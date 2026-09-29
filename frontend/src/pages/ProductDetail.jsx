@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import './ProductDetail.css';
+import { useParams, useNavigate } from 'react-router-dom';
+import ProductDetailModal from '../components/ProductDetailModal';
+import Products from './Products';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -53,15 +54,13 @@ const FALLBACK_MAP = {
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
-      // Check fallback first for demo IDs
       if (FALLBACK_MAP[id]) {
         setProduct(FALLBACK_MAP[id]);
-        setLoading(false);
         return;
       }
 
@@ -76,81 +75,22 @@ const ProductDetail = () => {
       } catch (err) {
         console.error('Error fetching product details:', err);
         setProduct(null);
-      } finally {
-        setLoading(false);
       }
     };
 
     fetchProduct();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="detail-container" style={{ zIndex: 1, position: 'relative', textAlign: 'center', padding: '5rem', color: '#d4af37' }}>
-        <h2>Loading product details...</h2>
-      </div>
-    );
-  }
-
-  if (!product) {
-    return (
-      <div className="detail-container not-found" style={{ zIndex: 1, position: 'relative' }}>
-        <h2>Product not found.</h2>
-        <Link to="/products" className="back-link">← Back to Products</Link>
-      </div>
-    );
-  }
-
   return (
-    <div className="detail-container" style={{ zIndex: 1, position: 'relative' }}>
-      <Link to="/products" className="back-link">← Back to Products</Link>
-
-      <div className="detail-card">
-        <div className="detail-image">
-          <img
-            src={product.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=900'}
-            alt={product.title}
-          />
-          <span className="product-category-badge">{product.category}</span>
-        </div>
-
-        <div className="detail-info">
-          <div className="detail-header-row">
-            {product.logo && <img src={product.logo} alt="" className="detail-app-logo" />}
-            <h1>{product.title}</h1>
-          </div>
-          <p className="detail-description">{product.description}</p>
-
-          <div className="detail-meta">
-            <div className="meta-item">
-              <span className="meta-label">Version</span>
-              <span className="meta-value">v{product.version || '1.0.0'}</span>
-            </div>
-            <div className="meta-item">
-              <span className="meta-label">Price</span>
-              <span className="meta-value price">{product.price}</span>
-            </div>
-          </div>
-
-          <div className="detail-actions">
-            {product.apkFile ? (
-              <a href={product.apkFile} target="_blank" rel="noopener noreferrer" download>
-                <button className="cta-button download-btn">⬇ Download Package / APK</button>
-              </a>
-            ) : (
-              <button className="cta-button purchase-btn">Get Now — {product.price}</button>
-            )}
-          </div>
-
-          {product.releaseNotes && (
-            <div className="release-notes">
-              <h3>📋 Release Notes & Specs</h3>
-              <p>{product.releaseNotes}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <>
+      <Products />
+      {product && (
+        <ProductDetailModal
+          product={product}
+          onClose={() => navigate('/products')}
+        />
+      )}
+    </>
   );
 };
 

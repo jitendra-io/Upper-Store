@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import ProductDetailModal from '../components/ProductDetailModal';
 import './Products.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -42,6 +42,7 @@ const FALLBACK_PRODUCTS = [
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -83,7 +84,7 @@ const Products = () => {
         <div className="products-grid">
           {products.map((product) => (
             <div key={product.id} className="product-card">
-              <div className="product-image">
+              <div className="product-image" onClick={() => setSelectedProduct(product)} style={{ cursor: 'pointer' }}>
                 <img
                   src={product.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=500'}
                   alt={product.title}
@@ -98,14 +99,22 @@ const Products = () => {
                 <p>{product.description}</p>
                 <div className="product-footer">
                   <span className="product-price">{product.price}</span>
-                  <Link to={`/products/${product.id}`}>
-                    <button className="view-btn">View Details</button>
-                  </Link>
+                  <button className="view-btn" onClick={() => setSelectedProduct(product)}>
+                    View Details
+                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {/* Product Detail Modal Overlay */}
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
       )}
     </div>
   );
