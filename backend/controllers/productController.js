@@ -64,15 +64,15 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'Title, category, and description are required.' });
     }
 
-    let imageUrl = '';
+    let imageUrls = [];
     let logoUrl = '';
     let apkUrl = '';
 
-    // Handle Image upload
-    if (req.files?.image) {
-      const imgFile = req.files.image[0];
+    // Handle up to 3 Screenshot Images upload
+    const imgFiles = req.files?.images || req.files?.image || [];
+    for (const imgFile of imgFiles) {
       const relativePath = path.relative(path.join(__dirname, '..'), imgFile.path);
-      imageUrl = getFileUrl(req, relativePath);
+      let url = getFileUrl(req, relativePath);
 
       if (imagekit) {
         try {
@@ -82,12 +82,14 @@ const createProduct = async (req, res) => {
             fileName: imgFile.filename,
             folder: '/upper-store/images',
           });
-          if (uploaded?.url) imageUrl = uploaded.url;
+          if (uploaded?.url) url = uploaded.url;
         } catch (ikErr) {
-          console.warn('ImageKit upload warning (using local fallback):', ikErr.message);
+          console.warn('ImageKit image upload warning:', ikErr.message);
         }
       }
+      imageUrls.push(url);
     }
+    const imageUrl = imageUrls[0] || '';
 
     // Handle Logo / Icon upload
     if (req.files?.logo) {
@@ -139,6 +141,7 @@ const createProduct = async (req, res) => {
       version: version || '1.0.0',
       releaseNotes: releaseNotes || '',
       image: imageUrl,
+      images: imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : []),
       logo: logoUrl,
       apkFile: apkUrl,
       createdAt: new Date().toISOString(),

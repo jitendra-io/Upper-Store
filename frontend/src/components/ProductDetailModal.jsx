@@ -1,7 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ProductDetailModal.css';
 
 const ProductDetailModal = ({ product, onClose }) => {
+  const allImages = product?.images && product.images.length > 0
+    ? product.images
+    : (product?.image ? [product.image] : []);
+
+  const [activeImage, setActiveImage] = useState(allImages[0] || '');
+
+  useEffect(() => {
+    if (allImages.length > 0) setActiveImage(allImages[0]);
+  }, [product]);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('modalToggle', { detail: true }));
+    return () => {
+      window.dispatchEvent(new CustomEvent('modalToggle', { detail: false }));
+    };
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') onClose();
@@ -25,20 +42,35 @@ const ProductDetailModal = ({ product, onClose }) => {
   return (
     <div className="modal-backdrop-overlay" onClick={handleBackdropClick}>
       <div className="modal-card-container">
-        {/* Close Button */}
+        {/* Close Icon */}
         <button className="modal-close-icon" onClick={onClose} aria-label="Close modal">
           ✕
         </button>
 
-        {/* Cover Image with Preserved Aspect Ratio */}
-        {product.image && (
+        {/* Cover Image with Preserved Aspect Ratio (Reduced by 60px vertically) */}
+        {activeImage && (
           <div className="modal-cover-frame">
             <img
-              src={product.image}
+              src={activeImage}
               alt={product.title}
               className="modal-cover-img"
             />
             <span className="modal-category-badge">{product.category}</span>
+          </div>
+        )}
+
+        {/* Multiple Screenshots Gallery Thumbs */}
+        {allImages.length > 1 && (
+          <div className="modal-thumbs-row">
+            {allImages.map((imgUrl, idx) => (
+              <button
+                key={idx}
+                className={`thumb-btn ${activeImage === imgUrl ? 'active' : ''}`}
+                onClick={() => setActiveImage(imgUrl)}
+              >
+                <img src={imgUrl} alt={`Screenshot ${idx + 1}`} />
+              </button>
+            ))}
           </div>
         )}
 
@@ -61,13 +93,21 @@ const ProductDetailModal = ({ product, onClose }) => {
 
           <p className="modal-description-text">{product.description}</p>
 
+          {/* Animated Download Button */}
           <div className="modal-actions">
             {product.apkFile ? (
               <a href={product.apkFile} target="_blank" rel="noopener noreferrer" download className="modal-download-link">
-                <button className="modal-cta-button download-btn">⬇ Download Package / APK</button>
+                <button className="modal-cta-button animated-download-btn">
+                  <span className="btn-icon">⬇</span>
+                  <span className="btn-text">Download Package / APK</span>
+                  <span className="btn-shine"></span>
+                </button>
               </a>
             ) : (
-              <button className="modal-cta-button purchase-btn">Get Now — {product.price}</button>
+              <button className="modal-cta-button animated-download-btn">
+                <span className="btn-text">Get Now — {product.price}</span>
+                <span className="btn-shine"></span>
+              </button>
             )}
           </div>
 

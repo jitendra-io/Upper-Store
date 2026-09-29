@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import BackgroundAnimation from './BackgroundAnimation';
 import Navbar from './components/Navbar';
@@ -13,12 +14,26 @@ import './App.css';
 
 function AppContent() {
   const location = useLocation();
-  const showFooter = location.pathname === '/' || location.pathname === '/products';
+  const [modalOpen, setModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleModalToggle = (e) => {
+      setModalOpen(!!e.detail);
+    };
+    window.addEventListener('modalToggle', handleModalToggle);
+    return () => window.removeEventListener('modalToggle', handleModalToggle);
+  }, []);
+
+  const isDetailRoute = location.pathname.startsWith('/products/') && location.pathname !== '/products';
+  const hideNavAndFooter = modalOpen || isDetailRoute;
+
+  const showNavbar = !hideNavAndFooter;
+  const showFooter = (location.pathname === '/' || location.pathname === '/products') && !hideNavAndFooter;
 
   return (
     <div className="app-container">
       <BackgroundAnimation />
-      <Navbar />
+      {showNavbar && <Navbar />}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />

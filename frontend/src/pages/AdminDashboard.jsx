@@ -17,7 +17,7 @@ const AdminDashboard = () => {
   const [version, setVersion] = useState('1.0.0');
   const [description, setDescription] = useState('');
   const [releaseNotes, setReleaseNotes] = useState('');
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
   const [apkFile, setApkFile] = useState(null);
 
@@ -56,6 +56,11 @@ const AdminDashboard = () => {
     navigate('/admin');
   };
 
+  const handleScreenshotChange = (e) => {
+    const selected = Array.from(e.target.files).slice(0, 3);
+    setImageFiles(selected);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -69,7 +74,7 @@ const AdminDashboard = () => {
       formData.append('version', version);
       formData.append('description', description);
       formData.append('releaseNotes', releaseNotes);
-      if (imageFile) formData.append('image', imageFile);
+      imageFiles.forEach((file) => formData.append('images', file));
       if (logoFile) formData.append('logo', logoFile);
       if (apkFile) formData.append('apk', apkFile);
 
@@ -92,7 +97,7 @@ const AdminDashboard = () => {
       setTitle('');
       setDescription('');
       setReleaseNotes('');
-      setImageFile(null);
+      setImageFiles([]);
       setLogoFile(null);
       setApkFile(null);
       // Reset file input elements
@@ -269,14 +274,19 @@ const AdminDashboard = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="image-file">Cover Screenshot (Banner)</label>
+                <label htmlFor="image-file">Screenshots (Up to 3 images)</label>
                 <input
                   id="image-file"
                   type="file"
                   accept="image/*"
-                  onChange={(e) => setImageFile(e.target.files[0])}
+                  multiple
+                  onChange={handleScreenshotChange}
                 />
-                {imageFile && <span className="file-name">Selected: {imageFile.name}</span>}
+                {imageFiles.length > 0 && (
+                  <span className="file-name">
+                    {imageFiles.length} file(s) selected: {imageFiles.map(f => f.name).join(', ')}
+                  </span>
+                )}
               </div>
             </div>
 
