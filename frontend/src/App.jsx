@@ -16,6 +16,11 @@ function AppContent() {
   const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Auto scroll to top on every navigation route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   useEffect(() => {
     const handleModalToggle = (e) => {
       setModalOpen(!!e.detail);
@@ -24,11 +29,8 @@ function AppContent() {
     return () => window.removeEventListener('modalToggle', handleModalToggle);
   }, []);
 
-  const isDetailRoute = location.pathname.startsWith('/products/') && location.pathname !== '/products';
-  const hideNavAndFooter = modalOpen || isDetailRoute;
-
-  const showNavbar = true; // Navbar stays visible as requested
-  const showFooter = location.pathname === '/' || location.pathname === '/products';
+  // Show Footer ONLY on the Home page ('/'), removed from products panel
+  const showFooter = location.pathname === '/';
 
   return (
     <div className="app-container">
