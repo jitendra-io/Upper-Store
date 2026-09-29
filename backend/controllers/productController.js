@@ -165,11 +165,95 @@ const updateProduct = async (req, res) => {
     const doc = await docRef.get();
     if (!doc.exists) return res.status(404).json({ message: 'Product not found.' });
 
-    await docRef.update({ ...req.body, updatedAt: new Date().toISOString() });
-    const updated = await docRef.get();
-    res.json({ id: updated.id, ...updated.data() });
+    const { title, category, description, price, version, releaseNotes } = req.body;
+
+    const updatedData = {};
+    if (title !== undefined) updatedData.title = title;
+    if (category !== undefined) updatedData.category = category;
+    if (description !== undefined) updatedData.description = description;
+    if (price !== undefined) updatedData.price = price;
+    if (version !== undefined) updatedData.version = version;
+    if (releaseNotes !== undefined) updatedData.releaseNotes = releaseNotes;
+
+    // Handle screenshot image uploads if provided
+    const imgFiles = req.files?.images || req.files?.image || [];
+    if (imgFiles.length > 0) {
+      let imageUrls = [];
+      for (const imgFile of imgFiles) {
+        const relativePath = path.relative(path.join(__dirname, '..'), imgFile.path);
+        let url = getFileUrl(req, relativePath);
+
+        if (imagekit) {
+          try {
+            const buffer = fs.readFileSync(imgFile.path);
+            const uploaded = await imagekit.upload({
+              file: buffer.toString('base64'),
+              fileName: imgFile.filename,
+              folder: '/upper-store/images',
+            });
+            if (uploaded?.url) url = uploaded.url;
+          } catch (ikErr) {
+            console.warn('ImageKit image upload warning:', ikErr.message);
+          }
+        }
+        imageUrls.push(url);
+      }
+      updatedData.image = imageUrls[0];
+      updatedData.images = imageUrls;
+    }
+
+    // Handle logo upload if provided
+    if (req.files?.logo) {
+      const logoFile = req.files.logo[0];
+      const relativePath = path.relative(path.join(__dirname, '..'), logoFile.path);
+      let logoUrl = getFileUrl(req, relativePath);
+
+      if (imagekit) {
+        try {
+          const buffer = fs.readFileSync(logoFile.path);
+          const uploaded = await imagekit.upload({
+            file: buffer.toString('base64'),
+            fileName: logoFile.filename,
+            folder: '/upper-store/logos',
+          });
+          if (uploaded?.url) logoUrl = uploaded.url;
+        } catch (ikErr) {
+          console.warn('ImageKit logo upload warning:', ikErr.message);
+        }
+      }
+      updatedData.logo = logoUrl;
+    }
+
+    // Handle binary / apk / exe file upload if provided
+    if (req.files?.apk) {
+      const apkFile = req.files.apk[0];
+      const relativePath = path.relative(path.join(__dirname, '..'), apkFile.path);
+      let apkUrl = getFileUrl(req, relativePath);
+
+      if (imagekit && apkFile.size <= 25 * 1024 * 1024) {
+        try {
+          const buffer = fs.readFileSync(apkFile.path);
+          const uploaded = await imagekit.upload({
+            file: buffer.toString('base64'),
+            fileName: apkFile.filename,
+            folder: '/upper-store/apks',
+          });
+          if (uploaded?.url) apkUrl = uploaded.url;
+        } catch (ikErr) {
+          console.warn('ImageKit APK/EXE upload warning:', ikErr.message);
+        }
+      }
+      updatedData.apkFile = apkUrl;
+    }
+
+    updatedData.updatedAt = new Date().toISOString();
+
+    await docRef.update(updatedData);
+    const updatedDoc = await docRef.get();
+    res.json({ id: updatedDoc.id, ...updatedDoc.data() });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating product.' });
+    console.error('Update product error:', error);
+    res.status(500).json({ message: error.message || 'Error updating product.' });
   }
 };
 

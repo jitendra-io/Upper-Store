@@ -10,6 +10,9 @@ const AdminDashboard = () => {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
+  // Edit state
+  const [editingProduct, setEditingProduct] = useState(null);
+
   // Form State
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Mobile App');
@@ -61,6 +64,40 @@ const AdminDashboard = () => {
     setImageFiles(selected);
   };
 
+  const startEditProduct = (p) => {
+    setEditingProduct(p);
+    setTitle(p.title || '');
+    setCategory(p.category || 'Mobile App');
+    setPrice(p.price || 'Free');
+    setVersion(p.version || '1.0.0');
+    setDescription(p.description || '');
+    setReleaseNotes(p.releaseNotes || '');
+    setLogoFile(null);
+    setImageFiles([]);
+    setApkFile(null);
+    // Reset file inputs
+    const inputs = document.querySelectorAll('input[type="file"]');
+    inputs.forEach((input) => (input.value = ''));
+    setMessage({ type: '', text: '' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const cancelEdit = () => {
+    setEditingProduct(null);
+    setTitle('');
+    setCategory('Mobile App');
+    setPrice('Free');
+    setVersion('1.0.0');
+    setDescription('');
+    setReleaseNotes('');
+    setLogoFile(null);
+    setImageFiles([]);
+    setApkFile(null);
+    const inputs = document.querySelectorAll('input[type="file"]');
+    inputs.forEach((input) => (input.value = ''));
+    setMessage({ type: '', text: '' });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -78,8 +115,14 @@ const AdminDashboard = () => {
       if (logoFile) formData.append('logo', logoFile);
       if (apkFile) formData.append('apk', apkFile);
 
-      const res = await fetch(`${API_BASE}/api/products`, {
-        method: 'POST',
+      const isEditing = Boolean(editingProduct);
+      const url = isEditing
+        ? `${API_BASE}/api/products/${editingProduct.id}`
+        : `${API_BASE}/api/products`;
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -89,22 +132,14 @@ const AdminDashboard = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || 'Failed to upload product.');
+        throw new Error(data.message || `Failed to ${isEditing ? 'update' : 'upload'} product.`);
       }
 
-      setMessage({ type: 'success', text: '✨ Product successfully published!' });
-      // Reset form
-      setTitle('');
-      setDescription('');
-      setReleaseNotes('');
-      setImageFiles([]);
-      setLogoFile(null);
-      setApkFile(null);
-      // Reset file input elements
-      const inputs = document.querySelectorAll('input[type="file"]');
-      inputs.forEach(input => (input.value = ''));
-
-      // Refresh products list
+      setMessage({
+        type: 'success',
+        text: `✨ Product successfully ${isEditing ? 'updated' : 'published'}!`,
+      });
+      cancelEdit();
       fetchProducts();
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
@@ -130,6 +165,9 @@ const AdminDashboard = () => {
       }
 
       setProducts(products.filter((p) => p.id !== id));
+      if (editingProduct?.id === id) {
+        cancelEdit();
+      }
     } catch (err) {
       alert(`Error deleting product: ${err.message}`);
     } finally {
@@ -137,12 +175,43 @@ const AdminDashboard = () => {
     }
   };
 
+  const renderFileLink = (p) => {
+    if (!p.apkFile) return <span className="no-file">—</span>;
+    const fileUrl = p.apkFile.toLowerCase();
+    let label = 'FILE ⬇';
+    let className = 'file-link general-link';
+
+    if (
+      fileUrl.endsWith('.exe') ||
+      fileUrl.endsWith('.msi') ||
+      p.category?.includes('.exe') ||
+      p.category?.includes('Windows')
+    ) {
+      label = 'EXE ⬇';
+      className = 'file-link exe-link';
+    } else if (fileUrl.endsWith('.apk') || p.category?.includes('Mobile')) {
+      label = 'APK ⬇';
+      className = 'file-link apk-link';
+    } else if (fileUrl.endsWith('.zip')) {
+      label = 'ZIP ⬇';
+      className = 'file-link zip-link';
+    }
+
+    return (
+      <a href={p.apkFile} target="_blank" rel="noopener noreferrer" className={className}>
+        {label}
+      </a>
+    );
+  };
+
   return (
     <div className="admin-dashboard-container">
       {/* Header Bar */}
       <header className="admin-nav">
         <div className="nav-brand">
-          <h2>Upper <span className="gold-text">Store</span></h2>
+          <h2>
+            Upper <span className="gold-text">Store</span>
+          </h2>
           <span className="admin-badge">Admin Control Center</span>
         </div>
         <button onClick={handleLogout} className="logout-btn">
@@ -172,16 +241,23 @@ const AdminDashboard = () => {
       </div>
 
       <div className="admin-main-grid">
-        {/* Publish Product Form */}
+        {/* Form Section */}
         <div className="dashboard-card form-section">
-          <h3>Publish New Product</h3>
-          <p className="section-desc">Add a new digital asset, web application, or APK file to Upper Store.</p>
+          <div className="form-header-row">
+            <h3>{editingProduct ? `Edit Product: ${editingProduct.title}` : 'Publish New Product'}</h3>
+            {editingProduct && (
+              <button type="button" onClick={cancelEdit} className="cancel-edit-btn">
+                ✕ Cancel Edit
+              </button>
+            )}
+          </div>
+          <p className="section-desc">
+            {editingProduct
+              ? 'Update existing details, change category, or upload updated package files.'
+              : 'Add a new digital asset, web application, or executable file to Upper Store.'}
+          </p>
 
-          {message.text && (
-            <div className={`alert-banner ${message.type}`}>
-              {message.text}
-            </div>
-          )}
+          {message.text && <div className={`alert-banner ${message.type}`}>{message.text}</div>}
 
           <form onSubmit={handleSubmit} className="product-form">
             <div className="form-row">
@@ -205,6 +281,7 @@ const AdminDashboard = () => {
                   onChange={(e) => setCategory(e.target.value)}
                 >
                   <option value="Mobile App">Mobile App (APK)</option>
+                  <option value="Windows App (.exe)">Windows App (.exe)</option>
                   <option value="Web UI Kit">Web UI Kit</option>
                   <option value="SaaS Platform">SaaS Platform</option>
                   <option value="AI Tool">AI Tool</option>
@@ -263,7 +340,9 @@ const AdminDashboard = () => {
 
             <div className="form-row file-upload-row">
               <div className="form-group">
-                <label htmlFor="logo-file">App / Product Logo Icon</label>
+                <label htmlFor="logo-file">
+                  App / Product Logo Icon {editingProduct && <span className="optional-tag">(Optional replace)</span>}
+                </label>
                 <input
                   id="logo-file"
                   type="file"
@@ -274,7 +353,9 @@ const AdminDashboard = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="image-file">Screenshots (Up to 3 images)</label>
+                <label htmlFor="image-file">
+                  Screenshots (Up to 3 images) {editingProduct && <span className="optional-tag">(Optional replace)</span>}
+                </label>
                 <input
                   id="image-file"
                   type="file"
@@ -284,25 +365,31 @@ const AdminDashboard = () => {
                 />
                 {imageFiles.length > 0 && (
                   <span className="file-name">
-                    {imageFiles.length} file(s) selected: {imageFiles.map(f => f.name).join(', ')}
+                    {imageFiles.length} file(s) selected: {imageFiles.map((f) => f.name).join(', ')}
                   </span>
                 )}
               </div>
             </div>
 
             <div className="form-group">
-              <label htmlFor="apk-file">APK / Binary Package File</label>
+              <label htmlFor="apk-file">
+                Binary Package File (.apk, .exe, .zip) {editingProduct && <span className="optional-tag">(Optional replace)</span>}
+              </label>
               <input
                 id="apk-file"
                 type="file"
-                accept=".apk,.zip"
+                accept=".apk,.exe,.msi,.zip"
                 onChange={(e) => setApkFile(e.target.files[0])}
               />
               {apkFile && <span className="file-name">Selected: {apkFile.name}</span>}
             </div>
 
             <button type="submit" className="publish-btn" disabled={submitting}>
-              {submitting ? 'Uploading to Cloud...' : 'Publish Product'}
+              {submitting
+                ? 'Saving Changes...'
+                : editingProduct
+                ? 'Update Product'
+                : 'Publish Product'}
             </button>
           </form>
         </div>
@@ -310,7 +397,7 @@ const AdminDashboard = () => {
         {/* Existing Products List */}
         <div className="dashboard-card list-section">
           <h3>Manage Inventory ({products.length})</h3>
-          <p className="section-desc">View, monitor, and remove live products from your catalog.</p>
+          <p className="section-desc">View, monitor, edit, and remove live products from your catalog.</p>
 
           {loadingProducts ? (
             <div className="loading-spinner">Loading product catalog...</div>
@@ -333,41 +420,44 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                   {products.map((p) => (
-                    <tr key={p.id}>
+                    <tr key={p.id} className={editingProduct?.id === p.id ? 'editing-row' : ''}>
                       <td className="product-info-cell">
                         {p.logo || p.image ? (
                           <img src={p.logo || p.image} alt={p.title} className="table-thumb" />
                         ) : (
                           <div className="table-thumb-placeholder">📦</div>
                         )}
-                        <div>
+                        <div className="product-title-group">
                           <div className="product-title-text">{p.title}</div>
-                          <div className="product-date">{new Date(p.createdAt).toLocaleDateString()}</div>
+                          <div className="product-date">
+                            {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Live'}
+                          </div>
                         </div>
                       </td>
-                      <td>
+                      <td className="category-cell">
                         <span className="category-pill">{p.category}</span>
                       </td>
-                      <td className="gold-text fw-bold">{p.price}</td>
-                      <td>v{p.version}</td>
-                      <td className="file-links">
-                        {p.apkFile ? (
-                          <a href={p.apkFile} target="_blank" rel="noopener noreferrer" className="file-link apk-link">
-                            APK ⬇
-                          </a>
-                        ) : (
-                          <span className="no-file">—</span>
-                        )}
-                      </td>
-                      <td>
-                        <button
-                          onClick={() => handleDelete(p.id)}
-                          disabled={deletingId === p.id}
-                          className="delete-btn"
-                          title="Delete Product"
-                        >
-                          {deletingId === p.id ? 'Deleting...' : 'Delete'}
-                        </button>
+                      <td className="gold-text fw-bold price-cell">{p.price}</td>
+                      <td className="version-cell">v{p.version}</td>
+                      <td className="file-links-cell">{renderFileLink(p)}</td>
+                      <td className="actions-cell">
+                        <div className="action-btns">
+                          <button
+                            onClick={() => startEditProduct(p)}
+                            className="edit-btn"
+                            title="Edit Product"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(p.id)}
+                            disabled={deletingId === p.id}
+                            className="delete-btn"
+                            title="Delete Product"
+                          >
+                            {deletingId === p.id ? 'Deleting...' : 'Delete'}
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

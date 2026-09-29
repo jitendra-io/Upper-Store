@@ -39,12 +39,17 @@ const upload = multer({
   limits: { fileSize: 1500 * 1024 * 1024 }, // 1.5 GB limit (supports 210MB+ APKs)
   fileFilter: (req, file, cb) => {
     const isImage = file.mimetype.startsWith('image/');
-    const isApk = file.mimetype === 'application/vnd.android.package-archive' ||
-                  file.mimetype === 'application/octet-stream' ||
-                  file.originalname.toLowerCase().endsWith('.apk') ||
-                  file.originalname.toLowerCase().endsWith('.zip');
-    if (isImage || isApk) cb(null, true);
-    else cb(new Error('Invalid file type. Only image files and APK/ZIP files are allowed.'));
+    const orig = file.originalname.toLowerCase();
+    const isBinary = file.mimetype === 'application/vnd.android.package-archive' ||
+                     file.mimetype === 'application/octet-stream' ||
+                     file.mimetype === 'application/x-msdownload' ||
+                     file.mimetype === 'application/x-msdos-program' ||
+                     orig.endsWith('.apk') ||
+                     orig.endsWith('.exe') ||
+                     orig.endsWith('.msi') ||
+                     orig.endsWith('.zip');
+    if (isImage || isBinary) cb(null, true);
+    else cb(new Error('Invalid file type. Only image files and APK/EXE/ZIP files are allowed.'));
   },
 });
 
@@ -75,7 +80,7 @@ router.get('/:id', getProductById);
 
 // Protected admin routes
 router.post('/', protect, uploadFields, createProduct);
-router.put('/:id', protect, updateProduct);
+router.put('/:id', protect, uploadFields, updateProduct);
 router.delete('/:id', protect, deleteProduct);
 
 module.exports = router;

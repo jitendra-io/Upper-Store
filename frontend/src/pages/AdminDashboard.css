@@ -255,9 +255,44 @@
   transform: none;
 }
 
+/* Edit Mode Form Styling */
+.form-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.25rem;
+}
+
+.cancel-edit-btn {
+  background: rgba(255, 255, 255, 0.08);
+  color: #aaa;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancel-edit-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.optional-tag {
+  font-size: 0.75rem;
+  color: #d4af37;
+  font-weight: normal;
+  margin-left: 0.4rem;
+}
+
 /* Inventory Table */
 .products-table-wrapper {
   overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .products-table {
@@ -268,24 +303,33 @@
 }
 
 .products-table th {
-  padding: 0.85rem 0.75rem;
+  padding: 0.9rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: #888;
   font-weight: 600;
   font-size: 0.8rem;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: rgba(15, 15, 18, 0.4);
 }
 
 .products-table td {
-  padding: 1rem 0.75rem;
+  padding: 0.9rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   vertical-align: middle;
+  white-space: nowrap;
+}
+
+.editing-row {
+  background: rgba(212, 175, 55, 0.07);
 }
 
 .product-info-cell {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
+  min-width: 200px;
 }
 
 .table-thumb {
@@ -293,7 +337,8 @@
   height: 42px;
   border-radius: 8px;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
 }
 
 .table-thumb-placeholder {
@@ -305,11 +350,18 @@
   align-items: center;
   justify-content: center;
   font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.product-title-group {
+  display: flex;
+  flex-direction: column;
 }
 
 .product-title-text {
   font-weight: 600;
   color: #fff;
+  white-space: nowrap;
 }
 
 .product-date {
@@ -317,35 +369,119 @@
   color: #666;
 }
 
+.category-cell {
+  white-space: nowrap;
+}
+
 .category-pill {
-  padding: 0.2rem 0.5rem;
-  background: rgba(255, 255, 255, 0.06);
+  display: inline-block;
+  white-space: nowrap;
+  word-break: keep-all;
+  padding: 0.35rem 0.65rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 6px;
   font-size: 0.75rem;
-  color: #ccc;
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.price-cell, .version-cell, .file-links-cell {
+  white-space: nowrap;
 }
 
 .fw-bold {
   font-weight: 700;
 }
 
-.apk-link {
-  color: #10b981;
+/* File badge links */
+.file-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  gap: 0.3rem;
   text-decoration: none;
   font-weight: 600;
   font-size: 0.8rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(16, 185, 129, 0.1);
+  padding: 0.3rem 0.65rem;
   border-radius: 6px;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  transition: all 0.2s ease;
+}
+
+.apk-link {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .apk-link:hover {
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.25);
+}
+
+.exe-link {
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.exe-link:hover {
+  background: rgba(56, 189, 248, 0.25);
+}
+
+.zip-link {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.zip-link:hover {
+  background: rgba(245, 158, 11, 0.25);
+}
+
+.general-link {
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.25);
+}
+
+.general-link:hover {
+  background: rgba(168, 85, 247, 0.25);
 }
 
 .no-file {
   color: #555;
+}
+
+/* Actions cell */
+.actions-cell {
+  white-space: nowrap;
+}
+
+.action-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.edit-btn {
+  background: rgba(212, 175, 55, 0.12);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-btn:hover {
+  background: #d4af37;
+  color: #0d0d0f;
+  border-color: #d4af37;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
 }
 
 .delete-btn {
