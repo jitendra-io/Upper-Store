@@ -1,0 +1,63 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 5%;
+  background: rgba(17, 17, 17, 0.6);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid rgba(46, 46, 46, 0.5); /* Faint Charcoal */
+}
+
+.nav-logo a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.brand-logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+.nav-logo .highlight-text {
+  color: var(--color-accent-primary);
+}
+
+.nav-links {
+  display: flex;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+.nav-links a {
+  color: var(--color-text-primary);
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.nav-links a:hover {
+  color: var(--color-accent-primary);
+}
+
+.nav-links .admin-link {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  border: 1px solid var(--color-text-secondary);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+}
+
+.nav-links .admin-link:hover {
+  border-color: var(--color-accent-primary);
+}
