@@ -65,6 +65,7 @@ const createProduct = async (req, res) => {
     }
 
     let imageUrl = '';
+    let logoUrl = '';
     let apkUrl = '';
 
     // Handle Image upload
@@ -73,7 +74,6 @@ const createProduct = async (req, res) => {
       const relativePath = path.relative(path.join(__dirname, '..'), imgFile.path);
       imageUrl = getFileUrl(req, relativePath);
 
-      // Attempt ImageKit upload if available
       if (imagekit) {
         try {
           const buffer = fs.readFileSync(imgFile.path);
@@ -89,13 +89,33 @@ const createProduct = async (req, res) => {
       }
     }
 
+    // Handle Logo / Icon upload
+    if (req.files?.logo) {
+      const logoFile = req.files.logo[0];
+      const relativePath = path.relative(path.join(__dirname, '..'), logoFile.path);
+      logoUrl = getFileUrl(req, relativePath);
+
+      if (imagekit) {
+        try {
+          const buffer = fs.readFileSync(logoFile.path);
+          const uploaded = await imagekit.upload({
+            file: buffer.toString('base64'),
+            fileName: logoFile.filename,
+            folder: '/upper-store/logos',
+          });
+          if (uploaded?.url) logoUrl = uploaded.url;
+        } catch (ikErr) {
+          console.warn('ImageKit logo upload warning:', ikErr.message);
+        }
+      }
+    }
+
     // Handle APK / Package upload
     if (req.files?.apk) {
       const apkFile = req.files.apk[0];
       const relativePath = path.relative(path.join(__dirname, '..'), apkFile.path);
       apkUrl = getFileUrl(req, relativePath);
 
-      // Attempt ImageKit upload if file size <= 25MB (ImageKit standard upload API limit)
       if (imagekit && apkFile.size <= 25 * 1024 * 1024) {
         try {
           const buffer = fs.readFileSync(apkFile.path);
@@ -119,6 +139,7 @@ const createProduct = async (req, res) => {
       version: version || '1.0.0',
       releaseNotes: releaseNotes || '',
       image: imageUrl,
+      logo: logoUrl,
       apkFile: apkUrl,
       createdAt: new Date().toISOString(),
     };

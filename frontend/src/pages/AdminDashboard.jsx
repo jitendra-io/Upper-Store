@@ -18,6 +18,7 @@ const AdminDashboard = () => {
   const [description, setDescription] = useState('');
   const [releaseNotes, setReleaseNotes] = useState('');
   const [imageFile, setImageFile] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
   const [apkFile, setApkFile] = useState(null);
 
   // UI Feedback
@@ -69,6 +70,7 @@ const AdminDashboard = () => {
       formData.append('description', description);
       formData.append('releaseNotes', releaseNotes);
       if (imageFile) formData.append('image', imageFile);
+      if (logoFile) formData.append('logo', logoFile);
       if (apkFile) formData.append('apk', apkFile);
 
       const res = await fetch(`${API_BASE}/api/products`, {
@@ -91,6 +93,7 @@ const AdminDashboard = () => {
       setDescription('');
       setReleaseNotes('');
       setImageFile(null);
+      setLogoFile(null);
       setApkFile(null);
       // Reset file input elements
       const inputs = document.querySelectorAll('input[type="file"]');
@@ -255,7 +258,18 @@ const AdminDashboard = () => {
 
             <div className="form-row file-upload-row">
               <div className="form-group">
-                <label htmlFor="image-file">Cover Screenshot (Image)</label>
+                <label htmlFor="logo-file">App / Product Logo Icon</label>
+                <input
+                  id="logo-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setLogoFile(e.target.files[0])}
+                />
+                {logoFile && <span className="file-name">Selected: {logoFile.name}</span>}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="image-file">Cover Screenshot (Banner)</label>
                 <input
                   id="image-file"
                   type="file"
@@ -264,17 +278,17 @@ const AdminDashboard = () => {
                 />
                 {imageFile && <span className="file-name">Selected: {imageFile.name}</span>}
               </div>
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="apk-file">APK / Package File</label>
-                <input
-                  id="apk-file"
-                  type="file"
-                  accept=".apk,.zip"
-                  onChange={(e) => setApkFile(e.target.files[0])}
-                />
-                {apkFile && <span className="file-name">Selected: {apkFile.name}</span>}
-              </div>
+            <div className="form-group">
+              <label htmlFor="apk-file">APK / Binary Package File</label>
+              <input
+                id="apk-file"
+                type="file"
+                accept=".apk,.zip"
+                onChange={(e) => setApkFile(e.target.files[0])}
+              />
+              {apkFile && <span className="file-name">Selected: {apkFile.name}</span>}
             </div>
 
             <button type="submit" className="publish-btn" disabled={submitting}>
@@ -311,8 +325,8 @@ const AdminDashboard = () => {
                   {products.map((p) => (
                     <tr key={p.id}>
                       <td className="product-info-cell">
-                        {p.image ? (
-                          <img src={p.image} alt={p.title} className="table-thumb" />
+                        {p.logo || p.image ? (
+                          <img src={p.logo || p.image} alt={p.title} className="table-thumb" />
                         ) : (
                           <div className="table-thumb-placeholder">📦</div>
                         )}

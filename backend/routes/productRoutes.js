@@ -16,7 +16,7 @@ const {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let destFolder = path.join(__dirname, '../uploads');
-    if (file.fieldname === 'image') {
+    if (file.fieldname === 'image' || file.fieldname === 'logo') {
       destFolder = path.join(destFolder, 'images');
     } else if (file.fieldname === 'apk') {
       destFolder = path.join(destFolder, 'apks');
@@ -51,6 +51,7 @@ const upload = multer({
 const uploadFields = (req, res, next) => {
   const handler = upload.fields([
     { name: 'image', maxCount: 1 },
+    { name: 'logo', maxCount: 1 },
     { name: 'apk', maxCount: 1 },
   ]);
 

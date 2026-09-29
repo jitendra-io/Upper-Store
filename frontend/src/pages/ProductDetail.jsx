@@ -115,7 +115,10 @@ const ProductDetail = () => {
         </div>
 
         <div className="detail-info">
-          <h1>{product.title}</h1>
+          <div className="detail-header-row">
+            {product.logo && <img src={product.logo} alt="" className="detail-app-logo" />}
+            <h1>{product.title}</h1>
+          </div>
           <p className="detail-description">{product.description}</p>
 
           <div className="detail-meta">

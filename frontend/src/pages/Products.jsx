@@ -91,7 +91,10 @@ const Products = () => {
                 <span className="product-category">{product.category}</span>
               </div>
               <div className="product-info">
-                <h3>{product.title}</h3>
+                <div className="product-title-row">
+                  {product.logo && <img src={product.logo} alt="" className="product-app-logo" />}
+                  <h3>{product.title}</h3>
+                </div>
                 <p>{product.description}</p>
                 <div className="product-footer">
                   <span className="product-price">{product.price}</span>

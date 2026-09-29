@@ -79,9 +79,25 @@
   flex-grow: 1;
 }
 
-.product-info h3 {
-  font-size: 1.4rem;
+.product-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 0.8rem;
+}
+
+.product-app-logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  flex-shrink: 0;
+}
+
+.product-info h3 {
+  font-size: 1.3rem;
+  margin: 0;
   color: var(--color-text-primary);
 }
 
