@@ -1,62 +1,102 @@
 .about-container {
-  padding: 4rem 5%;
-  max-width: 1100px;
+  padding: 3rem 5%;
+  max-width: 1200px;
   margin: 0 auto;
-  min-height: calc(100vh - 80px);
+  min-height: calc(100vh - 120px);
 }
 
 .about-hero {
   text-align: center;
-  margin-bottom: 5rem;
+  margin-bottom: 3.5rem;
 }
 
 .about-hero h1 {
-  font-size: 3.5rem;
+  font-size: 3.2rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
 .about-hero p {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   color: var(--color-text-secondary);
 }
 
 .about-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.75rem;
 }
 
+@media (max-width: 992px) {
+  .about-content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .about-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* All cards are square shaped with yellow rounded borders */
 .about-card {
+  aspect-ratio: 1 / 1; /* Makes card perfectly square */
   background: var(--color-bg-secondary);
-  border: 1px solid rgba(201, 168, 76, 0.15);
-  border-radius: 14px;
-  padding: 2.5rem 2rem;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid #ffd700; /* Yellow border edge */
+  border-radius: 20px; /* Rounded corners */
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.15);
+  overflow: hidden;
+  position: relative;
 }
 
 .about-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(201, 168, 76, 0.15);
-  border-color: rgba(201, 168, 76, 0.4);
+  transform: translateY(-8px);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 215, 0, 0.35);
+  border-color: #ffea00;
 }
 
 .about-icon {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   display: block;
-  margin-bottom: 1.2rem;
+  margin-bottom: 0.75rem;
 }
 
 .about-card h3 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: var(--color-accent-primary);
-  margin-bottom: 1rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 0.6rem;
 }
 
 .about-card p {
-  color: var(--color-text-secondary);
-  line-height: 1.7;
-  font-size: 0.97rem;
+  color: #cccccc;
+  line-height: 1.5;
+  font-size: 0.88rem;
+  margin: 0;
+}
+
+/* 4th Card containing ONLY the Logo */
+.about-card.logo-card {
+  padding: 1.25rem;
+}
+
+.about-logo-img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+  border-radius: 16px;
+  filter: drop-shadow(0 6px 18px rgba(255, 215, 0, 0.35));
+  transition: transform 0.3s ease;
+}
+
+.about-card.logo-card:hover .about-logo-img {
+  transform: scale(1.08);
 }
