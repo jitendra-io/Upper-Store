@@ -10,6 +10,7 @@ import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Footer from './components/Footer';
+import MiniFooter from './components/MiniFooter';
 import './App.css';
 
 function AppContent() {
@@ -29,8 +30,8 @@ function AppContent() {
     return () => window.removeEventListener('modalToggle', handleModalToggle);
   }, []);
 
-  // Show Footer ONLY on the Home page ('/'), removed from products panel
-  const showFooter = location.pathname === '/';
+  const isHome = location.pathname === '/';
+  const isProducts = location.pathname === '/products';
 
   return (
     <div className="app-container">
@@ -45,7 +46,8 @@ function AppContent() {
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
-      {showFooter && <Footer />}
+      {isHome && <Footer />}
+      {isProducts && !modalOpen && <MiniFooter />}
     </div>
   );
 }
