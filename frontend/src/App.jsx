@@ -27,13 +27,13 @@ function AppContent() {
   const isDetailRoute = location.pathname.startsWith('/products/') && location.pathname !== '/products';
   const hideNavAndFooter = modalOpen || isDetailRoute;
 
-  const showNavbar = !hideNavAndFooter;
-  const showFooter = (location.pathname === '/' || location.pathname === '/products') && !hideNavAndFooter;
+  const showNavbar = true; // Navbar stays visible as requested
+  const showFooter = location.pathname === '/' || location.pathname === '/products';
 
   return (
     <div className="app-container">
       <BackgroundAnimation />
-      {showNavbar && <Navbar />}
+      <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
