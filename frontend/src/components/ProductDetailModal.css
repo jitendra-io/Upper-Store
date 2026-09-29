@@ -318,3 +318,38 @@
   color: #aaa;
   white-space: pre-wrap;
 }
+
+/* Mobile Responsive Styling */
+@media (max-width: 600px) {
+  .modal-backdrop-overlay {
+    padding: 0.75rem;
+  }
+
+  .modal-card-container {
+    max-width: 100%;
+    max-height: 88vh;
+    border-radius: 14px;
+  }
+
+  .modal-cover-frame {
+    height: 140px;
+  }
+
+  .modal-details-body {
+    padding: 1rem;
+    gap: 0.85rem;
+  }
+
+  .modal-product-title {
+    font-size: 1.15rem;
+  }
+
+  .modal-description-text {
+    font-size: 0.84rem;
+  }
+
+  .animated-download-btn {
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
+  }
+}
