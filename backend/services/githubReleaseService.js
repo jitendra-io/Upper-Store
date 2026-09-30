@@ -5,13 +5,13 @@ const path = require('path');
  * Creates a GitHub Release on the repository and uploads the binary asset (.apk, .exe, .zip).
  * Returns the public CDN browser_download_url from GitHub.
  */
-const uploadToGitHubRelease = async ({ filePath, fileName, version, title, description }) => {
-  const token = process.env.GITHUB_TOKEN;
-  const repoOwner = process.env.GITHUB_REPO_OWNER || 'YourJITENDRA';
-  const repoName = process.env.GITHUB_REPO_NAME || 'Upper-Official';
+const uploadToGitHubRelease = async ({ filePath, fileName, version, title, description, customToken, customOwner, customRepo }) => {
+  const token = customToken || process.env.GITHUB_TOKEN;
+  const repoOwner = customOwner || process.env.GITHUB_REPO_OWNER || 'YourJITENDRA';
+  const repoName = customRepo || process.env.GITHUB_REPO_NAME || 'Upper-Official';
 
   if (!token || token.includes('your_github_token')) {
-    console.warn('⚠️ GITHUB_TOKEN is not configured in backend/.env. Skipping GitHub Release upload.');
+    console.warn('⚠️ GITHUB_TOKEN is not configured in backend/.env or form request. Skipping GitHub Release upload.');
     return null;
   }
 
