@@ -19,11 +19,63 @@ if (
   }
 }
 
-// Helper to resolve full file URL
+const { uploadToGitHubRelease } = require('../services/githubReleaseService');
+
+// Helper to resolve full file URL fallback
 const getFileUrl = (req, relativePath) => {
+  if (process.env.BACKEND_URL) {
+    const baseUrl = process.env.BACKEND_URL.replace(/\/$/, '');
+    return `${baseUrl}/${relativePath.replace(/\\/g, '/')}`;
+  }
   const protocol = req.protocol || 'http';
   const host = req.get('host') || 'localhost:5000';
   return `${protocol}://${host}/${relativePath.replace(/\\/g, '/')}`;
+};
+
+// Helper to upload a file to ImageKit or fallback to server URL
+const uploadFileToCloudOrLocal = async (file, folder, req) => {
+  const relativePath = path.relative(path.join(__dirname, '..'), file.path);
+  let url = getFileUrl(req, relativePath);
+
+  if (imagekit) {
+    try {
+      const buffer = fs.readFileSync(file.path);
+      const uploadFn = (imagekit.files?.upload ? imagekit.files.upload.bind(imagekit.files) : imagekit.upload.bind(imagekit));
+      const uploaded = await uploadFn({
+        file: buffer.toString('base64'),
+        fileName: file.filename,
+        folder: `/upper-store/${folder}`,
+      });
+      if (uploaded?.url) {
+        url = uploaded.url;
+        console.log(`☁️ Uploaded to ImageKit (${folder}): ${url}`);
+      }
+    } catch (ikErr) {
+      console.warn(`⚠️ ImageKit upload failed for ${file.originalname}: ${ikErr.message}. Using fallback: ${url}`);
+    }
+  } else {
+    console.log(`📁 Saved locally (${folder}): ${url}`);
+  }
+  return url;
+};
+
+// Helper to process package file upload (prefers GitHub Release for large files)
+const handlePackageFileUpload = async (apkFile, title, version, description, req) => {
+  // 1. Try uploading to GitHub Release
+  const ghUrl = await uploadToGitHubRelease({
+    filePath: apkFile.path,
+    fileName: apkFile.originalname || apkFile.filename,
+    version,
+    title,
+    description,
+  });
+
+  if (ghUrl) {
+    return ghUrl;
+  }
+
+  // 2. Fallback to ImageKit or Local
+  return await uploadFileToCloudOrLocal(apkFile, 'apks', req);
 };
 
 // @desc    Get all products
@@ -71,22 +123,7 @@ const createProduct = async (req, res) => {
     // Handle up to 3 Screenshot Images upload
     const imgFiles = req.files?.images || req.files?.image || [];
     for (const imgFile of imgFiles) {
-      const relativePath = path.relative(path.join(__dirname, '..'), imgFile.path);
-      let url = getFileUrl(req, relativePath);
-
-      if (imagekit) {
-        try {
-          const buffer = fs.readFileSync(imgFile.path);
-          const uploaded = await imagekit.upload({
-            file: buffer.toString('base64'),
-            fileName: imgFile.filename,
-            folder: '/upper-store/images',
-          });
-          if (uploaded?.url) url = uploaded.url;
-        } catch (ikErr) {
-          console.warn('ImageKit image upload warning:', ikErr.message);
-        }
-      }
+      const url = await uploadFileToCloudOrLocal(imgFile, 'images', req);
       imageUrls.push(url);
     }
     const imageUrl = imageUrls[0] || '';
@@ -94,43 +131,13 @@ const createProduct = async (req, res) => {
     // Handle Logo / Icon upload
     if (req.files?.logo) {
       const logoFile = req.files.logo[0];
-      const relativePath = path.relative(path.join(__dirname, '..'), logoFile.path);
-      logoUrl = getFileUrl(req, relativePath);
-
-      if (imagekit) {
-        try {
-          const buffer = fs.readFileSync(logoFile.path);
-          const uploaded = await imagekit.upload({
-            file: buffer.toString('base64'),
-            fileName: logoFile.filename,
-            folder: '/upper-store/logos',
-          });
-          if (uploaded?.url) logoUrl = uploaded.url;
-        } catch (ikErr) {
-          console.warn('ImageKit logo upload warning:', ikErr.message);
-        }
-      }
+      logoUrl = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
     }
 
     // Handle APK / Package upload
     if (req.files?.apk) {
       const apkFile = req.files.apk[0];
-      const relativePath = path.relative(path.join(__dirname, '..'), apkFile.path);
-      apkUrl = getFileUrl(req, relativePath);
-
-      if (imagekit && apkFile.size <= 25 * 1024 * 1024) {
-        try {
-          const buffer = fs.readFileSync(apkFile.path);
-          const uploaded = await imagekit.upload({
-            file: buffer.toString('base64'),
-            fileName: apkFile.filename,
-            folder: '/upper-store/apks',
-          });
-          if (uploaded?.url) apkUrl = uploaded.url;
-        } catch (ikErr) {
-          console.warn('ImageKit APK upload warning (using local fallback):', ikErr.message);
-        }
-      }
+      apkUrl = await handlePackageFileUpload(apkFile, title, version, description, req);
     }
 
     const productData = {
@@ -165,6 +172,7 @@ const updateProduct = async (req, res) => {
     const doc = await docRef.get();
     if (!doc.exists) return res.status(404).json({ message: 'Product not found.' });
 
+    const existingData = doc.data();
     const { title, category, description, price, version, releaseNotes } = req.body;
 
     const updatedData = {};
@@ -180,22 +188,7 @@ const updateProduct = async (req, res) => {
     if (imgFiles.length > 0) {
       let imageUrls = [];
       for (const imgFile of imgFiles) {
-        const relativePath = path.relative(path.join(__dirname, '..'), imgFile.path);
-        let url = getFileUrl(req, relativePath);
-
-        if (imagekit) {
-          try {
-            const buffer = fs.readFileSync(imgFile.path);
-            const uploaded = await imagekit.upload({
-              file: buffer.toString('base64'),
-              fileName: imgFile.filename,
-              folder: '/upper-store/images',
-            });
-            if (uploaded?.url) url = uploaded.url;
-          } catch (ikErr) {
-            console.warn('ImageKit image upload warning:', ikErr.message);
-          }
-        }
+        const url = await uploadFileToCloudOrLocal(imgFile, 'images', req);
         imageUrls.push(url);
       }
       updatedData.image = imageUrls[0];
@@ -205,45 +198,16 @@ const updateProduct = async (req, res) => {
     // Handle logo upload if provided
     if (req.files?.logo) {
       const logoFile = req.files.logo[0];
-      const relativePath = path.relative(path.join(__dirname, '..'), logoFile.path);
-      let logoUrl = getFileUrl(req, relativePath);
-
-      if (imagekit) {
-        try {
-          const buffer = fs.readFileSync(logoFile.path);
-          const uploaded = await imagekit.upload({
-            file: buffer.toString('base64'),
-            fileName: logoFile.filename,
-            folder: '/upper-store/logos',
-          });
-          if (uploaded?.url) logoUrl = uploaded.url;
-        } catch (ikErr) {
-          console.warn('ImageKit logo upload warning:', ikErr.message);
-        }
-      }
-      updatedData.logo = logoUrl;
+      updatedData.logo = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
     }
 
     // Handle binary / apk / exe file upload if provided
     if (req.files?.apk) {
       const apkFile = req.files.apk[0];
-      const relativePath = path.relative(path.join(__dirname, '..'), apkFile.path);
-      let apkUrl = getFileUrl(req, relativePath);
-
-      if (imagekit && apkFile.size <= 25 * 1024 * 1024) {
-        try {
-          const buffer = fs.readFileSync(apkFile.path);
-          const uploaded = await imagekit.upload({
-            file: buffer.toString('base64'),
-            fileName: apkFile.filename,
-            folder: '/upper-store/apks',
-          });
-          if (uploaded?.url) apkUrl = uploaded.url;
-        } catch (ikErr) {
-          console.warn('ImageKit APK/EXE upload warning:', ikErr.message);
-        }
-      }
-      updatedData.apkFile = apkUrl;
+      const prodTitle = title || existingData.title;
+      const prodVersion = version || existingData.version;
+      const prodDesc = description || existingData.description;
+      updatedData.apkFile = await handlePackageFileUpload(apkFile, prodTitle, prodVersion, prodDesc, req);
     }
 
     updatedData.updatedAt = new Date().toISOString();
