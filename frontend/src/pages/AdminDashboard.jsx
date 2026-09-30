@@ -299,7 +299,10 @@ const AdminDashboard = () => {
         
         <div className="nav-actions">
           <button onClick={() => setShowInboxModal(true)} className="inbox-nav-btn" title="View Customer Messages">
-            <span className="inbox-btn-icon">📥</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+            </svg>
             <span>Customer Inbox</span>
             {unreadCount > 0 ? (
               <span className="unread-badge">{unreadCount}</span>
@@ -637,7 +640,13 @@ const AdminDashboard = () => {
           <div className="inbox-modal-card">
             <div className="inbox-modal-header">
               <div className="inbox-header-title">
-                <h3>📥 Customer Messages Inbox</h3>
+                <h3>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
+                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+                    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+                  </svg>
+                  Customer Messages Inbox
+                </h3>
                 <span className="inbox-count-tag">{messages.length} Messages ({unreadCount} Unread)</span>
               </div>
               <button className="inbox-close-btn" onClick={() => setShowInboxModal(false)}>
