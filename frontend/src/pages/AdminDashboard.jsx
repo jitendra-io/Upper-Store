@@ -20,9 +20,16 @@ const AdminDashboard = () => {
   const [version, setVersion] = useState('1.0.0');
   const [description, setDescription] = useState('');
   const [releaseNotes, setReleaseNotes] = useState('');
+  const [directApkUrl, setDirectApkUrl] = useState('');
   const [imageFiles, setImageFiles] = useState([]);
   const [logoFile, setLogoFile] = useState(null);
   const [apkFile, setApkFile] = useState(null);
+
+  // Advanced GitHub Release Settings State
+  const [showGhSettings, setShowGhSettings] = useState(false);
+  const [githubOwner, setGithubOwner] = useState('');
+  const [githubRepo, setGithubRepo] = useState('');
+  const [githubToken, setGithubToken] = useState('');
 
   // UI Feedback
   const [submitting, setSubmitting] = useState(false);
@@ -72,6 +79,7 @@ const AdminDashboard = () => {
     setVersion(p.version || '1.0.0');
     setDescription(p.description || '');
     setReleaseNotes(p.releaseNotes || '');
+    setDirectApkUrl(p.apkFile || '');
     setLogoFile(null);
     setImageFiles([]);
     setApkFile(null);
@@ -90,6 +98,7 @@ const AdminDashboard = () => {
     setVersion('1.0.0');
     setDescription('');
     setReleaseNotes('');
+    setDirectApkUrl('');
     setLogoFile(null);
     setImageFiles([]);
     setApkFile(null);
@@ -111,6 +120,13 @@ const AdminDashboard = () => {
       formData.append('version', version);
       formData.append('description', description);
       formData.append('releaseNotes', releaseNotes);
+      if (directApkUrl) formData.append('directApkUrl', directApkUrl);
+
+      // GitHub custom settings if provided
+      if (githubOwner) formData.append('githubOwner', githubOwner);
+      if (githubRepo) formData.append('githubRepo', githubRepo);
+      if (githubToken) formData.append('githubToken', githubToken);
+
       imageFiles.forEach((file) => formData.append('images', file));
       if (logoFile) formData.append('logo', logoFile);
       if (apkFile) formData.append('apk', apkFile);
@@ -178,10 +194,14 @@ const AdminDashboard = () => {
   const renderFileLink = (p) => {
     if (!p.apkFile) return <span className="no-file">—</span>;
     const fileUrl = p.apkFile.toLowerCase();
+    const isGitHub = fileUrl.includes('github.com');
     let label = 'FILE ⬇';
     let className = 'file-link general-link';
 
-    if (
+    if (isGitHub) {
+      label = 'GitHub Release ⬇';
+      className = 'file-link github-link';
+    } else if (
       fileUrl.endsWith('.exe') ||
       fileUrl.endsWith('.msi') ||
       p.category?.includes('.exe') ||
@@ -235,8 +255,8 @@ const AdminDashboard = () => {
           <div className="stat-value status-online">Firebase Firestore</div>
         </div>
         <div className="stat-card">
-          <div className="stat-title">Storage Provider</div>
-          <div className="stat-value gold-text">ImageKit Cloud</div>
+          <div className="stat-title">Package Storage</div>
+          <div className="stat-value gold-text">GitHub Releases (2GB Max)</div>
         </div>
       </div>
 
@@ -338,6 +358,21 @@ const AdminDashboard = () => {
               ></textarea>
             </div>
 
+            {/* Direct URL OR File Upload for App Package */}
+            <div className="form-group">
+              <label htmlFor="direct-url">Direct Package Download URL (GitHub Release / CDN URL)</label>
+              <input
+                id="direct-url"
+                type="text"
+                placeholder="e.g. https://github.com/YourJITENDRA/Upper-Official/releases/download/v4.0/UpperPlayer_v4.0.apk"
+                value={directApkUrl}
+                onChange={(e) => setDirectApkUrl(e.target.value)}
+              />
+              <span className="file-hint-text">
+                💡 Paste a direct GitHub Release URL above, OR attach a file below to auto-publish to GitHub Releases.
+              </span>
+            </div>
+
             <div className="form-row file-upload-row">
               <div className="form-group">
                 <label htmlFor="logo-file">
@@ -373,7 +408,7 @@ const AdminDashboard = () => {
 
             <div className="form-group">
               <label htmlFor="apk-file">
-                Binary Package File (.apk, .exe, .zip) {editingProduct && <span className="optional-tag">(Optional replace)</span>}
+                Upload Package File (.apk, .exe, .zip) {editingProduct && <span className="optional-tag">(Optional replace)</span>}
               </label>
               <input
                 id="apk-file"
@@ -384,9 +419,54 @@ const AdminDashboard = () => {
               {apkFile && <span className="file-name">Selected: {apkFile.name}</span>}
             </div>
 
+            {/* Custom GitHub Account Release Settings Toggle */}
+            <div className="github-custom-toggle-container">
+              <button
+                type="button"
+                className="gh-toggle-btn"
+                onClick={() => setShowGhSettings(!showGhSettings)}
+              >
+                ⚙️ {showGhSettings ? 'Hide' : 'Configure'} GitHub Release Account (Optional)
+              </button>
+
+              {showGhSettings && (
+                <div className="gh-custom-settings-box">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>GitHub Username / Owner</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. YourJITENDRA"
+                        value={githubOwner}
+                        onChange={(e) => setGithubOwner(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Repository Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Upper-Official"
+                        value={githubRepo}
+                        onChange={(e) => setGithubRepo(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Personal Access Token (PAT Token)</label>
+                    <input
+                      type="password"
+                      placeholder="ghp_..."
+                      value={githubToken}
+                      onChange={(e) => setGithubToken(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button type="submit" className="publish-btn" disabled={submitting}>
               {submitting
-                ? 'Saving Changes...'
+                ? 'Publishing Package...'
                 : editingProduct
                 ? 'Update Product'
                 : 'Publish Product'}

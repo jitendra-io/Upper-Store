@@ -68,6 +68,9 @@ const handlePackageFileUpload = async (apkFile, title, version, description, req
     version,
     title,
     description,
+    customToken: req.body?.githubToken,
+    customOwner: req.body?.githubOwner,
+    customRepo: req.body?.githubRepo,
   });
 
   if (ghUrl) {
@@ -110,7 +113,7 @@ const getProductById = async (req, res) => {
 // @access  Private (Admin)
 const createProduct = async (req, res) => {
   try {
-    const { title, category, description, price, version, releaseNotes } = req.body;
+    const { title, category, description, price, version, releaseNotes, directApkUrl } = req.body;
 
     if (!title || !category || !description) {
       return res.status(400).json({ message: 'Title, category, and description are required.' });
@@ -118,7 +121,7 @@ const createProduct = async (req, res) => {
 
     let imageUrls = [];
     let logoUrl = '';
-    let apkUrl = '';
+    let apkUrl = directApkUrl ? directApkUrl.trim() : '';
 
     // Handle up to 3 Screenshot Images upload
     const imgFiles = req.files?.images || req.files?.image || [];
@@ -134,8 +137,8 @@ const createProduct = async (req, res) => {
       logoUrl = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
     }
 
-    // Handle APK / Package upload
-    if (req.files?.apk) {
+    // Handle APK / Package upload if no direct URL was provided
+    if (!apkUrl && req.files?.apk) {
       const apkFile = req.files.apk[0];
       apkUrl = await handlePackageFileUpload(apkFile, title, version, description, req);
     }
@@ -173,7 +176,7 @@ const updateProduct = async (req, res) => {
     if (!doc.exists) return res.status(404).json({ message: 'Product not found.' });
 
     const existingData = doc.data();
-    const { title, category, description, price, version, releaseNotes } = req.body;
+    const { title, category, description, price, version, releaseNotes, directApkUrl } = req.body;
 
     const updatedData = {};
     if (title !== undefined) updatedData.title = title;
@@ -182,6 +185,9 @@ const updateProduct = async (req, res) => {
     if (price !== undefined) updatedData.price = price;
     if (version !== undefined) updatedData.version = version;
     if (releaseNotes !== undefined) updatedData.releaseNotes = releaseNotes;
+    if (directApkUrl !== undefined && directApkUrl.trim() !== '') {
+      updatedData.apkFile = directApkUrl.trim();
+    }
 
     // Handle screenshot image uploads if provided
     const imgFiles = req.files?.images || req.files?.image || [];
