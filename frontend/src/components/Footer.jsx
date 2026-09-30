@@ -33,7 +33,7 @@ const Footer = () => {
           <div className="footer-column">
             <h4>Support</h4>
             <ul>
-              <li><Link to="/contact">Help & FAQ</Link></li>
+              <li><Link to="/faq">Help & FAQ</Link></li>
               <li>
                 <button type="button" onClick={() => setActiveModal('advisories')} className="footer-modal-trigger">
                   Advisories

@@ -7,6 +7,7 @@ import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import Faq from './pages/Faq';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Footer from './components/Footer';
@@ -30,8 +31,8 @@ function AppContent() {
     return () => window.removeEventListener('modalToggle', handleModalToggle);
   }, []);
 
-  const isHome = location.pathname === '/';
   const isProducts = location.pathname === '/products';
+  const showFullFooter = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/faq';
 
   return (
     <div className="app-container">
@@ -43,10 +44,11 @@ function AppContent() {
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/faq" element={<Faq />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
-      {isHome && <Footer />}
+      {showFullFooter && <Footer />}
       {isProducts && !modalOpen && <MiniFooter />}
     </div>
   );
