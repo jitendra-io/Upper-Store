@@ -49,6 +49,13 @@ const uploadFileToCloudOrLocal = async (file, folder, req) => {
       if (uploaded?.url) {
         url = uploaded.url;
         console.log(`☁️ Uploaded to ImageKit (${folder}): ${url}`);
+
+        // Remove local temporary staging file so it is not stored locally
+        try {
+          if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        } catch (unlinkErr) {
+          console.warn(`Note: Could not delete local temp file ${file.path}`);
+        }
       }
     } catch (ikErr) {
       console.warn(`⚠️ ImageKit upload failed for ${file.originalname}: ${ikErr.message}. Using fallback: ${url}`);
