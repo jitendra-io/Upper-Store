@@ -39,6 +39,16 @@ const Contact = () => {
     }
   };
 
+  const handleReset = () => {
+    setForm({ name: '', email: '', message: '' });
+    setSent(false);
+    setErrorMsg('');
+  };
+
+  const handleRefreshPage = () => {
+    window.location.reload();
+  };
+
   return (
     <div className="contact-container" style={{ zIndex: 1, position: 'relative' }}>
       <header className="contact-header">
@@ -47,14 +57,44 @@ const Contact = () => {
       </header>
 
       <div className="contact-card">
+        <div className="contact-card-top-bar">
+          <span className="contact-card-title">Direct Messaging</span>
+          <button 
+            type="button" 
+            onClick={handleRefreshPage} 
+            className="contact-page-refresh-btn" 
+            title="Refresh Contact Page"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            <span>Refresh</span>
+          </button>
+        </div>
+
         {sent ? (
           <div className="success-message">
-            <span>✅</span>
-            <h3>Message Sent!</h3>
+            <div className="success-icon-badge">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <h3>Message Sent Successfully!</h3>
             <p>Thanks for reaching out. We'll get back to you shortly.</p>
+            
+            <button onClick={handleReset} className="reset-form-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+              </svg>
+              <span>Send Another Message</span>
+            </button>
           </div>
         ) : (
           <form className="contact-form" onSubmit={handleSubmit}>
+            {errorMsg && <div className="contact-error-banner">{errorMsg}</div>}
             <div className="form-group">
               <label htmlFor="name">Full Name</label>
               <input
@@ -91,7 +131,9 @@ const Contact = () => {
                 required
               />
             </div>
-            <button type="submit" className="submit-btn">Send Message</button>
+            <button type="submit" className="submit-btn" disabled={submitting}>
+              {submitting ? 'Sending...' : 'Send Message'}
+            </button>
           </form>
         )}
       </div>
