@@ -32,8 +32,8 @@ function AppContent() {
     return () => window.removeEventListener('modalToggle', handleModalToggle);
   }, []);
 
-  const isProducts = location.pathname === '/products';
-  const showFullFooter = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/faq' || location.pathname === '/blog';
+  const isAdmin = location.pathname.startsWith('/admin');
+  const showFullFooter = !isAdmin && !modalOpen;
 
   return (
     <div className="app-container">
@@ -51,7 +51,6 @@ function AppContent() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
       {showFullFooter && <Footer />}
-      {isProducts && !modalOpen && <MiniFooter />}
     </div>
   );
 }
