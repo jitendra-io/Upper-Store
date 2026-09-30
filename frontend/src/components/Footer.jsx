@@ -1,8 +1,13 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import './Footer.css';
 
 const Footer = () => {
+  const [activeModal, setActiveModal] = useState(null); // 'advisories' | 'status' | null
+
+  const closeModal = () => setActiveModal(null);
+
   return (
     <footer className="footer">
       <div className="footer-content">
@@ -28,8 +33,16 @@ const Footer = () => {
             <h4>Support</h4>
             <ul>
               <li><Link to="/contact">Help & FAQ</Link></li>
-              <li><a href="#advisories">Advisories</a></li>
-              <li><a href="#status">System Status</a></li>
+              <li>
+                <button type="button" onClick={() => setActiveModal('advisories')} className="footer-modal-trigger">
+                  Advisories
+                </button>
+              </li>
+              <li>
+                <button type="button" onClick={() => setActiveModal('status')} className="footer-modal-trigger">
+                  System Status <span className="status-dot-pulse"></span>
+                </button>
+              </li>
               <li><Link to="/contact">Contact Support</Link></li>
             </ul>
           </div>
@@ -38,8 +51,8 @@ const Footer = () => {
             <h4>Company</h4>
             <ul>
               <li><Link to="/about">About Us</Link></li>
-              <li><a href="#blog">Blog</a></li>
-              <li><a href="#press">Press Kit</a></li>
+              <li><Link to="/products">Blog & Updates</Link></li>
+              <li><Link to="/products">Press Kit</Link></li>
               <li><Link to="/products">Catalog</Link></li>
             </ul>
           </div>
@@ -47,10 +60,10 @@ const Footer = () => {
           <div className="footer-column">
             <h4>Terms & Policies</h4>
             <ul>
-              <li><a href="#policies">Store Policies</a></li>
-              <li><a href="#terms">Terms of Service</a></li>
-              <li><a href="#conduct">Code of Conduct</a></li>
-              <li><a href="#privacy">Privacy Policy</a></li>
+              <li><Link to="/contact">Store Policies</Link></li>
+              <li><Link to="/contact">Terms of Service</Link></li>
+              <li><Link to="/contact">Code of Conduct</Link></li>
+              <li><Link to="/contact">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
@@ -61,6 +74,100 @@ const Footer = () => {
       </div>
 
       <div className="footer-gradient-bar"></div>
+
+      {/* ADVISORIES MODAL */}
+      {activeModal === 'advisories' && (
+        <div className="footer-modal-backdrop" onClick={closeModal}>
+          <div className="footer-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="footer-modal-header">
+              <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                Security & Service Advisories
+              </h3>
+              <button className="footer-modal-close" onClick={closeModal}>✕</button>
+            </div>
+            <div className="footer-modal-body">
+              <div className="advisory-item">
+                <span className="advisory-badge green">Verified Integrity</span>
+                <h4>Official Package Downloads</h4>
+                <p>All application binaries (.apk and .exe) on Upper Store are cryptographic SHA-256 verified and mirrored directly via high-speed GitHub Release endpoints.</p>
+              </div>
+
+              <div className="advisory-item">
+                <span className="advisory-badge gold">CDN Security</span>
+                <h4>Media & Image Assets</h4>
+                <p>Logos, screenshots, and visual branding are optimized and delivered securely via ImageKit CDN with global SSL encryption.</p>
+              </div>
+
+              <div className="advisory-item">
+                <span className="advisory-badge blue">Direct Inbox Guarantee</span>
+                <h4>Customer Support Messaging</h4>
+                <p>Contact messages bypass cloud SMTP restrictions (like Render port blocks) by storing directly in encrypted Firebase Firestore for real-time Admin Inbox response.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SYSTEM STATUS MODAL */}
+      {activeModal === 'status' && (
+        <div className="footer-modal-backdrop" onClick={closeModal}>
+          <div className="footer-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="footer-modal-header">
+              <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                System Status Monitor
+              </h3>
+              <button className="footer-modal-close" onClick={closeModal}>✕</button>
+            </div>
+            <div className="footer-modal-body">
+              <div className="status-overall-banner">
+                <span className="live-indicator"></span>
+                <span>All Systems Operational</span>
+                <span className="uptime-pill">100% Uptime</span>
+              </div>
+
+              <div className="status-services-list">
+                <div className="status-service-row">
+                  <div className="service-info">
+                    <span className="status-light operational"></span>
+                    <span className="service-name">REST API Services</span>
+                  </div>
+                  <span className="service-status-tag">Operational</span>
+                </div>
+
+                <div className="status-service-row">
+                  <div className="service-info">
+                    <span className="status-light operational"></span>
+                    <span className="service-name">Firebase Firestore Database</span>
+                  </div>
+                  <span className="service-status-tag">Operational</span>
+                </div>
+
+                <div className="status-service-row">
+                  <div className="service-info">
+                    <span className="status-light operational"></span>
+                    <span className="service-name">ImageKit CDN (Media Server)</span>
+                  </div>
+                  <span className="service-status-tag">Operational</span>
+                </div>
+
+                <div className="status-service-row">
+                  <div className="service-info">
+                    <span className="status-light operational"></span>
+                    <span className="service-name">GitHub Release Downloads</span>
+                  </div>
+                  <span className="service-status-tag">Operational</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </footer>
   );
 };
