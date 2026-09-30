@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import './Footer.css';
@@ -75,8 +76,8 @@ const Footer = () => {
 
       <div className="footer-gradient-bar"></div>
 
-      {/* ADVISORIES MODAL */}
-      {activeModal === 'advisories' && (
+      {/* ADVISORIES MODAL PORTAL */}
+      {activeModal === 'advisories' && createPortal(
         <div className="footer-modal-backdrop" onClick={closeModal}>
           <div className="footer-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="footer-modal-header">
@@ -108,11 +109,12 @@ const Footer = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* SYSTEM STATUS MODAL */}
-      {activeModal === 'status' && (
+      {/* SYSTEM STATUS MODAL PORTAL */}
+      {activeModal === 'status' && createPortal(
         <div className="footer-modal-backdrop" onClick={closeModal}>
           <div className="footer-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="footer-modal-header">
@@ -166,7 +168,8 @@ const Footer = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </footer>
   );
