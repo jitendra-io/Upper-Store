@@ -7,6 +7,10 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
   const closeMenu = () => setMenuOpen(false);
 
   return (
