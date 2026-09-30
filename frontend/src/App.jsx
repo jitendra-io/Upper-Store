@@ -8,6 +8,7 @@ import ProductDetail from './pages/ProductDetail';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Faq from './pages/Faq';
+import Blog from './pages/Blog';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Footer from './components/Footer';
@@ -32,7 +33,7 @@ function AppContent() {
   }, []);
 
   const isProducts = location.pathname === '/products';
-  const showFullFooter = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/faq';
+  const showFullFooter = location.pathname === '/' || location.pathname === '/about' || location.pathname === '/contact' || location.pathname === '/faq' || location.pathname === '/blog';
 
   return (
     <div className="app-container">
@@ -45,6 +46,7 @@ function AppContent() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/faq" element={<Faq />} />
+        <Route path="/blog" element={<Blog />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
