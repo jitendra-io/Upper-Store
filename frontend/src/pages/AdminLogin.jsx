@@ -40,7 +40,7 @@ const AdminLogin = () => {
           <p>Admin Access</p>
         </div>
 
-        <form className="admin-login-form" onSubmit={handleSubmit}>
+        <form className="admin-login-form" onSubmit={handleSubmit} autoComplete="off">
           {error && <div className="error-banner">{error}</div>}
           <div className="form-group">
             <label htmlFor="admin-username">Username</label>
@@ -51,7 +51,9 @@ const AdminLogin = () => {
               value={form.username}
               onChange={handleChange}
               placeholder="Enter username"
-              autoComplete="username"
+              autoComplete="off"
+              readOnly
+              onFocus={(e) => e.target.removeAttribute('readonly')}
               required
             />
           </div>
@@ -64,7 +66,9 @@ const AdminLogin = () => {
               value={form.password}
               onChange={handleChange}
               placeholder="••••••••"
-              autoComplete="current-password"
+              autoComplete="new-password"
+              readOnly
+              onFocus={(e) => e.target.removeAttribute('readonly')}
               required
             />
           </div>
