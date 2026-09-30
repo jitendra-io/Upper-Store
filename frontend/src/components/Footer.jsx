@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
@@ -6,6 +6,17 @@ import './Footer.css';
 
 const Footer = () => {
   const [activeModal, setActiveModal] = useState(null); // 'advisories' | 'status' | null
+
+  useEffect(() => {
+    if (activeModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [activeModal]);
 
   const closeModal = () => setActiveModal(null);
 

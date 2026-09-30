@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Blog.css';
 
 const BLOG_POSTS = [
@@ -100,6 +100,17 @@ const CATEGORIES = ['All', 'Release Announcements', 'Tech & Development', 'Secur
 const Blog = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeArticle, setActiveArticle] = useState(null);
+
+  useEffect(() => {
+    if (activeArticle) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [activeArticle]);
 
   const featuredPost = BLOG_POSTS.find((p) => p.featured) || BLOG_POSTS[0];
   const regularPosts = BLOG_POSTS.filter((p) => {

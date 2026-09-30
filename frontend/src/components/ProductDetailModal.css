@@ -4,13 +4,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.82);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(10px);
-  z-index: 9999;
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 5rem 1rem 2rem;
   font-family: 'Outfit', sans-serif;
   color: #e0e0e0;
 }
@@ -18,8 +18,8 @@
 .modal-card-container {
   position: relative;
   width: 100%;
-  max-width: 540px;
-  max-height: 82vh;
+  max-width: 520px;
+  max-height: 75vh;
   overflow-y: auto;
   background: rgba(20, 20, 24, 0.96);
   border: 1px solid rgba(212, 175, 55, 0.35);

@@ -176,13 +176,13 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(10px);
   z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 5rem 1.5rem 2rem;
 }
 
 .footer-modal-card {
@@ -190,7 +190,10 @@
   border: 1px solid rgba(212, 175, 55, 0.35);
   border-radius: 18px;
   width: 100%;
-  max-width: 580px;
+  max-width: 560px;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(212, 175, 55, 0.15);
   overflow: hidden;
   animation: footerModalFade 0.25s ease-out;

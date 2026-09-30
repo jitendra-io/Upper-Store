@@ -42,6 +42,17 @@ const AdminDashboard = () => {
   const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
+    if (showInboxModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showInboxModal]);
+
+  useEffect(() => {
     const savedToken = localStorage.getItem('adminToken');
     if (!savedToken) {
       navigate('/admin');
