@@ -23,57 +23,7 @@
   color: var(--color-text-secondary, #aaa);
   font-size: 1.1rem;
   max-width: 600px;
-  margin: 0 auto 2rem;
-}
-
-/* Search Box */
-.faq-search-box {
-  position: relative;
-  max-width: 580px;
   margin: 0 auto;
-}
-
-.faq-search-box .search-icon {
-  position: absolute;
-  left: 1.25rem;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.faq-search-box input {
-  width: 100%;
-  background: rgba(20, 20, 24, 0.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  border-radius: 50px;
-  padding: 1rem 3rem 1rem 3.25rem;
-  font-size: 1rem;
-  color: #ffffff;
-  font-family: 'Outfit', sans-serif;
-  outline: none;
-  transition: all 0.3s ease;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-}
-
-.faq-search-box input:focus {
-  border-color: #d4af37;
-  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.25);
-}
-
-.clear-search-btn {
-  position: absolute;
-  right: 1.25rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 1.1rem;
-  cursor: pointer;
-}
-
-.clear-search-btn:hover {
-  color: #fff;
 }
 
 /* Category Filter Tabs */

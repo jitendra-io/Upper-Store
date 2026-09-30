@@ -44,7 +44,6 @@ const FAQ_DATA = [
 const CATEGORIES = ['All', 'Installation & Downloads', 'Security & Integrity', 'General', 'Developer & Support'];
 
 const Faq = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [openItems, setOpenItems] = useState({ '1': true }); // First item open by default
 
@@ -56,10 +55,7 @@ const Faq = () => {
   };
 
   const filteredFaqs = FAQ_DATA.filter((item) => {
-    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesSearch = item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return selectedCategory === 'All' || item.category === selectedCategory;
   });
 
   return (
@@ -67,23 +63,6 @@ const Faq = () => {
       <header className="faq-header">
         <h1>Help & <span className="highlight">FAQ</span></h1>
         <p>Find answers to common questions about downloads, installation, security, and developer support.</p>
-        
-        {/* Search Bar */}
-        <div className="faq-search-box">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="search-icon">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search questions or keywords..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="clear-search-btn">✕</button>
-          )}
-        </div>
       </header>
 
       {/* Category Filter Tabs */}
