@@ -6,6 +6,21 @@
   position: relative;
   font-family: 'Outfit', sans-serif;
   color: #e0e0e0;
+  overflow-x: hidden;
+}
+
+/* Reduced Dashboard Body by 25% (Nav Bar remains 100% full scale) */
+.admin-dashboard-body {
+  zoom: 0.75;
+}
+
+@supports not (zoom: 0.75) {
+  .admin-dashboard-body {
+    transform: scale(0.75);
+    transform-origin: top center;
+    width: 133.33%;
+    margin-left: -16.66%;
+  }
 }
 
 /* Header Bar */
@@ -290,9 +305,15 @@
 
 /* Inventory Table */
 .products-table-wrapper {
-  overflow-x: auto;
+  overflow-x: hidden;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.products-table-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .products-table {
@@ -303,7 +324,7 @@
 }
 
 .products-table th {
-  padding: 0.9rem 1rem;
+  padding: 0.8rem 0.65rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   color: #888;
   font-weight: 600;
@@ -315,7 +336,7 @@
 }
 
 .products-table td {
-  padding: 0.9rem 1rem;
+  padding: 0.8rem 0.65rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   vertical-align: middle;
   white-space: nowrap;
@@ -328,8 +349,7 @@
 .product-info-cell {
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  min-width: 200px;
+  gap: 0.65rem;
 }
 
 .table-thumb {

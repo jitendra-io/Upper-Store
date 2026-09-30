@@ -226,7 +226,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard-container">
-      {/* Header Bar */}
+      {/* Header Bar (Full Scale) */}
       <header className="admin-nav">
         <div className="nav-brand">
           <h2>
@@ -244,7 +244,9 @@ const AdminDashboard = () => {
         </button>
       </header>
 
-      {/* Stats Bar */}
+      {/* Dashboard Body Content (Reduced by 25%) */}
+      <div className="admin-dashboard-body">
+        {/* Stats Bar */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-title">Total Live Products</div>
@@ -546,6 +548,7 @@ const AdminDashboard = () => {
             </div>
           )}
         </div>
+      </div>
       </div>
     </div>
   );
