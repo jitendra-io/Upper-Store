@@ -96,10 +96,26 @@ const ProductDetailModal = ({ product, onClose }) => {
           {/* Animated Download Button */}
           <div className="modal-actions">
             {product.apkFile ? (
-              <a href={product.apkFile} target="_blank" rel="noopener noreferrer" download className="modal-download-link">
+              <a
+                href={product.apkFile}
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="modal-download-link"
+              >
                 <button className="modal-cta-button animated-download-btn">
-                  <span className="btn-icon">⬇</span>
-                  <span className="btn-text">Download Package / APK</span>
+                  <span className="btn-icon">
+                    {product.apkFile.toLowerCase().endsWith('.exe') || product.category?.includes('.exe') || product.category?.includes('Windows')
+                      ? '💻'
+                      : '📱'}
+                  </span>
+                  <span className="btn-text">
+                    {product.apkFile.toLowerCase().endsWith('.exe') || product.category?.includes('.exe') || product.category?.includes('Windows')
+                      ? 'Download Windows App (.exe)'
+                      : product.apkFile.toLowerCase().endsWith('.zip')
+                      ? 'Download Zip Package (.zip)'
+                      : 'Download Android App (.apk)'}
+                  </span>
                   <span className="btn-shine"></span>
                 </button>
               </a>
