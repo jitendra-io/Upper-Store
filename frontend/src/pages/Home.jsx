@@ -45,7 +45,7 @@ const FEATURED_FALLBACKS = [
 ];
 
 const Home = () => {
-  const [featuredProducts] = useState(FEATURED_FALLBACKS);
+  const [featuredProducts, setFeaturedProducts] = useState(FEATURED_FALLBACKS);
   const [totalProductsCount, setTotalProductsCount] = useState(4);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [reviewModalProduct, setReviewModalProduct] = useState(null);
@@ -58,20 +58,24 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    const fetchCatalogCount = async () => {
+    const fetchCatalogProducts = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/products`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {
             setTotalProductsCount(data.length);
+            setFeaturedProducts(data.slice(0, 3));
+          } else {
+            setFeaturedProducts(FEATURED_FALLBACKS);
           }
         }
       } catch (err) {
         setTotalProductsCount(4);
+        setFeaturedProducts(FEATURED_FALLBACKS);
       }
     };
-    fetchCatalogCount();
+    fetchCatalogProducts();
   }, []);
 
   return (
