@@ -1,19 +1,278 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import logoImg from '../assets/logo.jpg';
+import ProductDetailModal from '../components/ProductDetailModal';
+import './Home.css';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const FEATURED_FALLBACKS = [
+  {
+    id: 'feat-1',
+    title: 'Upper Store Mobile Client',
+    category: 'Mobile App',
+    version: '1.4.2',
+    description: 'Official Android application for browsing, updating, and managing your software assets on the go.',
+    image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=600',
+    price: 'Free',
+    apkFile: 'https://github.com/YourJITENDRA/Upper-Official/releases',
+    features: ['Instant Push Alerts', 'SHA-256 Verified Downloads', 'Dark Mode UI']
+  },
+  {
+    id: 'feat-2',
+    title: 'Premium Web UI Kit',
+    category: 'Design Asset',
+    version: '2.1.0',
+    description: 'A dark-mode first, luxury glassmorphism UI system engineered for modern web applications.',
+    image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=600',
+    price: '$29',
+    features: ['React & CSS Modules', 'Figma Source Tokens', 'Responsive Grids']
+  },
+  {
+    id: 'feat-3',
+    title: 'React Canvas Animation Engine',
+    category: 'Software Tool',
+    version: '3.0.1',
+    description: 'High-performance interactive particle canvas engine built for silky smooth 60fps web experiences.',
+    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=600',
+    price: '$15',
+    features: ['60 FPS Hardware Accelerated', 'Zero External Dependencies', 'Customizable Emitters']
+  }
+];
 
 const Home = () => {
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/products`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setFeaturedProducts(data.slice(0, 3));
+          } else {
+            setFeaturedProducts(FEATURED_FALLBACKS);
+          }
+        } else {
+          setFeaturedProducts(FEATURED_FALLBACKS);
+        }
+      } catch (err) {
+        setFeaturedProducts(FEATURED_FALLBACKS);
+      }
+    };
+    fetchFeatured();
+  }, []);
+
   return (
-    <main className="hero" style={{ zIndex: 1, position: 'relative' }}>
-      <h1 className="hero-title">
-        Upper <span className="highlight">Store</span>
-      </h1>
-      <p className="hero-subtitle">
-        Discover exclusive tools, APKs, and digital assets. Built with unparalleled elegance.
-      </p>
+    <div className="home-wrapper" style={{ zIndex: 1, position: 'relative' }}>
       
-      <Link to="/products">
-        <button className="cta-button">Explore Now</button>
-      </Link>
-    </main>
+      {/* HERO SECTION */}
+      <section className="home-hero">
+        <div className="hero-badge-pill">
+          <span className="hero-badge-dot"></span>
+          Official Software & Developer Asset Platform
+        </div>
+        
+        <h1 className="home-hero-title">
+          Empowering Creators with <br />
+          <span className="gold-gradient-text">Premier Software & Assets</span>
+        </h1>
+        
+        <p className="home-hero-desc">
+          Explore cryptographic SHA-256 verified applications, desktop utilities, developer tools, and luxury design systems—crafted with precision for modern creators.
+        </p>
+        
+        <div className="home-hero-actions">
+          <Link to="/products" className="home-btn-primary">
+            Explore Catalog
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '8px' }}>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </Link>
+          <Link to="/about" className="home-btn-secondary">
+            Meet the Founder
+          </Link>
+        </div>
+
+        {/* METRICS STATS RIBBON */}
+        <div className="home-stats-ribbon">
+          <div className="stat-card">
+            <span className="stat-number">100%</span>
+            <span className="stat-label">Verified Releases</span>
+          </div>
+          <div className="stat-divider"></div>
+          <div className="stat-card">
+            <span className="stat-number">99.9%</span>
+            <span className="stat-label">System Uptime</span>
+          </div>
+          <div className="stat-divider"></div>
+          <div className="stat-card">
+            <span className="stat-number">ImageKit</span>
+            <span className="stat-label">Global CDN Engine</span>
+          </div>
+          <div className="stat-divider"></div>
+          <div className="stat-card">
+            <span className="stat-number">SHA-256</span>
+            <span className="stat-label">Package Protection</span>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED PRODUCTS SPOTLIGHT */}
+      <section className="home-section featured-section">
+        <div className="section-header-center">
+          <span className="section-eyebrow">Curated Selection</span>
+          <h2>Featured <span className="gold-gradient-text">Product Spotlight</span></h2>
+          <p>Hand-picked software releases and essential digital tools ready for instant deployment.</p>
+        </div>
+
+        <div className="featured-grid">
+          {featuredProducts.map((prod) => (
+            <div key={prod.id} className="featured-card">
+              <div className="featured-card-media" onClick={() => setSelectedProduct(prod)}>
+                <img src={prod.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600'} alt={prod.title} />
+                <span className="featured-category-badge">{prod.category}</span>
+              </div>
+              <div className="featured-card-body">
+                <div className="featured-card-title-row">
+                  <h3>{prod.title}</h3>
+                  {prod.version && <span className="featured-version-pill">v{prod.version}</span>}
+                </div>
+                <p>{prod.description}</p>
+                
+                {prod.features && (
+                  <ul className="featured-mini-specs">
+                    {prod.features.slice(0, 2).map((f, idx) => (
+                      <li key={idx}>✓ {f}</li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="featured-card-footer">
+                  <span className="featured-price">{prod.price}</span>
+                  <button className="featured-view-btn" onClick={() => setSelectedProduct(prod)}>
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="section-cta-row">
+          <Link to="/products" className="view-all-link-btn">
+            View Complete Product Catalog (6+ Items) ➔
+          </Link>
+        </div>
+      </section>
+
+      {/* CORE PLATFORM PILLARS */}
+      <section className="home-section pillars-section">
+        <div className="section-header-center">
+          <span className="section-eyebrow">Technical Excellence</span>
+          <h2>Built for Speed, <span className="gold-gradient-text">Security & Elegance</span></h2>
+          <p>Our infrastructure guarantees high availability, cryptographic integrity, and zero latency.</p>
+        </div>
+
+        <div className="pillars-grid">
+          <div className="pillar-card">
+            <div className="pillar-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <h3>High-Speed CDN Mirroring</h3>
+            <p>Visual assets and branding media are optimized dynamically via global ImageKit CDN edge locations for sub-millisecond load times.</p>
+          </div>
+
+          <div className="pillar-card">
+            <div className="pillar-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3>Cryptographic Integrity</h3>
+            <p>Executable installers (.exe & .apk) are mirrored directly via verified GitHub Release tags with cryptographic SHA-256 verification.</p>
+          </div>
+
+          <div className="pillar-card">
+            <div className="pillar-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <h3>Real-Time Cloud Synchronization</h3>
+            <p>Customer inquiries and support messages are synchronized in real time via encrypted Firebase Firestore databases to ensure fast inbox response.</p>
+          </div>
+
+          <div className="pillar-card">
+            <div className="pillar-icon-box">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 8l4 4-4 4M8 12h8"></path>
+              </svg>
+            </div>
+            <h3>Luxury Glassmorphism Aesthetic</h3>
+            <p>Designed with an Antique Gold visual design system, high-contrast dark modes, and subtle interactive micro-animations.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* FOUNDER & BRAND SHOWCASE CARD */}
+      <section className="home-section founder-showcase-section">
+        <div className="founder-banner-card">
+          <div className="founder-banner-content">
+            <span className="founder-pill">Official Founder Profile</span>
+            <h2>Architected by <span className="gold-gradient-text">Jitendra</span></h2>
+            <p>
+              Upper Store was founded by Jitendra (@YourJITENDRA) with the mission of delivering high-performance digital tools, developer utilities, and modern design assets under strict quality control.
+            </p>
+            <div className="founder-banner-actions">
+              <Link to="/about" className="founder-btn-primary">
+                Read Full Story
+              </Link>
+              <Link to="/press" className="founder-btn-secondary">
+                View Official Press Kit
+              </Link>
+            </div>
+          </div>
+          <div className="founder-logo-card">
+            <img src={logoImg} alt="Upper Store Logo" className="founder-card-logo" />
+            <span className="founder-card-brand">UPPER STORE</span>
+            <span className="founder-card-tag">Official Enterprise Signature</span>
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA HERO BANNER */}
+      <section className="home-section cta-banner-section">
+        <div className="cta-banner-box">
+          <h2>Ready to Elevate Your Digital Experience?</h2>
+          <p>Browse our catalog of software applications or reach out to our team for custom enterprise solutions.</p>
+          <div className="cta-banner-buttons">
+            <Link to="/products" className="cta-btn-gold">
+              Explore Products Catalog
+            </Link>
+            <Link to="/contact" className="cta-btn-outline">
+              Contact Support & Licensing
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* PRODUCT DETAIL MODAL */}
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
+    </div>
   );
 };
 
