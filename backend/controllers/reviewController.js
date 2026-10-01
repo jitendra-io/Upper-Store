@@ -144,4 +144,50 @@ const addOrUpdateReview = async (req, res) => {
   }
 };
 
-module.exports = { getProductReviews, addOrUpdateReview };
+// @desc    Delete a review for a product
+// @route   DELETE /api/reviews/:reviewId
+// @access  Public (User owner)
+const deleteReview = async (req, res) => {
+  const { reviewId } = req.params;
+
+  try {
+    const docRef = db.collection('reviews').doc(reviewId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Review not found.' });
+    }
+
+    const reviewData = doc.data();
+    const productId = reviewData.productId;
+
+    await docRef.delete();
+
+    // Recalculate average rating & reviews count for product
+    const allSnapshot = await db.collection('reviews').where('productId', '==', productId).get();
+    const remainingReviews = allSnapshot.docs.map(d => d.data());
+    const totalRatings = remainingReviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+    const averageRating = remainingReviews.length > 0 ? Number((totalRatings / remainingReviews.length).toFixed(1)) : 5.0;
+
+    const productRef = db.collection('products').doc(productId);
+    const prodDoc = await productRef.get();
+    if (prodDoc.exists) {
+      await productRef.update({
+        averageRating,
+        reviewsCount: remainingReviews.length,
+      });
+    }
+
+    res.json({
+      message: 'Review deleted successfully.',
+      productId,
+      averageRating,
+      reviewsCount: remainingReviews.length,
+    });
+  } catch (error) {
+    console.error('Error deleting review:', error);
+    res.status(500).json({ message: 'Failed to delete review.' });
+  }
+};
+
+module.exports = { getProductReviews, addOrUpdateReview, deleteReview };

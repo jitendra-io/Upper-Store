@@ -3,6 +3,15 @@ import './StarRatingBadge.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+const formatCount = (num) => {
+  if (!num) return 0;
+  if (num > 999) {
+    const formatted = (num / 1000).toFixed(1).replace(/\.0$/, '');
+    return `${formatted}k`;
+  }
+  return num;
+};
+
 const StarRatingBadge = ({ productId, initialRating = 5.0, initialCount = 0, onClick }) => {
   const [rating, setRating] = useState(initialRating);
   const [count, setCount] = useState(initialCount);
@@ -55,8 +64,8 @@ const StarRatingBadge = ({ productId, initialRating = 5.0, initialCount = 0, onC
           return (
             <svg
               key={starIdx}
-              width="12"
-              height="12"
+              width="8"
+              height="8"
               viewBox="0 0 24 24"
               className={`star-svg ${starFill}`}
             >
@@ -68,9 +77,10 @@ const StarRatingBadge = ({ productId, initialRating = 5.0, initialCount = 0, onC
         })}
       </div>
       <span className="rating-num">{rating.toFixed(1)}</span>
-      <span className="rating-count">({count})</span>
+      <span className="rating-count">({formatCount(count)})</span>
     </div>
   );
 };
 
 export default StarRatingBadge;
+
