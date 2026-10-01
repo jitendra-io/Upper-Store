@@ -10,6 +10,7 @@ const {
   getAppeals,
   resolveAppeal,
   rejectAppeal,
+  deleteAppeal,
 } = require('../controllers/contactController');
 
 // Public routes
@@ -23,6 +24,7 @@ router.delete('/:id', protectAdmin, deleteMessage);
 router.get('/appeals', protectAdmin, getAppeals);
 router.post('/appeals/:appealId/resolve', protectAdmin, resolveAppeal);
 router.post('/appeals/:appealId/reject', protectAdmin, rejectAppeal);
+router.delete('/appeals/:appealId', protectAdmin, deleteAppeal);
 
 module.exports = router;
 

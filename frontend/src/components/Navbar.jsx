@@ -66,12 +66,36 @@ const Navbar = () => {
   });
   const notifDropdownRef = useRef(null);
 
+  const [flashToast, setFlashToast] = useState(null);
+  const initialFetchRef = useRef(true);
+
   const fetchNotifications = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/notifications`);
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data || []);
+        const newNotifs = data || [];
+        setNotifications(newNotifs);
+
+        if (newNotifs.length > 0) {
+          const latest = newNotifs[0];
+          const toastedIds = JSON.parse(sessionStorage.getItem('upper_toasted_notifications') || '[]');
+
+          if (!toastedIds.includes(latest.id)) {
+            toastedIds.push(latest.id);
+            sessionStorage.setItem('upper_toasted_notifications', JSON.stringify(toastedIds));
+
+            const isRecent = (Date.now() - new Date(latest.createdAt || Date.now()).getTime()) < 5 * 60 * 1000;
+
+            if (!initialFetchRef.current || isRecent) {
+              setFlashToast(latest);
+              setTimeout(() => {
+                setFlashToast(null);
+              }, 3000);
+            }
+          }
+        }
+        initialFetchRef.current = false;
       }
     } catch (err) {
       console.warn('Failed to fetch notifications:', err);
@@ -80,7 +104,7 @@ const Navbar = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 20000);
+    const interval = setInterval(fetchNotifications, 8000);
     return () => clearInterval(interval);
   }, []);
 
@@ -338,6 +362,23 @@ const Navbar = () => {
           )}
         </div>
       </nav>
+
+      {/* FLASHING BLUE NOTIFICATION TOAST (TOP RIGHT CORNER BELOW NAVBAR) */}
+      {flashToast && (
+        <div 
+          className="nav-flash-toast" 
+          onClick={() => {
+            setNotifDropdownOpen(true);
+            setFlashToast(null);
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="toast-bell-icon">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span>New notification: <strong>{flashToast.title}</strong></span>
+        </div>
+      )}
 
       {/* DOWNLOAD HISTORY MODAL */}
       <DownloadHistoryModal

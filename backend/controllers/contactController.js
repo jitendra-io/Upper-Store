@@ -241,6 +241,28 @@ const rejectAppeal = async (req, res) => {
   }
 };
 
+// @desc    Delete appeal (Admin)
+// @route   DELETE /api/contact/appeals/:appealId
+// @access  Private (Admin)
+const deleteAppeal = async (req, res) => {
+  try {
+    const { appealId } = req.params;
+    const appealRef = db.collection('appeals').doc(appealId);
+    const doc = await appealRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Appeal not found.' });
+    }
+
+    await appealRef.delete();
+
+    res.json({ message: 'Appeal record deleted successfully.' });
+  } catch (error) {
+    console.error('Delete appeal error:', error);
+    res.status(500).json({ message: 'Error deleting appeal.' });
+  }
+};
+
 module.exports = {
   createMessage,
   getMessages,
@@ -250,5 +272,6 @@ module.exports = {
   getAppeals,
   resolveAppeal,
   rejectAppeal,
+  deleteAppeal,
 };
 
