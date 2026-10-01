@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import ProductDetailModal from '../components/ProductDetailModal';
+import ProductReviewsModal from '../components/ProductReviewsModal';
+import StarRatingBadge from '../components/StarRatingBadge';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Home.css';
 
@@ -45,6 +47,7 @@ const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [totalProductsCount, setTotalProductsCount] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [reviewModalProduct, setReviewModalProduct] = useState(null);
   const [, setRefreshDownloads] = useState(0);
 
   useEffect(() => {
@@ -152,7 +155,16 @@ const Home = () => {
               <div className="featured-card-body">
                 <div className="featured-card-title-row">
                   <h3>{prod.title}</h3>
-                  {prod.version && <span className="featured-version-pill">v{prod.version}</span>}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    {prod.version && <span className="featured-version-pill">v{prod.version}</span>}
+                    {/* Star Rating Badge next to version */}
+                    <StarRatingBadge
+                      productId={prod.id}
+                      initialRating={prod.averageRating || 5.0}
+                      initialCount={prod.reviewsCount || 0}
+                      onClick={() => setReviewModalProduct(prod)}
+                    />
+                  </div>
                 </div>
                 <p>{prod.description}</p>
                 
@@ -280,6 +292,15 @@ const Home = () => {
         <ProductDetailModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
+        />
+      )}
+
+      {/* PRODUCT REVIEWS & USER COMMENTS MODAL */}
+      {reviewModalProduct && (
+        <ProductReviewsModal
+          product={reviewModalProduct}
+          isOpen={!!reviewModalProduct}
+          onClose={() => setReviewModalProduct(null)}
         />
       )}
     </div>

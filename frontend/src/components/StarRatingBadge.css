@@ -1,0 +1,54 @@
+.star-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.star-rating-badge:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #d4af37;
+  transform: translateY(-1px);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.25);
+}
+
+.stars-flex-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5px;
+}
+
+.star-svg {
+  stroke: #d4af37;
+  stroke-width: 1.5px;
+}
+
+.star-svg.full {
+  fill: #d4af37;
+}
+
+.star-svg.half {
+  fill: url(#halfStarGradient);
+}
+
+.star-svg.empty {
+  fill: rgba(255, 255, 255, 0.1);
+  stroke: rgba(212, 175, 55, 0.5);
+}
+
+.rating-num {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.rating-count {
+  font-size: 0.68rem;
+  color: #aaa;
+}

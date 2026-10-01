@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import ProductDetailModal from '../components/ProductDetailModal';
+import ProductReviewsModal from '../components/ProductReviewsModal';
+import StarRatingBadge from '../components/StarRatingBadge';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Products.css';
 
@@ -51,6 +53,7 @@ const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [reviewModalProduct, setReviewModalProduct] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
@@ -215,7 +218,16 @@ const Products = () => {
                     )}
                     <div>
                       <h3>{product.title}</h3>
-                      {product.version && <span className="catalog-ver-tag">v{product.version}</span>}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
+                        {product.version && <span className="catalog-ver-tag">v{product.version}</span>}
+                        {/* 5-Star Rating Badge next to version tag */}
+                        <StarRatingBadge
+                          productId={product.id}
+                          initialRating={product.averageRating || 5.0}
+                          initialCount={product.reviewsCount || 0}
+                          onClick={() => setReviewModalProduct(product)}
+                        />
+                      </div>
                     </div>
                   </div>
                   <p>{product.description}</p>
@@ -247,6 +259,15 @@ const Products = () => {
         <ProductDetailModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
+        />
+      )}
+
+      {/* Product Reviews & User Comments Modal Popup (Without Background Blur) */}
+      {reviewModalProduct && (
+        <ProductReviewsModal
+          product={reviewModalProduct}
+          isOpen={!!reviewModalProduct}
+          onClose={() => setReviewModalProduct(null)}
         />
       )}
     </div>
