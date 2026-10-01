@@ -213,14 +213,14 @@ const Press = () => {
         <div className="leadership-grid">
           <div className="leader-card">
             <div className="leader-avatar-frame">
-              <img src={logoImg} alt="Jitendra - Founder" className="leader-avatar-img" />
+              <img src={logoImg} alt="Upper Engineering Team" className="leader-avatar-img" />
             </div>
             <div className="leader-bio-details">
-              <span className="leader-role-tag">Founder & Lead Engineer</span>
-              <h3>Jitendra</h3>
-              <span className="leader-handle">@YourJITENDRA</span>
+              <span className="leader-role-tag">Engineering & Platform Team</span>
+              <h3>Upper Engineering Team</h3>
+              <span className="leader-handle">@UpperOfficial</span>
               <p>
-                Jitendra is the Founder and Lead System Architect of Upper Store. With expertise in modern full-stack web applications, cloud API design, and digital distribution infrastructure, Jitendra spearheaded the development of Upper Store’s zero-latency package mirror pipeline and real-time database messaging architecture.
+                The Upper Engineering Team oversees digital architecture and package distribution for Upper Store. With expertise in modern full-stack web applications, cloud API design, and digital distribution infrastructure, the team engineered Upper Store’s zero-latency package mirror pipeline and real-time database messaging architecture.
               </p>
             </div>
           </div>

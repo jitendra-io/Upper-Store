@@ -19,7 +19,7 @@ const FEATURED_FALLBACKS = [
     description: 'Official Android application for browsing, updating, and managing your software assets on the go.',
     image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=600',
     price: 'Free',
-    apkFile: 'https://github.com/YourJITENDRA/Upper-Official/releases',
+    apkFile: 'https://github.com/Upper-Official/Store-Releases/releases',
     features: ['Instant Push Alerts', 'SHA-256 Verified Downloads', 'Dark Mode UI']
   },
   {
@@ -45,8 +45,8 @@ const FEATURED_FALLBACKS = [
 ];
 
 const Home = () => {
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [totalProductsCount, setTotalProductsCount] = useState(0);
+  const [featuredProducts] = useState(FEATURED_FALLBACKS);
+  const [totalProductsCount, setTotalProductsCount] = useState(4);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [reviewModalProduct, setReviewModalProduct] = useState(null);
   const [, setRefreshDownloads] = useState(0);
@@ -58,28 +58,20 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    const fetchFeatured = async () => {
+    const fetchCatalogCount = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/products`);
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {
-            setFeaturedProducts(data.slice(0, 3));
             setTotalProductsCount(data.length);
-          } else {
-            setFeaturedProducts(FEATURED_FALLBACKS);
-            setTotalProductsCount(4);
           }
-        } else {
-          setFeaturedProducts(FEATURED_FALLBACKS);
-          setTotalProductsCount(4);
         }
       } catch (err) {
-        setFeaturedProducts(FEATURED_FALLBACKS);
         setTotalProductsCount(4);
       }
     };
-    fetchFeatured();
+    fetchCatalogCount();
   }, []);
 
   return (

@@ -34,7 +34,7 @@ const BLOG_POSTS = [
     category: 'Tech & Development',
     date: 'Sep 29, 2026',
     readTime: '5 min read',
-    author: 'Jitendra (Upper Tech Lead)',
+    author: 'Upper Engineering Team',
     image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=900',
     excerpt: 'How we engineered a real-time database inbox system to bypass free-tier cloud platform SMTP blocks on Render and Vercel.',
     featured: false,

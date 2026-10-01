@@ -7,7 +7,7 @@ const path = require('path');
  */
 const uploadToGitHubRelease = async ({ filePath, fileName, version, title, description, customToken, customOwner, customRepo }) => {
   const token = customToken || process.env.GITHUB_TOKEN;
-  const repoOwner = customOwner || process.env.GITHUB_REPO_OWNER || 'YourJITENDRA';
+  const repoOwner = customOwner || process.env.GITHUB_REPO_OWNER || 'Upper-Official';
   const repoName = customRepo || process.env.GITHUB_REPO_NAME || 'Upper-Official';
 
   if (!token || token.includes('your_github_token')) {

@@ -25,7 +25,7 @@ const FALLBACK_PRODUCTS = [
     description: 'The official mobile client for managing your products and downloads on the go.',
     image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=500',
     price: 'Free',
-    apkFile: 'https://github.com/YourJITENDRA/Upper-Official/releases',
+    apkFile: 'https://github.com/Upper-Official/Store-Releases/releases',
   },
   {
     id: 'demo-3',

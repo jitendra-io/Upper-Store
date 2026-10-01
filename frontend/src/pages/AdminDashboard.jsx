@@ -468,7 +468,7 @@ const AdminDashboard = () => {
                   required
                   value={directApkUrl}
                   onChange={(e) => setDirectApkUrl(e.target.value)}
-                  placeholder="https://github.com/YourJITENDRA/Upper-Official/releases/download/v1.0.0/app.apk"
+                  placeholder="https://github.com/Upper-Official/Store-Releases/releases/download/v1.0.0/app.apk"
                 />
                 <span className="field-hint">All product downloads are served directly from GitHub Releases.</span>
               </div>

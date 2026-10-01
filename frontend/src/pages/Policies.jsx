@@ -123,7 +123,7 @@ const POLICIES_DATA = {
       },
       {
         title: '2. User Misuse & Zero Financial Liability Shield',
-        content: `Upper Store, its founder Jitendra (@YourJITENDRA), operators, and developers hold ZERO financial, legal, or monetary liability under any circumstances for any user's misuse, modification, misrepresentation, or misleading redistribution of our software or products.
+        content: `Upper Store, its platform operators, creators, and developers hold ZERO financial, legal, or monetary liability under any circumstances for any user's misuse, modification, misrepresentation, or misleading redistribution of our software or products.
 The user bears 100% full personal, legal, and financial responsibility for their actions, must provide complete explanation for any misleading activity, and may undergo formal legal procedures. Upper Store will not pay any amount of money or compensation to anyone for any user's misuse of our products.`
       },
       {

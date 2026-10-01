@@ -11,16 +11,38 @@ const createMessage = async (req, res) => {
       return res.status(400).json({ message: 'Name, email, and message are required fields.' });
     }
 
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Check 2-minute rate limit for sending contact messages (120,000 ms)
+    const existingMessages = await db.collection('messages').where('email', '==', cleanEmail).get();
+    if (!existingMessages.empty) {
+      const sorted = existingMessages.docs
+        .map(d => d.data())
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+      const latest = sorted[0];
+      if (latest && latest.createdAt) {
+        const timeDiff = Date.now() - new Date(latest.createdAt).getTime();
+        const TWO_MINUTES_MS = 2 * 60 * 1000;
+        if (timeDiff < TWO_MINUTES_MS) {
+          const secondsRemaining = Math.ceil((TWO_MINUTES_MS - timeDiff) / 1000);
+          return res.status(400).json({
+            message: `Please wait ${secondsRemaining} second(s) before sending another message.`,
+          });
+        }
+      }
+    }
+
     const messageData = {
       name: name.trim(),
-      email: email.trim(),
+      email: cleanEmail,
       message: message.trim(),
       read: false,
       createdAt: new Date().toISOString(),
     };
 
     const docRef = await db.collection('messages').add(messageData);
-    console.log(`📩 New Contact Message received from "${name}" (${email})`);
+    console.log(`📩 New Contact Message received from "${name}" (${cleanEmail})`);
 
     res.status(201).json({
       id: docRef.id,

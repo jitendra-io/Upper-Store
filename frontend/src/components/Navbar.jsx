@@ -184,8 +184,10 @@ const Navbar = () => {
                   <button
                     className="dropdown-logout-btn"
                     onClick={() => {
-                      logout();
-                      closeMenu();
+                      if (window.confirm('Are you sure you want to sign out of your account?')) {
+                        logout();
+                        closeMenu();
+                      }
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
