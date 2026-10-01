@@ -168,17 +168,19 @@ const Policies = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedSection, setCopiedSection] = useState(null);
 
-  // Sync tab with URL hash or default
+  // Sync tab with URL hash or default & scroll page to top
   useEffect(() => {
     const hash = location.hash.replace('#', '');
     if (hash && POLICIES_DATA[hash]) {
       setActiveTab(hash);
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.hash]);
 
   const handleTabChange = (tabKey) => {
     setActiveTab(tabKey);
     navigate(`/policies#${tabKey}`, { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCopyText = (text, idx) => {

@@ -21,10 +21,10 @@ function AppContent() {
   const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Auto scroll to top on every navigation route change
+  // Auto scroll to top on every navigation route, hash, or search change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash, location.search]);
 
   useEffect(() => {
     const handleModalToggle = (e) => {
