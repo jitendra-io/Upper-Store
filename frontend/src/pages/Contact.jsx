@@ -146,7 +146,7 @@ const Contact = () => {
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
-            <h3>{formType === 'appeal' ? 'Ban Appeal Submitted' : 'Message Sent Successfully!'}</h3>
+            <h3>{formType === 'appeal' ? 'Appeal Submitted' : 'Message Sent Successfully!'}</h3>
             <p>{successResponse}</p>
             
             <button onClick={handleReset} className="reset-form-btn">
@@ -218,7 +218,7 @@ const Contact = () => {
             </div>
 
             <button type="submit" className="submit-btn" disabled={submitting}>
-              {submitting ? 'Submitting...' : formType === 'appeal' ? 'Submit Ban Appeal' : 'Send Message'}
+              {submitting ? 'Submitting...' : formType === 'appeal' ? 'Submit Appeal' : 'Send Message'}
             </button>
           </form>
         )}
