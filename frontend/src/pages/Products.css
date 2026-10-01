@@ -1,7 +1,7 @@
 .products-container {
-  padding: 4rem 5%;
+  padding: 3rem 2%;
   flex: 1;
-  max-width: 1250px;
+  max-width: 1550px;
   margin: 0 auto;
   font-family: 'Outfit', sans-serif;
 }
@@ -208,10 +208,11 @@
 /* 5 Products in a row on Desktop */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   justify-content: center;
   gap: 1rem;
-  max-width: 1350px;
+  max-width: 1550px;
+  width: 100%;
   margin: 0 auto;
 }
 

@@ -83,6 +83,10 @@ const AdminDashboard = () => {
       const res = await fetch(`${API_BASE}/api/auth/users`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
@@ -101,6 +105,10 @@ const AdminDashboard = () => {
       const res = await fetch(`${API_BASE}/api/contact/appeals`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setAppeals(data);
@@ -119,6 +127,10 @@ const AdminDashboard = () => {
       const res = await fetch(`${API_BASE}/api/contact`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
+      if (res.status === 401) {
+        handleLogout();
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
@@ -374,7 +386,7 @@ const AdminDashboard = () => {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           </svg>
-          <span>Ban Appeals</span>
+          <span>Appeals</span>
           {pendingAppealsCount > 0 && <span className="tab-badge warning">{pendingAppealsCount}</span>}
         </button>
 
@@ -462,15 +474,15 @@ const AdminDashboard = () => {
 
               {/* REQUIREMENT: GITHUB RELEASE URL REQUIREMENT */}
               <div className="form-group highlight-box">
-                <label>GitHub Release Download URL * (Only Download Option)</label>
+                <label>GitHub Release Package URL *</label>
                 <input
                   type="url"
                   required
                   value={directApkUrl}
                   onChange={(e) => setDirectApkUrl(e.target.value)}
-                  placeholder="https://github.com/Upper-Official/Store-Releases/releases/download/v1.0.0/app.apk"
+                  placeholder="https://github.com/owner/repo/releases/download/v1.0.0/app.apk"
                 />
-                <span className="field-hint">All product downloads are served directly from GitHub Releases.</span>
+                <span className="field-hint">Specify direct release package URL for this product deployment.</span>
               </div>
 
               {/* REQUIREMENT: LOGO & SCREENSHOT LINKS (GOOGLE PHOTOS / WEB LINKS) */}
@@ -743,12 +755,12 @@ const AdminDashboard = () => {
       {/* TAB 3: BAN APPEALS REVIEW */}
       {activeTab === 'appeals' && (
         <div className="admin-section-block">
-          <h3>User Ban Appeals ({appeals.length})</h3>
+          <h3>Appeals ({appeals.length})</h3>
 
           {loadingAppeals ? (
             <div className="admin-loading">Loading appeals...</div>
           ) : appeals.length === 0 ? (
-            <div className="admin-empty">No ban appeals submitted yet.</div>
+            <div className="admin-empty">No appeals submitted yet.</div>
           ) : (
             <div className="appeals-stack">
               {appeals.map((app) => (
