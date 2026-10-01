@@ -52,6 +52,7 @@ const Products = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -78,13 +79,43 @@ const Products = () => {
     loadProducts();
   }, []);
 
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setActiveSearch(searchQuery);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setActiveSearch('');
+  };
+
   const filteredProducts = products.filter((p) => {
+    // 1. Category matching
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory ||
       (selectedCategory === 'Mobile App' && p.category?.toLowerCase().includes('mobile')) ||
       (selectedCategory === 'Windows App' && (p.category?.toLowerCase().includes('windows') || p.category?.toLowerCase().includes('exe')));
     
-    const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          p.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    // 2. Word-level description & title search matching
+    const queryToUse = activeSearch || searchQuery;
+    const searchWords = queryToUse
+      .toLowerCase()
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    
+    let matchesSearch = true;
+    if (searchWords.length > 0) {
+      const fullProductContent = `
+        ${p.title || ''} 
+        ${p.description || ''} 
+        ${p.category || ''} 
+        ${p.version || ''} 
+        ${Array.isArray(p.features) ? p.features.join(' ') : ''}
+      `.toLowerCase();
+      
+      // Match if ANY word in search query matches ANY word/phrase in product content
+      matchesSearch = searchWords.some((word) => fullProductContent.includes(word));
+    }
     
     return matchesCategory && matchesSearch;
   });
@@ -96,22 +127,29 @@ const Products = () => {
         <h1>Product <span className="highlight">Catalog</span></h1>
         <p>Explore our curated collection of verified applications, desktop software, and developer assets.</p>
 
-        {/* Search Bar */}
-        <div className="catalog-search-box">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="catalog-search-icon">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input
-            type="text"
-            placeholder="Search products by name or category..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery('')} className="catalog-clear-btn">✕</button>
-          )}
-        </div>
+        {/* Search Bar with Explicit Search Button */}
+        <form className="catalog-search-form" onSubmit={handleSearchSubmit}>
+          <div className="catalog-search-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="catalog-search-icon">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              placeholder="Search by keywords (e.g. mobile, dark mode, particle, gold)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button type="button" onClick={handleClearSearch} className="catalog-clear-btn" title="Clear Search">
+                ✕
+              </button>
+            )}
+            <button type="submit" className="catalog-search-submit-btn">
+              Search
+            </button>
+          </div>
+        </form>
       </header>
 
       {/* Category Filter Tabs */}
@@ -137,7 +175,12 @@ const Products = () => {
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
           </svg>
           <h3>No products found</h3>
-          <p>No products match your selected category or search filter.</p>
+          <p>No products matched any search keywords in title or description.</p>
+          {(searchQuery || activeSearch) && (
+            <button onClick={handleClearSearch} className="catalog-reset-btn">
+              Reset Search Filter
+            </button>
+          )}
         </div>
       ) : (
         <div className="products-grid">
@@ -166,7 +209,7 @@ const Products = () => {
                 <div className="product-footer">
                   <span className="product-price">{product.price}</span>
                   <button className="view-btn" onClick={() => setSelectedProduct(product)}>
-                    View Details
+                    Details
                   </button>
                 </div>
               </div>
