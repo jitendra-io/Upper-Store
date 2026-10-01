@@ -45,16 +45,6 @@ const About = () => {
           <h3>High-Speed CDN Edge</h3>
           <p>Backed by ImageKit CDN for instant media rendering and direct high-bandwidth GitHub Release mirrors for rapid package downloads.</p>
         </div>
-
-        <div className="about-pillar-card">
-          <div className="pillar-icon-box purple">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            </svg>
-          </div>
-          <h3>User-Centric Design</h3>
-          <p>Designed with modern dark-gold glassmorphic aesthetics, responsive mobile layout math, and an ad-free user experience.</p>
-        </div>
       </section>
 
       {/* Brand Overview Writing Section */}
@@ -76,12 +66,6 @@ const About = () => {
             <img src={logoImg} alt="Upper Store Official Logo" className="showcase-logo-img" />
           </div>
           <div className="showcase-logo-details">
-            <span className="brand-verified-pill">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.35rem', verticalAlign: 'middle' }}>
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              Official Brand Signature
-            </span>
             <h2>Upper <span className="highlight">Store</span></h2>
             <p>Empowering digital creators with elite applications, seamless delivery, and uncompromised security.</p>
           </div>
