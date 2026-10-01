@@ -42,6 +42,7 @@ const FEATURED_FALLBACKS = [
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [totalProductsCount, setTotalProductsCount] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
@@ -52,14 +53,18 @@ const Home = () => {
           const data = await res.json();
           if (data && data.length > 0) {
             setFeaturedProducts(data.slice(0, 3));
+            setTotalProductsCount(data.length);
           } else {
             setFeaturedProducts(FEATURED_FALLBACKS);
+            setTotalProductsCount(4);
           }
         } else {
           setFeaturedProducts(FEATURED_FALLBACKS);
+          setTotalProductsCount(4);
         }
       } catch (err) {
         setFeaturedProducts(FEATURED_FALLBACKS);
+        setTotalProductsCount(4);
       }
     };
     fetchFeatured();
@@ -164,7 +169,7 @@ const Home = () => {
 
         <div className="section-cta-row">
           <Link to="/products" className="view-all-link-btn">
-            View Complete Product Catalog (6+ Items) ➔
+            View Complete Product Catalog ({totalProductsCount} {totalProductsCount === 1 ? 'Item' : 'Items'}) ➔
           </Link>
         </div>
       </section>
