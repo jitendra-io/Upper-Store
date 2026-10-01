@@ -146,6 +146,20 @@ const Navbar = () => {
 
   const userAvatar = user?.photoURL || `https://unavatar.io/${encodeURIComponent(user?.email ? user.email.trim().toLowerCase() : 'user')}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(user?.email || 'user')}`;
 
+  const handleNotifWheel = (e) => {
+    const el = e.currentTarget;
+    const isScrollable = el.scrollHeight > el.clientHeight;
+    if (!isScrollable) {
+      e.preventDefault();
+      return;
+    }
+    const isAtTop = el.scrollTop === 0;
+    const isAtBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 1;
+    if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <>
       <nav className="navbar">
@@ -214,7 +228,7 @@ const Navbar = () => {
                   )}
                 </div>
 
-                <div className="notif-list-body">
+                <div className="notif-list-body" onWheel={handleNotifWheel}>
                   {notifications.length === 0 ? (
                     <div className="notif-empty-state">
                       <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">

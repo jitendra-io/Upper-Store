@@ -453,6 +453,7 @@
   z-index: 1003;
   animation: dropdownPop 0.2s ease-out;
   overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .notif-header {
@@ -496,6 +497,8 @@
 .notif-list-body {
   max-height: 340px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 0.6rem;
   display: flex;
   flex-direction: column;

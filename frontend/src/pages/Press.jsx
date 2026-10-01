@@ -2,13 +2,6 @@ import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import './Press.css';
 
-const BRAND_COLORS = [
-  { name: 'Antique Gold', hex: '#D4AF37', rgb: 'rgb(212, 175, 55)', label: 'Primary Brand Accent', bg: '#D4AF37', text: '#0D0D0F' },
-  { name: 'Deep Dark Noir', hex: '#121216', rgb: 'rgb(18, 18, 22)', label: 'Background Surface', bg: '#121216', text: '#FFFFFF', border: true },
-  { name: 'Emerald Green', hex: '#10B981', rgb: 'rgb(16, 185, 129)', label: 'Security & Verification', bg: '#10B981', text: '#FFFFFF' },
-  { name: 'Electric Sky Blue', hex: '#38BDF8', rgb: 'rgb(56, 189, 248)', label: 'Action & Highlights', bg: '#38BDF8', text: '#0D0D0F' }
-];
-
 const PRESS_RELEASES = [
   {
     id: 'pr-1',
@@ -137,24 +130,6 @@ const Press = () => {
           </div>
         </div>
 
-        {/* Brand Colors */}
-        <div className="brand-sub-header">
-          <h3>Brand Color Palette</h3>
-        </div>
-        <div className="palette-grid">
-          {BRAND_COLORS.map((col) => (
-            <div key={col.hex} className="swatch-card">
-              <div className="swatch-color-box" style={{ backgroundColor: col.bg, border: col.border ? '1px solid rgba(255,255,255,0.2)' : 'none' }}>
-                <span className="swatch-hex" style={{ color: col.text }}>{col.hex}</span>
-              </div>
-              <div className="swatch-meta">
-                <h5>{col.name}</h5>
-                <span>{col.rgb}</span>
-                <p>{col.label}</p>
-              </div>
-            </div>
-          ))}
-        </div>
 
         {/* Typography Standard */}
         <div className="brand-sub-header">
