@@ -613,3 +613,92 @@
   text-align: center;
   padding: 1.5rem;
 }
+
+/* INBOX MESSAGES STYLING */
+.message-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.1rem;
+  transition: all 0.25s ease;
+}
+
+.message-item.unread {
+  border-color: rgba(212, 175, 55, 0.35);
+  background: rgba(212, 175, 55, 0.04);
+}
+
+.message-item:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+}
+
+.msg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.65rem;
+}
+
+.msg-email {
+  color: #d4af37;
+  font-size: 0.82rem;
+  margin-left: 0.35rem;
+}
+
+.msg-date {
+  display: block;
+  font-size: 0.74rem;
+  color: #888;
+  margin-top: 0.15rem;
+}
+
+.msg-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.msg-status-badge.unread {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.msg-status-badge.read {
+  background: rgba(255, 255, 255, 0.06);
+  color: #888;
+}
+
+.msg-content {
+  color: #e0e0e0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 0 0 0.85rem;
+  white-space: pre-wrap;
+}
+
+.msg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.admin-btn.delete-sm {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.76rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 14px;
+}
+
+.admin-btn.delete-sm:hover {
+  background: #ef4444;
+  color: #ffffff;
+}

@@ -142,6 +142,46 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteMessage = async (msgId) => {
+    if (!window.confirm('Are you sure you want to delete this contact message?')) return;
+    setActionId(msgId);
+    try {
+      const res = await fetch(`${API_BASE}/api/contact/${msgId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Message deleted successfully.' });
+        fetchMessages();
+      } else {
+        const data = await res.json();
+        throw new Error(data.message || 'Failed to delete message.');
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleMarkMessageRead = async (msgId) => {
+    setActionId(msgId);
+    try {
+      const res = await fetch(`${API_BASE}/api/contact/${msgId}/read`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Message marked as read.' });
+        fetchMessages();
+      }
+    } catch (err) {
+      console.error('Failed to mark message read:', err);
+    } finally {
+      setActionId(null);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     navigate('/admin');
@@ -646,7 +686,15 @@ const AdminDashboard = () => {
                     return (
                       <tr key={u.uid} className={u.isBanned ? 'row-banned' : ''}>
                         <td className="user-profile-cell">
-                          <img src={u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.email)}`} alt="" className="admin-user-avatar" />
+                          <img
+                            src={u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.email)}`}
+                            alt={u.displayName || u.email}
+                            className="admin-user-avatar"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.email)}`;
+                            }}
+                          />
                           <div>
                             <strong>{u.displayName || u.email.split('@')[0]}</strong>
                             <span className="sub-text">Registered: {new Date(u.createdAt || Date.now()).toLocaleDateString()}</span>
@@ -817,15 +865,36 @@ const AdminDashboard = () => {
                       <strong>{m.name}</strong> <span className="msg-email">&lt;{m.email}&gt;</span>
                       <span className="msg-date">{new Date(m.createdAt).toLocaleString()}</span>
                     </div>
-                    {!m.read && <span className="unread-dot">NEW</span>}
+                    {!m.read ? (
+                      <span className="msg-status-badge unread">NEW MESSAGE</span>
+                    ) : (
+                      <span className="msg-status-badge read">READ</span>
+                    )}
                   </div>
                   <p className="msg-content">{m.message}</p>
                   <div className="msg-actions">
+                    {!m.read && (
+                      <button
+                        className="admin-btn outline-sm"
+                        disabled={actionId === m.id}
+                        onClick={() => handleMarkMessageRead(m.id)}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Mark as Read</span>
+                      </button>
+                    )}
                     <button
-                      className="admin-btn secondary-sm"
+                      className="admin-btn delete-sm"
+                      disabled={actionId === m.id}
                       onClick={() => handleDeleteMessage(m.id)}
                     >
-                      Delete
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                      <span>{actionId === m.id ? 'Deleting...' : 'Delete Mail'}</span>
                     </button>
                   </div>
                 </div>
