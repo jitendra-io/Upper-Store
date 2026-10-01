@@ -97,19 +97,17 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
               <p className="history-user-sub">{user.email} • {history.length} {history.length === 1 ? 'Item' : 'Items'} Downloaded</p>
             </div>
           </div>
-          <button className="history-close-btn" onClick={onClose} title="Close History">✕</button>
+          <button className="history-close-btn" onClick={onClose} title="Close History">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
 
         {/* CONTROLS BAR */}
         {history.length > 0 && (
-          <div className="history-actions-bar">
-            <span className="history-badge-count">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px', verticalAlign: 'middle' }}>
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-              </svg>
-              Saved privately in local browser storage
-            </span>
+          <div className="history-actions-bar" style={{ justifyContent: 'flex-end' }}>
             <button className="history-clear-btn" onClick={handleClear}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -132,7 +130,7 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
                 </svg>
               </div>
               <h4>No Downloads Recorded Yet</h4>
-              <p>When you download apps, software tools, or design packages, your download activity will be stored locally right here in your profile.</p>
+              <p>When you download apps, software tools, or design packages, your download activity will be listed right here.</p>
               <button className="history-browse-btn" onClick={onClose}>
                 Browse Catalog & Downloads
               </button>
@@ -193,7 +191,7 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
-            Download history is private and preserved locally in your browser.
+            Download history is private to your user session.
           </span>
         </div>
       </div>
