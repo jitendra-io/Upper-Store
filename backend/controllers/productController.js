@@ -103,6 +103,7 @@ const resolveDirectImageUrl = async (url) => {
   if (cleanUrl.includes('photos.app.goo.gl') || cleanUrl.includes('photos.google.com')) {
     try {
       const response = await fetch(cleanUrl, {
+        redirect: 'follow',
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
@@ -111,8 +112,9 @@ const resolveDirectImageUrl = async (url) => {
         const html = await response.text();
         const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
         if (ogMatch && ogMatch[1]) {
-          console.log(`📸 Resolved Google Photos share link to direct image: ${ogMatch[1]}`);
-          return ogMatch[1];
+          const directImg = ogMatch[1].replace(/=w\d+-h\d+.*$/, '=s1200');
+          console.log(`📸 Resolved Google Photos share link (${cleanUrl}) -> direct image: ${directImg}`);
+          return directImg;
         }
       }
     } catch (err) {
@@ -129,7 +131,47 @@ const resolveDirectImageUrl = async (url) => {
 const getProducts = async (req, res) => {
   try {
     const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
-    const products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const products = [];
+
+    for (const doc of snapshot.docs) {
+      const p = { id: doc.id, ...doc.data() };
+      let updated = false;
+
+      if (p.image && (p.image.includes('photos.app.goo.gl') || p.image.includes('drive.google.com/file'))) {
+        p.image = await resolveDirectImageUrl(p.image);
+        updated = true;
+      }
+      if (p.logo && (p.logo.includes('photos.app.goo.gl') || p.logo.includes('drive.google.com/file'))) {
+        p.logo = await resolveDirectImageUrl(p.logo);
+        updated = true;
+      }
+      if (Array.isArray(p.images)) {
+        const resolvedImages = [];
+        for (const img of p.images) {
+          if (img && (img.includes('photos.app.goo.gl') || img.includes('drive.google.com/file'))) {
+            resolvedImages.push(await resolveDirectImageUrl(img));
+            updated = true;
+          } else {
+            resolvedImages.push(img);
+          }
+        }
+        p.images = resolvedImages;
+      }
+
+      // Self-heal Firestore document if needed
+      if (updated) {
+        try {
+          await doc.ref.update({
+            image: p.image,
+            logo: p.logo || '',
+            images: p.images || [],
+          });
+        } catch (e) {}
+      }
+
+      products.push(p);
+    }
+
     res.json(products);
   } catch (error) {
     console.error('Get products error:', error);
