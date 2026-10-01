@@ -10,6 +10,7 @@ import Contact from './pages/Contact';
 import Faq from './pages/Faq';
 import Blog from './pages/Blog';
 import Press from './pages/Press';
+import Policies from './pages/Policies';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Footer from './components/Footer';
@@ -49,6 +50,7 @@ function AppContent() {
         <Route path="/faq" element={<Faq />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/press" element={<Press />} />
+        <Route path="/policies" element={<Policies />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>

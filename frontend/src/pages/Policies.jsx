@@ -1,0 +1,271 @@
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import './Policies.css';
+
+const POLICIES_DATA = {
+  store: {
+    id: 'store',
+    title: 'Store & Refund Policy',
+    subtitle: 'Rules governing digital product licensing, delivery mechanisms, and refund guarantees.',
+    icon: '🛒',
+    sections: [
+      {
+        title: '1. Digital Product Delivery',
+        content: `All digital assets, applications (.apk for Android, .exe for Windows), source code packages, UI kits, and vector graphic bundles purchased or downloaded from Upper Store are fulfilled digitally via instant download links or mirrored through verified GitHub Release endpoints. Upon successful transaction or selection, download links remain permanently accessible in your session or account repository.`
+      },
+      {
+        title: '2. Refund Eligibility & Digital Guarantee',
+        content: `Because Upper Store offers non-tangible, irrevocable digital goods:
+• Free / Open Source Tier: Offered as-is without financial transaction.
+• Premium Digital Items: Eligible for full refund within 14 calendar days of purchase if the file is proven defective, corrupted, or fundamentally non-functional as advertised, and our support team cannot resolve the issue within 72 hours.
+• Ineligibility: Refunds are not issued for change-of-mind after successful package download or incompatibility with unlisted hardware/software requirements.`
+      },
+      {
+        title: '3. Licensing & Permitted Usage',
+        content: `Purchasing or downloading digital products grants you a non-exclusive, non-transferable worldwide license based on the specific product tier:
+• Standard Commercial License: Allows use in unlimited personal projects and up to 5 end commercial client projects.
+• Extended Enterprise License: Permits unlimited commercial applications, SaaS integration, and internal team distribution.
+• Resale Restriction: Re-distributing, sub-licensing, or selling raw source files, design tokens, or standalone binaries on third-party marketplaces is strictly prohibited.`
+      },
+      {
+        title: '4. Software Updates & Compatibility',
+        content: `Upper Store guarantees free lifetime minor version updates (e.g. v1.x to v1.y) for purchased digital items. Major version upgrades (e.g. v1.x to v2.x) may be offered at a discounted upgrade price for existing license holders.`
+      }
+    ]
+  },
+  privacy: {
+    id: 'privacy',
+    title: 'Privacy Policy',
+    subtitle: 'How Upper Store collects, safeguards, and respects your personal information.',
+    icon: '🔒',
+    sections: [
+      {
+        title: '1. Information We Collect',
+        content: `We collect minimal necessary data to operate our official platform:
+• Contact Information: Email address and name provided when submitting support inquiries, feedback, or newsletter subscriptions.
+• System & Diagnostic Data: IP address, browser type, device information, and download timestamps collected automatically for rate-limiting, security monitoring, and anti-abuse safeguards.
+• Account Credentials: Cryptographically hashed passwords for administrative or registered user sessions.`
+      },
+      {
+        title: '2. How We Store & Secure Data',
+        content: `Your data is processed and secured using modern cloud infrastructure:
+• Real-time Databases: Encrypted at rest and in transit via Firebase Firestore (TLS 1.3).
+• Media & CDN Storage: Visual branding, logos, and screenshots are optimized and served securely via ImageKit CDN.
+• Binary Package Integrity: Application installers (.apk / .exe) are mirrored through SSL-encrypted GitHub Release repositories.
+• Zero SMTP Block Exposure: Inbound support communications are routed directly to encrypted database collections, bypassing insecure third-party email relays.`
+      },
+      {
+        title: '3. Cookies & Session Storage',
+        content: `Upper Store uses local storage and essential cookies strictly to maintain user authentication state, active theme preferences, and cart sessions. We do not sell user data to advertising networks or employ intrusive cross-site tracking pixels.`
+      },
+      {
+        title: '4. Third-Party Data Disclosures',
+        content: `We do not sell, rent, or trade your personal information. We disclose data only when legally required by law enforcement compliance or to protect Upper Store infrastructure against malicious cyber threats.`
+      }
+    ]
+  },
+  terms: {
+    id: 'terms',
+    title: 'Terms of Service',
+    subtitle: 'The legal agreement governing your access to and use of Upper Store services.',
+    icon: '⚖️',
+    sections: [
+      {
+        title: '1. Acceptance of Terms',
+        content: `By accessing or using Upper Store (upperstore.com and affiliated subdomains), you agree to be legally bound by these Terms of Service. If you do not agree with any part of these terms, you must discontinue using our services immediately.`
+      },
+      {
+        title: '2. Intellectual Property Rights',
+        content: `All content on Upper Store—including software binaries, source code, UI components, vector graphics, brand logos, copy, and visual trademarks—is the exclusive intellectual property of Upper Store and founder Jitendra (@YourJITENDRA), protected under international copyright and trademark laws.`
+      },
+      {
+        title: '3. System Availability & Service Levels',
+        content: `While Upper Store maintains a 99.9% target uptime commitment across REST APIs, Firebase databases, and ImageKit CDN servers, services are provided on an "AS IS" and "AS AVAILABLE" basis. Scheduled maintenance windows will be communicated via the System Status dashboard.`
+      },
+      {
+        title: '4. Limitation of Liability',
+        content: `To the maximum extent permitted by applicable law, Upper Store and its developers shall not be liable for any indirect, incidental, special, or consequential damages resulting from the use or inability to use any software tools, design assets, or mobile applications provided on the platform.`
+      }
+    ]
+  },
+  conduct: {
+    id: 'conduct',
+    title: 'Code of Conduct',
+    subtitle: 'Our community standards, ethical developer guidelines, and anti-piracy pledge.',
+    icon: '🛡️',
+    sections: [
+      {
+        title: '1. Ethical Usage & Integrity',
+        content: `Users and developers interacting with Upper Store services, API endpoints, or public communities agree to maintain high standards of integrity. Reverse engineering, decompiling applications for malicious distribution, or injecting malware into distribution packages is prohibited.`
+      },
+      {
+        title: '2. Anti-Piracy & Unauthorized Mirroring',
+        content: `We actively enforce copyright protection against unauthorized mirror websites, pirate forums, and automated scrapers. Official releases must only be downloaded directly from Upper Store or verified GitHub Release mirrors.`
+      },
+      {
+        title: '3. Community Respect & Support Etiquette',
+        content: `Upper Store values respectful, professional communication. Harassment, abuse, or spam directed at support staff, developers, or community members will result in immediate termination of account access and service support.`
+      },
+      {
+        title: '4. Reporting Security Vulnerabilities',
+        content: `We encourage responsible security disclosure. If you discover a potential vulnerability in our APIs, CDN infrastructure, or authentication systems, please report it directly to legal@upperstore.com or support@upperstore.com. We acknowledge security researchers promptly.`
+      }
+    ]
+  }
+};
+
+const Policies = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('store');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [copiedSection, setCopiedSection] = useState(null);
+
+  // Sync tab with URL hash or default
+  useEffect(() => {
+    const hash = location.hash.replace('#', '');
+    if (hash && POLICIES_DATA[hash]) {
+      setActiveTab(hash);
+    }
+  }, [location.hash]);
+
+  const handleTabChange = (tabKey) => {
+    setActiveTab(tabKey);
+    navigate(`/policies#${tabKey}`, { replace: true });
+  };
+
+  const handleCopyText = (text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedSection(idx);
+    setTimeout(() => setCopiedSection(null), 2000);
+  };
+
+  const currentPolicy = POLICIES_DATA[activeTab];
+
+  // Filter sections by search query
+  const filteredSections = currentPolicy.sections.filter((s) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return s.title.toLowerCase().includes(q) || s.content.toLowerCase().includes(q);
+  });
+
+  return (
+    <div className="policies-page-container">
+      {/* HEADER HERO */}
+      <header className="policies-header">
+        <div className="policies-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Legal & Governance Center
+        </div>
+        <h1>Store <span className="gold-highlight">Policies</span> & Terms</h1>
+        <p className="policies-subtitle">
+          Transparent standards, licensing terms, privacy commitments, and customer guarantees for Upper Store.
+        </p>
+
+        {/* Global Policy Search Bar */}
+        <div className="policies-search-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="search-icon">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            placeholder="Search within policies (e.g., refund, license, data, security)..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="clear-search-btn" onClick={() => setSearchQuery('')}>✕</button>
+          )}
+        </div>
+      </header>
+
+      {/* TABS NAVIGATION */}
+      <div className="policies-tabs-nav">
+        {Object.keys(POLICIES_DATA).map((key) => {
+          const item = POLICIES_DATA[key];
+          return (
+            <button
+              key={key}
+              className={`policy-nav-tab ${activeTab === key ? 'active' : ''}`}
+              onClick={() => handleTabChange(key)}
+            >
+              <span className="tab-icon">{item.icon}</span>
+              <span className="tab-label">{item.title}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* POLICY CONTENT AREA */}
+      <div className="policies-content-card">
+        <div className="policy-meta-bar">
+          <div className="meta-left">
+            <span className="policy-big-icon">{currentPolicy.icon}</span>
+            <div>
+              <h2>{currentPolicy.title}</h2>
+              <p>{currentPolicy.subtitle}</p>
+            </div>
+          </div>
+          <div className="meta-right">
+            <span className="last-updated-badge">Last Revised: Oct 1, 2026</span>
+            <button className="print-policy-btn" onClick={() => window.print()} title="Print or Save PDF">
+              🖨️ Print PDF
+            </button>
+          </div>
+        </div>
+
+        <hr className="policy-divider" />
+
+        {/* SECTIONS LIST */}
+        {filteredSections.length === 0 ? (
+          <div className="policy-no-results">
+            <p>No clauses matching "<strong>{searchQuery}</strong>" found in {currentPolicy.title}.</p>
+            <button onClick={() => setSearchQuery('')} className="reset-search-link">Reset Search</button>
+          </div>
+        ) : (
+          <div className="policy-sections-wrapper">
+            {filteredSections.map((sec, idx) => (
+              <div key={idx} className="policy-section-block">
+                <div className="section-header">
+                  <h3>{sec.title}</h3>
+                  <button
+                    className="copy-clause-btn"
+                    onClick={() => handleCopyText(`${sec.title}\n\n${sec.content}`, idx)}
+                  >
+                    {copiedSection === idx ? '✓ Copied' : '📋 Copy Clause'}
+                  </button>
+                </div>
+                <div className="section-body">
+                  {sec.content.split('\n').map((line, lineIdx) => (
+                    <p key={lineIdx}>{line}</p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* FOOTER DIRECT CHANNEL CONTACT */}
+        <div className="policy-contact-box">
+          <div className="contact-box-left">
+            <h4>Questions regarding our policies?</h4>
+            <p>Our legal and support operations team is available for licensing assistance and policy clarification.</p>
+          </div>
+          <div className="contact-box-right">
+            <a href="mailto:support@upperstore.com" className="policy-contact-btn">
+              Email Support Team
+            </a>
+            <a href="mailto:legal@upperstore.com" className="policy-contact-btn gold">
+              Contact Legal Counsel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Policies;
