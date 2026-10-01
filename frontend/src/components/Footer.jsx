@@ -87,7 +87,16 @@ const Footer = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>© {new Date().getFullYear()} Upper Store. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Upper Store. Crafted with precision for creators & developers.</p>
+        <div className="footer-bottom-links">
+          <Link to="/policies#privacy">Privacy</Link>
+          <span className="dot-sep">•</span>
+          <Link to="/policies#terms">Terms</Link>
+          <span className="dot-sep">•</span>
+          <Link to="/policies#store">Refunds</Link>
+          <span className="dot-sep">•</span>
+          <span className="footer-built-by">Engineered by <a href="https://github.com/YourJITENDRA" target="_blank" rel="noopener noreferrer">@YourJITENDRA</a></span>
+        </div>
       </div>
 
       <div className="footer-gradient-bar"></div>

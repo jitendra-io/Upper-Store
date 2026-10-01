@@ -16,7 +16,7 @@
   display: grid;
   grid-template-columns: 1.5fr 3fr;
   gap: 4rem;
-  padding-bottom: 3rem;
+  padding-bottom: 1.75rem;
 }
 
 @media (max-width: 900px) {
@@ -151,13 +151,51 @@
 .footer-bottom {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 1.5rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1.2rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.85rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.82rem;
+  color: #777;
+}
+
+.footer-bottom p {
+  margin: 0;
+}
+
+.footer-bottom-links {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.footer-bottom-links a {
+  color: #888;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-bottom-links a:hover {
+  color: #d4af37;
+}
+
+.dot-sep {
+  color: #444;
+  font-size: 0.7rem;
+}
+
+.footer-built-by {
   color: #666;
+}
+
+.footer-built-by a {
+  color: #d4af37;
+  font-weight: 600;
+  text-decoration: none;
 }
 
 /* Colorful Gradient Line at the bottom */
