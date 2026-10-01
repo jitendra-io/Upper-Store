@@ -100,6 +100,15 @@ const addOrUpdateReview = async (req, res) => {
 
   try {
     const cleanEmail = userEmail.trim().toLowerCase();
+
+    // Check if user account is banned in Firestore
+    const userSnapshot = await db.collection('users').where('email', '==', cleanEmail).get();
+    if (!userSnapshot.empty && userSnapshot.docs[0].data().isBanned) {
+      return res.status(403).json({
+        message: 'Your account has been banned. You cannot submit product reviews while banned.',
+      });
+    }
+
     const reviewId = `${productId}_${cleanEmail.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
     const docRef = db.collection('reviews').doc(reviewId);
 

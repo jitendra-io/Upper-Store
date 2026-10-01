@@ -28,6 +28,27 @@ const ProductDetailModal = ({ product, onClose }) => {
     return () => window.removeEventListener('productDownloadsUpdated', handleUpdate);
   }, [product]);
 
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const [isBanned, setIsBanned] = useState(Boolean(user?.isBanned));
+
+  useEffect(() => {
+    if (!user || !user.email) {
+      setIsBanned(false);
+      return;
+    }
+    setIsBanned(Boolean(user.isBanned));
+    const checkBanStatus = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(user.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setIsBanned(Boolean(data.isBanned));
+        }
+      } catch (err) {}
+    };
+    checkBanStatus();
+  }, [user]);
+
   const hasUserAcceptedTerms = () => {
     if (!user || !user.email) return false;
     const cleanEmail = user.email.trim().toLowerCase();
@@ -41,9 +62,9 @@ const ProductDetailModal = ({ product, onClose }) => {
       return;
     }
 
-    if (user?.isBanned) {
+    if (isBanned || user?.isBanned) {
       e.preventDefault();
-      alert("Your account has been banned due to policy violation. Downloads are restricted. Please submit an appeal via the Contact page.");
+      alert("Account Banned: Downloads and product reviews are restricted. Please submit an appeal on the Contact page.");
       return;
     }
 
@@ -184,7 +205,27 @@ const ProductDetailModal = ({ product, onClose }) => {
             </div>
           </div>
 
-          <p className="modal-description-text">{product.description}</p>
+          {/* Account Banned Restriction Banner */}
+          {(isBanned || user?.isBanned) && (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              borderRadius: '10px',
+              padding: '0.85rem 1rem',
+              marginBottom: '1.25rem',
+              color: '#fca5a5',
+              fontSize: '0.88rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.65rem'
+            }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+              </svg>
+              <span><strong>Account Restricted (Banned):</strong> You cannot download software or submit product reviews while your account is banned. Please submit an appeal on the Contact page.</span>
+            </div>
+          )}
 
           {/* Animated Download Button */}
           <div className="modal-actions">

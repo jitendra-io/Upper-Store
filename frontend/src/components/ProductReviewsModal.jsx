@@ -32,6 +32,25 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   const [deletingId, setDeletingId] = useState(null);
   const [formMsg, setFormMsg] = useState({ type: '', text: '' });
   const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [isBanned, setIsBanned] = useState(Boolean(user?.isBanned));
+
+  useEffect(() => {
+    if (!user || !user.email) {
+      setIsBanned(false);
+      return;
+    }
+    setIsBanned(Boolean(user.isBanned));
+    const checkBanStatus = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(user.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setIsBanned(Boolean(data.isBanned));
+        }
+      } catch (err) {}
+    };
+    checkBanStatus();
+  }, [user, isOpen]);
 
   // Fetch reviews on load
   const loadReviews = async () => {
@@ -95,6 +114,10 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
+    if (isBanned || user?.isBanned) {
+      setFormMsg({ type: 'error', text: 'Account Restricted: You cannot submit product reviews while your account is banned.' });
+      return;
+    }
     if (!isVerifiedDownloader) return;
     if (userExistingReview) {
       setFormMsg({ type: 'error', text: 'You have already submitted a review for this product. Delete your previous review to submit a new one.' });
@@ -177,6 +200,11 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     if (!isLoggedIn) {
       onClose();
       openAuthModal("Authentication Required: Please sign in to download this application.");
+      return;
+    }
+
+    if (isBanned || user?.isBanned) {
+      alert("Account Restricted: You cannot download software products while your account is banned. Please submit an appeal on the Contact page.");
       return;
     }
 
@@ -289,6 +317,16 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                 >
                   Sign In to Upper Store
                 </button>
+              </div>
+            ) : (isBanned || user?.isBanned) ? (
+              <div className="reviews-banner-notice warning" style={{ borderColor: 'rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.1)' }}>
+                <p style={{ color: '#fca5a5' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                  </svg>
+                  <span><strong>Account Restricted (Banned):</strong> You cannot download software or submit product reviews while your account is banned. Please submit an appeal on the Contact page.</span>
+                </p>
               </div>
             ) : !isVerifiedDownloader ? (
               <div className="reviews-banner-notice info">

@@ -300,6 +300,17 @@ const deleteProduct = async (req, res) => {
 // @access  Public
 const trackProductDownload = async (req, res) => {
   try {
+    const { userEmail } = req.body;
+    if (userEmail) {
+      const cleanEmail = userEmail.trim().toLowerCase();
+      const userSnapshot = await db.collection('users').where('email', '==', cleanEmail).get();
+      if (!userSnapshot.empty && userSnapshot.docs[0].data().isBanned) {
+        return res.status(403).json({
+          message: 'Your account has been banned. Product downloads are restricted.',
+        });
+      }
+    }
+
     const docRef = db.collection('products').doc(req.params.id);
     const doc = await docRef.get();
     
