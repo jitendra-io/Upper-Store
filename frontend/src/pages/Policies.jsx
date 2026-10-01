@@ -119,19 +119,20 @@ const POLICIES_DATA = {
     sections: [
       {
         title: '1. Acceptance of Terms',
-        content: `By accessing or using Upper Store (upperstore.com and affiliated subdomains), you agree to be legally bound by these Terms of Service. If you do not agree with any part of these terms, you must discontinue using our services immediately.`
+        content: `By accessing or downloading items from Upper Store (upperstore.com and affiliated subdomains), you agree to be legally bound by these Terms of Service. Download access requires a one-time agreement to these terms.`
       },
       {
-        title: '2. Intellectual Property Rights',
-        content: `All content on Upper Store—including software binaries, source code, UI components, vector graphics, brand logos, copy, and visual trademarks—is the exclusive intellectual property of Upper Store and founder Jitendra (@YourJITENDRA), protected under international copyright and trademark laws.`
+        title: '2. User Misuse & Zero Financial Liability Shield',
+        content: `Upper Store, its founder Jitendra (@YourJITENDRA), operators, and developers hold ZERO financial, legal, or monetary liability under any circumstances for any user's misuse, modification, misrepresentation, or misleading redistribution of our software or products.
+The user bears 100% full personal, legal, and financial responsibility for their actions, must provide complete explanation for any misleading activity, and may undergo formal legal procedures. Upper Store will not pay any amount of money or compensation to anyone for any user's misuse of our products.`
       },
       {
-        title: '3. System Availability & Service Levels',
-        content: `While Upper Store maintains a 99.9% target uptime commitment across REST APIs, Firebase databases, and ImageKit CDN servers, services are provided on an "AS IS" and "AS AVAILABLE" basis. Scheduled maintenance windows will be communicated via the System Status dashboard.`
+        title: '3. Verification & Monetary Refund Guarantee',
+        content: `Upper Store will issue a full refund if a monetary-related error or financial mistake occurs directly from our side, subject to administrative verification and valid proof of transaction.`
       },
       {
-        title: '4. Limitation of Liability',
-        content: `To the maximum extent permitted by applicable law, Upper Store and its developers shall not be liable for any indirect, incidental, special, or consequential damages resulting from the use or inability to use any software tools, design assets, or mobile applications provided on the platform.`
+        title: '4. Account Termination & Suspension Rights',
+        content: `Upper Store reserves the absolute right to suspend or terminate any user account or download access at any moment without prior warning if we detect suspicious activity, code of conduct violations, or platform policy breaches.`
       }
     ]
   },

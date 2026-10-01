@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { recordUserDownload, getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
+import TermsAcceptanceModal from './TermsAcceptanceModal';
 import './ProductDetailModal.css';
 
 const ProductDetailModal = ({ product, onClose }) => {
   const { user, isLoggedIn, openAuthModal } = useAuth();
   const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
 
   useEffect(() => {
     if (product?.id) {
@@ -23,12 +25,43 @@ const ProductDetailModal = ({ product, onClose }) => {
     return () => window.removeEventListener('productDownloadsUpdated', handleUpdate);
   }, [product]);
 
+  const hasUserAcceptedTerms = () => {
+    if (!user || !user.email) return false;
+    const cleanEmail = user.email.trim().toLowerCase();
+    return localStorage.getItem(`upper_terms_accepted_${cleanEmail}`) === 'true';
+  };
+
   const handleDownloadClick = (e) => {
     if (!isLoggedIn) {
       e.preventDefault();
       openAuthModal("Authentication Required: Please sign in to download this application or digital package.");
-    } else if (user && user.email) {
+      return;
+    }
+
+    if (!hasUserAcceptedTerms()) {
+      e.preventDefault();
+      setTermsModalOpen(true);
+      return;
+    }
+
+    // Terms already accepted! Track download
+    if (user && user.email) {
       recordUserDownload(user.email, product);
+    }
+  };
+
+  const handleAcceptTerms = () => {
+    if (user && user.email) {
+      const cleanEmail = user.email.trim().toLowerCase();
+      localStorage.setItem(`upper_terms_accepted_${cleanEmail}`, 'true');
+    }
+    setTermsModalOpen(false);
+    recordUserDownload(user.email, product);
+
+    // Trigger download programmatically
+    const targetUrl = product.apkFile && product.apkFile !== '#' ? product.apkFile : '/products';
+    if (targetUrl && targetUrl !== '#') {
+      window.open(targetUrl, '_blank');
     }
   };
 
@@ -208,6 +241,13 @@ const ProductDetailModal = ({ product, onClose }) => {
           )}
         </div>
       </div>
+
+      {/* ONE-TIME TERMS & CONDITIONS ACCEPTANCE MODAL */}
+      <TermsAcceptanceModal
+        isOpen={termsModalOpen}
+        onAccept={handleAcceptTerms}
+        onCancel={() => setTermsModalOpen(false)}
+      />
     </div>
   );
 };
