@@ -199,4 +199,65 @@ const deleteReview = async (req, res) => {
   }
 };
 
-module.exports = { getProductReviews, addOrUpdateReview, deleteReview };
+// @desc    Get all reviews written across all products
+// @route   GET /api/reviews/all
+// @access  Public / Admin
+const getAllReviews = async (req, res) => {
+  try {
+    const snapshot = await db.collection('reviews').get();
+    let reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Include demo fallback reviews if no database reviews for those products
+    Object.values(DEMO_REVIEWS).forEach(list => {
+      list.forEach(demoR => {
+        if (!reviews.some(r => r.id === demoR.id)) {
+          reviews.push(demoR);
+        }
+      });
+    });
+
+    res.json(reviews);
+  } catch (error) {
+    console.error('Error fetching all reviews:', error);
+    res.status(500).json({ message: 'Failed to fetch reviews.' });
+  }
+};
+
+// @desc    Get all reviews written by a specific user email
+// @route   GET /api/reviews/user/:email
+// @access  Public / Admin
+const getUserReviews = async (req, res) => {
+  const { email } = req.params;
+  try {
+    const cleanEmail = email.trim().toLowerCase();
+    const snapshot = await db.collection('reviews').where('userEmail', '==', cleanEmail).get();
+    let reviews = [];
+
+    if (!snapshot.empty) {
+      reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    // Check demo reviews fallback
+    Object.values(DEMO_REVIEWS).forEach(list => {
+      const matches = list.filter(r => r.userEmail?.trim().toLowerCase() === cleanEmail);
+      matches.forEach(m => {
+        if (!reviews.some(r => r.id === m.id)) {
+          reviews.push(m);
+        }
+      });
+    });
+
+    res.json(reviews);
+  } catch (error) {
+    console.error('Error fetching user reviews:', error);
+    res.status(500).json({ message: 'Failed to fetch user reviews.' });
+  }
+};
+
+module.exports = {
+  getProductReviews,
+  addOrUpdateReview,
+  deleteReview,
+  getAllReviews,
+  getUserReviews,
+};

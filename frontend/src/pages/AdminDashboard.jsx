@@ -168,6 +168,25 @@ const AdminDashboard = () => {
       if (res.ok) {
         const data = await res.json();
         setUsers(data);
+
+        // Fetch all reviews to build complete real-time user reviews map
+        try {
+          const revRes = await fetch(`${API_BASE}/api/reviews/all`);
+          if (revRes.ok) {
+            const allRevs = await revRes.json();
+            const map = {};
+            allRevs.forEach((r) => {
+              const cleanE = (r.userEmail || '').trim().toLowerCase();
+              if (cleanE) {
+                if (!map[cleanE]) map[cleanE] = [];
+                map[cleanE].push(r);
+              }
+            });
+            setUserReviewsMap(map);
+          }
+        } catch (rErr) {
+          console.warn('Failed to fetch reviews map:', rErr);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch users:', err);
@@ -358,18 +377,17 @@ const AdminDashboard = () => {
   // VIEW USER DETAILS (DOWNLOAD HISTORY & REVIEWS)
   const handleViewUserDetail = async (userObj) => {
     setSelectedUserDetail(userObj);
-    // Fetch user reviews
+    const cleanEmail = (userObj.email || '').trim().toLowerCase();
     try {
-      const userReviews = [];
-      for (const prod of products) {
-        const res = await fetch(`${API_BASE}/api/reviews/product/${prod.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          const match = (data.reviews || []).filter(r => r.userEmail === userObj.email.toLowerCase());
-          userReviews.push(...match.map(r => ({ ...r, productTitle: prod.title })));
-        }
+      const res = await fetch(`${API_BASE}/api/reviews/user/${encodeURIComponent(cleanEmail)}`);
+      if (res.ok) {
+        const userReviews = await res.json();
+        setUserReviewsMap((prev) => ({
+          ...prev,
+          [cleanEmail]: userReviews,
+          [userObj.email]: userReviews,
+        }));
       }
-      setUserReviewsMap({ [userObj.email]: userReviews });
     } catch (err) {
       console.warn('Error fetching user reviews:', err);
     }
@@ -810,8 +828,9 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody>
                   {users.map((u) => {
+                    const cleanUserEmail = (u.email || '').trim().toLowerCase();
                     const history = getUserDownloadHistory(u.email);
-                    const reviews = userReviewsMap[u.email] || [];
+                    const reviews = userReviewsMap[cleanUserEmail] || userReviewsMap[u.email] || [];
                     return (
                       <tr key={u.uid} className={u.isBanned ? 'row-banned' : ''}>
                         <td className="user-profile-cell">
