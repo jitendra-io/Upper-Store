@@ -1,14 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { recordUserDownload, getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './ProductDetailModal.css';
 
 const ProductDetailModal = ({ product, onClose }) => {
-  const { isLoggedIn, openAuthModal } = useAuth();
+  const { user, isLoggedIn, openAuthModal } = useAuth();
+  const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
+
+  useEffect(() => {
+    if (product?.id) {
+      setDownloadCount(getProductDownloadCount(product.id, product.downloadCount));
+    }
+  }, [product]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      if (product?.id) {
+        setDownloadCount(getProductDownloadCount(product.id, product.downloadCount));
+      }
+    };
+    window.addEventListener('productDownloadsUpdated', handleUpdate);
+    return () => window.removeEventListener('productDownloadsUpdated', handleUpdate);
+  }, [product]);
 
   const handleDownloadClick = (e) => {
     if (!isLoggedIn) {
       e.preventDefault();
       openAuthModal("Authentication Required: Please sign in to download this application or digital package.");
+    } else if (user && user.email) {
+      recordUserDownload(user.email, product);
     }
   };
 
@@ -57,7 +77,7 @@ const ProductDetailModal = ({ product, onClose }) => {
           ✕
         </button>
 
-        {/* Cover Image with Preserved Aspect Ratio (Reduced by 60px vertically) */}
+        {/* Cover Image with Preserved Aspect Ratio */}
         {activeImage && (
           <div className="modal-cover-frame">
             <img
@@ -102,6 +122,7 @@ const ProductDetailModal = ({ product, onClose }) => {
               <h2 className="modal-product-title">{product.title}</h2>
               <div className="modal-meta-pills">
                 <span className="pill-item">Version: v{product.version || '1.0.0'}</span>
+                <span className="pill-item download-count-pill">📥 {formatDownloadCount(downloadCount)} Downloads</span>
                 <span className="pill-item price-pill">{product.price}</span>
               </div>
             </div>

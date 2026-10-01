@@ -319,6 +319,20 @@
   color: #ffffff;
 }
 
+.product-downloads-badge {
+  font-size: 0.72rem;
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.12);
+  border: 1px solid rgba(46, 204, 113, 0.25);
+  padding: 0.12rem 0.45rem;
+  border-radius: 8px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  width: fit-content;
+}
+
 .view-btn {
   background-color: transparent;
   color: #d4af37;

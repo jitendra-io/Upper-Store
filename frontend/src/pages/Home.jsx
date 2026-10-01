@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import ProductDetailModal from '../components/ProductDetailModal';
+import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Home.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -44,6 +45,13 @@ const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [totalProductsCount, setTotalProductsCount] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [, setRefreshDownloads] = useState(0);
+
+  useEffect(() => {
+    const handleUpdate = () => setRefreshDownloads((prev) => prev + 1);
+    window.addEventListener('productDownloadsUpdated', handleUpdate);
+    return () => window.removeEventListener('productDownloadsUpdated', handleUpdate);
+  }, []);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -157,7 +165,10 @@ const Home = () => {
                 )}
 
                 <div className="featured-card-footer">
-                  <span className="featured-price">{prod.price}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                    <span className="featured-price">{prod.price}</span>
+                    <span className="product-downloads-badge">📥 {formatDownloadCount(getProductDownloadCount(prod.id, prod.downloadCount))}</span>
+                  </div>
                   <button className="featured-view-btn" onClick={() => setSelectedProduct(prod)}>
                     View Details
                   </button>

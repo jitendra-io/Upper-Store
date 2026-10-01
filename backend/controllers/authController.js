@@ -101,11 +101,13 @@ const registerUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const photoURL = `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
     const newUserRef = await db.collection('users').add({
       email: cleanEmail,
       password: hashedPassword,
       displayName: displayName ? displayName.trim() : cleanEmail.split('@')[0],
+      photoURL,
       provider: 'email',
       createdAt: new Date().toISOString(),
     });
@@ -114,6 +116,7 @@ const registerUser = async (req, res) => {
       uid: newUserRef.id,
       email: cleanEmail,
       displayName: displayName ? displayName.trim() : cleanEmail.split('@')[0],
+      photoURL,
       provider: 'email',
       role: 'user',
     };
@@ -160,12 +163,14 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid email or password.' });
     }
 
+    const photoURL = userData.photoURL || `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
+
     const userProfile = {
       uid: userDoc.id,
       email: userData.email,
       displayName: userData.displayName || userData.email.split('@')[0],
       provider: userData.provider || 'email',
-      photoURL: userData.photoURL || null,
+      photoURL,
       role: 'user',
     };
 
@@ -197,13 +202,14 @@ const googleOAuthLogin = async (req, res) => {
 
     let uid;
     let finalProfile;
+    const computedPhoto = photoURL || `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
     if (snapshot.empty) {
       // Create new user account via Google
       const newUserRef = await db.collection('users').add({
         email: cleanEmail,
         displayName: displayName || cleanEmail.split('@')[0],
-        photoURL: photoURL || null,
+        photoURL: computedPhoto,
         googleId: googleId || null,
         provider: 'google',
         createdAt: new Date().toISOString(),
@@ -213,7 +219,7 @@ const googleOAuthLogin = async (req, res) => {
         uid,
         email: cleanEmail,
         displayName: displayName || cleanEmail.split('@')[0],
-        photoURL: photoURL || null,
+        photoURL: computedPhoto,
         provider: 'google',
         role: 'user',
       };
@@ -222,10 +228,12 @@ const googleOAuthLogin = async (req, res) => {
       uid = userDoc.id;
       const existingData = userDoc.data();
 
+      const activePhoto = photoURL || existingData.photoURL || computedPhoto;
+
       // Update avatar or display name if missing
       await userDoc.ref.update({
         displayName: displayName || existingData.displayName || cleanEmail.split('@')[0],
-        photoURL: photoURL || existingData.photoURL || null,
+        photoURL: activePhoto,
         lastLogin: new Date().toISOString(),
       });
 
@@ -233,7 +241,7 @@ const googleOAuthLogin = async (req, res) => {
         uid,
         email: cleanEmail,
         displayName: displayName || existingData.displayName || cleanEmail.split('@')[0],
-        photoURL: photoURL || existingData.photoURL || null,
+        photoURL: activePhoto,
         provider: existingData.provider || 'google',
         role: 'user',
       };

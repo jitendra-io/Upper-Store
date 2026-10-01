@@ -156,7 +156,24 @@
 .dropdown-user-header {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
   gap: 0.2rem;
+}
+
+.dropdown-avatar-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.dropdown-user-avatar-large {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #d4af37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
 }
 
 .dropdown-user-title {
@@ -191,7 +208,39 @@
   border: none;
   height: 1px;
   background: rgba(255, 255, 255, 0.08);
-  margin: 0.8rem 0;
+  margin: 0.7rem 0;
+}
+
+.dropdown-item-btn {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: #e0e0e0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.dropdown-item-btn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: #ffffff;
+  border-color: #d4af37;
+}
+
+.dropdown-history-count-tag {
+  background: #d4af37;
+  color: #0d0d0f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.1rem 0.45rem;
+  border-radius: 10px;
 }
 
 .dropdown-logout-btn {

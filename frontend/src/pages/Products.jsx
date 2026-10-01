@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ProductDetailModal from '../components/ProductDetailModal';
+import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Products.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -53,6 +54,13 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [, setRefreshDownloads] = useState(0);
+
+  useEffect(() => {
+    const handleUpdate = () => setRefreshDownloads((prev) => prev + 1);
+    window.addEventListener('productDownloadsUpdated', handleUpdate);
+    return () => window.removeEventListener('productDownloadsUpdated', handleUpdate);
+  }, []);
 
   useEffect(() => {
     const loadProducts = async () => {
@@ -113,7 +121,6 @@ const Products = () => {
         ${Array.isArray(p.features) ? p.features.join(' ') : ''}
       `.toLowerCase();
       
-      // Match if ANY word in search query matches ANY word/phrase in product content
       matchesSearch = searchWords.some((word) => fullProductContent.includes(word));
     }
     
@@ -127,7 +134,7 @@ const Products = () => {
         <h1>Product <span className="highlight">Catalog</span></h1>
         <p>Explore our curated collection of verified applications, desktop software, and developer assets.</p>
 
-        {/* Search Bar with Explicit Search Button */}
+        {/* Search Bar */}
         <form className="catalog-search-form" onSubmit={handleSearchSubmit}>
           <div className="catalog-search-box">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="catalog-search-icon">
@@ -184,37 +191,43 @@ const Products = () => {
         </div>
       ) : (
         <div className="products-grid">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="product-card">
-              <div className="product-image" onClick={() => setSelectedProduct(product)} style={{ cursor: 'pointer' }}>
-                <img
-                  src={product.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=500'}
-                  alt={product.title}
-                />
-                <span className="product-category">{product.category}</span>
-              </div>
-              <div className="product-info">
-                <div className="product-title-row">
-                  {product.logo ? (
-                    <img src={product.logo} alt="" className="product-app-logo" />
-                  ) : (
-                    <div className="product-logo-placeholder-sm">📦</div>
-                  )}
-                  <div>
-                    <h3>{product.title}</h3>
-                    {product.version && <span className="catalog-ver-tag">v{product.version}</span>}
+          {filteredProducts.map((product) => {
+            const downloadsCount = getProductDownloadCount(product.id, product.downloadCount);
+            return (
+              <div key={product.id} className="product-card">
+                <div className="product-image" onClick={() => setSelectedProduct(product)} style={{ cursor: 'pointer' }}>
+                  <img
+                    src={product.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=500'}
+                    alt={product.title}
+                  />
+                  <span className="product-category">{product.category}</span>
+                </div>
+                <div className="product-info">
+                  <div className="product-title-row">
+                    {product.logo ? (
+                      <img src={product.logo} alt="" className="product-app-logo" />
+                    ) : (
+                      <div className="product-logo-placeholder-sm">📦</div>
+                    )}
+                    <div>
+                      <h3>{product.title}</h3>
+                      {product.version && <span className="catalog-ver-tag">v{product.version}</span>}
+                    </div>
+                  </div>
+                  <p>{product.description}</p>
+                  <div className="product-footer">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                      <span className="product-price">{product.price}</span>
+                      <span className="product-downloads-badge">📥 {formatDownloadCount(downloadsCount)}</span>
+                    </div>
+                    <button className="view-btn" onClick={() => setSelectedProduct(product)}>
+                      Details
+                    </button>
                   </div>
                 </div>
-                <p>{product.description}</p>
-                <div className="product-footer">
-                  <span className="product-price">{product.price}</span>
-                  <button className="view-btn" onClick={() => setSelectedProduct(product)}>
-                    Details
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
