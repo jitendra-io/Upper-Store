@@ -708,6 +708,7 @@ const AdminDashboard = () => {
                             src={u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.email)}`}
                             alt={u.displayName || u.email}
                             className="admin-user-avatar"
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.email)}`;

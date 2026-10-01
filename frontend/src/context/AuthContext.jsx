@@ -11,19 +11,69 @@ export const AuthProvider = ({ children }) => {
   const [authModalPrompt, setAuthModalPrompt] = useState('');
   const [authModalTab, setAuthModalTab] = useState('login'); // 'login' | 'register'
 
-  // Load saved session on mount
+  const refreshUserStatus = async (overrideEmail = null) => {
+    const targetEmail = overrideEmail || user?.email;
+    if (!targetEmail) return null;
+
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(targetEmail.trim())}`);
+      if (res.ok) {
+        const statusData = await res.json();
+        setUser((prevUser) => {
+          if (!prevUser) return prevUser;
+          const updated = {
+            ...prevUser,
+            isBanned: Boolean(statusData.isBanned),
+            bannedAt: statusData.bannedAt || null,
+            lastAppealedAt: statusData.lastAppealedAt || null,
+          };
+          localStorage.setItem('upper_user_data', JSON.stringify(updated));
+          return updated;
+        });
+        return statusData;
+      }
+    } catch (err) {
+      console.warn('Failed to refresh user status:', err);
+    }
+    return null;
+  };
+
+  // Load saved session on mount and sync live status from server
   useEffect(() => {
     try {
       const savedToken = localStorage.getItem('upper_user_token');
       const savedUser = localStorage.getItem('upper_user_data');
       if (savedToken && savedUser) {
+        const parsed = JSON.parse(savedUser);
         setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+        setUser(parsed);
+        if (parsed?.email) {
+          refreshUserStatus(parsed.email);
+        }
       }
     } catch (err) {
       console.warn('Failed to restore auth session:', err);
     }
   }, []);
+
+  // Sync user status on window focus or periodically every 15s
+  useEffect(() => {
+    if (!user?.email) return;
+
+    const handleFocus = () => {
+      refreshUserStatus(user.email);
+    };
+
+    window.addEventListener('focus', handleFocus);
+    const intervalId = setInterval(() => {
+      refreshUserStatus(user.email);
+    }, 15000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(intervalId);
+    };
+  }, [user?.email]);
 
   const openAuthModal = (prompt = '', defaultTab = 'login') => {
     setAuthModalPrompt(prompt);
@@ -118,6 +168,7 @@ export const AuthProvider = ({ children }) => {
         login,
         loginWithGoogle,
         logout,
+        refreshUserStatus,
       }}
     >
       {children}

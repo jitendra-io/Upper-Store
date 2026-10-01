@@ -7,6 +7,32 @@
   color: #e0e0e0;
 }
 
+/* Banned Notification Banner */
+.press-banned-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+  color: #fca5a5;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.08);
+}
+
+.press-primary-dl-btn.banned-disabled,
+.img-dl-btn.banned-disabled,
+button.asset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #888888 !important;
+  box-shadow: none !important;
+}
+
 /* Hero Header */
 .press-hero {
   text-align: center;
@@ -213,6 +239,28 @@
   font-size: 0.88rem;
   color: #aaa;
   line-height: 1.5;
+}
+
+.asset-tag-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.asset-format-badge {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ccc;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.asset-format-badge.primary {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.35);
+  color: #d4af37;
 }
 
 .asset-btn-group {

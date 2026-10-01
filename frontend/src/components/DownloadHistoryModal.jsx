@@ -1,12 +1,19 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserDownloadHistory, clearUserDownloadHistory, recordUserDownload } from '../utils/downloadTracker';
 import './DownloadHistoryModal.css';
 
 const DownloadHistoryModal = ({ isOpen, onClose }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [history, setHistory] = useState([]);
+
+  const handleBrowseCatalog = () => {
+    onClose();
+    navigate('/products');
+  };
 
   useEffect(() => {
     if (user && user.email) {
@@ -87,6 +94,7 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
               src={userAvatar}
               alt={user.displayName || 'User'}
               className="history-avatar"
+              referrerPolicy="no-referrer"
               onError={(e) => {
                 e.target.onerror = null;
                 e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.email)}&backgroundColor=d4af37&textColor=000000`;
@@ -131,7 +139,7 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
               </div>
               <h4>No Downloads Recorded Yet</h4>
               <p>When you download apps, software tools, or design packages, your download activity will be listed right here.</p>
-              <button className="history-browse-btn" onClick={onClose}>
+              <button className="history-browse-btn" onClick={handleBrowseCatalog}>
                 Browse Catalog & Downloads
               </button>
             </div>

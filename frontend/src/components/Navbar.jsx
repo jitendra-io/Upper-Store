@@ -117,6 +117,7 @@ const Navbar = () => {
                   src={userAvatar}
                   alt={user?.displayName || 'User profile photo'}
                   className="nav-user-avatar"
+                  referrerPolicy="no-referrer"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.email || 'user')}&backgroundColor=d4af37&textColor=000000`;
@@ -136,6 +137,7 @@ const Navbar = () => {
                         src={userAvatar}
                         alt={user?.displayName || 'User'}
                         className="dropdown-user-avatar-large"
+                        referrerPolicy="no-referrer"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.email || 'user')}&backgroundColor=d4af37&textColor=000000`;

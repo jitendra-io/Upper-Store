@@ -308,17 +308,18 @@
 /* Article Reader Modal */
 .blog-modal-backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(10px);
-  z-index: 99999;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 5rem 1.5rem 2rem;
+  padding: 1.5rem;
+  box-sizing: border-box;
 }
 
 .blog-modal-card {
@@ -326,12 +327,14 @@
   border: 1px solid rgba(212, 175, 55, 0.35);
   border-radius: 20px;
   width: 100%;
-  max-width: 760px;
-  max-height: 78vh;
+  max-width: 800px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 35px rgba(212, 175, 55, 0.2);
+  position: relative;
+  z-index: 1000000;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 35px rgba(212, 175, 55, 0.25);
   animation: modalPopUp 0.3s ease-out;
 }
 

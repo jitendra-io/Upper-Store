@@ -464,6 +464,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                           src={rev.userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`}
                           alt={rev.userName || 'User'}
                           className="review-user-avatar"
+                          referrerPolicy="no-referrer"
                           onError={(e) => {
                             e.target.onerror = null;
                             e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`;

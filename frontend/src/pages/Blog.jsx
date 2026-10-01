@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './Blog.css';
 
 const BLOG_POSTS = [
@@ -189,7 +190,7 @@ const Blog = () => {
       </div>
 
       {/* ARTICLE READER MODAL */}
-      {activeArticle && (
+      {activeArticle && createPortal(
         <div className="blog-modal-backdrop" onClick={() => setActiveArticle(null)}>
           <div className="blog-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="blog-modal-header">
@@ -214,7 +215,8 @@ const Blog = () => {
               />
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

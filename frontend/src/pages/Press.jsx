@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
-import { useAuth } from '../context/AuthContext';
 import './Press.css';
 
 const BRAND_COLORS = [
@@ -56,21 +55,6 @@ const EDITORIAL_IMAGERY = [
 ];
 
 const Press = () => {
-  const { isLoggedIn, openAuthModal } = useAuth();
-
-  const handleDownloadAsset = (filename) => {
-    if (!isLoggedIn) {
-      openAuthModal("Authentication Required: Please sign in to download official press assets and branding PDFs.");
-      return;
-    }
-    const link = document.createElement('a');
-    link.href = logoImg;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
   return (
     <div className="press-container" style={{ zIndex: 1, position: 'relative' }}>
       {/* 1. HERO HEADER */}
@@ -78,17 +62,6 @@ const Press = () => {
         <span className="press-badge-pill">Media & Resource Kit</span>
         <h1>Official Press & <span className="highlight">Media Kit</span></h1>
         <p>Comprehensive branding assets, company boilerplate statements, leadership bios, media releases, and guidelines for editorial coverage.</p>
-        
-        <div className="press-action-bar">
-          <button onClick={() => handleDownloadAsset('Upper_Store_Press_Kit_Full.zip')} className="press-primary-dl-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Download Complete Press Bundle (.ZIP)</span>
-          </button>
-        </div>
       </header>
 
       {/* 2. COMPANY OVERVIEW (BOILERPLATE STATEMENT) */}
@@ -140,9 +113,9 @@ const Press = () => {
             <div className="asset-card-details">
               <h4>Primary Brand Logo</h4>
               <p>Square high-res logo with gold border and dark noir backdrop.</p>
-              <div className="asset-btn-group">
-                <button onClick={() => handleDownloadAsset('Upper_Store_Logo.svg')} className="asset-btn">SVG Vector</button>
-                <button onClick={() => handleDownloadAsset('Upper_Store_Logo.png')} className="asset-btn primary">PNG (Transparent)</button>
+              <div className="asset-tag-group">
+                <span className="asset-format-badge">SVG Vector</span>
+                <span className="asset-format-badge primary">PNG (Transparent)</span>
               </div>
             </div>
           </div>
@@ -157,8 +130,8 @@ const Press = () => {
             <div className="asset-card-details">
               <h4>Official Wordmark</h4>
               <p>High-contrast typographic logo for header & editorial banners.</p>
-              <div className="asset-btn-group">
-                <button onClick={() => handleDownloadAsset('Upper_Store_Wordmark.png')} className="asset-btn primary">PNG (Transparent)</button>
+              <div className="asset-tag-group">
+                <span className="asset-format-badge primary">PNG (Transparent)</span>
               </div>
             </div>
           </div>
@@ -243,9 +216,6 @@ const Press = () => {
               </div>
               <div className="imagery-footer">
                 <h4>{img.title}</h4>
-                <button onClick={() => handleDownloadAsset(`${img.id}.jpg`)} className="img-dl-btn">
-                  Download High-Res
-                </button>
               </div>
             </div>
           ))}
