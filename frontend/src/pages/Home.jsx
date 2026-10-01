@@ -98,7 +98,7 @@ const Home = () => {
             </svg>
           </Link>
           <Link to="/about" className="home-btn-secondary">
-            Meet the Founder
+            About Us
           </Link>
         </div>
 
