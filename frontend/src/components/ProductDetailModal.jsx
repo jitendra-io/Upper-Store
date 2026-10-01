@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { recordUserDownload, getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
+import StarRatingBadge from './StarRatingBadge';
+import ProductReviewsModal from './ProductReviewsModal';
 import './ProductDetailModal.css';
 
 const ProductDetailModal = ({ product, onClose }) => {
   const { user, isLoggedIn, openAuthModal } = useAuth();
   const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
   const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
 
   useEffect(() => {
     if (product?.id) {
@@ -155,6 +158,13 @@ const ProductDetailModal = ({ product, onClose }) => {
               <h2 className="modal-product-title">{product.title}</h2>
               <div className="modal-meta-pills">
                 <span className="pill-item">Version: v{product.version || '1.0.0'}</span>
+                {/* 5-Star Review Rating Button inside Product Details */}
+                <StarRatingBadge
+                  productId={product.id}
+                  initialRating={product.averageRating || 5.0}
+                  initialCount={product.reviewsCount || 0}
+                  onClick={() => setReviewModalOpen(true)}
+                />
                 <span className="pill-item download-count-pill">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -248,8 +258,18 @@ const ProductDetailModal = ({ product, onClose }) => {
         onAccept={handleAcceptTerms}
         onCancel={() => setTermsModalOpen(false)}
       />
+
+      {/* PRODUCT REVIEWS POPUP FROM DETAILS */}
+      {reviewModalOpen && (
+        <ProductReviewsModal
+          product={product}
+          isOpen={reviewModalOpen}
+          onClose={() => setReviewModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
 
 export default ProductDetailModal;
+

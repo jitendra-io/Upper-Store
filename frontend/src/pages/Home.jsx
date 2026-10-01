@@ -6,6 +6,7 @@ import ProductReviewsModal from '../components/ProductReviewsModal';
 import StarRatingBadge from '../components/StarRatingBadge';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Home.css';
+import './Products.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -145,56 +146,64 @@ const Home = () => {
           <p>Hand-picked software releases and essential digital tools ready for instant deployment.</p>
         </div>
 
-        <div className="featured-grid">
-          {featuredProducts.map((prod) => (
-            <div key={prod.id} className="featured-card">
-              <div className="featured-card-media" onClick={() => setSelectedProduct(prod)}>
-                <img src={prod.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600'} alt={prod.title} />
-                <span className="featured-category-badge">{prod.category}</span>
-              </div>
-              <div className="featured-card-body">
-                <div className="featured-card-title-row">
-                  <h3>{prod.title}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    {prod.version && <span className="featured-version-pill">v{prod.version}</span>}
-                    {/* Star Rating Badge next to version */}
-                    <StarRatingBadge
-                      productId={prod.id}
-                      initialRating={prod.averageRating || 5.0}
-                      initialCount={prod.reviewsCount || 0}
-                      onClick={() => setReviewModalProduct(prod)}
-                    />
+        <div className="products-grid">
+          {featuredProducts.map((prod) => {
+            const downloadsCount = getProductDownloadCount(prod.id, prod.downloadCount);
+            return (
+              <div key={prod.id} className="product-card">
+                <div className="product-image" onClick={() => setSelectedProduct(prod)} style={{ cursor: 'pointer' }}>
+                  <img
+                    src={prod.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=500'}
+                    alt={prod.title}
+                  />
+                  <span className="product-category">{prod.category}</span>
+                </div>
+                <div className="product-info">
+                  <div className="product-title-row">
+                    {prod.logo ? (
+                      <img src={prod.logo} alt="" className="product-app-logo" />
+                    ) : (
+                      <div className="product-logo-placeholder-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        </svg>
+                      </div>
+                    )}
+                    <div>
+                      <h3>{prod.title}</h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
+                        {prod.version && <span className="catalog-ver-tag">v{prod.version}</span>}
+                        {/* 5-Star Rating Badge next to version */}
+                        <StarRatingBadge
+                          productId={prod.id}
+                          initialRating={prod.averageRating || 5.0}
+                          initialCount={prod.reviewsCount || 0}
+                          onClick={() => setReviewModalProduct(prod)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <p>{prod.description}</p>
+                  <div className="product-footer">
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                      <span className="product-price">{prod.price}</span>
+                      <span className="product-downloads-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '3px' }}>
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        {formatDownloadCount(downloadsCount)} Downloads
+                      </span>
+                    </div>
+                    <button className="view-btn" onClick={() => setSelectedProduct(prod)}>
+                      Details
+                    </button>
                   </div>
                 </div>
-                <p>{prod.description}</p>
-                
-                {prod.features && (
-                  <ul className="featured-mini-specs">
-                    {prod.features.slice(0, 2).map((f, idx) => (
-                      <li key={idx}>✓ {f}</li>
-                    ))}
-                  </ul>
-                )}
-
-                <div className="featured-card-footer">
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                    <span className="featured-price">{prod.price}</span>
-                    <span className="product-downloads-badge">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '3px' }}>
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                      </svg>
-                      {formatDownloadCount(getProductDownloadCount(prod.id, prod.downloadCount))} Downloads
-                    </span>
-                  </div>
-                  <button className="featured-view-btn" onClick={() => setSelectedProduct(prod)}>
-                    View Details
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="section-cta-row">
