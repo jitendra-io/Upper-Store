@@ -171,6 +171,9 @@ const loginUser = async (req, res) => {
       displayName: userData.displayName || userData.email.split('@')[0],
       provider: userData.provider || 'email',
       photoURL,
+      isBanned: Boolean(userData.isBanned),
+      bannedAt: userData.bannedAt || null,
+      lastAppealedAt: userData.lastAppealedAt || null,
       role: 'user',
     };
 
@@ -212,6 +215,7 @@ const googleOAuthLogin = async (req, res) => {
         photoURL: computedPhoto,
         googleId: googleId || null,
         provider: 'google',
+        isBanned: false,
         createdAt: new Date().toISOString(),
       });
       uid = newUserRef.id;
@@ -221,6 +225,7 @@ const googleOAuthLogin = async (req, res) => {
         displayName: displayName || cleanEmail.split('@')[0],
         photoURL: computedPhoto,
         provider: 'google',
+        isBanned: false,
         role: 'user',
       };
     } else {
@@ -243,6 +248,9 @@ const googleOAuthLogin = async (req, res) => {
         displayName: displayName || existingData.displayName || cleanEmail.split('@')[0],
         photoURL: activePhoto,
         provider: existingData.provider || 'google',
+        isBanned: Boolean(existingData.isBanned),
+        bannedAt: existingData.bannedAt || null,
+        lastAppealedAt: existingData.lastAppealedAt || null,
         role: 'user',
       };
     }
@@ -258,10 +266,113 @@ const googleOAuthLogin = async (req, res) => {
   }
 };
 
+// @desc    Get all registered users for Admin panel
+// @route   GET /api/auth/users
+// @access  Private (Admin)
+const getAllUsers = async (req, res) => {
+  try {
+    const snapshot = await db.collection('users').get();
+    const users = snapshot.docs.map((doc) => ({
+      uid: doc.id,
+      ...doc.data(),
+      isBanned: Boolean(doc.data().isBanned),
+    }));
+
+    users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Failed to fetch registered users.' });
+  }
+};
+
+// @desc    Ban a user account
+// @route   POST /api/auth/users/:userId/ban
+// @access  Private (Admin)
+const banUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const docRef = db.collection('users').doc(userId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    await docRef.update({
+      isBanned: true,
+      bannedAt: new Date().toISOString(),
+    });
+
+    res.json({ message: 'User account has been banned successfully.' });
+  } catch (error) {
+    console.error('Error banning user:', error);
+    res.status(500).json({ message: 'Failed to ban user account.' });
+  }
+};
+
+// @desc    Unban a user account
+// @route   POST /api/auth/users/:userId/unban
+// @access  Private (Admin)
+const unbanUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const docRef = db.collection('users').doc(userId);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    await docRef.update({
+      isBanned: false,
+      unbannedAt: new Date().toISOString(),
+    });
+
+    res.json({ message: 'User account has been unbanned successfully.' });
+  } catch (error) {
+    console.error('Error unbanning user:', error);
+    res.status(500).json({ message: 'Failed to unban user account.' });
+  }
+};
+
+// @desc    Get real-time user status (check if banned)
+// @route   GET /api/auth/user/status/:email
+// @access  Public
+const getUserStatus = async (req, res) => {
+  const { email } = req.params;
+  try {
+    const cleanEmail = email.trim().toLowerCase();
+    const snapshot = await db.collection('users').where('email', '==', cleanEmail).get();
+
+    if (snapshot.empty) {
+      return res.json({ isBanned: false });
+    }
+
+    const userData = snapshot.docs[0].data();
+    res.json({
+      uid: snapshot.docs[0].id,
+      email: userData.email,
+      isBanned: Boolean(userData.isBanned),
+      bannedAt: userData.bannedAt || null,
+      lastAppealedAt: userData.lastAppealedAt || null,
+    });
+  } catch (error) {
+    console.error('Error fetching user status:', error);
+    res.status(500).json({ message: 'Failed to fetch user status.' });
+  }
+};
+
 module.exports = {
   loginAdmin,
   setupAdmin,
   registerUser,
   loginUser,
   googleOAuthLogin,
+  getAllUsers,
+  banUser,
+  unbanUser,
+  getUserStatus,
 };
+

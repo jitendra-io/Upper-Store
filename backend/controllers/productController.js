@@ -120,53 +120,77 @@ const getProductById = async (req, res) => {
 // @access  Private (Admin)
 const createProduct = async (req, res) => {
   try {
-    const { title, category, description, price, version, releaseNotes, directApkUrl } = req.body;
+    const {
+      title,
+      category,
+      description,
+      price,
+      version,
+      releaseNotes,
+      directApkUrl,
+      logoUrl,
+      imageUrl1,
+      imageUrl2,
+      imageUrl3,
+      imageUrls: bodyImageUrls,
+    } = req.body;
 
     if (!title || !category || !description) {
       return res.status(400).json({ message: 'Title, category, and description are required.' });
     }
 
-    let imageUrls = [];
-    let logoUrl = '';
-    let apkUrl = directApkUrl ? directApkUrl.trim() : '';
+    // Enforce GitHub Release link requirement
+    const apkUrl = (directApkUrl || '').trim();
+    if (!apkUrl || (!apkUrl.toLowerCase().includes('github.com') && !apkUrl.toLowerCase().includes('githubusercontent.com'))) {
+      return res.status(400).json({
+        message: 'GitHub Release URL is required as the download source (e.g. https://github.com/owner/repo/releases/download/v1.0.0/app.apk).',
+      });
+    }
 
-    // Handle up to 3 Screenshot Images upload
+    // Collect Screenshot image links (Google Photos / Web image links)
+    let finalImageUrls = [];
+    if (Array.isArray(bodyImageUrls)) {
+      finalImageUrls = bodyImageUrls.map(u => u.trim()).filter(Boolean);
+    } else if (typeof bodyImageUrls === 'string' && bodyImageUrls.trim()) {
+      finalImageUrls = bodyImageUrls.split('\n').map(u => u.trim()).filter(Boolean);
+    }
+
+    if (imageUrl1 && imageUrl1.trim()) finalImageUrls.push(imageUrl1.trim());
+    if (imageUrl2 && imageUrl2.trim()) finalImageUrls.push(imageUrl2.trim());
+    if (imageUrl3 && imageUrl3.trim()) finalImageUrls.push(imageUrl3.trim());
+
+    // Fallback if image uploaded via file staging
     const imgFiles = req.files?.images || req.files?.image || [];
     for (const imgFile of imgFiles) {
       const url = await uploadFileToCloudOrLocal(imgFile, 'images', req);
-      imageUrls.push(url);
+      finalImageUrls.push(url);
     }
-    const imageUrl = imageUrls[0] || '';
 
-    // Handle Logo / Icon upload
-    if (req.files?.logo) {
+    let finalLogoUrl = (logoUrl || '').trim();
+    if (!finalLogoUrl && req.files?.logo) {
       const logoFile = req.files.logo[0];
-      logoUrl = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
+      finalLogoUrl = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
     }
 
-    // Handle APK / Package upload if no direct URL was provided
-    if (!apkUrl && req.files?.apk) {
-      const apkFile = req.files.apk[0];
-      apkUrl = await handlePackageFileUpload(apkFile, title, version, description, req);
-    }
+    const mainImageUrl = finalImageUrls[0] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600';
 
     const productData = {
-      title,
-      category,
-      description,
-      price: price || 'Free',
-      version: version || '1.0.0',
-      releaseNotes: releaseNotes || '',
-      image: imageUrl,
-      images: imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : []),
-      logo: logoUrl,
+      title: title.trim(),
+      category: category.trim(),
+      description: description.trim(),
+      price: price ? price.trim() : 'Free',
+      version: version ? version.trim() : '1.0.0',
+      releaseNotes: releaseNotes ? releaseNotes.trim() : '',
+      image: mainImageUrl,
+      images: finalImageUrls.length > 0 ? finalImageUrls : [mainImageUrl],
+      logo: finalLogoUrl,
       apkFile: apkUrl,
       downloadCount: 0,
       createdAt: new Date().toISOString(),
     };
 
     const docRef = await db.collection('products').add(productData);
-    console.log(`✅ Product published successfully: "${title}" (ID: ${docRef.id})`);
+    console.log(`✅ Product published successfully via GitHub Release: "${title}" (ID: ${docRef.id})`);
     res.status(201).json({ id: docRef.id, ...productData });
   } catch (error) {
     console.error('Create product error:', error);
@@ -184,44 +208,51 @@ const updateProduct = async (req, res) => {
     if (!doc.exists) return res.status(404).json({ message: 'Product not found.' });
 
     const existingData = doc.data();
-    const { title, category, description, price, version, releaseNotes, directApkUrl } = req.body;
+    const {
+      title,
+      category,
+      description,
+      price,
+      version,
+      releaseNotes,
+      directApkUrl,
+      logoUrl,
+      imageUrl1,
+      imageUrl2,
+      imageUrl3,
+      imageUrls: bodyImageUrls,
+    } = req.body;
 
     const updatedData = {};
-    if (title !== undefined) updatedData.title = title;
-    if (category !== undefined) updatedData.category = category;
-    if (description !== undefined) updatedData.description = description;
-    if (price !== undefined) updatedData.price = price;
-    if (version !== undefined) updatedData.version = version;
-    if (releaseNotes !== undefined) updatedData.releaseNotes = releaseNotes;
+    if (title !== undefined) updatedData.title = title.trim();
+    if (category !== undefined) updatedData.category = category.trim();
+    if (description !== undefined) updatedData.description = description.trim();
+    if (price !== undefined) updatedData.price = price.trim();
+    if (version !== undefined) updatedData.version = version.trim();
+    if (releaseNotes !== undefined) updatedData.releaseNotes = releaseNotes.trim();
+
     if (directApkUrl !== undefined && directApkUrl.trim() !== '') {
-      updatedData.apkFile = directApkUrl.trim();
-    }
-
-    // Handle screenshot image uploads if provided
-    const imgFiles = req.files?.images || req.files?.image || [];
-    if (imgFiles.length > 0) {
-      let imageUrls = [];
-      for (const imgFile of imgFiles) {
-        const url = await uploadFileToCloudOrLocal(imgFile, 'images', req);
-        imageUrls.push(url);
+      const apkUrl = directApkUrl.trim();
+      if (!apkUrl.toLowerCase().includes('github.com') && !apkUrl.toLowerCase().includes('githubusercontent.com')) {
+        return res.status(400).json({
+          message: 'Download link must be a valid GitHub Release URL.',
+        });
       }
-      updatedData.image = imageUrls[0];
-      updatedData.images = imageUrls;
+      updatedData.apkFile = apkUrl;
     }
 
-    // Handle logo upload if provided
-    if (req.files?.logo) {
-      const logoFile = req.files.logo[0];
-      updatedData.logo = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
+    if (logoUrl !== undefined && logoUrl.trim() !== '') {
+      updatedData.logo = logoUrl.trim();
     }
 
-    // Handle binary / apk / exe file upload if provided
-    if (req.files?.apk) {
-      const apkFile = req.files.apk[0];
-      const prodTitle = title || existingData.title;
-      const prodVersion = version || existingData.version;
-      const prodDesc = description || existingData.description;
-      updatedData.apkFile = await handlePackageFileUpload(apkFile, prodTitle, prodVersion, prodDesc, req);
+    let finalImageUrls = [];
+    if (imageUrl1 && imageUrl1.trim()) finalImageUrls.push(imageUrl1.trim());
+    if (imageUrl2 && imageUrl2.trim()) finalImageUrls.push(imageUrl2.trim());
+    if (imageUrl3 && imageUrl3.trim()) finalImageUrls.push(imageUrl3.trim());
+
+    if (finalImageUrls.length > 0) {
+      updatedData.image = finalImageUrls[0];
+      updatedData.images = finalImageUrls;
     }
 
     updatedData.updatedAt = new Date().toISOString();
@@ -234,6 +265,7 @@ const updateProduct = async (req, res) => {
     res.status(500).json({ message: error.message || 'Error updating product.' });
   }
 };
+
 
 // @desc    Delete a product
 // @route   DELETE /api/products/:id

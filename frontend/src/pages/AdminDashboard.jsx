@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUserDownloadHistory } from '../utils/downloadTracker';
 import './AdminDashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -7,13 +8,14 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [token, setToken] = useState(localStorage.getItem('adminToken'));
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'users', 'appeals', 'inbox'
+
+  // Products State
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-
-  // Edit state
   const [editingProduct, setEditingProduct] = useState(null);
 
-  // Form State
+  // Form State (GitHub Release + Google Photos Links)
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Mobile App');
   const [price, setPrice] = useState('Free');
@@ -21,36 +23,30 @@ const AdminDashboard = () => {
   const [description, setDescription] = useState('');
   const [releaseNotes, setReleaseNotes] = useState('');
   const [directApkUrl, setDirectApkUrl] = useState('');
-  const [imageFiles, setImageFiles] = useState([]);
-  const [logoFile, setLogoFile] = useState(null);
-  const [apkFile, setApkFile] = useState(null);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [imageUrl1, setImageUrl1] = useState('');
+  const [imageUrl2, setImageUrl2] = useState('');
+  const [imageUrl3, setImageUrl3] = useState('');
 
-  // Advanced GitHub Release Settings State
-  const [showGhSettings, setShowGhSettings] = useState(false);
-  const [githubOwner, setGithubOwner] = useState('');
-  const [githubRepo, setGithubRepo] = useState('');
-  const [githubToken, setGithubToken] = useState('');
+  // Users State
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedUserDetail, setSelectedUserDetail] = useState(null);
+  const [userReviewsMap, setUserReviewsMap] = useState({});
 
-  // Inbox State
+  // Appeals State
+  const [appeals, setAppeals] = useState([]);
+  const [loadingAppeals, setLoadingAppeals] = useState(false);
+  const [actionId, setActionId] = useState(null);
+
+  // Inbox Messages State
   const [messages, setMessages] = useState([]);
-  const [showInboxModal, setShowInboxModal] = useState(false);
-  const [deletingMsgId, setDeletingMsgId] = useState(null);
+  const [loadingMessages, setLoadingMessages] = useState(false);
 
   // UI Feedback
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [deletingId, setDeletingId] = useState(null);
-
-  useEffect(() => {
-    if (showInboxModal) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'auto';
-    }
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, [showInboxModal]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('adminToken');
@@ -59,12 +55,9 @@ const AdminDashboard = () => {
     } else {
       setToken(savedToken);
       fetchProducts();
+      fetchUsers(savedToken);
+      fetchAppeals(savedToken);
       fetchMessages(savedToken);
-
-      const interval = setInterval(() => {
-        fetchMessages(savedToken);
-      }, 15000);
-      return () => clearInterval(interval);
     }
   }, [navigate]);
 
@@ -83,67 +76,139 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchUsers = async (authToken = token) => {
+    if (!authToken) return;
+    setLoadingUsers(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/users`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch users:', err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const fetchAppeals = async (authToken = token) => {
+    if (!authToken) return;
+    setLoadingAppeals(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/contact/appeals`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAppeals(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch appeals:', err);
+    } finally {
+      setLoadingAppeals(false);
+    }
+  };
+
   const fetchMessages = async (authToken = token) => {
     if (!authToken) return;
+    setLoadingMessages(true);
     try {
       const res = await fetch(`${API_BASE}/api/contact`, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
+        headers: { Authorization: `Bearer ${authToken}` },
       });
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
       }
     } catch (err) {
-      console.error('Failed to fetch inbox messages:', err);
-    }
-  };
-
-  const handleMarkRead = async (id) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/contact/${id}/read`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        setMessages(messages.map((m) => (m.id === id ? { ...m, read: true } : m)));
-      }
-    } catch (err) {
-      console.error('Failed to mark message read:', err);
-    }
-  };
-
-  const handleDeleteMessage = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this message?')) return;
-    setDeletingMsgId(id);
-    try {
-      const res = await fetch(`${API_BASE}/api/contact/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        setMessages(messages.filter((m) => m.id !== id));
-      }
-    } catch (err) {
-      alert(`Error deleting message: ${err.message}`);
+      console.error('Failed to fetch messages:', err);
     } finally {
-      setDeletingMsgId(null);
+      setLoadingMessages(false);
     }
   };
-
-  const unreadCount = messages.filter((m) => !m.read).length;
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     navigate('/admin');
   };
 
-  const handleScreenshotChange = (e) => {
-    const selected = Array.from(e.target.files).slice(0, 3);
-    setImageFiles(selected);
+  // BAN / UNBAN USER HANDLER
+  const handleToggleBan = async (userObj) => {
+    const isCurrentlyBanned = userObj.isBanned;
+    const endpoint = isCurrentlyBanned
+      ? `${API_BASE}/api/auth/users/${userObj.uid}/unban`
+      : `${API_BASE}/api/auth/users/${userObj.uid}/ban`;
+
+    if (!window.confirm(`Are you sure you want to ${isCurrentlyBanned ? 'UNBAN' : 'BAN'} ${userObj.email}?`)) return;
+
+    setActionId(userObj.uid);
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setMessage({
+          type: 'success',
+          text: `User ${userObj.email} has been ${isCurrentlyBanned ? 'unbanned' : 'banned'} successfully.`,
+        });
+        fetchUsers();
+      } else {
+        const data = await res.json();
+        throw new Error(data.message || 'Action failed.');
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setActionId(null);
+    }
   };
 
+  // RESOLVE APPEAL & UNBAN
+  const handleResolveAppeal = async (appealId) => {
+    if (!window.confirm('Resolve appeal and unban user?')) return;
+    setActionId(appealId);
+    try {
+      const res = await fetch(`${API_BASE}/api/contact/appeals/${appealId}/resolve`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Ban appeal resolved and user unbanned successfully.' });
+        fetchAppeals();
+        fetchUsers();
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to resolve appeal.' });
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  // VIEW USER DETAILS (DOWNLOAD HISTORY & REVIEWS)
+  const handleViewUserDetail = async (userObj) => {
+    setSelectedUserDetail(userObj);
+    // Fetch user reviews
+    try {
+      const userReviews = [];
+      for (const prod of products) {
+        const res = await fetch(`${API_BASE}/api/reviews/product/${prod.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          const match = (data.reviews || []).filter(r => r.userEmail === userObj.email.toLowerCase());
+          userReviews.push(...match.map(r => ({ ...r, productTitle: prod.title })));
+        }
+      }
+      setUserReviewsMap({ [userObj.email]: userReviews });
+    } catch (err) {
+      console.warn('Error fetching user reviews:', err);
+    }
+  };
+
+  // PRODUCT FORM HANDLER
   const startEditProduct = (p) => {
     setEditingProduct(p);
     setTitle(p.title || '');
@@ -153,12 +218,10 @@ const AdminDashboard = () => {
     setDescription(p.description || '');
     setReleaseNotes(p.releaseNotes || '');
     setDirectApkUrl(p.apkFile || '');
-    setLogoFile(null);
-    setImageFiles([]);
-    setApkFile(null);
-    // Reset file inputs
-    const inputs = document.querySelectorAll('input[type="file"]');
-    inputs.forEach((input) => (input.value = ''));
+    setLogoUrl(p.logo || '');
+    setImageUrl1(p.images?.[0] || p.image || '');
+    setImageUrl2(p.images?.[1] || '');
+    setImageUrl3(p.images?.[2] || '');
     setMessage({ type: '', text: '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -172,38 +235,24 @@ const AdminDashboard = () => {
     setDescription('');
     setReleaseNotes('');
     setDirectApkUrl('');
-    setLogoFile(null);
-    setImageFiles([]);
-    setApkFile(null);
-    const inputs = document.querySelectorAll('input[type="file"]');
-    inputs.forEach((input) => (input.value = ''));
+    setLogoUrl('');
+    setImageUrl1('');
+    setImageUrl2('');
+    setImageUrl3('');
     setMessage({ type: '', text: '' });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmitProduct = async (e) => {
     e.preventDefault();
+    if (!directApkUrl || (!directApkUrl.toLowerCase().includes('github.com') && !directApkUrl.toLowerCase().includes('githubusercontent.com'))) {
+      setMessage({ type: 'error', text: 'GitHub Release URL is required for product download source (e.g. https://github.com/owner/repo/releases/download/v1.0.0/app.apk).' });
+      return;
+    }
+
     setSubmitting(true);
     setMessage({ type: '', text: '' });
 
     try {
-      const formData = new FormData();
-      formData.append('title', title);
-      formData.append('category', category);
-      formData.append('price', price);
-      formData.append('version', version);
-      formData.append('description', description);
-      formData.append('releaseNotes', releaseNotes);
-      if (directApkUrl) formData.append('directApkUrl', directApkUrl);
-
-      // GitHub custom settings if provided
-      if (githubOwner) formData.append('githubOwner', githubOwner);
-      if (githubRepo) formData.append('githubRepo', githubRepo);
-      if (githubToken) formData.append('githubToken', githubToken);
-
-      imageFiles.forEach((file) => formData.append('images', file));
-      if (logoFile) formData.append('logo', logoFile);
-      if (apkFile) formData.append('apk', apkFile);
-
       const isEditing = Boolean(editingProduct);
       const url = isEditing
         ? `${API_BASE}/api/products/${editingProduct.id}`
@@ -213,21 +262,28 @@ const AdminDashboard = () => {
       const res = await fetch(url, {
         method,
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        body: JSON.stringify({
+          title,
+          category,
+          price,
+          version,
+          description,
+          releaseNotes,
+          directApkUrl,
+          logoUrl,
+          imageUrl1,
+          imageUrl2,
+          imageUrl3,
+        }),
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to save product.');
 
-      if (!res.ok) {
-        throw new Error(data.message || `Failed to ${isEditing ? 'update' : 'upload'} product.`);
-      }
-
-      setMessage({
-        type: 'success',
-        text: `✨ Product successfully ${isEditing ? 'updated' : 'published'}!`,
-      });
+      setMessage({ type: 'success', text: `Product ${isEditing ? 'updated' : 'published'} successfully via GitHub Release!` });
       cancelEdit();
       fetchProducts();
     } catch (err) {
@@ -237,398 +293,305 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDeleteProduct = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     setDeletingId(id);
     try {
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.message || 'Failed to delete');
-      }
-
-      setProducts(products.filter((p) => p.id !== id));
-      if (editingProduct?.id === id) {
-        cancelEdit();
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Product deleted successfully.' });
+        fetchProducts();
       }
     } catch (err) {
-      alert(`Error deleting product: ${err.message}`);
+      setMessage({ type: 'error', text: 'Failed to delete product.' });
     } finally {
       setDeletingId(null);
     }
   };
 
-  const renderFileLink = (p) => {
-    if (!p.apkFile) return <span className="no-file">—</span>;
-    const fileUrl = p.apkFile.toLowerCase();
-    const isGitHub = fileUrl.includes('github.com');
-    let label = 'FILE ⬇';
-    let className = 'file-link general-link';
-
-    if (isGitHub) {
-      label = 'GitHub Release ⬇';
-      className = 'file-link github-link';
-    } else if (
-      fileUrl.endsWith('.exe') ||
-      fileUrl.endsWith('.msi') ||
-      p.category?.includes('.exe') ||
-      p.category?.includes('Windows')
-    ) {
-      label = 'EXE ⬇';
-      className = 'file-link exe-link';
-    } else if (fileUrl.endsWith('.apk') || p.category?.includes('Mobile')) {
-      label = 'APK ⬇';
-      className = 'file-link apk-link';
-    } else if (fileUrl.endsWith('.zip')) {
-      label = 'ZIP ⬇';
-      className = 'file-link zip-link';
-    }
-
-    return (
-      <a href={p.apkFile} target="_blank" rel="noopener noreferrer" className={className}>
-        {label}
-      </a>
-    );
-  };
+  const unreadCount = messages.filter((m) => !m.read).length;
+  const pendingAppealsCount = appeals.filter((a) => a.status === 'pending').length;
 
   return (
-    <div className="admin-dashboard-container">
-      {/* Header Bar (Full Scale) */}
-      <header className="admin-nav">
-        <div className="nav-brand">
-          <h2>
-            Upper <span className="gold-text">Store</span>
-          </h2>
-          <span className="admin-badge">Admin Control Center</span>
-        </div>
-        
-        <div className="nav-actions">
-          <button onClick={() => setShowInboxModal(true)} className="inbox-nav-btn" title="View Customer Messages">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
-              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
+    <div className="admin-container">
+      
+      {/* HEADER NAVBAR */}
+      <header className="admin-header">
+        <div className="admin-header-brand">
+          <div className="admin-logo-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             </svg>
-            <span>Customer Inbox</span>
-            {unreadCount > 0 ? (
-              <span className="unread-badge">{unreadCount}</span>
-            ) : (
-              <span className="msg-total-badge">{messages.length}</span>
-            )}
-          </button>
+          </div>
+          <div>
+            <h1>Upper Official <span className="highlight-gold">Admin Panel</span></h1>
+            <span className="admin-subtext">System Control & Management Console</span>
+          </div>
+        </div>
 
-          <button onClick={handleLogout} className="logout-btn">
-            <span>Logout</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-          </button>
-        </div>
+        <button className="admin-logout-btn" onClick={handleLogout}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Sign Out</span>
+        </button>
       </header>
 
-      {/* Dashboard Body Content (Reduced by 25%) */}
-      <div className="admin-dashboard-body">
-        {/* Stats Bar */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-title">Total Live Products</div>
-            <div className="stat-value">{products.length}</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-title">Inbox Messages</div>
-            <div className="stat-value gold-text">
-              {messages.length} <span className="sub-unread">({unreadCount} unread)</span>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-title">Package Storage</div>
-            <div className="stat-value gold-text">GitHub Releases (2GB Max)</div>
-          </div>
+      {/* NAVIGATION TABS (ZERO EMOJIS - VECTOR ICONS ONLY) */}
+      <div className="admin-tabs-bar">
+        <button
+          className={`admin-tab-btn ${activeTab === 'products' ? 'active' : ''}`}
+          onClick={() => setActiveTab('products')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          </svg>
+          <span>Products ({products.length})</span>
+        </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'users' ? 'active' : ''}`}
+          onClick={() => setActiveTab('users')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>User Accounts ({users.length})</span>
+        </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'appeals' ? 'active' : ''}`}
+          onClick={() => setActiveTab('appeals')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Ban Appeals</span>
+          {pendingAppealsCount > 0 && <span className="tab-badge warning">{pendingAppealsCount}</span>}
+        </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'inbox' ? 'active' : ''}`}
+          onClick={() => setActiveTab('inbox')}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <polyline points="22,6 12,13 2,6"></polyline>
+          </svg>
+          <span>Inbox</span>
+          {unreadCount > 0 && <span className="tab-badge alert">{unreadCount}</span>}
+        </button>
+      </div>
+
+      {/* FEEDBACK ALERT MESSAGE */}
+      {message.text && (
+        <div className={`admin-alert ${message.type}`}>
+          {message.type === 'error' ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          )}
+          <span>{message.text}</span>
         </div>
+      )}
 
-        <div className="admin-main-grid">
-          {/* Form Section */}
-          <div className="dashboard-card form-section">
-            <div className="form-header-row">
-              <h3>{editingProduct ? `Edit Product: ${editingProduct.title}` : 'Publish New Product'}</h3>
-              {editingProduct && (
-                <button type="button" onClick={cancelEdit} className="cancel-edit-btn">
-                  ✕ Cancel Edit
-                </button>
-              )}
-            </div>
-            <p className="section-desc">
-              {editingProduct
-                ? 'Update existing details, change category, or upload updated package files.'
-                : 'Add a new digital asset, web application, or executable file to Upper Store.'}
-            </p>
-
-            {message.text && <div className={`alert-banner ${message.type}`}>{message.text}</div>}
-
-            <form onSubmit={handleSubmit} className="product-form">
+      {/* TAB 1: PRODUCTS MANAGEMENT */}
+      {activeTab === 'products' && (
+        <div className="admin-grid-layout">
+          {/* UPLOAD FORM (GITHUB RELEASE ONLY + GOOGLE PHOTOS LINKS) */}
+          <div className="admin-form-card">
+            <h3>{editingProduct ? 'Edit Product' : 'Add New Product (GitHub Release)'}</h3>
+            
+            <form onSubmit={handleSubmitProduct} className="admin-form">
               <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="title">Product Title *</label>
+                <div className="form-group flex-2">
+                  <label>Product Title *</label>
                   <input
-                    id="title"
                     type="text"
-                    placeholder="e.g. Upper Task Manager Pro"
+                    required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    required
+                    placeholder="e.g. Upper Mobile Client"
                   />
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="category">Category *</label>
-                  <select
-                    id="category"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  >
-                    <option value="Mobile App">Mobile App (APK)</option>
-                    <option value="Windows App (.exe)">Windows App (.exe)</option>
-                    <option value="Web UI Kit">Web UI Kit</option>
-                    <option value="SaaS Platform">SaaS Platform</option>
-                    <option value="AI Tool">AI Tool</option>
-                    <option value="Developer Script">Developer Script</option>
+                <div className="form-group flex-1">
+                  <label>Category *</label>
+                  <select value={category} onChange={(e) => setCategory(e.target.value)}>
+                    <option value="Mobile App">Mobile App (.apk)</option>
+                    <option value="Windows App">Windows App (.exe)</option>
+                    <option value="Design Asset">Design Asset (.zip)</option>
+                    <option value="Software Tool">Software Tool</option>
                   </select>
                 </div>
               </div>
 
               <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="price">Price / Badge *</label>
+                <div className="form-group flex-1">
+                  <label>Price *</label>
                   <input
-                    id="price"
                     type="text"
-                    placeholder="e.g. Free, $19, $49"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    required
+                    placeholder="Free or $29"
                   />
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="version">Version</label>
+                <div className="form-group flex-1">
+                  <label>Version *</label>
                   <input
-                    id="version"
                     type="text"
-                    placeholder="1.0.0"
                     value={version}
                     onChange={(e) => setVersion(e.target.value)}
+                    placeholder="1.0.0"
                   />
                 </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="description">Short Description *</label>
-                <textarea
-                  id="description"
-                  rows="3"
-                  placeholder="Brief summary of features, design system, and capabilities..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                ></textarea>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="releaseNotes">Release Notes & System Requirements</label>
-                <textarea
-                  id="releaseNotes"
-                  rows="3"
-                  placeholder="List major changes, compatibility details, or download instructions..."
-                  value={releaseNotes}
-                  onChange={(e) => setReleaseNotes(e.target.value)}
-                ></textarea>
-              </div>
-
-              {/* Direct URL OR File Upload for App Package */}
-              <div className="form-group">
-                <label htmlFor="direct-url">Direct Package Download URL (GitHub Release / CDN URL)</label>
+              {/* REQUIREMENT: GITHUB RELEASE URL REQUIREMENT */}
+              <div className="form-group highlight-box">
+                <label>GitHub Release Download URL * (Only Download Option)</label>
                 <input
-                  id="direct-url"
-                  type="text"
-                  placeholder="e.g. https://github.com/YourJITENDRA/Upper-Official/releases/download/v4.0/UpperPlayer_v4.0.apk"
+                  type="url"
+                  required
                   value={directApkUrl}
                   onChange={(e) => setDirectApkUrl(e.target.value)}
+                  placeholder="https://github.com/YourJITENDRA/Upper-Official/releases/download/v1.0.0/app.apk"
                 />
-                <span className="file-hint-text">
-                  💡 Paste a direct GitHub Release URL above, OR attach a file below to auto-publish to GitHub Releases.
-                </span>
+                <span className="field-hint">All product downloads are served directly from GitHub Releases.</span>
               </div>
 
-              <div className="form-row file-upload-row">
-                <div className="form-group">
-                  <label htmlFor="logo-file">
-                    App / Product Logo Icon {editingProduct && <span className="optional-tag">(Optional replace)</span>}
-                  </label>
-                  <input
-                    id="logo-file"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setLogoFile(e.target.files[0])}
-                  />
-                  {logoFile && <span className="file-name">Selected: {logoFile.name}</span>}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="image-file">
-                    Screenshots (Up to 3 images) {editingProduct && <span className="optional-tag">(Optional replace)</span>}
-                  </label>
-                  <input
-                    id="image-file"
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleScreenshotChange}
-                  />
-                  {imageFiles.length > 0 && (
-                    <span className="file-name">
-                      {imageFiles.length} file(s) selected: {imageFiles.map((f) => f.name).join(', ')}
-                    </span>
-                  )}
-                </div>
+              {/* REQUIREMENT: LOGO & SCREENSHOT LINKS (GOOGLE PHOTOS / WEB LINKS) */}
+              <div className="form-group">
+                <label>Logo / App Icon URL (Google Photos / Direct Image Link)</label>
+                <input
+                  type="url"
+                  value={logoUrl}
+                  onChange={(e) => setLogoUrl(e.target.value)}
+                  placeholder="https://lh3.googleusercontent.com/... or direct image URL"
+                />
               </div>
 
               <div className="form-group">
-                <label htmlFor="apk-file">
-                  Upload Package File (.apk, .exe, .zip) {editingProduct && <span className="optional-tag">(Optional replace)</span>}
-                </label>
+                <label>Screenshot Image URLs (Up to 3 Google Photos / Web Image Links)</label>
                 <input
-                  id="apk-file"
-                  type="file"
-                  accept=".apk,.exe,.msi,.zip"
-                  onChange={(e) => setApkFile(e.target.files[0])}
+                  type="url"
+                  value={imageUrl1}
+                  onChange={(e) => setImageUrl1(e.target.value)}
+                  placeholder="Screenshot 1 URL..."
+                  style={{ marginBottom: '0.4rem' }}
                 />
-                {apkFile && <span className="file-name">Selected: {apkFile.name}</span>}
+                <input
+                  type="url"
+                  value={imageUrl2}
+                  onChange={(e) => setImageUrl2(e.target.value)}
+                  placeholder="Screenshot 2 URL..."
+                  style={{ marginBottom: '0.4rem' }}
+                />
+                <input
+                  type="url"
+                  value={imageUrl3}
+                  onChange={(e) => setImageUrl3(e.target.value)}
+                  placeholder="Screenshot 3 URL..."
+                />
               </div>
 
-              {/* Custom GitHub Account Release Settings Toggle */}
-              <div className="github-custom-toggle-container">
-                <button
-                  type="button"
-                  className="gh-toggle-btn"
-                  onClick={() => setShowGhSettings(!showGhSettings)}
-                >
-                  ⚙️ {showGhSettings ? 'Hide' : 'Configure'} GitHub Release Account (Optional)
-                </button>
+              <div className="form-group">
+                <label>Description *</label>
+                <textarea
+                  rows="3"
+                  required
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Detailed description..."
+                />
+              </div>
 
-                {showGhSettings && (
-                  <div className="gh-custom-settings-box">
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>GitHub Username / Owner</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. YourJITENDRA"
-                          value={githubOwner}
-                          onChange={(e) => setGithubOwner(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Repository Name</label>
-                        <input
-                          type="text"
-                          placeholder="e.g. Upper-Official"
-                          value={githubRepo}
-                          onChange={(e) => setGithubRepo(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label>Personal Access Token (PAT Token)</label>
-                      <input
-                        type="password"
-                        placeholder="ghp_..."
-                        value={githubToken}
-                        onChange={(e) => setGithubToken(e.target.value)}
-                      />
-                    </div>
-                  </div>
+              <div className="form-group">
+                <label>Release Notes</label>
+                <textarea
+                  rows="2"
+                  value={releaseNotes}
+                  onChange={(e) => setReleaseNotes(e.target.value)}
+                  placeholder="v1.0.0 - Initial release notes..."
+                />
+              </div>
+
+              <div className="form-actions">
+                {editingProduct && (
+                  <button type="button" onClick={cancelEdit} className="admin-btn secondary">
+                    Cancel Edit
+                  </button>
                 )}
+                <button type="submit" className="admin-btn primary" disabled={submitting}>
+                  {submitting ? 'Saving Product...' : editingProduct ? 'Update Product' : 'Publish Product'}
+                </button>
               </div>
-
-              <button type="submit" className="publish-btn" disabled={submitting}>
-                {submitting
-                  ? 'Publishing Package...'
-                  : editingProduct
-                  ? 'Update Product'
-                  : 'Publish Product'}
-              </button>
             </form>
           </div>
 
-          {/* Existing Products List */}
-          <div className="dashboard-card list-section">
-            <h3>Manage Inventory ({products.length})</h3>
-            <p className="section-desc">View, monitor, edit, and remove live products from your catalog.</p>
-
+          {/* PRODUCTS LIST TABLE */}
+          <div className="admin-list-card">
+            <h3>Catalog Products ({products.length})</h3>
+            
             {loadingProducts ? (
-              <div className="loading-spinner">Loading product catalog...</div>
+              <div className="admin-loading">Loading catalog...</div>
             ) : products.length === 0 ? (
-              <div className="empty-catalog">
-                <p>No products added yet. Use the form on the left to add your first product!</p>
-              </div>
+              <div className="admin-empty">No products found. Add your first release above!</div>
             ) : (
-              <div className="products-table-wrapper">
-                <table className="products-table">
+              <div className="admin-table-wrapper">
+                <table className="admin-table">
                   <thead>
                     <tr>
                       <th>Product</th>
                       <th>Category</th>
-                      <th>Price</th>
                       <th>Version</th>
-                      <th>Files</th>
-                      <th>Action</th>
+                      <th>Download Link</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((p) => (
-                      <tr key={p.id} className={editingProduct?.id === p.id ? 'editing-row' : ''}>
-                        <td className="product-info-cell">
-                          {p.logo || p.image ? (
-                            <img src={p.logo || p.image} alt={p.title} className="table-thumb" />
-                          ) : (
-                            <div className="table-thumb-placeholder">📦</div>
-                          )}
-                          <div className="product-title-group">
-                            <div className="product-title-text">{p.title}</div>
-                            <div className="product-date">
-                              {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : 'Live'}
-                            </div>
+                      <tr key={p.id}>
+                        <td className="product-cell">
+                          <img src={p.logo || p.image} alt="" className="admin-prod-thumb" />
+                          <div>
+                            <strong>{p.title}</strong>
+                            <span className="sub-text">{p.price}</span>
                           </div>
                         </td>
-                        <td className="category-cell">
-                          <span className="category-pill">{p.category}</span>
+                        <td><span className="cat-pill">{p.category}</span></td>
+                        <td><code>v{p.version}</code></td>
+                        <td className="link-cell">
+                          <a href={p.apkFile} target="_blank" rel="noreferrer" title={p.apkFile}>
+                            GitHub Release
+                          </a>
                         </td>
-                        <td className="gold-text fw-bold price-cell">{p.price}</td>
-                        <td className="version-cell">v{p.version}</td>
-                        <td className="file-links-cell">{renderFileLink(p)}</td>
-                        <td className="actions-cell">
-                          <div className="action-btns">
-                            <button
-                              onClick={() => startEditProduct(p)}
-                              className="edit-btn"
-                              title="Edit Product"
-                            >
-                              Edit
+                        <td>
+                          <div className="table-actions">
+                            <button onClick={() => startEditProduct(p)} className="action-btn edit" title="Edit">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                              </svg>
                             </button>
-                            <button
-                              onClick={() => handleDelete(p.id)}
-                              disabled={deletingId === p.id}
-                              className="delete-btn"
-                              title="Delete Product"
-                            >
-                              {deletingId === p.id ? 'Deleting...' : 'Delete'}
+                            <button onClick={() => handleDeleteProduct(p.id)} className="action-btn delete" title="Delete" disabled={deletingId === p.id}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                              </svg>
                             </button>
                           </div>
                         </td>
@@ -640,82 +603,223 @@ const AdminDashboard = () => {
             )}
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Customer Contact Inbox Modal */}
-      {showInboxModal && (
-        <div
-          className="inbox-modal-backdrop"
-          onClick={(e) => e.target.classList.contains('inbox-modal-backdrop') && setShowInboxModal(false)}
-        >
-          <div className="inbox-modal-card">
-            <div className="inbox-modal-header">
-              <div className="inbox-header-title">
-                <h3>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
-                    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
-                    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path>
-                  </svg>
-                  Customer Messages Inbox
-                </h3>
-                <span className="inbox-count-tag">{messages.length} Messages ({unreadCount} Unread)</span>
-              </div>
-              <button className="inbox-close-btn" onClick={() => setShowInboxModal(false)}>
-                ✕
-              </button>
-            </div>
-
-            <div className="inbox-modal-body">
-              {messages.length === 0 ? (
-                <div className="empty-inbox">
-                  <p>📬 No customer messages received yet.</p>
-                  <span className="empty-subtext">
-                    Messages sent from your website's Contact page will appear here automatically!
-                  </span>
-                </div>
-              ) : (
-                <div className="inbox-messages-list">
-                  {messages.map((msg) => (
-                    <div key={msg.id} className={`inbox-msg-card ${!msg.read ? 'unread-msg' : ''}`}>
-                      <div className="inbox-msg-header">
-                        <div className="sender-details">
-                          <span className="sender-name">{msg.name}</span>
-                          <a href={`mailto:${msg.email}`} className="sender-email">
-                            ✉️ {msg.email}
-                          </a>
-                        </div>
-                        <div className="msg-meta-row">
-                          <span className="msg-date">
-                            {msg.createdAt ? new Date(msg.createdAt).toLocaleString() : 'Recent'}
-                          </span>
-                          {!msg.read && <span className="unread-pill">NEW</span>}
-                        </div>
-                      </div>
-
-                      <div className="inbox-msg-content">
-                        <p>{msg.message}</p>
-                      </div>
-
-                      <div className="inbox-msg-actions">
-                        {!msg.read && (
-                          <button onClick={() => handleMarkRead(msg.id)} className="mark-read-btn">
-                            ✓ Mark as Read
+      {/* TAB 2: USER ACCOUNTS & BAN/UNBAN MODERATION */}
+      {activeTab === 'users' && (
+        <div className="admin-section-block">
+          <h3>Registered User Accounts & Moderation ({users.length})</h3>
+          
+          {loadingUsers ? (
+            <div className="admin-loading">Loading users list...</div>
+          ) : users.length === 0 ? (
+            <div className="admin-empty">No registered users found.</div>
+          ) : (
+            <div className="admin-table-wrapper">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>User Profile</th>
+                    <th>Email</th>
+                    <th>Provider</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                    <th>Moderation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u) => {
+                    const history = getUserDownloadHistory(u.email);
+                    const reviews = userReviewsMap[u.email] || [];
+                    return (
+                      <tr key={u.uid} className={u.isBanned ? 'row-banned' : ''}>
+                        <td className="user-profile-cell">
+                          <img src={u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.email)}`} alt="" className="admin-user-avatar" />
+                          <div>
+                            <strong>{u.displayName || u.email.split('@')[0]}</strong>
+                            <span className="sub-text">Registered: {new Date(u.createdAt || Date.now()).toLocaleDateString()}</span>
+                          </div>
+                        </td>
+                        <td>{u.email}</td>
+                        <td><span className="provider-pill">{u.provider || 'email'}</span></td>
+                        <td>
+                          {u.isBanned ? (
+                            <span className="status-badge banned">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                              </svg>
+                              <span>BANNED</span>
+                            </span>
+                          ) : (
+                            <span className="status-badge active">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                              <span>ACTIVE</span>
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <button className="admin-btn outline-sm" onClick={() => handleViewUserDetail(u)}>
+                            View Activity ({history.length} DLs, {reviews.length} Reviews)
                           </button>
-                        )}
-                        <button
-                          onClick={() => handleDeleteMessage(msg.id)}
-                          disabled={deletingMsgId === msg.id}
-                          className="msg-delete-btn"
-                        >
-                          {deletingMsgId === msg.id ? 'Deleting...' : '🗑 Delete'}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                        </td>
+                        <td>
+                          <button
+                            className={`ban-action-btn ${u.isBanned ? 'unban' : 'ban'}`}
+                            disabled={actionId === u.uid}
+                            onClick={() => handleToggleBan(u)}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              {u.isBanned ? (
+                                <>
+                                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </>
+                              ) : (
+                                <>
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                </>
+                              )}
+                            </svg>
+                            <span>{actionId === u.uid ? 'Updating...' : u.isBanned ? 'UNBAN USER' : 'BAN USER'}</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </div>
+          )}
+
+          {/* USER ACTIVITY MODAL DETAIL */}
+          {selectedUserDetail && (
+            <div className="admin-modal-backdrop" onClick={() => setSelectedUserDetail(null)}>
+              <div className="admin-modal-box" onClick={(e) => e.stopPropagation()}>
+                <div className="admin-modal-header">
+                  <h4>User Activity: {selectedUserDetail.email}</h4>
+                  <button className="modal-close-icon" onClick={() => setSelectedUserDetail(null)}>✕</button>
+                </div>
+                <div className="admin-modal-body">
+                  <h5>Download History ({getUserDownloadHistory(selectedUserDetail.email).length})</h5>
+                  {getUserDownloadHistory(selectedUserDetail.email).length === 0 ? (
+                    <p className="no-data">No recorded downloads for this user in local history.</p>
+                  ) : (
+                    <ul className="activity-list">
+                      {getUserDownloadHistory(selectedUserDetail.email).map((dl, idx) => (
+                        <li key={idx}>
+                          <strong>{dl.title}</strong> (v{dl.version}) — {new Date(dl.downloadedAt).toLocaleDateString()}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <h5 style={{ marginTop: '1.2rem' }}>Review Comments ({userReviewsMap[selectedUserDetail.email]?.length || 0})</h5>
+                  {(!userReviewsMap[selectedUserDetail.email] || userReviewsMap[selectedUserDetail.email].length === 0) ? (
+                    <p className="no-data">No submitted product reviews for this user.</p>
+                  ) : (
+                    <div className="activity-reviews-stack">
+                      {userReviewsMap[selectedUserDetail.email].map((rev) => (
+                        <div key={rev.id} className="activity-review-item">
+                          <div className="rev-head">
+                            <span className="prod-name">{rev.productTitle}</span>
+                            <span className="score">★ {rev.rating} / 5</span>
+                          </div>
+                          <p className="rev-body">"{rev.comment}"</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: BAN APPEALS REVIEW */}
+      {activeTab === 'appeals' && (
+        <div className="admin-section-block">
+          <h3>User Ban Appeals ({appeals.length})</h3>
+
+          {loadingAppeals ? (
+            <div className="admin-loading">Loading appeals...</div>
+          ) : appeals.length === 0 ? (
+            <div className="admin-empty">No ban appeals submitted yet.</div>
+          ) : (
+            <div className="appeals-stack">
+              {appeals.map((app) => (
+                <div key={app.id} className={`appeal-card ${app.status}`}>
+                  <div className="appeal-header">
+                    <div>
+                      <h4>{app.name} <span className="appeal-email">({app.email})</span></h4>
+                      <span className="appeal-date">Submitted: {new Date(app.createdAt).toLocaleString()}</span>
+                    </div>
+                    <span className={`appeal-status-badge ${app.status}`}>{app.status.toUpperCase()}</span>
+                  </div>
+
+                  <div className="appeal-body">
+                    <p className="appeal-subject"><strong>Subject:</strong> {app.subject}</p>
+                    <p className="appeal-commitment"><strong>Commitment / Explanation:</strong> "{app.commitment}"</p>
+                  </div>
+
+                  {app.status === 'pending' && (
+                    <div className="appeal-actions">
+                      <button
+                        className="admin-btn primary-sm"
+                        disabled={actionId === app.id}
+                        onClick={() => handleResolveAppeal(app.id)}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>{actionId === app.id ? 'Processing...' : 'Unban User & Resolve Appeal'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 4: INBOX MESSAGES */}
+      {activeTab === 'inbox' && (
+        <div className="admin-section-block">
+          <h3>Inbox Messages ({messages.length})</h3>
+
+          {loadingMessages ? (
+            <div className="admin-loading">Loading messages...</div>
+          ) : messages.length === 0 ? (
+            <div className="admin-empty">No contact messages received.</div>
+          ) : (
+            <div className="inbox-messages-stack">
+              {messages.map((m) => (
+                <div key={m.id} className={`message-item ${m.read ? 'read' : 'unread'}`}>
+                  <div className="msg-header">
+                    <div>
+                      <strong>{m.name}</strong> <span className="msg-email">&lt;{m.email}&gt;</span>
+                      <span className="msg-date">{new Date(m.createdAt).toLocaleString()}</span>
+                    </div>
+                    {!m.read && <span className="unread-dot">NEW</span>}
+                  </div>
+                  <p className="msg-content">{m.message}</p>
+                  <div className="msg-actions">
+                    <button
+                      className="admin-btn secondary-sm"
+                      onClick={() => handleDeleteMessage(m.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

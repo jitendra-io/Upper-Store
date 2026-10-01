@@ -38,12 +38,39 @@
   border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
 }
 
-.contact-card-title {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--color-accent-primary);
-  font-weight: 600;
+.contact-type-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.contact-type-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #aaa;
+  padding: 0.4rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.contact-type-tab:hover {
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.contact-type-tab.active {
+  background: #d4af37;
+  color: #0d0d0f;
+  border-color: #d4af37;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
 .contact-page-refresh-btn {

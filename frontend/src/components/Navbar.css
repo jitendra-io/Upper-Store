@@ -121,16 +121,59 @@
   justify-content: center;
 }
 
-.nav-user-name {
-  max-width: 110px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.nav-user-pill.banned {
+  border-color: rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.1);
 }
 
-.dropdown-caret {
-  font-size: 0.7rem;
-  color: #d4af37;
+.nav-banned-tag {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.nav-banned-tag.sm {
+  font-size: 0.58rem;
+  padding: 0.08rem 0.35rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+.nav-banned-notice {
+  margin-top: 0.65rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  padding: 0.55rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.nav-banned-notice p {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+.nav-banned-appeal-btn {
+  display: inline-block;
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: background 0.2s ease;
+}
+
+.nav-banned-appeal-btn:hover {
+  background: #dc2626;
 }
 
 .nav-user-dropdown {

@@ -1,19 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/authMiddleware');
+const { protectAdmin } = require('../middleware/authMiddleware');
 const {
   createMessage,
   getMessages,
   markMessageRead,
   deleteMessage,
+  submitAppeal,
+  getAppeals,
+  resolveAppealAndUnban,
 } = require('../controllers/contactController');
 
-// Public route to send contact message
+// Public routes
 router.post('/', createMessage);
+router.post('/appeal', submitAppeal);
 
-// Protected Admin routes for Inbox
-router.get('/', protect, getMessages);
-router.put('/:id/read', protect, markMessageRead);
-router.delete('/:id', protect, deleteMessage);
+// Protected Admin routes for Inbox & Appeals
+router.get('/', protectAdmin, getMessages);
+router.put('/:id/read', protectAdmin, markMessageRead);
+router.delete('/:id', protectAdmin, deleteMessage);
+router.get('/appeals', protectAdmin, getAppeals);
+router.post('/appeals/:appealId/resolve', protectAdmin, resolveAppealAndUnban);
 
 module.exports = router;
+

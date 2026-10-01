@@ -41,6 +41,12 @@ const ProductDetailModal = ({ product, onClose }) => {
       return;
     }
 
+    if (user?.isBanned) {
+      e.preventDefault();
+      alert("Your account has been banned due to policy violation. Downloads are restricted. Please submit an appeal via the Contact page.");
+      return;
+    }
+
     if (!hasUserAcceptedTerms()) {
       e.preventDefault();
       setTermsModalOpen(true);

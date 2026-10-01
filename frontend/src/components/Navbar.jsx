@@ -53,6 +53,26 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const [isBanned, setIsBanned] = useState(Boolean(user?.isBanned));
+
+  useEffect(() => {
+    if (!user || !user.email) return;
+    setIsBanned(Boolean(user.isBanned));
+    const checkBanStatus = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(user.email)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setIsBanned(Boolean(data.isBanned));
+        }
+      } catch (err) {
+        // Keep current state
+      }
+    };
+    checkBanStatus();
+  }, [user]);
+
   const userAvatar = user?.photoURL || `https://unavatar.io/${encodeURIComponent(user?.email ? user.email.trim().toLowerCase() : 'user')}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(user?.email || 'user')}`;
 
   return (
@@ -90,7 +110,7 @@ const Navbar = () => {
             <div className="nav-user-wrapper" ref={dropdownRef}>
               <button
                 type="button"
-                className="nav-user-pill"
+                className={`nav-user-pill ${isBanned ? 'banned' : ''}`}
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
               >
                 <img
@@ -103,6 +123,7 @@ const Navbar = () => {
                   }}
                 />
                 <span className="nav-user-name">{user?.displayName || user?.email?.split('@')[0]}</span>
+                {isBanned && <span className="nav-banned-tag">BANNED</span>}
                 <span className="dropdown-caret">▾</span>
               </button>
 
@@ -121,11 +142,22 @@ const Navbar = () => {
                         }}
                       />
                     </div>
-                    <p className="dropdown-user-title">{user?.displayName || 'User'}</p>
+                    <p className="dropdown-user-title">
+                      {user?.displayName || 'User'}
+                      {isBanned && <span className="nav-banned-tag sm">BANNED</span>}
+                    </p>
                     <p className="dropdown-user-email">{user?.email}</p>
                     <span className="dropdown-provider-tag">
                       {user?.provider === 'google' ? 'Google Sign-In' : 'Email Account'}
                     </span>
+                    {isBanned && (
+                      <div className="nav-banned-notice">
+                        <p>⚠️ Account Banned: Downloads restricted.</p>
+                        <Link to="/contact" onClick={closeMenu} className="nav-banned-appeal-btn">
+                          Submit Ban Appeal
+                        </Link>
+                      </div>
+                    )}
                   </div>
                   
                   <hr className="dropdown-divider" />
