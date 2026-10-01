@@ -9,6 +9,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Faq from './pages/Faq';
 import Blog from './pages/Blog';
+import Press from './pages/Press';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Footer from './components/Footer';
@@ -47,6 +48,7 @@ function AppContent() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/faq" element={<Faq />} />
         <Route path="/blog" element={<Blog />} />
+        <Route path="/press" element={<Press />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
