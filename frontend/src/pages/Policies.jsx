@@ -2,12 +2,59 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './Policies.css';
 
+// Sleek SVG Icon Components
+const StoreIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+    <line x1="3" y1="6" x2="21" y2="6"></line>
+    <path d="M16 10a4 4 0 0 1-8 0"></path>
+  </svg>
+);
+
+const LockIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+  </svg>
+);
+
+const TermsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+    <polyline points="14 2 14 8 20 8"></polyline>
+    <line x1="16" y1="13" x2="8" y2="13"></line>
+    <line x1="16" y1="17" x2="8" y2="17"></line>
+    <polyline points="10 9 9 9 8 9"></polyline>
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+  </svg>
+);
+
+const PrinterIcon = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', verticalAlign: 'middle' }}>
+    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+    <rect x="6" y="14" width="12" height="8"></rect>
+  </svg>
+);
+
+const CopyIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px', verticalAlign: 'middle' }}>
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+  </svg>
+);
+
 const POLICIES_DATA = {
   store: {
     id: 'store',
     title: 'Store & Refund Policy',
     subtitle: 'Rules governing digital product licensing, delivery mechanisms, and refund guarantees.',
-    icon: '🛒',
+    iconComponent: StoreIcon,
     sections: [
       {
         title: '1. Digital Product Delivery',
@@ -37,7 +84,7 @@ const POLICIES_DATA = {
     id: 'privacy',
     title: 'Privacy Policy',
     subtitle: 'How Upper Store collects, safeguards, and respects your personal information.',
-    icon: '🔒',
+    iconComponent: LockIcon,
     sections: [
       {
         title: '1. Information We Collect',
@@ -68,7 +115,7 @@ const POLICIES_DATA = {
     id: 'terms',
     title: 'Terms of Service',
     subtitle: 'The legal agreement governing your access to and use of Upper Store services.',
-    icon: '⚖️',
+    iconComponent: TermsIcon,
     sections: [
       {
         title: '1. Acceptance of Terms',
@@ -92,7 +139,7 @@ const POLICIES_DATA = {
     id: 'conduct',
     title: 'Code of Conduct',
     subtitle: 'Our community standards, ethical developer guidelines, and anti-piracy pledge.',
-    icon: '🛡️',
+    iconComponent: ShieldIcon,
     sections: [
       {
         title: '1. Ethical Usage & Integrity',
@@ -141,6 +188,7 @@ const Policies = () => {
   };
 
   const currentPolicy = POLICIES_DATA[activeTab];
+  const CurrentIcon = currentPolicy.iconComponent;
 
   // Filter sections by search query
   const filteredSections = currentPolicy.sections.filter((s) => {
@@ -186,13 +234,14 @@ const Policies = () => {
       <div className="policies-tabs-nav">
         {Object.keys(POLICIES_DATA).map((key) => {
           const item = POLICIES_DATA[key];
+          const IconComp = item.iconComponent;
           return (
             <button
               key={key}
               className={`policy-nav-tab ${activeTab === key ? 'active' : ''}`}
               onClick={() => handleTabChange(key)}
             >
-              <span className="tab-icon">{item.icon}</span>
+              <span className="tab-icon"><IconComp /></span>
               <span className="tab-label">{item.title}</span>
             </button>
           );
@@ -203,7 +252,9 @@ const Policies = () => {
       <div className="policies-content-card">
         <div className="policy-meta-bar">
           <div className="meta-left">
-            <span className="policy-big-icon">{currentPolicy.icon}</span>
+            <span className="policy-big-icon">
+              <CurrentIcon />
+            </span>
             <div>
               <h2>{currentPolicy.title}</h2>
               <p>{currentPolicy.subtitle}</p>
@@ -212,7 +263,7 @@ const Policies = () => {
           <div className="meta-right">
             <span className="last-updated-badge">Last Revised: Oct 1, 2026</span>
             <button className="print-policy-btn" onClick={() => window.print()} title="Print or Save PDF">
-              🖨️ Print PDF
+              <PrinterIcon /> Print PDF
             </button>
           </div>
         </div>
@@ -235,7 +286,7 @@ const Policies = () => {
                     className="copy-clause-btn"
                     onClick={() => handleCopyText(`${sec.title}\n\n${sec.content}`, idx)}
                   >
-                    {copiedSection === idx ? '✓ Copied' : '📋 Copy Clause'}
+                    <CopyIcon /> {copiedSection === idx ? '✓ Copied' : 'Copy Clause'}
                   </button>
                 </div>
                 <div className="section-body">
