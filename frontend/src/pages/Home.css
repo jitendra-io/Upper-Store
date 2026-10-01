@@ -185,8 +185,11 @@
 /* FEATURED PRODUCTS SPOTLIGHT */
 .featured-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 280px));
+  justify-content: center;
+  gap: 1.4rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .featured-card {
