@@ -228,28 +228,15 @@ const Home = () => {
         </div>
       </section>
 
-      {/* FOUNDER & BRAND SHOWCASE CARD */}
-      <section className="home-section founder-showcase-section">
-        <div className="founder-banner-card">
-          <div className="founder-banner-content">
-            <span className="founder-pill">Official Founder Profile</span>
-            <h2>Architected by <span className="gold-gradient-text">Jitendra</span></h2>
-            <p>
-              Upper Store was founded by Jitendra (@YourJITENDRA) with the mission of delivering high-performance digital tools, developer utilities, and modern design assets under strict quality control.
-            </p>
-            <div className="founder-banner-actions">
-              <Link to="/about" className="founder-btn-primary">
-                Read Full Story
-              </Link>
-              <Link to="/press" className="founder-btn-secondary">
-                View Official Press Kit
-              </Link>
-            </div>
-          </div>
-          <div className="founder-logo-card">
-            <img src={logoImg} alt="Upper Store Logo" className="founder-card-logo" />
-            <span className="founder-card-brand">UPPER STORE</span>
-            <span className="founder-card-tag">Official Enterprise Signature</span>
+      {/* OFFICIAL BRAND SHOWCASE CARD */}
+      <section className="home-section brand-showcase-section">
+        <div className="brand-logo-showcase-box">
+          <img src={logoImg} alt="Upper Store Official Logo" className="brand-showcase-logo" />
+          <h3 className="brand-showcase-title">UPPER STORE</h3>
+          <p className="brand-showcase-subtitle">Verified Software Assets & Developer Enterprise Platform</p>
+          <div className="brand-showcase-actions">
+            <Link to="/about" className="brand-btn-gold">About Us</Link>
+            <Link to="/press" className="brand-btn-outline">Official Press Kit</Link>
           </div>
         </div>
       </section>
