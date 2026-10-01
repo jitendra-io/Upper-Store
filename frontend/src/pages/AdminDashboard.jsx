@@ -219,9 +219,9 @@ const AdminDashboard = () => {
     }
   };
 
-  // RESOLVE APPEAL & UNBAN
+  // RESOLVE / REJECT APPEALS HANDLERS
   const handleResolveAppeal = async (appealId) => {
-    if (!window.confirm('Resolve appeal and unban user?')) return;
+    if (!window.confirm('Mark this appeal as resolved?')) return;
     setActionId(appealId);
     try {
       const res = await fetch(`${API_BASE}/api/contact/appeals/${appealId}/resolve`, {
@@ -229,12 +229,30 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
-        setMessage({ type: 'success', text: 'Ban appeal resolved and user unbanned successfully.' });
+        setMessage({ type: 'success', text: 'Appeal marked as resolved.' });
         fetchAppeals();
-        fetchUsers();
       }
     } catch (err) {
       setMessage({ type: 'error', text: 'Failed to resolve appeal.' });
+    } finally {
+      setActionId(null);
+    }
+  };
+
+  const handleRejectAppeal = async (appealId) => {
+    if (!window.confirm('Reject this appeal?')) return;
+    setActionId(appealId);
+    try {
+      const res = await fetch(`${API_BASE}/api/contact/appeals/${appealId}/reject`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Appeal marked as rejected.' });
+        fetchAppeals();
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to reject appeal.' });
     } finally {
       setActionId(null);
     }
@@ -836,7 +854,19 @@ const AdminDashboard = () => {
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>{actionId === app.id ? 'Processing...' : 'Unban User & Resolve Appeal'}</span>
+                        <span>{actionId === app.id ? 'Updating...' : 'Resolve Appeal'}</span>
+                      </button>
+
+                      <button
+                        className="admin-btn delete-sm"
+                        disabled={actionId === app.id}
+                        onClick={() => handleRejectAppeal(app.id)}
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        <span>{actionId === app.id ? 'Updating...' : 'Reject Appeal'}</span>
                       </button>
                     </div>
                   )}

@@ -191,10 +191,10 @@ const getAppeals = async (req, res) => {
   }
 };
 
-// @desc    Resolve appeal & unban user (Admin)
+// @desc    Resolve appeal (Admin)
 // @route   POST /api/contact/appeals/:appealId/resolve
 // @access  Private (Admin)
-const resolveAppealAndUnban = async (req, res) => {
+const resolveAppeal = async (req, res) => {
   try {
     const { appealId } = req.params;
     const appealRef = db.collection('appeals').doc(appealId);
@@ -204,28 +204,40 @@ const resolveAppealAndUnban = async (req, res) => {
       return res.status(404).json({ message: 'Appeal not found.' });
     }
 
-    const appealData = doc.data();
-    const cleanEmail = appealData.email;
-
-    // Update appeal status
     await appealRef.update({
       status: 'resolved',
       resolvedAt: new Date().toISOString(),
     });
 
-    // Unban user in users collection
-    const userSnapshot = await db.collection('users').where('email', '==', cleanEmail).get();
-    if (!userSnapshot.empty) {
-      await userSnapshot.docs[0].ref.update({
-        isBanned: false,
-        unbannedAt: new Date().toISOString(),
-      });
-    }
-
-    res.json({ message: `Appeal resolved and user (${cleanEmail}) has been unbanned successfully.` });
+    res.json({ message: 'Appeal marked as resolved successfully.' });
   } catch (error) {
     console.error('Resolve appeal error:', error);
     res.status(500).json({ message: 'Error resolving appeal.' });
+  }
+};
+
+// @desc    Reject appeal (Admin)
+// @route   POST /api/contact/appeals/:appealId/reject
+// @access  Private (Admin)
+const rejectAppeal = async (req, res) => {
+  try {
+    const { appealId } = req.params;
+    const appealRef = db.collection('appeals').doc(appealId);
+    const doc = await appealRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Appeal not found.' });
+    }
+
+    await appealRef.update({
+      status: 'rejected',
+      rejectedAt: new Date().toISOString(),
+    });
+
+    res.json({ message: 'Appeal marked as rejected.' });
+  } catch (error) {
+    console.error('Reject appeal error:', error);
+    res.status(500).json({ message: 'Error rejecting appeal.' });
   }
 };
 
@@ -236,6 +248,7 @@ module.exports = {
   deleteMessage,
   submitAppeal,
   getAppeals,
-  resolveAppealAndUnban,
+  resolveAppeal,
+  rejectAppeal,
 };
 

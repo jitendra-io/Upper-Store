@@ -8,7 +8,8 @@ const {
   deleteMessage,
   submitAppeal,
   getAppeals,
-  resolveAppealAndUnban,
+  resolveAppeal,
+  rejectAppeal,
 } = require('../controllers/contactController');
 
 // Public routes
@@ -20,7 +21,8 @@ router.get('/', protectAdmin, getMessages);
 router.put('/:id/read', protectAdmin, markMessageRead);
 router.delete('/:id', protectAdmin, deleteMessage);
 router.get('/appeals', protectAdmin, getAppeals);
-router.post('/appeals/:appealId/resolve', protectAdmin, resolveAppealAndUnban);
+router.post('/appeals/:appealId/resolve', protectAdmin, resolveAppeal);
+router.post('/appeals/:appealId/reject', protectAdmin, rejectAppeal);
 
 module.exports = router;
 

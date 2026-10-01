@@ -497,6 +497,12 @@
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
+.appeal-status-badge.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
 .appeal-subject {
   font-size: 0.88rem;
   color: #ffffff;
