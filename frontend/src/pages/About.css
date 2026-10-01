@@ -1,101 +1,242 @@
 .about-container {
-  padding: 3rem 5%;
-  max-width: 1200px;
+  padding: 4rem 5%;
+  max-width: 1100px;
   margin: 0 auto;
   min-height: calc(100vh - 120px);
+  font-family: 'Outfit', sans-serif;
+  color: #e0e0e0;
 }
 
+/* Hero Section */
 .about-hero {
   text-align: center;
   margin-bottom: 3.5rem;
 }
 
+.about-pill-tag {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.12);
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 0.25rem 0.85rem;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+}
+
 .about-hero h1 {
   font-size: 3.2rem;
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
+  color: #ffffff;
+  letter-spacing: -0.5px;
 }
 
 .about-hero p {
   font-size: 1.15rem;
-  color: var(--color-text-secondary);
+  color: var(--color-text-secondary, #aaa);
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
-.about-content {
+/* Pillars Grid (All Writings First) */
+.about-pillars-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1.75rem;
+  margin-bottom: 3rem;
 }
 
-@media (max-width: 992px) {
-  .about-content {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 600px) {
-  .about-content {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* All cards are square shaped with yellow rounded borders */
-.about-card {
-  aspect-ratio: 1 / 1; /* Makes card perfectly square */
-  background: var(--color-bg-secondary);
-  border: 2px solid #ffd700; /* Yellow border edge */
-  border-radius: 20px; /* Rounded corners */
-  padding: 1.5rem;
+.about-pillar-card {
+  background: rgba(20, 20, 24, 0.7);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.about-pillar-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(212, 175, 55, 0.35);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.15);
+}
+
+.pillar-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.15);
-  overflow: hidden;
-  position: relative;
+  margin-bottom: 1.25rem;
 }
 
-.about-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 215, 0, 0.35);
-  border-color: #ffea00;
+.pillar-icon-box.gold {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
-.about-icon {
-  font-size: 2.2rem;
-  display: block;
-  margin-bottom: 0.75rem;
+.pillar-icon-box.green {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-.about-card h3 {
-  font-size: 1.15rem;
+.pillar-icon-box.blue {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.pillar-icon-box.purple {
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+.about-pillar-card h3 {
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #ffd700;
-  margin-bottom: 0.6rem;
+  color: #ffffff;
+  margin: 0 0 0.6rem 0;
 }
 
-.about-card p {
-  color: #cccccc;
-  line-height: 1.5;
-  font-size: 0.88rem;
+.about-pillar-card p {
+  color: #aaaaaa;
+  font-size: 0.92rem;
+  line-height: 1.6;
   margin: 0;
 }
 
-/* 4th Card containing ONLY the Logo - Fills completely */
-.about-card.logo-card {
-  padding: 0;
+/* Brand Overview Section */
+.about-overview-section {
+  margin-bottom: 3.5rem;
 }
 
-.about-logo-img {
+.overview-card {
+  background: linear-gradient(135deg, rgba(24, 24, 28, 0.8) 0%, rgba(18, 18, 22, 0.8) 100%);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 20px;
+  padding: 2.5rem;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+
+.overview-card h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #d4af37;
+  margin: 0 0 1rem 0;
+}
+
+.overview-card p {
+  font-size: 1.05rem;
+  color: #cbd5e1;
+  line-height: 1.7;
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+/* LOGO CARD PLACED BELOW ALL THE WRITINGS */
+.about-logo-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.brand-logo-showcase-card {
+  background: rgba(18, 18, 22, 0.9);
+  border: 2px solid #d4af37;
+  border-radius: 24px;
+  padding: 2.5rem 3rem;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  max-width: 850px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.2);
+  transition: all 0.3s ease;
+}
+
+.brand-logo-showcase-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(212, 175, 55, 0.35);
+}
+
+@media (max-width: 768px) {
+  .brand-logo-showcase-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+    gap: 1.5rem;
+  }
+}
+
+.showcase-logo-frame {
+  width: 140px;
+  height: 140px;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid rgba(212, 175, 55, 0.4);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
+}
+
+.showcase-logo-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: inherit;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s ease;
 }
 
-.about-card.logo-card:hover .about-logo-img {
-  transform: scale(1.05);
+.brand-logo-showcase-card:hover .showcase-logo-img {
+  transform: scale(1.08);
+}
+
+.showcase-logo-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .showcase-logo-details {
+    align-items: center;
+  }
+}
+
+.brand-verified-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.2rem 0.65rem;
+  border-radius: 12px;
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.5px;
+}
+
+.showcase-logo-details h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.showcase-logo-details p {
+  color: #aaa;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
 }
