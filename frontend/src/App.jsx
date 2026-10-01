@@ -15,6 +15,8 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import Footer from './components/Footer';
 import MiniFooter from './components/MiniFooter';
+import { AuthProvider } from './context/AuthContext';
+import AuthModal from './components/AuthModal';
 import './App.css';
 
 function AppContent() {
@@ -55,6 +57,7 @@ function AppContent() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
       {showFullFooter && <Footer />}
+      <AuthModal />
     </div>
   );
 }
@@ -62,7 +65,9 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }

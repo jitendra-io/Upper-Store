@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
+import { useAuth } from '../context/AuthContext';
 import './Press.css';
 
 const BRAND_COLORS = [
@@ -55,7 +56,13 @@ const EDITORIAL_IMAGERY = [
 ];
 
 const Press = () => {
+  const { isLoggedIn, openAuthModal } = useAuth();
+
   const handleDownloadAsset = (filename) => {
+    if (!isLoggedIn) {
+      openAuthModal("Authentication Required: Please sign in to download official press assets and branding PDFs.");
+      return;
+    }
     const link = document.createElement('a');
     link.href = logoImg;
     link.download = filename;

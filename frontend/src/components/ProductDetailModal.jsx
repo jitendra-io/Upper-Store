@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import './ProductDetailModal.css';
 
 const ProductDetailModal = ({ product, onClose }) => {
+  const { isLoggedIn, openAuthModal } = useAuth();
+
+  const handleDownloadClick = (e) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      openAuthModal("Authentication Required: Please sign in to download this application or digital package.");
+    }
+  };
+
   const allImages = product?.images && product.images.length > 0
     ? product.images
     : (product?.image ? [product.image] : []);
@@ -103,11 +113,12 @@ const ProductDetailModal = ({ product, onClose }) => {
           <div className="modal-actions">
             {product.apkFile ? (
               <a
-                href={product.apkFile}
-                target="_blank"
+                href={isLoggedIn ? product.apkFile : '#'}
+                target={isLoggedIn ? '_blank' : '_self'}
                 rel="noopener noreferrer"
                 download
                 className="modal-download-link"
+                onClick={handleDownloadClick}
               >
                 <button className="modal-cta-button animated-download-btn">
                   <span className="btn-icon">
@@ -146,7 +157,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                 </button>
               </a>
             ) : (
-              <button className="modal-cta-button animated-download-btn">
+              <button className="modal-cta-button animated-download-btn" onClick={handleDownloadClick}>
                 <span className="btn-text">Get Now — {product.price}</span>
                 <span className="btn-shine"></span>
               </button>
