@@ -16,7 +16,7 @@ const BLOG_POSTS = [
       <h2>The Next Generation of Developer Asset Distribution</h2>
       <p>Upper Store has evolved. Today we are launching <strong>Upper Store 2.0</strong>, engineered from the ground up to solve modern challenges in software deployment and digital asset distribution.</p>
       
-      <h3>🚀 What's New in 2.0?</h3>
+      <h3>What's New in 2.0?</h3>
       <ul>
         <li><strong>Direct GitHub Release Mirrors:</strong> Unlimited package hosting for Android APKs and Windows EXEs with 2GB per binary limits via PAT Token authentication.</li>
         <li><strong>ImageKit Global CDN:</strong> Lightning-fast logo and screenshot rendering with automated WebP compression and global edge caching.</li>
@@ -24,7 +24,7 @@ const BLOG_POSTS = [
         <li><strong>Luxury Dark Gold Aesthetics:</strong> A revamped responsive UI built with glassmorphism and smooth micro-animations.</li>
       </ul>
 
-      <h3>🔐 Security & Verification</h3>
+      <h3>Security & Verification</h3>
       <p>All compiled binaries published on Upper Store undergo automated SHA-256 integrity checksum verification before entering the catalog. Developers and users can download packages with confidence.</p>
     `
   },
@@ -42,7 +42,7 @@ const BLOG_POSTS = [
       <h2>The Cloud SMTP Challenge</h2>
       <p>Free-tier hosting providers like Render, Vercel, and Heroku restrict outbound SMTP ports (25, 465, and 587) to prevent spam abuse. This frequently causes classic <code>Nodemailer</code> setups to fail silently or timeout in production environments.</p>
       
-      <h3>💡 The Solution: Real-Time Database Inbox</h3>
+      <h3>The Solution: Real-Time Database Inbox</h3>
       <p>Instead of relying on SMTP mail servers, we designed a zero-latency database submission pipeline:</p>
       <ol>
         <li>Contact submissions are validated and sent to <code>POST /api/contact</code>.</li>
@@ -67,7 +67,7 @@ const BLOG_POSTS = [
       <h2>Safe APK Sideloading</h2>
       <p>When installing Android applications outside the Google Play Store, Android prompts users to grant "Install Unknown Apps" permission to your browser or file manager.</p>
 
-      <h3>🛡️ Security Checklist</h3>
+      <h3>Security Checklist</h3>
       <ul>
         <li><strong>Verify Source URLs:</strong> Ensure you are downloading binaries directly from official <code>upperstore.com</code> or GitHub Release mirrors.</li>
         <li><strong>Check App Permissions:</strong> Upper Store apps request only essential permissions required for core functionality.</li>
@@ -89,7 +89,7 @@ const BLOG_POSTS = [
       <h2>Automating Binary Publishing</h2>
       <p>Upper Store Admin Dashboard allows creators to publish APK and EXE packages directly from GitHub Release tags without manually uploading heavy 500MB+ files through web forms.</p>
 
-      <h3>🔧 How It Works</h3>
+      <h3>How It Works</h3>
       <p>By configuring your Personal Access Token (PAT), repository owner, and repo name in the Admin Control Center, Upper Store fetches the latest compiled release assets automatically and mirrors them for end users.</p>
     `
   }
