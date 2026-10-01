@@ -88,6 +88,41 @@ const handlePackageFileUpload = async (apkFile, title, version, description, req
   return await uploadFileToCloudOrLocal(apkFile, 'apks', req);
 };
 
+// Helper to resolve Google Photos & Google Drive sharing links to raw direct image URLs
+const resolveDirectImageUrl = async (url) => {
+  if (!url || typeof url !== 'string') return url;
+  let cleanUrl = url.trim();
+
+  // 1. Convert Google Drive file view links: drive.google.com/file/d/FILE_ID/view -> https://lh3.googleusercontent.com/d/FILE_ID
+  const driveMatch = cleanUrl.match(/drive\.google\.com\/file\/d\/([^\/]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+  }
+
+  // 2. Resolve Google Photos app share links: photos.app.goo.gl/ID or photos.google.com/share/ID
+  if (cleanUrl.includes('photos.app.goo.gl') || cleanUrl.includes('photos.google.com')) {
+    try {
+      const response = await fetch(cleanUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+      });
+      if (response.ok) {
+        const html = await response.text();
+        const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
+        if (ogMatch && ogMatch[1]) {
+          console.log(`📸 Resolved Google Photos share link to direct image: ${ogMatch[1]}`);
+          return ogMatch[1];
+        }
+      }
+    } catch (err) {
+      console.warn('Google Photos link resolution failed, using original URL:', err.message);
+    }
+  }
+
+  return cleanUrl;
+};
+
 // @desc    Get all products
 // @route   GET /api/products
 // @access  Public
@@ -148,16 +183,22 @@ const createProduct = async (req, res) => {
     }
 
     // Collect Screenshot image links (Google Photos / Web image links)
-    let finalImageUrls = [];
+    let rawUrls = [];
+    if (imageUrl1 && imageUrl1.trim()) rawUrls.push(imageUrl1.trim());
+    if (imageUrl2 && imageUrl2.trim()) rawUrls.push(imageUrl2.trim());
+    if (imageUrl3 && imageUrl3.trim()) rawUrls.push(imageUrl3.trim());
+
     if (Array.isArray(bodyImageUrls)) {
-      finalImageUrls = bodyImageUrls.map(u => u.trim()).filter(Boolean);
+      rawUrls.push(...bodyImageUrls.map(u => u.trim()).filter(Boolean));
     } else if (typeof bodyImageUrls === 'string' && bodyImageUrls.trim()) {
-      finalImageUrls = bodyImageUrls.split('\n').map(u => u.trim()).filter(Boolean);
+      rawUrls.push(...bodyImageUrls.split('\n').map(u => u.trim()).filter(Boolean));
     }
 
-    if (imageUrl1 && imageUrl1.trim()) finalImageUrls.push(imageUrl1.trim());
-    if (imageUrl2 && imageUrl2.trim()) finalImageUrls.push(imageUrl2.trim());
-    if (imageUrl3 && imageUrl3.trim()) finalImageUrls.push(imageUrl3.trim());
+    let finalImageUrls = [];
+    for (const urlItem of rawUrls) {
+      const resolved = await resolveDirectImageUrl(urlItem);
+      if (resolved) finalImageUrls.push(resolved);
+    }
 
     // Fallback if image uploaded via file staging
     const imgFiles = req.files?.images || req.files?.image || [];
@@ -167,7 +208,9 @@ const createProduct = async (req, res) => {
     }
 
     let finalLogoUrl = (logoUrl || '').trim();
-    if (!finalLogoUrl && req.files?.logo) {
+    if (finalLogoUrl) {
+      finalLogoUrl = await resolveDirectImageUrl(finalLogoUrl);
+    } else if (req.files?.logo) {
       const logoFile = req.files.logo[0];
       finalLogoUrl = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
     }
@@ -242,13 +285,23 @@ const updateProduct = async (req, res) => {
     }
 
     if (logoUrl !== undefined && logoUrl.trim() !== '') {
-      updatedData.logo = logoUrl.trim();
+      updatedData.logo = await resolveDirectImageUrl(logoUrl);
     }
 
-    let finalImageUrls = [];
-    if (imageUrl1 && imageUrl1.trim()) finalImageUrls.push(imageUrl1.trim());
-    if (imageUrl2 && imageUrl2.trim()) finalImageUrls.push(imageUrl2.trim());
-    if (imageUrl3 && imageUrl3.trim()) finalImageUrls.push(imageUrl3.trim());
+    let rawUrls = [];
+    if (imageUrl1 && imageUrl1.trim()) rawUrls.push(imageUrl1.trim());
+    if (imageUrl2 && imageUrl2.trim()) rawUrls.push(imageUrl2.trim());
+    if (imageUrl3 && imageUrl3.trim()) rawUrls.push(imageUrl3.trim());
+
+    if (rawUrls.length > 0) {
+      let finalImageUrls = [];
+      for (const urlItem of rawUrls) {
+        const resolved = await resolveDirectImageUrl(urlItem);
+        if (resolved) finalImageUrls.push(resolved);
+      }
+      updatedData.images = finalImageUrls;
+      updatedData.image = finalImageUrls[0];
+    }
 
     if (finalImageUrls.length > 0) {
       updatedData.image = finalImageUrls[0];

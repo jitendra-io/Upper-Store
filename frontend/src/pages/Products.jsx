@@ -202,13 +202,14 @@ const Products = () => {
                   <img
                     src={product.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=500'}
                     alt={product.title}
+                    referrerPolicy="no-referrer"
                   />
                   <span className="product-category">{product.category}</span>
                 </div>
                 <div className="product-info">
                   <div className="product-title-row">
                     {product.logo ? (
-                      <img src={product.logo} alt="" className="product-app-logo" />
+                      <img src={product.logo} alt="" className="product-app-logo" referrerPolicy="no-referrer" />
                     ) : (
                       <div className="product-logo-placeholder-sm">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

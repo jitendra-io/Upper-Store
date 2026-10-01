@@ -618,7 +618,7 @@ const AdminDashboard = () => {
                     {products.map((p) => (
                       <tr key={p.id}>
                         <td className="product-cell">
-                          <img src={p.logo || p.image} alt="" className="admin-prod-thumb" />
+                          <img src={p.logo || p.image} alt="" className="admin-prod-thumb" referrerPolicy="no-referrer" />
                           <div>
                             <strong>{p.title}</strong>
                             <span className="sub-text">{p.price}</span>

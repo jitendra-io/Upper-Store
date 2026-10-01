@@ -147,6 +147,7 @@ const ProductDetailModal = ({ product, onClose }) => {
               src={activeImage}
               alt={product.title}
               className="modal-cover-img"
+              referrerPolicy="no-referrer"
             />
             <span className="modal-category-badge">{product.category}</span>
           </div>
@@ -161,7 +162,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                 className={`thumb-btn ${activeImage === imgUrl ? 'active' : ''}`}
                 onClick={() => setActiveImage(imgUrl)}
               >
-                <img src={imgUrl} alt={`Screenshot ${idx + 1}`} />
+                <img src={imgUrl} alt={`Screenshot ${idx + 1}`} referrerPolicy="no-referrer" />
               </button>
             ))}
           </div>
@@ -171,7 +172,7 @@ const ProductDetailModal = ({ product, onClose }) => {
         <div className="modal-details-body">
           <div className="modal-header-row">
             {product.logo ? (
-              <img src={product.logo} alt="" className="modal-app-logo" />
+              <img src={product.logo} alt="" className="modal-app-logo" referrerPolicy="no-referrer" />
             ) : (
               <div className="modal-logo-placeholder">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
