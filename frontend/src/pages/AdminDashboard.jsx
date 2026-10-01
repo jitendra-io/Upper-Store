@@ -43,6 +43,15 @@ const AdminDashboard = () => {
   const [messages, setMessages] = useState([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
 
+  // Broadcast Notifications State
+  const [broadcastNotifications, setBroadcastNotifications] = useState([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+  const [notifCategory, setNotifCategory] = useState('Update');
+  const [notifLink, setNotifLink] = useState('');
+  const [sendingNotif, setSendingNotif] = useState(false);
+
   // UI Feedback
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -58,8 +67,77 @@ const AdminDashboard = () => {
       fetchUsers(savedToken);
       fetchAppeals(savedToken);
       fetchMessages(savedToken);
+      fetchBroadcastNotifications();
     }
   }, [navigate]);
+
+  const fetchBroadcastNotifications = async () => {
+    setLoadingNotifications(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications`);
+      if (res.ok) {
+        const data = await res.json();
+        setBroadcastNotifications(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch notifications:', err);
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  const handleSendNotification = async (e) => {
+    e.preventDefault();
+    if (!notifTitle.trim() || !notifMessage.trim()) return;
+
+    setSendingNotif(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: notifTitle,
+          message: notifMessage,
+          category: notifCategory,
+          link: notifLink,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to send notification.');
+
+      setMessage({ type: 'success', text: 'Broadcast notification sent successfully to all users!' });
+      setNotifTitle('');
+      setNotifMessage('');
+      setNotifCategory('Update');
+      setNotifLink('');
+      fetchBroadcastNotifications();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setSendingNotif(false);
+    }
+  };
+
+  const handleDeleteNotification = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this notification broadcast?')) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setMessage({ type: 'success', text: 'Notification deleted successfully.' });
+        fetchBroadcastNotifications();
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Failed to delete notification.' });
+    }
+  };
 
   const fetchProducts = async () => {
     setLoadingProducts(true);
@@ -458,6 +536,20 @@ const AdminDashboard = () => {
           </svg>
           <span>Inbox</span>
           {unreadCount > 0 && <span className="tab-badge alert">{unreadCount}</span>}
+        </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'notifications' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('notifications');
+            fetchBroadcastNotifications();
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span>Broadcasts ({broadcastNotifications.length})</span>
         </button>
       </div>
 
@@ -932,6 +1024,127 @@ const AdminDashboard = () => {
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB 5: BROADCAST NOTIFICATIONS */}
+      {activeTab === 'notifications' && (
+        <div className="admin-grid-layout">
+          {/* COMPOSE BROADCAST FORM */}
+          <div className="admin-form-card">
+            <h3>Send Broadcast Notification</h3>
+            <p className="sub-hint">Send live update, release, or announcement alerts to all users via the Navbar blue notification bell.</p>
+
+            <form onSubmit={handleSendNotification} className="admin-form">
+              <div className="form-group">
+                <label>Notification Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  placeholder="e.g., Upper Store 2.1 Release Live!"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group flex-1">
+                  <label>Category *</label>
+                  <select value={notifCategory} onChange={(e) => setNotifCategory(e.target.value)}>
+                    <option value="Update">Update (Blue)</option>
+                    <option value="Release">Release (Green)</option>
+                    <option value="Notice">Notice (Amber)</option>
+                    <option value="Announcement">Announcement (Gold)</option>
+                  </select>
+                </div>
+                <div className="form-group flex-1">
+                  <label>Link / URL (Optional)</label>
+                  <input
+                    type="url"
+                    value={notifLink}
+                    onChange={(e) => setNotifLink(e.target.value)}
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Message Content *</label>
+                <textarea
+                  required
+                  rows="4"
+                  value={notifMessage}
+                  onChange={(e) => setNotifMessage(e.target.value)}
+                  placeholder="Type the update details or announcement message here..."
+                ></textarea>
+              </div>
+
+              <button type="submit" className="admin-btn primary-full" disabled={sendingNotif}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span>{sendingNotif ? 'Sending Broadcast...' : 'Send Broadcast Alert'}</span>
+              </button>
+            </form>
+          </div>
+
+          {/* ACTIVE BROADCASTS LIST */}
+          <div className="admin-list-card">
+            <h3>Active Broadcasts ({broadcastNotifications.length})</h3>
+
+            {loadingNotifications ? (
+              <div className="admin-loading">Loading broadcasts...</div>
+            ) : broadcastNotifications.length === 0 ? (
+              <div className="admin-empty">No broadcast notifications sent yet.</div>
+            ) : (
+              <div className="admin-table-wrapper">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Title & Message</th>
+                      <th>Category</th>
+                      <th>Sent Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {broadcastNotifications.map((n) => (
+                      <tr key={n.id}>
+                        <td>
+                          <strong>{n.title}</strong>
+                          <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#aaa' }}>{n.message}</p>
+                          {n.link && (
+                            <a href={n.link} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: '#38bdf8' }}>
+                              {n.link}
+                            </a>
+                          )}
+                        </td>
+                        <td>
+                          <span className={`notif-cat-tag ${(n.category || 'Update').toLowerCase()}`}>
+                            {n.category || 'Update'}
+                          </span>
+                        </td>
+                        <td>{new Date(n.createdAt || Date.now()).toLocaleDateString()}</td>
+                        <td>
+                          <button
+                            className="admin-btn delete-sm"
+                            onClick={() => handleDeleteNotification(n.id)}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"></polyline>
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            <span>Delete</span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

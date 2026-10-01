@@ -250,17 +250,6 @@ const Home = () => {
             <h3>Real-Time Cloud Synchronization</h3>
             <p>Customer inquiries and support messages are synchronized in real time via encrypted Firebase Firestore databases to ensure fast inbox response.</p>
           </div>
-
-          <div className="pillar-card">
-            <div className="pillar-icon-box">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 8l4 4-4 4M8 12h8"></path>
-              </svg>
-            </div>
-            <h3>Luxury Glassmorphism Aesthetic</h3>
-            <p>Designed with an Antique Gold visual design system, high-contrast dark modes, and subtle interactive micro-animations.</p>
-          </div>
         </div>
       </section>
 

@@ -55,6 +55,53 @@ const Navbar = () => {
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const [isBanned, setIsBanned] = useState(Boolean(user?.isBanned));
+  const [notifications, setNotifications] = useState([]);
+  const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
+  const [readNotifIds, setReadNotifIds] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('upper_read_notifications') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const notifDropdownRef = useRef(null);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/notifications`);
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data || []);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch notifications:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const unreadCount = notifications.filter((n) => !readNotifIds.includes(n.id)).length;
+
+  const markAllAsRead = () => {
+    const allIds = notifications.map((n) => n.id);
+    setReadNotifIds(allIds);
+    localStorage.setItem('upper_read_notifications', JSON.stringify(allIds));
+  };
+
+  // Close notification dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifDropdownRef.current && !notifDropdownRef.current.contains(e.target)) {
+        setNotifDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!user || !user.email) return;
@@ -104,6 +151,81 @@ const Navbar = () => {
           <Link to="/blog" onClick={closeMenu} className={location.pathname === '/blog' ? 'active-link' : ''}>Blog</Link>
           <Link to="/faq" onClick={closeMenu} className={location.pathname === '/faq' ? 'active-link' : ''}>FAQ</Link>
           <Link to="/contact" onClick={closeMenu} className={location.pathname === '/contact' ? 'active-link' : ''}>Contact</Link>
+
+          {/* BLUE NOTIFICATION BELL */}
+          <div className="nav-notif-wrapper" ref={notifDropdownRef}>
+            <button
+              type="button"
+              className="nav-notif-bell-btn"
+              onClick={() => {
+                setNotifDropdownOpen(!notifDropdownOpen);
+                setUserDropdownOpen(false);
+              }}
+              title="Notifications & Broadcasts"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              {unreadCount > 0 && (
+                <span className="nav-notif-badge">{unreadCount}</span>
+              )}
+            </button>
+
+            {/* NOTIFICATION DROPDOWN */}
+            {notifDropdownOpen && (
+              <div className="nav-notif-dropdown">
+                <div className="notif-header">
+                  <div className="notif-header-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <h4>Broadcasts & Updates</h4>
+                  </div>
+                  {unreadCount > 0 && (
+                    <button className="notif-mark-read-btn" onClick={markAllAsRead}>
+                      Mark read
+                    </button>
+                  )}
+                </div>
+
+                <div className="notif-list-body">
+                  {notifications.length === 0 ? (
+                    <div className="notif-empty-state">
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                      </svg>
+                      <p>No notifications yet.</p>
+                      <span>Admin announcements and release updates will appear here.</span>
+                    </div>
+                  ) : (
+                    notifications.map((n) => {
+                      const isUnread = !readNotifIds.includes(n.id);
+                      return (
+                        <div key={n.id} className={`notif-item-card ${isUnread ? 'unread' : 'read'}`}>
+                          <div className="notif-item-top">
+                            <span className={`notif-cat-tag ${(n.category || 'Update').toLowerCase()}`}>
+                              {n.category || 'Update'}
+                            </span>
+                            <span className="notif-time">{new Date(n.createdAt || Date.now()).toLocaleDateString()}</span>
+                          </div>
+                          <h5 className="notif-item-title">{n.title}</h5>
+                          <p className="notif-item-msg">{n.message}</p>
+                          {n.link && (
+                            <a href={n.link} target="_blank" rel="noopener noreferrer" className="notif-item-link">
+                              Open Link ➔
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* AUTH USER PROFILE BADGE OR SIGN IN BUTTON */}
           {isLoggedIn ? (
