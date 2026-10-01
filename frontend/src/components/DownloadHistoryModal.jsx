@@ -103,7 +103,13 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
         {/* CONTROLS BAR */}
         {history.length > 0 && (
           <div className="history-actions-bar">
-            <span className="history-badge-count">📥 Saved in local browser storage</span>
+            <span className="history-badge-count">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px', verticalAlign: 'middle' }}>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+              Saved privately in local browser storage
+            </span>
             <button className="history-clear-btn" onClick={handleClear}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
                 <polyline points="3 6 5 6 21 6"></polyline>
@@ -118,7 +124,13 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
         <div className="history-modal-body">
           {history.length === 0 ? (
             <div className="history-empty-state">
-              <div className="history-empty-icon">📥</div>
+              <div className="history-empty-icon">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+              </div>
               <h4>No Downloads Recorded Yet</h4>
               <p>When you download apps, software tools, or design packages, your download activity will be stored locally right here in your profile.</p>
               <button className="history-browse-btn" onClick={onClose}>
@@ -142,7 +154,13 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
                     </div>
                     <div className="history-item-meta">
                       <span className="history-cat-tag">{item.category}</span>
-                      <span className="history-time-stamp">🕒 {formatDate(item.downloadedAt)}</span>
+                      <span className="history-time-stamp">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+                          <circle cx="12" cy="12" r="10"></circle>
+                          <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        {formatDate(item.downloadedAt)}
+                      </span>
                     </div>
                   </div>
                   <div className="history-item-action">
@@ -170,7 +188,13 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
 
         {/* FOOTER NOTE */}
         <div className="history-modal-footer">
-          <span>🔒 Download history is private and preserved locally in your browser.</span>
+          <span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px', verticalAlign: 'middle' }}>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            Download history is private and preserved locally in your browser.
+          </span>
         </div>
       </div>
     </div>,

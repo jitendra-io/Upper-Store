@@ -10,6 +10,7 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  trackProductDownload,
 } = require('../controllers/productController');
 
 // Multer Disk Storage - stream large files directly to disk (supports 1GB+ files cleanly)
@@ -77,6 +78,7 @@ const uploadFields = (req, res, next) => {
 // Public routes
 router.get('/', getProducts);
 router.get('/:id', getProductById);
+router.post('/:id/download', trackProductDownload);
 
 // Protected admin routes
 router.post('/', protect, uploadFields, createProduct);

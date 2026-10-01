@@ -161,6 +161,7 @@ const createProduct = async (req, res) => {
       images: imageUrls.length > 0 ? imageUrls : (imageUrl ? [imageUrl] : []),
       logo: logoUrl,
       apkFile: apkUrl,
+      downloadCount: 0,
       createdAt: new Date().toISOString(),
     };
 
@@ -262,4 +263,26 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct };
+// @desc    Increment product download count
+// @route   POST /api/products/:id/download
+// @access  Public
+const trackProductDownload = async (req, res) => {
+  try {
+    const docRef = db.collection('products').doc(req.params.id);
+    const doc = await docRef.get();
+    
+    if (doc.exists) {
+      const currentCount = Number(doc.data().downloadCount) || 0;
+      const newCount = currentCount + 1;
+      await docRef.update({ downloadCount: newCount });
+      return res.json({ id: req.params.id, downloadCount: newCount });
+    }
+    
+    res.json({ id: req.params.id, downloadCount: 1 });
+  } catch (error) {
+    console.error('Error tracking download:', error);
+    res.status(500).json({ message: 'Error updating download count.' });
+  }
+};
+
+module.exports = { getProducts, getProductById, createProduct, updateProduct, deleteProduct, trackProductDownload };

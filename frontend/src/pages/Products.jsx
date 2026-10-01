@@ -207,7 +207,11 @@ const Products = () => {
                     {product.logo ? (
                       <img src={product.logo} alt="" className="product-app-logo" />
                     ) : (
-                      <div className="product-logo-placeholder-sm">📦</div>
+                      <div className="product-logo-placeholder-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        </svg>
+                      </div>
                     )}
                     <div>
                       <h3>{product.title}</h3>
@@ -218,7 +222,14 @@ const Products = () => {
                   <div className="product-footer">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
                       <span className="product-price">{product.price}</span>
-                      <span className="product-downloads-badge">📥 {formatDownloadCount(downloadsCount)}</span>
+                      <span className="product-downloads-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '3px' }}>
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        {formatDownloadCount(downloadsCount)} Downloads
+                      </span>
                     </div>
                     <button className="view-btn" onClick={() => setSelectedProduct(product)}>
                       Details

@@ -1,33 +1,10 @@
 // =========================================================
-// DOWNLOAD TRACKER UTILITY (LOCAL STORAGE PER USER & PRODUCT COUNTS)
+// DOWNLOAD TRACKER UTILITY (REAL USER HISTORY & DATABASE SYNC)
 // =========================================================
 
-// Baseline download counts for initial visual richness
-const INITIAL_DOWNLOAD_BASELINES = {
-  'demo-1': 1420,
-  'demo-2': 3890,
-  'demo-3': 855,
-  'demo-4': 640,
-  'feat-1': 3890,
-  'feat-2': 1420,
-  'feat-3': 855,
-};
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Compute deterministic baseline count if not in initial baselines
-const getBaselineCount = (productId) => {
-  if (INITIAL_DOWNLOAD_BASELINES[productId]) {
-    return INITIAL_DOWNLOAD_BASELINES[productId];
-  }
-  let hash = 0;
-  const str = String(productId || 'default');
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return 100 + Math.abs(hash % 900);
-};
-
-// Retrieve all product download counts from localStorage
+// Retrieve all local product download increments from localStorage
 export const getProductDownloadCountMap = () => {
   try {
     const data = localStorage.getItem('upper_product_downloads');
@@ -38,13 +15,13 @@ export const getProductDownloadCountMap = () => {
   }
 };
 
-// Get single product's download count
-export const getProductDownloadCount = (productId, backendCount = null) => {
+// Get single product's real download count (DB count + local session increments)
+export const getProductDownloadCount = (productId, backendCount = 0) => {
   if (!productId) return 0;
   const map = getProductDownloadCountMap();
-  const baseline = backendCount !== null && backendCount !== undefined ? Number(backendCount) : getBaselineCount(productId);
-  const localIncrements = Number(map[productId] || 0);
-  return baseline + localIncrements;
+  const base = Number(backendCount || 0);
+  const localExtra = Number(map[productId] || 0);
+  return base + localExtra;
 };
 
 // Format count for display (e.g., 1420 -> "1.4k")
@@ -59,14 +36,21 @@ export const formatDownloadCount = (count) => {
   return num.toLocaleString();
 };
 
-// Increment product download count in localStorage
-export const incrementProductDownloadCount = (productId) => {
+// Increment product download count locally and sync with backend DB
+export const incrementProductDownloadCount = async (productId) => {
   if (!productId) return;
   try {
     const map = getProductDownloadCountMap();
     map[productId] = (Number(map[productId]) || 0) + 1;
     localStorage.setItem('upper_product_downloads', JSON.stringify(map));
+    
+    // Dispatch instant local reactive event
     window.dispatchEvent(new CustomEvent('productDownloadsUpdated', { detail: { productId, newCount: map[productId] } }));
+
+    // Send async backend counter increment to Firestore
+    fetch(`${API_BASE}/api/products/${productId}/download`, { method: 'POST' }).catch((err) => {
+      console.warn('Failed to sync download count to server:', err);
+    });
   } catch (err) {
     console.warn('Failed to update download count in localStorage:', err);
   }
