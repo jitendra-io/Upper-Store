@@ -296,11 +296,17 @@ const createProduct = async (req, res) => {
     let finalVideoUrl = (videoUrl || '').trim();
     if (finalVideoUrl) {
       finalVideoUrl = await resolveDirectImageUrl(finalVideoUrl);
+    } else if (req.files?.video) {
+      const videoFile = req.files.video[0];
+      finalVideoUrl = await uploadFileToCloudOrLocal(videoFile, 'videos', req);
     }
 
     let finalVideoPosterUrl = (videoPosterUrl || '').trim();
     if (finalVideoPosterUrl) {
       finalVideoPosterUrl = await resolveDirectImageUrl(finalVideoPosterUrl);
+    } else if (req.files?.videoPoster) {
+      const posterFile = req.files.videoPoster[0];
+      finalVideoPosterUrl = await uploadFileToCloudOrLocal(posterFile, 'images', req);
     }
 
     const mainImageUrl = finalImageUrls[0] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600';
@@ -378,10 +384,16 @@ const updateProduct = async (req, res) => {
 
     if (videoUrl !== undefined) {
       updatedData.videoUrl = videoUrl.trim() ? await resolveDirectImageUrl(videoUrl.trim()) : '';
+    } else if (req.files?.video) {
+      const videoFile = req.files.video[0];
+      updatedData.videoUrl = await uploadFileToCloudOrLocal(videoFile, 'videos', req);
     }
 
     if (videoPosterUrl !== undefined) {
       updatedData.videoPoster = videoPosterUrl.trim() ? await resolveDirectImageUrl(videoPosterUrl.trim()) : '';
+    } else if (req.files?.videoPoster) {
+      const posterFile = req.files.videoPoster[0];
+      updatedData.videoPoster = await uploadFileToCloudOrLocal(posterFile, 'images', req);
     }
 
     if (logoUrl !== undefined && logoUrl.trim() !== '') {

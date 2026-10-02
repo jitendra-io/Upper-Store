@@ -17,10 +17,12 @@ const {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     let destFolder = path.join(__dirname, '../uploads');
-    if (file.fieldname === 'image' || file.fieldname === 'images' || file.fieldname === 'logo') {
+    if (file.fieldname === 'image' || file.fieldname === 'images' || file.fieldname === 'logo' || file.fieldname === 'videoPoster') {
       destFolder = path.join(destFolder, 'images');
     } else if (file.fieldname === 'apk') {
       destFolder = path.join(destFolder, 'apks');
+    } else if (file.fieldname === 'video') {
+      destFolder = path.join(destFolder, 'videos');
     }
     if (!fs.existsSync(destFolder)) {
       fs.mkdirSync(destFolder, { recursive: true });
@@ -37,9 +39,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 1500 * 1024 * 1024 }, // 1.5 GB limit (supports 210MB+ APKs)
+  limits: { fileSize: 1500 * 1024 * 1024 }, // 1.5 GB limit (supports 210MB+ APKs & video files)
   fileFilter: (req, file, cb) => {
     const isImage = file.mimetype.startsWith('image/');
+    const isVideo = file.mimetype.startsWith('video/');
     const orig = file.originalname.toLowerCase();
     const isBinary = file.mimetype === 'application/vnd.android.package-archive' ||
                      file.mimetype === 'application/octet-stream' ||
@@ -49,8 +52,10 @@ const upload = multer({
                      orig.endsWith('.exe') ||
                      orig.endsWith('.msi') ||
                      orig.endsWith('.zip');
-    if (isImage || isBinary) cb(null, true);
-    else cb(new Error('Invalid file type. Only image files and APK/EXE/ZIP files are allowed.'));
+    const isVideoExt = orig.endsWith('.mp4') || orig.endsWith('.webm') || orig.endsWith('.mov') || orig.endsWith('.m4v') || orig.endsWith('.avi');
+
+    if (isImage || isVideo || isVideoExt || isBinary) cb(null, true);
+    else cb(new Error('Invalid file type. Only image, video, and software package files are allowed.'));
   },
 });
 
@@ -60,6 +65,8 @@ const uploadFields = (req, res, next) => {
     { name: 'images', maxCount: 3 },
     { name: 'logo', maxCount: 1 },
     { name: 'apk', maxCount: 1 },
+    { name: 'video', maxCount: 1 },
+    { name: 'videoPoster', maxCount: 1 },
   ]);
 
   handler(req, res, (err) => {
