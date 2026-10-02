@@ -79,9 +79,42 @@ const PRODUCT_VIDEOS = [
     videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-code-on-a-computer-screen-2512-large.mp4',
     poster: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800',
     description: 'Live stress-testing of hardware-accelerated particle systems running smoothly at 60 FPS under peak load.',
-    features: ['Zero Dependencies', 'WebGL / Canvas 2D', 'Custom Emitters']
   }
 ];
+
+const getVideoPlayerSource = (url) => {
+  if (!url || typeof url !== 'string') return { type: 'video', src: '' };
+  const clean = url.trim();
+
+  // 1. YouTube link
+  const ytMatch = clean.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return {
+      type: 'iframe',
+      src: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&controls=1&rel=0`
+    };
+  }
+
+  // 2. Google Drive video
+  const driveMatch = clean.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return {
+      type: 'iframe',
+      src: `https://drive.google.com/file/d/${driveMatch[1]}/preview`
+    };
+  }
+
+  // 3. Google Photos share link
+  if (clean.includes('photos.app.goo.gl') || clean.includes('photos.google.com')) {
+    if (clean.includes('lh3.googleusercontent.com') || clean.match(/\.(mp4|webm|ogg|mov)(\?|$)/i)) {
+      return { type: 'video', src: clean };
+    }
+    return { type: 'iframe', src: clean };
+  }
+
+  // 4. Standard Direct MP4 / Video Link
+  return { type: 'video', src: clean };
+};
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState(FEATURED_FALLBACKS);
@@ -291,21 +324,34 @@ const Home = () => {
 
             const currentVideo = videoList.find((v) => v.id === activeVideoId) || videoList[0];
             const matchingProduct = featuredProducts.find((p) => p.id === currentVideo.productId || (p.title && p.title.toLowerCase().includes(currentVideo.category.toLowerCase()))) || featuredProducts[0];
+            const playerSrc = getVideoPlayerSource(currentVideo.videoUrl);
 
             return (
               <div className="main-video-player-card">
                 <div className="video-viewport-wrapper">
-                  <video
-                    key={currentVideo.id}
-                    src={currentVideo.videoUrl}
-                    poster={currentVideo.poster}
-                    controls
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="featured-video-element"
-                  />
+                  {playerSrc.type === 'iframe' ? (
+                    <iframe
+                      key={currentVideo.id}
+                      src={playerSrc.src}
+                      title={currentVideo.title}
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      allowFullScreen
+                      className="featured-video-element"
+                      style={{ border: 'none', width: '100%', height: '100%', minHeight: '340px' }}
+                    />
+                  ) : (
+                    <video
+                      key={currentVideo.id}
+                      src={playerSrc.src}
+                      poster={currentVideo.poster}
+                      controls
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      className="featured-video-element"
+                    />
+                  )}
                   <div className="video-badge-tag">{currentVideo.badge}</div>
                   <div className="video-duration-tag">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
