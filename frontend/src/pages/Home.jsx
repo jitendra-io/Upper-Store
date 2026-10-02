@@ -82,16 +82,23 @@ const PRODUCT_VIDEOS = [
   }
 ];
 
+const parseYouTubeVideoId = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const clean = url.trim();
+  const match = clean.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match && match[1] ? match[1] : null;
+};
+
 const getVideoPlayerSource = (url) => {
-  if (!url || typeof url !== 'string') return { type: 'video', src: '' };
+  if (!url || typeof url !== 'string') return { type: 'none', src: '' };
   const clean = url.trim();
 
-  // 1. YouTube link
-  const ytMatch = clean.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (ytMatch && ytMatch[1]) {
+  // 1. YouTube Video
+  const ytId = parseYouTubeVideoId(clean);
+  if (ytId) {
     return {
       type: 'iframe',
-      src: `https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&controls=1&rel=0`
+      src: `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=1&rel=0&enablejsapi=1`
     };
   }
 
@@ -104,17 +111,12 @@ const getVideoPlayerSource = (url) => {
     };
   }
 
-  // 3. Direct Google Photos Stream or Direct Video File (lh3.googleusercontent.com, video-downloads, .mp4)
-  if (clean.includes('lh3.googleusercontent.com') || clean.includes('video-downloads.googleusercontent.com') || clean.match(/\.(mp4|webm|ogg|mov)(\?|$)/i)) {
+  // 3. Direct Video Stream (MP4, WebM, OGG, or direct video file)
+  if (clean.match(/\.(mp4|webm|ogg|mov)(\?|$)/i) || clean.includes('lh3.googleusercontent.com')) {
     return { type: 'video', src: clean };
   }
 
-  // 4. Raw Google Photos share link (photos.app.goo.gl or photos.google.com)
-  if (clean.includes('photos.app.goo.gl') || clean.includes('photos.google.com')) {
-    return { type: 'gphotos_link', src: clean };
-  }
-
-  // 5. Standard Direct MP4 / Video Link
+  // 4. Standard Direct MP4 / Video Link
   return { type: 'video', src: clean };
 };
 
@@ -312,19 +314,25 @@ const Home = () => {
             let videoList = PRODUCT_VIDEOS;
 
             if (customVideoProducts.length > 0) {
-              const customList = customVideoProducts.map((p) => ({
-                id: `custom-vid-${p.id}`,
-                productId: p.id,
-                title: `${p.title} - Video Demo`,
-                category: p.category || 'Product Showcase',
-                badge: 'Official Demo',
-                duration: 'Demo Reel',
-                videoUrl: p.videoUrl,
-                hasCustomPoster: Boolean(p.videoPoster && p.videoPoster.trim() !== ''),
-                poster: (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : '',
-                description: p.description || 'Watch hands-on video demonstration of this software package.',
-                features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
-              }));
+              const customList = customVideoProducts.map((p) => {
+                const ytId = parseYouTubeVideoId(p.videoUrl);
+                const ytThumbnail = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
+                const posterUrl = (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : ytThumbnail;
+
+                return {
+                  id: `custom-vid-${p.id}`,
+                  productId: p.id,
+                  title: `${p.title} - Video Demo`,
+                  category: p.category || 'Product Showcase',
+                  badge: 'Official Demo',
+                  duration: 'Demo Reel',
+                  videoUrl: p.videoUrl,
+                  hasCustomPoster: Boolean(posterUrl),
+                  poster: posterUrl,
+                  description: p.description || 'Watch hands-on video demonstration of this software package.',
+                  features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
+                };
+              });
 
               if (customList.length < 3) {
                 PRODUCT_VIDEOS.forEach((fallback) => {
@@ -438,19 +446,25 @@ const Home = () => {
               let videoList = PRODUCT_VIDEOS;
 
               if (customVideoProducts.length > 0) {
-                const customList = customVideoProducts.map((p) => ({
-                  id: `custom-vid-${p.id}`,
-                  productId: p.id,
-                  title: `${p.title} - Video Demo`,
-                  category: p.category || 'Product Showcase',
-                  badge: 'Official Demo',
-                  duration: 'Demo Reel',
-                  videoUrl: p.videoUrl,
-                  hasCustomPoster: Boolean(p.videoPoster && p.videoPoster.trim() !== ''),
-                  poster: (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : '',
-                  description: p.description || 'Watch hands-on video demonstration of this software package.',
-                  features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
-                }));
+                const customList = customVideoProducts.map((p) => {
+                  const ytId = parseYouTubeVideoId(p.videoUrl);
+                  const ytThumbnail = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
+                  const posterUrl = (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : ytThumbnail;
+
+                  return {
+                    id: `custom-vid-${p.id}`,
+                    productId: p.id,
+                    title: `${p.title} - Video Demo`,
+                    category: p.category || 'Product Showcase',
+                    badge: 'Official Demo',
+                    duration: 'Demo Reel',
+                    videoUrl: p.videoUrl,
+                    hasCustomPoster: Boolean(posterUrl),
+                    poster: posterUrl,
+                    description: p.description || 'Watch hands-on video demonstration of this software package.',
+                    features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
+                  };
+                });
 
                 if (customList.length < 3) {
                   PRODUCT_VIDEOS.forEach((fallback) => {
