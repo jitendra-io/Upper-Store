@@ -50,5 +50,14 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Process-level crash prevention guards
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ Uncaught Exception caught (process guarded):', err.message);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ Unhandled Promise Rejection caught (process guarded):', reason);
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
