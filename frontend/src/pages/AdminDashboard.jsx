@@ -24,6 +24,7 @@ const AdminDashboard = () => {
   const [releaseNotes, setReleaseNotes] = useState('');
   const [directApkUrl, setDirectApkUrl] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [videoPosterUrl, setVideoPosterUrl] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [imageUrl1, setImageUrl1] = useState('');
   const [imageUrl2, setImageUrl2] = useState('');
@@ -405,6 +406,7 @@ const AdminDashboard = () => {
     setReleaseNotes(p.releaseNotes || '');
     setDirectApkUrl(p.apkFile || '');
     setVideoUrl(p.videoUrl || '');
+    setVideoPosterUrl(p.videoPoster || '');
     setLogoUrl(p.logo || '');
     setImageUrl1(p.images?.[0] || p.image || '');
     setImageUrl2(p.images?.[1] || '');
@@ -423,6 +425,7 @@ const AdminDashboard = () => {
     setReleaseNotes('');
     setDirectApkUrl('');
     setVideoUrl('');
+    setVideoPosterUrl('');
     setLogoUrl('');
     setImageUrl1('');
     setImageUrl2('');
@@ -462,6 +465,7 @@ const AdminDashboard = () => {
           releaseNotes,
           directApkUrl,
           videoUrl,
+          videoPosterUrl,
           logoUrl,
           imageUrl1,
           imageUrl2,
@@ -676,16 +680,28 @@ const AdminDashboard = () => {
                 <span className="field-hint">Specify direct release package URL for this product deployment.</span>
               </div>
 
-              {/* PRODUCT DEMO VIDEO URL (GOOGLE PHOTOS / WEB VIDEO LINK) */}
+              {/* OPTIONAL PRODUCT DEMO VIDEO URL (GOOGLE PHOTOS / WEB VIDEO LINK) */}
               <div className="form-group highlight-box" style={{ borderColor: 'rgba(56, 189, 248, 0.3)', background: 'rgba(56, 189, 248, 0.05)' }}>
-                <label style={{ color: '#38bdf8' }}>Product Demo Video URL (Google Photos / Direct MP4 / Web Video Link)</label>
+                <label style={{ color: '#38bdf8' }}>Product Demo Video URL (Optional - Google Photos / Direct MP4 Link)</label>
                 <input
                   type="url"
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
                   placeholder="https://photos.app.goo.gl/... or direct MP4 video link"
                 />
-                <span className="field-hint">Public video link displayed in the Product Video Demos section on the home page.</span>
+                <span className="field-hint">Optional public video link displayed in the Product Video Demos section on the home page.</span>
+              </div>
+
+              {/* OPTIONAL VIDEO THUMBNAIL / POSTER URL */}
+              <div className="form-group highlight-box" style={{ borderColor: 'rgba(212, 175, 55, 0.3)', background: 'rgba(212, 175, 55, 0.05)' }}>
+                <label style={{ color: '#d4af37' }}>Video Thumbnail / Poster Image URL (Optional - Google Photos / Direct Image Link)</label>
+                <input
+                  type="url"
+                  value={videoPosterUrl}
+                  onChange={(e) => setVideoPosterUrl(e.target.value)}
+                  placeholder="https://photos.app.goo.gl/... or direct image thumbnail link"
+                />
+                <span className="field-hint">Optional thumbnail poster image displayed on the video card and preview deck.</span>
               </div>
 
               {/* REQUIREMENT: LOGO & SCREENSHOT LINKS (GOOGLE PHOTOS / WEB LINKS) */}

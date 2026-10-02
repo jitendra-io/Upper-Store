@@ -173,6 +173,10 @@ const getProducts = async (req, res) => {
         p.videoUrl = await resolveDirectImageUrl(p.videoUrl);
         updated = true;
       }
+      if (p.videoPoster && (p.videoPoster.includes('photos.app.goo.gl') || p.videoPoster.includes('drive.google.com/file') || p.videoPoster.includes('photos.google.com'))) {
+        p.videoPoster = await resolveDirectImageUrl(p.videoPoster);
+        updated = true;
+      }
       if (Array.isArray(p.images)) {
         const resolvedImages = [];
         for (const img of p.images) {
@@ -194,6 +198,7 @@ const getProducts = async (req, res) => {
             logo: p.logo || '',
             images: p.images || [],
             videoUrl: p.videoUrl || '',
+            videoPoster: p.videoPoster || '',
           });
         } catch (e) {}
       }
@@ -235,6 +240,7 @@ const createProduct = async (req, res) => {
       releaseNotes,
       directApkUrl,
       videoUrl,
+      videoPosterUrl,
       logoUrl,
       imageUrl1,
       imageUrl2,
@@ -292,6 +298,11 @@ const createProduct = async (req, res) => {
       finalVideoUrl = await resolveDirectImageUrl(finalVideoUrl);
     }
 
+    let finalVideoPosterUrl = (videoPosterUrl || '').trim();
+    if (finalVideoPosterUrl) {
+      finalVideoPosterUrl = await resolveDirectImageUrl(finalVideoPosterUrl);
+    }
+
     const mainImageUrl = finalImageUrls[0] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600';
 
     const productData = {
@@ -305,6 +316,7 @@ const createProduct = async (req, res) => {
       images: finalImageUrls.length > 0 ? finalImageUrls : [mainImageUrl],
       logo: finalLogoUrl,
       videoUrl: finalVideoUrl,
+      videoPoster: finalVideoPosterUrl,
       apkFile: apkUrl,
       downloadCount: 0,
       createdAt: new Date().toISOString(),
@@ -338,6 +350,7 @@ const updateProduct = async (req, res) => {
       releaseNotes,
       directApkUrl,
       videoUrl,
+      videoPosterUrl,
       logoUrl,
       imageUrl1,
       imageUrl2,
@@ -367,6 +380,10 @@ const updateProduct = async (req, res) => {
       updatedData.videoUrl = videoUrl.trim() ? await resolveDirectImageUrl(videoUrl.trim()) : '';
     }
 
+    if (videoPosterUrl !== undefined) {
+      updatedData.videoPoster = videoPosterUrl.trim() ? await resolveDirectImageUrl(videoPosterUrl.trim()) : '';
+    }
+
     if (logoUrl !== undefined && logoUrl.trim() !== '') {
       updatedData.logo = await resolveDirectImageUrl(logoUrl);
     }
@@ -382,13 +399,10 @@ const updateProduct = async (req, res) => {
         const resolved = await resolveDirectImageUrl(urlItem);
         if (resolved) finalImageUrls.push(resolved);
       }
-      updatedData.images = finalImageUrls;
-      updatedData.image = finalImageUrls[0];
-    }
-
-    if (finalImageUrls.length > 0) {
-      updatedData.image = finalImageUrls[0];
-      updatedData.images = finalImageUrls;
+      if (finalImageUrls.length > 0) {
+        updatedData.images = finalImageUrls;
+        updatedData.image = finalImageUrls[0];
+      }
     }
 
     updatedData.updatedAt = new Date().toISOString();
