@@ -1,6 +1,7 @@
 const { db } = require('../config/firebase');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { sendWelcomeEmail, sendLoginAlertEmail } = require('../services/emailService');
 
 const generateToken = (uid, role = 'user') => {
   return jwt.sign({ uid, role }, process.env.JWT_SECRET || 'upper_store_jwt_secret_key_2026', { expiresIn: '7d' });
@@ -121,6 +122,11 @@ const registerUser = async (req, res) => {
       role: 'user',
     };
 
+    // Trigger Welcome Email asynchronously
+    sendWelcomeEmail(cleanEmail, userProfile.displayName).catch((err) =>
+      console.error('Welcome email async trigger error:', err)
+    );
+
     res.status(201).json({
       message: 'Account created successfully.',
       user: userProfile,
@@ -177,6 +183,11 @@ const loginUser = async (req, res) => {
       role: 'user',
     };
 
+    // Trigger Login Alert Email asynchronously
+    sendLoginAlertEmail(userProfile.email, userProfile.displayName, 'Email & Password').catch((err) =>
+      console.error('Login alert email trigger error:', err)
+    );
+
     res.json({
       message: 'Logged in successfully.',
       user: userProfile,
@@ -228,6 +239,11 @@ const googleOAuthLogin = async (req, res) => {
         isBanned: false,
         role: 'user',
       };
+
+      // Trigger Welcome Email for new Google sign-ups
+      sendWelcomeEmail(cleanEmail, finalProfile.displayName).catch((err) =>
+        console.error('Welcome email async trigger error:', err)
+      );
     } else {
       const userDoc = snapshot.docs[0];
       uid = userDoc.id;
@@ -253,6 +269,11 @@ const googleOAuthLogin = async (req, res) => {
         lastAppealedAt: existingData.lastAppealedAt || null,
         role: 'user',
       };
+
+      // Trigger Login Alert for existing Google sign-ins
+      sendLoginAlertEmail(cleanEmail, finalProfile.displayName, 'Google OAuth 2.0').catch((err) =>
+        console.error('Login alert email trigger error:', err)
+      );
     }
 
     res.json({
