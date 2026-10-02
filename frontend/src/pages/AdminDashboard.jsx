@@ -15,7 +15,7 @@ const AdminDashboard = () => {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  // Form State (GitHub Release + Google Photos Links)
+  // Form State (GitHub Release + YouTube Video + Google Photos Links)
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Mobile App');
   const [price, setPrice] = useState('Free');
@@ -680,16 +680,16 @@ const AdminDashboard = () => {
                 <span className="field-hint">Specify direct release package URL for this product deployment.</span>
               </div>
 
-              {/* OPTIONAL PRODUCT DEMO VIDEO URL (GOOGLE PHOTOS / WEB VIDEO LINK) */}
+              {/* OPTIONAL PRODUCT DEMO VIDEO URL (YOUTUBE VIDEO LINK) */}
               <div className="form-group highlight-box" style={{ borderColor: 'rgba(56, 189, 248, 0.3)', background: 'rgba(56, 189, 248, 0.05)' }}>
-                <label style={{ color: '#38bdf8' }}>Product Demo Video URL (Optional - Google Photos / Direct MP4 Link)</label>
+                <label style={{ color: '#38bdf8' }}>Product Demo Video URL (Optional - YouTube Video Link)</label>
                 <input
                   type="url"
                   value={videoUrl}
                   onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://photos.app.goo.gl/... or direct MP4 video link"
+                  placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
                 />
-                <span className="field-hint">Optional public video link displayed in the Product Video Demos section on the home page.</span>
+                <span className="field-hint">Paste YouTube video link (watch, shorts, or share URL) for interactive playback in the Video Demos section.</span>
               </div>
 
               {/* OPTIONAL VIDEO THUMBNAIL / POSTER URL */}
