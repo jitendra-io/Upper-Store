@@ -7,46 +7,6 @@ import './Products.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-const FALLBACK_PRODUCTS = [
-  {
-    id: 'demo-1',
-    title: 'Premium Web UI Kit',
-    category: 'Design Asset',
-    version: '2.1.0',
-    description: 'A dark-mode first, glassmorphism UI kit designed for premium applications.',
-    image: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=500',
-    price: '$29',
-  },
-  {
-    id: 'demo-2',
-    title: 'Upper Store Mobile App',
-    category: 'Mobile App',
-    version: '1.4.2',
-    description: 'The official mobile client for managing your products and downloads on the go.',
-    image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=500',
-    price: 'Free',
-    apkFile: 'https://github.com/Upper-Official/Store-Releases/releases',
-  },
-  {
-    id: 'demo-3',
-    title: 'React Animation Library',
-    category: 'Software Tool',
-    version: '3.0.1',
-    description: 'A lightweight React library for creating stunning canvas particle effects.',
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=500',
-    price: '$15',
-  },
-  {
-    id: 'demo-4',
-    title: 'Golden Icons Pack',
-    category: 'Vector Graphics',
-    version: '1.0.0',
-    description: '200+ beautifully crafted scalable vector icons using the Antique Gold palette.',
-    image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=500',
-    price: '$10',
-  }
-];
-
 const CATEGORIES = ['All', 'Mobile App', 'Windows App', 'Design Asset', 'Software Tool', 'Vector Graphics'];
 
 const Products = () => {
@@ -74,14 +34,14 @@ const Products = () => {
           if (data && data.length > 0) {
             setProducts(data);
           } else {
-            setProducts(FALLBACK_PRODUCTS);
+            setProducts([]);
           }
         } else {
-          setProducts(FALLBACK_PRODUCTS);
+          setProducts([]);
         }
       } catch (err) {
-        console.warn('Backend API offline or unreachable, showing demo items:', err);
-        setProducts(FALLBACK_PRODUCTS);
+        console.warn('Backend API offline or unreachable:', err);
+        setProducts([]);
       } finally {
         setLoading(false);
       }

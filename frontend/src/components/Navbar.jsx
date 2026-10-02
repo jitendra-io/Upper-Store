@@ -247,7 +247,16 @@ const Navbar = () => {
                             <span className={`notif-cat-tag ${(n.category || 'Update').toLowerCase()}`}>
                               {n.category || 'Update'}
                             </span>
-                            <span className="notif-time">{new Date(n.createdAt || Date.now()).toLocaleDateString()}</span>
+                            <span className="notif-time">
+                              {new Date(n.createdAt || Date.now()).toLocaleString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                            </span>
                           </div>
                           <h5 className="notif-item-title">{n.title}</h5>
                           <p className="notif-item-msg">{n.message}</p>

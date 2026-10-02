@@ -1209,7 +1209,16 @@ const AdminDashboard = () => {
                             {n.category || 'Update'}
                           </span>
                         </td>
-                        <td>{new Date(n.createdAt || Date.now()).toLocaleDateString()}</td>
+                        <td>
+                          {new Date(n.createdAt || Date.now()).toLocaleString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </td>
                         <td>
                           <button
                             className="admin-btn delete-sm"
