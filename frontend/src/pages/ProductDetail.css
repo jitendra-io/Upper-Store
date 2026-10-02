@@ -206,3 +206,25 @@
     min-height: 200px;
   }
 }
+
+@media (max-width: 480px) {
+  .detail-container {
+    padding: 1.5rem 3%;
+  }
+
+  .detail-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .cta-button {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .detail-meta {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+}

@@ -392,6 +392,41 @@
   }
 }
 
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.85rem 4%;
+  }
+
+  .nav-logo a {
+    font-size: 1.25rem;
+    gap: 0.4rem;
+  }
+
+  .brand-logo-img {
+    width: 28px;
+    height: 28px;
+  }
+
+  .nav-notif-dropdown {
+    width: 290px;
+    max-width: 88vw;
+    right: -25px;
+  }
+
+  .nav-user-dropdown {
+    width: 260px;
+    max-width: 88vw;
+    right: -10px;
+  }
+
+  .nav-flash-toast {
+    right: 1rem;
+    left: 1rem;
+    font-size: 0.8rem;
+    padding: 0.55rem 0.9rem;
+  }
+}
+
 /* Blue Notification Bell Component */
 .nav-notif-wrapper {
   position: relative;

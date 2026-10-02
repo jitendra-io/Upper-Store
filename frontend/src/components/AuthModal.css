@@ -348,3 +348,22 @@
 .auth-cancel-btn:hover {
   color: #fff;
 }
+
+@media (max-width: 480px) {
+  .auth-modal-backdrop {
+    padding: 3.5rem 0.65rem 1.5rem;
+  }
+
+  .auth-modal-card {
+    max-width: 95vw;
+    border-radius: 16px;
+  }
+
+  .auth-modal-header {
+    padding: 1.1rem 1.1rem 0.7rem;
+  }
+
+  .auth-form-body {
+    padding: 1.2rem 1.1rem 1.5rem;
+  }
+}

@@ -439,3 +439,28 @@
     padding: 1.2rem;
   }
 }
+
+@media (max-width: 480px) {
+  .catalog-search-box input {
+    padding: 0.65rem 5.6rem 0.65rem 2.4rem;
+    font-size: 0.82rem;
+  }
+
+  .catalog-search-submit-btn {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.75rem;
+  }
+
+  .catalog-clear-btn {
+    right: 4.8rem;
+  }
+
+  .catalog-category-bar {
+    gap: 0.35rem;
+  }
+
+  .catalog-tab {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.76rem;
+  }
+}

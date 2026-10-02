@@ -708,3 +708,76 @@
   background: #ef4444;
   color: #ffffff;
 }
+
+/* Mobile Responsiveness */
+@media (max-width: 900px) {
+  .specs-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1rem 3% 3rem;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem;
+  }
+
+  .admin-logout-btn {
+    align-self: flex-start;
+  }
+
+  .admin-tabs-bar {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.6rem;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+
+  .admin-tab-btn {
+    flex-shrink: 0;
+    padding: 0.5rem 0.95rem;
+    font-size: 0.82rem;
+  }
+
+  .form-grid-3,
+  .form-row-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+
+  .admin-table {
+    min-width: 650px;
+  }
+
+  .product-form-card,
+  .admin-card {
+    padding: 1.25rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header-brand h1 {
+    font-size: 1.15rem;
+  }
+
+  .admin-subtext {
+    font-size: 0.72rem;
+  }
+
+  .msg-header {
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}
