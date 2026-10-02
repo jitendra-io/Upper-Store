@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import ProductDetailModal from '../components/ProductDetailModal';
@@ -41,44 +41,6 @@ const FEATURED_FALLBACKS = [
     image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=600',
     price: '$15',
     features: ['60 FPS Hardware Accelerated', 'Zero External Dependencies', 'Customizable Emitters']
-  }
-];
-
-const PRODUCT_VIDEOS = [
-  {
-    id: 'vid-1',
-    productId: 'feat-1',
-    title: 'Upper Store Mobile Client Walkthrough',
-    category: 'Mobile App',
-    badge: '4K App Demo',
-    duration: '0:45',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-41551-large.mp4',
-    poster: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=800',
-    description: 'Experience real-time direct downloads, SHA-256 integrity verification, and instant push updates in action.',
-    features: ['Direct APK Installation', 'Dark Gold Interface', 'Real-Time Sync']
-  },
-  {
-    id: 'vid-2',
-    productId: 'feat-2',
-    title: 'Luxury Glassmorphism UI Kit Showcase',
-    category: 'Design Asset',
-    badge: 'UI Design Reel',
-    duration: '0:32',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-a-green-screen-41529-large.mp4',
-    poster: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800',
-    description: 'A complete tour of modern dark-mode components, CSS blur effects, and gold accent micro-interactions.',
-    features: ['React & CSS Modules', 'Glassmorphism Tokens', 'Responsive Grids']
-  },
-  {
-    id: 'vid-3',
-    productId: 'feat-3',
-    title: 'Canvas Animation Engine 60FPS Test',
-    category: 'Software Tool',
-    badge: '60FPS Performance',
-    duration: '0:50',
-    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-code-on-a-computer-screen-2512-large.mp4',
-    poster: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800',
-    description: 'Live stress-testing of hardware-accelerated particle systems running smoothly at 60 FPS under peak load.',
   }
 ];
 
@@ -133,11 +95,24 @@ const getSafeImageUrl = (url) => {
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState(FEATURED_FALLBACKS);
+  const [catalogProducts, setCatalogProducts] = useState([]);
   const [totalProductsCount, setTotalProductsCount] = useState(4);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [reviewModalProduct, setReviewModalProduct] = useState(null);
-  const [activeVideoId, setActiveVideoId] = useState(PRODUCT_VIDEOS[0].id);
+  const [activeVideoId, setActiveVideoId] = useState(null);
   const [, setRefreshDownloads] = useState(0);
+
+  const deckTrackRef = useRef(null);
+
+  const scrollDeck = (direction) => {
+    if (deckTrackRef.current) {
+      const scrollAmount = 340;
+      deckTrackRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   useEffect(() => {
     const handleUpdate = () => setRefreshDownloads((prev) => prev + 1);
@@ -154,13 +129,16 @@ const Home = () => {
           if (data && data.length > 0) {
             setTotalProductsCount(data.length);
             setFeaturedProducts(data.slice(0, 3));
+            setCatalogProducts(data);
           } else {
             setFeaturedProducts(FEATURED_FALLBACKS);
+            setCatalogProducts([]);
           }
         }
       } catch (err) {
         setTotalProductsCount(4);
         setFeaturedProducts(FEATURED_FALLBACKS);
+        setCatalogProducts([]);
       }
     };
     fetchCatalogProducts();
@@ -307,228 +285,204 @@ const Home = () => {
         </div>
 
         <div className="video-showcase-container">
-          {/* Main Active Video Player */}
           {(() => {
-            // Dynamic video list (uses admin-defined videoUrl from products catalog if available)
-            const customVideoProducts = featuredProducts.filter((p) => p.videoUrl && p.videoUrl.trim() !== '');
-            let videoList = PRODUCT_VIDEOS;
+            const allProductsList = catalogProducts.length > 0 ? catalogProducts : featuredProducts;
+            const videoProducts = allProductsList.filter((p) => p.videoUrl && p.videoUrl.trim() !== '');
 
-            if (customVideoProducts.length > 0) {
-              const customList = customVideoProducts.map((p) => {
-                const ytId = parseYouTubeVideoId(p.videoUrl);
-                const ytThumbnail = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
-                const posterUrl = (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : ytThumbnail;
+            const videoList = videoProducts.map((p) => {
+              const ytId = parseYouTubeVideoId(p.videoUrl);
+              const ytThumbnail = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
+              const posterUrl = (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : ytThumbnail;
 
-                return {
-                  id: `custom-vid-${p.id}`,
-                  productId: p.id,
-                  title: `${p.title} - Video Demo`,
-                  category: p.category || 'Product Showcase',
-                  badge: 'Official Demo',
-                  duration: 'Demo Reel',
-                  videoUrl: p.videoUrl,
-                  hasCustomPoster: Boolean(posterUrl),
-                  poster: posterUrl,
-                  description: p.description || 'Watch hands-on video demonstration of this software package.',
-                  features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
-                };
-              });
+              return {
+                id: `custom-vid-${p._id || p.id}`,
+                productId: p._id || p.id,
+                title: p.title ? `${p.title} - Video Demo` : 'Product Video Demo',
+                category: p.category || 'Product Showcase',
+                badge: p.version ? `v${p.version}` : 'Official Demo',
+                duration: 'Demo Reel',
+                videoUrl: p.videoUrl,
+                hasCustomPoster: Boolean(posterUrl),
+                poster: posterUrl,
+                description: p.description || 'Watch hands-on video demonstration of this software package.',
+                features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
+              };
+            });
 
-              if (customList.length < 3) {
-                PRODUCT_VIDEOS.forEach((fallback) => {
-                  if (customList.length < 3 && !customList.some((v) => v.category === fallback.category)) {
-                    customList.push(fallback);
-                  }
-                });
-              }
-              videoList = customList;
+            if (videoList.length === 0) {
+              return (
+                <div className="no-videos-placeholder">
+                  <div className="no-videos-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                      <line x1="7" y1="2" x2="7" y2="22"></line>
+                      <line x1="17" y1="2" x2="17" y2="22"></line>
+                      <line x1="2" y1="12" x2="22" y2="12"></line>
+                      <line x1="2" y1="7" x2="7" y2="7"></line>
+                      <line x1="2" y1="17" x2="7" y2="17"></line>
+                      <line x1="17" y1="17" x2="22" y2="17"></line>
+                      <line x1="17" y1="7" x2="22" y2="7"></line>
+                    </svg>
+                  </div>
+                  <h3>No Product Video Demos Uploaded Yet</h3>
+                  <p>Add YouTube video URLs for your products in the Admin Dashboard to feature interactive walkthroughs here.</p>
+                </div>
+              );
             }
 
             const currentVideo = videoList.find((v) => v.id === activeVideoId) || videoList[0];
-            const matchingProduct = featuredProducts.find((p) => p.id === currentVideo.productId || (p.title && p.title.toLowerCase().includes(currentVideo.category.toLowerCase()))) || featuredProducts[0];
+            const matchingProduct = allProductsList.find((p) => (p._id || p.id) === currentVideo.productId) || allProductsList[0];
             const playerSrc = getVideoPlayerSource(currentVideo.videoUrl);
             const safePoster = getSafeImageUrl(currentVideo.poster);
 
             return (
-              <div className="main-video-player-card">
-                <div className="video-viewport-wrapper">
-                  {playerSrc.type === 'gphotos_link' ? (
-                    <div className="gphotos-card-overlay">
-                      <img src={safePoster} alt={currentVideo.title} className="gphotos-poster-img" />
-                      <div className="gphotos-card-body">
-                        <div className="gphotos-icon-badge">
-                          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                          </svg>
-                        </div>
-                        <h4>Google Photos Video Demo</h4>
-                        <p>Click below to stream the official high-resolution product demo video directly on Google Photos.</p>
-                        <a href={playerSrc.src} target="_blank" rel="noopener noreferrer" className="gphotos-open-btn">
-                          <span>Watch Video on Google Photos</span>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '6px' }}>
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                            <polyline points="15 3 21 3 21 9"></polyline>
-                            <line x1="10" y1="14" x2="21" y2="3"></line>
-                          </svg>
-                        </a>
-                      </div>
-                    </div>
-                  ) : playerSrc.type === 'iframe' ? (
-                    <iframe
-                      key={currentVideo.id}
-                      src={playerSrc.src}
-                      title={currentVideo.title}
-                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                      allowFullScreen
-                      className="featured-video-element"
-                      style={{ border: 'none', width: '100%', height: '100%', minHeight: '340px' }}
-                    />
-                  ) : (
-                    <video
-                      key={currentVideo.id}
-                      src={playerSrc.src}
-                      poster={safePoster}
-                      controls
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      referrerPolicy="no-referrer"
-                      className="featured-video-element"
-                    />
-                  )}
-                  <div className="video-badge-tag">{currentVideo.badge}</div>
-                  <div className="video-duration-tag">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    {currentVideo.duration}
-                  </div>
-                </div>
-
-                <div className="video-details-panel">
-                  <div className="video-meta-header">
-                    <span className="video-category-pill">{currentVideo.category}</span>
-                    <h3 className="video-title">{currentVideo.title}</h3>
-                    <p className="video-desc">{currentVideo.description}</p>
-                  </div>
-
-                  <div className="video-features-chips">
-                    {currentVideo.features.map((feat, idx) => (
-                      <span key={idx} className="video-feature-chip">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        {feat}
-                      </span>
-                    ))}
-                  </div>
-
-                  {matchingProduct && (
-                    <button className="video-action-btn" onClick={() => setSelectedProduct(matchingProduct)}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
+              <>
+                {/* Main Active Video Player */}
+                <div className="main-video-player-card">
+                  <div className="video-viewport-wrapper">
+                    {playerSrc.type === 'iframe' ? (
+                      <iframe
+                        key={currentVideo.id}
+                        src={playerSrc.src}
+                        title={currentVideo.title}
+                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowFullScreen
+                        className="featured-video-element"
+                        style={{ border: 'none', width: '100%', height: '100%', minHeight: '340px' }}
+                      />
+                    ) : (
+                      <video
+                        key={currentVideo.id}
+                        src={playerSrc.src}
+                        poster={safePoster}
+                        controls
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        referrerPolicy="no-referrer"
+                        className="featured-video-element"
+                      />
+                    )}
+                    <div className="video-badge-tag">{currentVideo.badge}</div>
+                    <div className="video-duration-tag">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
                       </svg>
-                      View Product Details & Downloads
-                    </button>
-                  )}
+                      {currentVideo.duration}
+                    </div>
+                  </div>
+
+                  <div className="video-details-panel">
+                    <div className="video-meta-header">
+                      <span className="video-category-pill">{currentVideo.category}</span>
+                      <h3 className="video-title">{currentVideo.title}</h3>
+                      <p className="video-desc">{currentVideo.description}</p>
+                    </div>
+
+                    <div className="video-features-chips">
+                      {currentVideo.features.map((feat, idx) => (
+                        <span key={idx} className="video-feature-chip">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                          {feat}
+                        </span>
+                      ))}
+                    </div>
+
+                    {matchingProduct && (
+                      <button className="video-action-btn" onClick={() => setSelectedProduct(matchingProduct)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        View Product Details & Downloads
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+
+                {/* Slidable Video Deck Carousel */}
+                {videoList.length > 1 && (
+                  <div className="video-deck-slider-wrapper">
+                    <button 
+                      className="deck-scroll-btn deck-scroll-left" 
+                      onClick={() => scrollDeck('left')}
+                      aria-label="Scroll left"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+
+                    <div className="video-deck-scroll-track" ref={deckTrackRef}>
+                      {videoList.map((vid) => {
+                        const isActive = vid.id === (activeVideoId || videoList[0]?.id);
+                        const safeDeckPoster = getSafeImageUrl(vid.poster);
+                        const deckPlayerSrc = getVideoPlayerSource(vid.videoUrl);
+                        const useVideoFrame = deckPlayerSrc.type === 'video' && !vid.hasCustomPoster;
+
+                        return (
+                          <div
+                            key={vid.id}
+                            className={`video-deck-card ${isActive ? 'active' : ''}`}
+                            onClick={() => setActiveVideoId(vid.id)}
+                          >
+                            <div className="deck-thumb-frame">
+                              {useVideoFrame ? (
+                                <video
+                                  src={`${deckPlayerSrc.src}#t=0.5`}
+                                  preload="metadata"
+                                  muted
+                                  playsInline
+                                  referrerPolicy="no-referrer"
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
+                                />
+                              ) : (
+                                <img
+                                  src={safeDeckPoster}
+                                  alt={vid.title}
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = FALLBACK_POSTER;
+                                  }}
+                                />
+                              )}
+                              <div className="deck-play-overlay">
+                                <div className="play-icon-circle">
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="deck-card-info">
+                              <span className="deck-cat">{vid.category}</span>
+                              <h4>{vid.title}</h4>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <button 
+                      className="deck-scroll-btn deck-scroll-right" 
+                      onClick={() => scrollDeck('right')}
+                      aria-label="Scroll right"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </>
             );
           })()}
-
-          {/* Video Selector Thumbnails Deck */}
-          <div className="video-deck-grid">
-            {(() => {
-              const customVideoProducts = featuredProducts.filter((p) => p.videoUrl && p.videoUrl.trim() !== '');
-              let videoList = PRODUCT_VIDEOS;
-
-              if (customVideoProducts.length > 0) {
-                const customList = customVideoProducts.map((p) => {
-                  const ytId = parseYouTubeVideoId(p.videoUrl);
-                  const ytThumbnail = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
-                  const posterUrl = (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : ytThumbnail;
-
-                  return {
-                    id: `custom-vid-${p.id}`,
-                    productId: p.id,
-                    title: `${p.title} - Video Demo`,
-                    category: p.category || 'Product Showcase',
-                    badge: 'Official Demo',
-                    duration: 'Demo Reel',
-                    videoUrl: p.videoUrl,
-                    hasCustomPoster: Boolean(posterUrl),
-                    poster: posterUrl,
-                    description: p.description || 'Watch hands-on video demonstration of this software package.',
-                    features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
-                  };
-                });
-
-                if (customList.length < 3) {
-                  PRODUCT_VIDEOS.forEach((fallback) => {
-                    if (customList.length < 3 && !customList.some((v) => v.category === fallback.category)) {
-                      customList.push(fallback);
-                    }
-                  });
-                }
-                videoList = customList;
-              }
-
-              const currentActiveId = videoList.find((v) => v.id === activeVideoId) ? activeVideoId : videoList[0]?.id;
-
-              return videoList.map((vid) => {
-                const isActive = vid.id === currentActiveId;
-                const safeDeckPoster = getSafeImageUrl(vid.poster);
-                const deckPlayerSrc = getVideoPlayerSource(vid.videoUrl);
-                const useVideoFrame = deckPlayerSrc.type === 'video' && !vid.hasCustomPoster;
-
-                return (
-                  <div
-                    key={vid.id}
-                    className={`video-deck-card ${isActive ? 'active' : ''}`}
-                    onClick={() => setActiveVideoId(vid.id)}
-                  >
-                    <div className="deck-thumb-frame">
-                      {useVideoFrame ? (
-                        <video
-                          src={`${deckPlayerSrc.src}#t=0.5`}
-                          preload="metadata"
-                          muted
-                          playsInline
-                          referrerPolicy="no-referrer"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
-                        />
-                      ) : (
-                        <img
-                          src={safeDeckPoster}
-                          alt={vid.title}
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            e.currentTarget.onerror = null;
-                            e.currentTarget.src = FALLBACK_POSTER;
-                          }}
-                        />
-                      )}
-                      <div className="deck-play-overlay">
-                        <div className="play-icon-circle">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                          </svg>
-                        </div>
-                      </div>
-                      <span className="deck-duration">{vid.duration}</span>
-                    </div>
-                    <div className="deck-card-info">
-                      <span className="deck-cat">{vid.category}</span>
-                      <h4>{vid.title}</h4>
-                    </div>
-                  </div>
-                );
-              });
-            })()}
-          </div>
         </div>
       </section>
 
