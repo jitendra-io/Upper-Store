@@ -110,12 +110,17 @@ const resolveDirectImageUrl = async (url) => {
       });
       if (response.ok) {
         const html = await response.text();
-        // Check 1: og:video meta tags
+        
+        // Check 1: og:video meta tags (Extract direct MP4 video stream)
         const ogVideoMatch = html.match(/<meta\s+property="og:video(?::secure_url|:url)?"\s+content="([^"]+)"/i) ||
                              html.match(/<meta\s+content="([^"]+)"\s+property="og:video(?::secure_url|:url)?"/i);
         if (ogVideoMatch && ogVideoMatch[1]) {
-          console.log(`🎥 Resolved Google Photos video share link (${cleanUrl}) -> direct video: ${ogVideoMatch[1]}`);
-          return ogVideoMatch[1];
+          let directVidUrl = ogVideoMatch[1];
+          if (directVidUrl.includes('=w600-h315')) {
+            directVidUrl = directVidUrl.replace(/=w600-h315.*$/, '=m22');
+          }
+          console.log(`🎥 Resolved Google Photos video share link (${cleanUrl}) -> direct video MP4: ${directVidUrl}`);
+          return directVidUrl;
         }
 
         // Check 2: direct googleusercontent video stream URLs in page HTML
@@ -128,7 +133,7 @@ const resolveDirectImageUrl = async (url) => {
           return streamUrl;
         }
 
-        // Check 3: og:image meta tags for thumbnails
+        // Check 3: og:image meta tag for direct high-res images
         const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
         if (ogMatch && ogMatch[1]) {
           const directImg = ogMatch[1].replace(/=w\d+-h\d+.*$/, '=s1200');
@@ -160,11 +165,11 @@ const getProducts = async (req, res) => {
         p.image = await resolveDirectImageUrl(p.image);
         updated = true;
       }
-      if (p.logo && (p.logo.includes('photos.app.goo.gl') || p.logo.includes('drive.google.com/file'))) {
+      if (p.logo && (p.logo.includes('photos.app.goo.gl') || p.logo.includes('drive.google.com/file') || p.logo.includes('photos.google.com'))) {
         p.logo = await resolveDirectImageUrl(p.logo);
         updated = true;
       }
-      if (p.videoUrl && (p.videoUrl.includes('photos.app.goo.gl') || p.videoUrl.includes('drive.google.com/file'))) {
+      if (p.videoUrl && (p.videoUrl.includes('photos.app.goo.gl') || p.videoUrl.includes('drive.google.com/file') || p.videoUrl.includes('photos.google.com'))) {
         p.videoUrl = await resolveDirectImageUrl(p.videoUrl);
         updated = true;
       }
