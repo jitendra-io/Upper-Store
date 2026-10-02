@@ -161,7 +161,7 @@ const getProducts = async (req, res) => {
       const p = { id: doc.id, ...doc.data() };
       let updated = false;
 
-      if (p.image && (p.image.includes('photos.app.goo.gl') || p.image.includes('drive.google.com/file'))) {
+      if (p.image && (p.image.includes('photos.app.goo.gl') || p.image.includes('drive.google.com/file') || p.image.includes('photos.google.com'))) {
         p.image = await resolveDirectImageUrl(p.image);
         updated = true;
       }
@@ -180,7 +180,7 @@ const getProducts = async (req, res) => {
       if (Array.isArray(p.images)) {
         const resolvedImages = [];
         for (const img of p.images) {
-          if (img && (img.includes('photos.app.goo.gl') || img.includes('drive.google.com/file'))) {
+          if (img && (img.includes('photos.app.goo.gl') || img.includes('drive.google.com/file') || img.includes('photos.google.com'))) {
             resolvedImages.push(await resolveDirectImageUrl(img));
             updated = true;
           } else {

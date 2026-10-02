@@ -118,6 +118,17 @@ const getVideoPlayerSource = (url) => {
   return { type: 'video', src: clean };
 };
 
+const FALLBACK_POSTER = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800';
+
+const getSafeImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return FALLBACK_POSTER;
+  const clean = url.trim();
+  if ((clean.includes('photos.app.goo.gl') || clean.includes('photos.google.com')) && !clean.includes('lh3.googleusercontent.com')) {
+    return FALLBACK_POSTER;
+  }
+  return clean;
+};
+
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState(FEATURED_FALLBACKS);
   const [totalProductsCount, setTotalProductsCount] = useState(4);
@@ -327,13 +338,14 @@ const Home = () => {
             const currentVideo = videoList.find((v) => v.id === activeVideoId) || videoList[0];
             const matchingProduct = featuredProducts.find((p) => p.id === currentVideo.productId || (p.title && p.title.toLowerCase().includes(currentVideo.category.toLowerCase()))) || featuredProducts[0];
             const playerSrc = getVideoPlayerSource(currentVideo.videoUrl);
+            const safePoster = getSafeImageUrl(currentVideo.poster);
 
             return (
               <div className="main-video-player-card">
                 <div className="video-viewport-wrapper">
                   {playerSrc.type === 'gphotos_link' ? (
                     <div className="gphotos-card-overlay">
-                      <img src={currentVideo.poster} alt={currentVideo.title} className="gphotos-poster-img" />
+                      <img src={safePoster} alt={currentVideo.title} className="gphotos-poster-img" />
                       <div className="gphotos-card-body">
                         <div className="gphotos-icon-badge">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
@@ -366,7 +378,7 @@ const Home = () => {
                     <video
                       key={currentVideo.id}
                       src={playerSrc.src}
-                      poster={currentVideo.poster}
+                      poster={safePoster}
                       controls
                       autoPlay
                       muted
@@ -447,8 +459,12 @@ const Home = () => {
                 videoList = customList;
               }
 
+              const currentActiveId = videoList.find((v) => v.id === activeVideoId) ? activeVideoId : videoList[0]?.id;
+
               return videoList.map((vid) => {
-                const isActive = vid.id === activeVideoId;
+                const isActive = vid.id === currentActiveId;
+                const safeDeckPoster = getSafeImageUrl(vid.poster);
+
                 return (
                   <div
                     key={vid.id}
@@ -456,7 +472,14 @@ const Home = () => {
                     onClick={() => setActiveVideoId(vid.id)}
                   >
                     <div className="deck-thumb-frame">
-                      <img src={vid.poster} alt={vid.title} />
+                      <img
+                        src={safeDeckPoster}
+                        alt={vid.title}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = FALLBACK_POSTER;
+                        }}
+                      />
                       <div className="deck-play-overlay">
                         <div className="play-icon-circle">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
