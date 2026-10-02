@@ -77,9 +77,9 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
       subject: 'Welcome to Upper Store - Account Activated',
       html: htmlContent,
     });
-    console.log(`✅ Welcome email sent to ${userEmail} (Msg ID: ${info.messageId})`);
+    console.log(` Welcome email sent to ${userEmail} (Msg ID: ${info.messageId})`);
   } catch (error) {
-    console.error(`❌ Error sending Welcome email to ${userEmail}:`, error.message);
+    console.error(` Error sending Welcome email to ${userEmail}:`, error.message);
   }
 };
 
@@ -88,7 +88,7 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
  */
 const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email & Password') => {
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`ℹ️ [Nodemailer] SMTP credentials not set. Skipping Login alert to ${userEmail}.`);
+    console.log(`ℹ [Nodemailer] SMTP credentials not set. Skipping Login alert to ${userEmail}.`);
     return;
   }
 
@@ -152,9 +152,9 @@ const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email 
       subject: 'Security Notification: New Login to Upper Store',
       html: htmlContent,
     });
-    console.log(`✅ Login alert email sent to ${userEmail} (Msg ID: ${info.messageId})`);
+    console.log(`Login alert email sent to ${userEmail} (Msg ID: ${info.messageId})`);
   } catch (error) {
-    console.error(`❌ Error sending Login alert email to ${userEmail}:`, error.message);
+    console.error(`Error sending Login alert email to ${userEmail}:`, error.message);
   }
 };
 
