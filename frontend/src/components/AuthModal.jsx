@@ -104,30 +104,18 @@ const AuthModal = () => {
       setLoading(false);
       return;
     } catch (err) {
-      console.warn('Firebase signInWithPopup fallback:', err);
+      console.error('Firebase Google Auth error:', err);
+      if (err.code === 'auth/unauthorized-domain') {
+        setErrorMsg('Domain not authorized in Firebase Console. Add yourjitendra.github.io to Firebase Auth Authorized Domains.');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setErrorMsg('Google Sign-In popup was closed before completing.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setErrorMsg('Popup was blocked by your browser. Please allow popups for Google Sign-In.');
+      } else {
+        setErrorMsg(err.message || 'Google Sign-In failed. Please try again.');
+      }
+      setLoading(false);
     }
-
-    // 2. Fallback: Open Google Account Chooser window (accounts.google.com/v3/signin/accountchooser)
-    const width = 500;
-    const height = 650;
-    const left = Math.max(0, Math.floor((window.screen.width - width) / 2));
-    const top = Math.max(0, Math.floor((window.screen.height - height) / 2));
-
-    const googleAccountChooserUrl = `https://accounts.google.com/v3/signin/accountchooser?` +
-      `prompt=select_account&` +
-      `service=lso&` +
-      `continue=${encodeURIComponent('https://accounts.google.com/OAuthHandler')}`;
-
-    const popup = window.open(
-      googleAccountChooserUrl,
-      'Sign in - Google Accounts',
-      `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes`
-    );
-
-    if (!popup) {
-      setErrorMsg('Popup blocked. Please allow popups for Google Sign-In.');
-    }
-    setLoading(false);
   };
 
   return createPortal(
