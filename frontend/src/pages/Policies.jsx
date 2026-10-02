@@ -156,7 +156,7 @@ The user bears 100% full personal, legal, and financial responsibility for their
       },
       {
         title: '4. Reporting Security Vulnerabilities',
-        content: `We encourage responsible security disclosure. If you discover a potential vulnerability in our APIs, CDN infrastructure, or authentication systems, please report it directly to legal@upperstore.com or support@upperstore.com. We acknowledge security researchers promptly.`
+        content: `We encourage responsible security disclosure. If you discover a potential vulnerability in our APIs, CDN infrastructure, or authentication systems, please report it directly to upper.official.in@gmail.com. We acknowledge security researchers promptly.`
       }
     ]
   }
@@ -309,10 +309,10 @@ const Policies = () => {
             <p>Our legal and support operations team is available for licensing assistance and policy clarification.</p>
           </div>
           <div className="contact-box-right">
-            <a href="mailto:support@upperstore.com" className="policy-contact-btn">
+            <a href="mailto:upper.official.in@gmail.com" className="policy-contact-btn">
               Email Support Team
             </a>
-            <a href="mailto:legal@upperstore.com" className="policy-contact-btn gold">
+            <a href="mailto:upper.official.in@gmail.com" className="policy-contact-btn gold">
               Contact Legal Counsel
             </a>
           </div>
