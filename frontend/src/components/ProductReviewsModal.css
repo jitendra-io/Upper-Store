@@ -472,6 +472,31 @@
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.4) transparent;
+}
+
+.reviews-cards-stack::-webkit-scrollbar {
+  width: 5px;
+}
+
+.reviews-cards-stack::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.reviews-cards-stack::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.4);
+  border-radius: 4px;
+}
+
+.reviews-cards-stack::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.7);
 }
 
 .review-comment-card {
@@ -717,6 +742,13 @@
 
   .reviews-divider {
     margin: 1rem 0;
+  }
+
+  .reviews-cards-stack {
+    max-height: 320px;
+    overflow-y: auto;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   .reviews-list-title {
