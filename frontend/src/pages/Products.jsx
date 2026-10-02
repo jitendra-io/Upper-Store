@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import ProductDetailModal from '../components/ProductDetailModal';
 import ProductReviewsModal from '../components/ProductReviewsModal';
 import StarRatingBadge from '../components/StarRatingBadge';
@@ -93,7 +94,15 @@ const Products = () => {
   return (
     <div className="products-container" style={{ zIndex: 1, position: 'relative' }}>
       <header className="products-header">
-        <span className="products-pill-badge">Official Software Catalog</span>
+        <div className="products-header-action-row">
+          <span className="products-pill-badge">Official Software Catalog</span>
+          <Link to="/about#publish" className="publish-product-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            Publish Your Product
+          </Link>
+        </div>
         <h1>Product <span className="highlight">Catalog</span></h1>
         <p>Explore our curated collection of verified applications, desktop software, and developer assets.</p>
 

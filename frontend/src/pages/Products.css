@@ -11,6 +11,15 @@
   margin-bottom: 3rem;
 }
 
+.products-header-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+  flex-wrap: wrap;
+}
+
 .products-pill-badge {
   display: inline-block;
   background: rgba(212, 175, 55, 0.12);
@@ -20,9 +29,32 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  padding: 0.25rem 0.85rem;
+  padding: 0.28rem 0.85rem;
   border-radius: 20px;
-  margin-bottom: 1rem;
+}
+
+.publish-product-btn {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+  color: #0d0d0f;
+  border: 1px solid #ffd700;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 0.28rem 0.95rem;
+  border-radius: 20px;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.publish-product-btn:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  color: #000000;
 }
 
 .products-header h1 {

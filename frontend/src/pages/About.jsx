@@ -1,7 +1,22 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import './About.css';
 
 const About = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash === '#publish' || window.location.hash === '#publish') {
+      const el = document.getElementById('publish');
+      if (el) {
+        setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+      }
+    }
+  }, [location]);
+
   return (
     <div className="about-container" style={{ zIndex: 1, position: 'relative' }}>
       {/* Hero Header */}
@@ -58,7 +73,7 @@ const About = () => {
           </p>
         </div>
 
-        <div className="overview-card" style={{ marginTop: '1.5rem', borderColor: 'rgba(212, 175, 55, 0.35)' }}>
+        <div id="publish" className="overview-card publish-card-target" style={{ marginTop: '1.5rem', borderColor: 'rgba(212, 175, 55, 0.45)' }}>
           <h2>Publishing Your Product on Upper Store</h2>
           <p>
             We welcome independent developers, software engineers, and digital creators to list their verified software applications, Android APKs, and developer tools on Upper Store.
