@@ -321,7 +321,7 @@ const Home = () => {
                 duration: 'Demo Reel',
                 videoUrl: p.videoUrl,
                 hasCustomPoster: Boolean(p.videoPoster && p.videoPoster.trim() !== ''),
-                poster: p.videoPoster || p.image || p.logo || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800',
+                poster: (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : '',
                 description: p.description || 'Watch hands-on video demonstration of this software package.',
                 features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
               }));
@@ -446,7 +446,7 @@ const Home = () => {
                   duration: 'Demo Reel',
                   videoUrl: p.videoUrl,
                   hasCustomPoster: Boolean(p.videoPoster && p.videoPoster.trim() !== ''),
-                  poster: p.videoPoster || p.image || p.logo || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800',
+                  poster: (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : '',
                   description: p.description || 'Watch hands-on video demonstration of this software package.',
                   features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
                 }));
