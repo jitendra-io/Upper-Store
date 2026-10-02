@@ -1,7 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AdminLogin.css';
 
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
+
 const AdminLogin = () => {
+  const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -13,8 +17,7 @@ const AdminLogin = () => {
     setLoading(true);
     setError('');
     try {
-      // TODO: Replace with actual API URL after backend deployment
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
@@ -24,9 +27,9 @@ const AdminLogin = () => {
       
       // Store token and redirect to admin dashboard
       localStorage.setItem('adminToken', data.token);
-      window.location.href = '/admin/dashboard';
+      navigate('/admin/dashboard');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to fetch');
     } finally {
       setLoading(false);
     }

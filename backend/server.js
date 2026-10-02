@@ -21,8 +21,19 @@ require('./config/firebase');
 const app = express();
 
 // Middleware
+// Dynamic CORS middleware supporting local dev and deployed GitHub Pages domains
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (
+      origin.includes('github.io') ||
+      origin.includes('localhost') ||
+      (process.env.FRONTEND_URL && origin.includes(process.env.FRONTEND_URL))
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
 }));
 
