@@ -6,6 +6,8 @@
   max-width: 100%;
   overflow-x: hidden;
   position: relative;
+  padding-top: 76px;
+  box-sizing: border-box;
 }
 
 .hero {
@@ -74,6 +76,10 @@
 
 /* Mobile Responsive Styling */
 @media (max-width: 768px) {
+  .app-container {
+    padding-top: 68px;
+  }
+
   .hero {
     padding: 3rem 1.25rem;
     min-height: calc(75vh - 60px);
@@ -95,6 +101,10 @@
 }
 
 @media (max-width: 480px) {
+  .app-container {
+    padding-top: 62px;
+  }
+
   .hero-title {
     font-size: 2.1rem;
   }

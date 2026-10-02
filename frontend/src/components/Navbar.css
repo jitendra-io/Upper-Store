@@ -3,10 +3,14 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 5%;
-  background: rgba(17, 17, 17, 0.75);
+  background: rgba(17, 17, 17, 0.85);
   backdrop-filter: blur(16px);
-  position: sticky;
+  -webkit-backdrop-filter: blur(16px);
+  position: fixed;
   top: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
   z-index: 1000;
   border-bottom: 1px solid rgba(46, 46, 46, 0.5);
   transition: all 0.3s ease;
