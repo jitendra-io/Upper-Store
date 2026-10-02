@@ -254,14 +254,42 @@ const Home = () => {
       <section className="home-section video-showcase-section">
         <div className="section-header-center">
           <span className="section-eyebrow">Visual Experience</span>
-          <h2>Interactive Product <span className="gold-gradient-text">Video Demos</span></h2>
+          <h2>Product <span className="gold-gradient-text">Video Demos</span></h2>
           <p>Watch hands-on video walkthroughs, live feature demonstrations, and UI animations of our software and digital assets.</p>
         </div>
 
         <div className="video-showcase-container">
           {/* Main Active Video Player */}
           {(() => {
-            const currentVideo = PRODUCT_VIDEOS.find((v) => v.id === activeVideoId) || PRODUCT_VIDEOS[0];
+            // Dynamic video list (uses admin-defined videoUrl from products catalog if available)
+            const customVideoProducts = featuredProducts.filter((p) => p.videoUrl && p.videoUrl.trim() !== '');
+            let videoList = PRODUCT_VIDEOS;
+
+            if (customVideoProducts.length > 0) {
+              const customList = customVideoProducts.map((p) => ({
+                id: `custom-vid-${p.id}`,
+                productId: p.id,
+                title: `${p.title} - Video Demo`,
+                category: p.category || 'Product Showcase',
+                badge: 'Official Demo',
+                duration: 'Demo Reel',
+                videoUrl: p.videoUrl,
+                poster: p.image || p.logo || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800',
+                description: p.description || 'Watch hands-on video demonstration of this software package.',
+                features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
+              }));
+
+              if (customList.length < 3) {
+                PRODUCT_VIDEOS.forEach((fallback) => {
+                  if (customList.length < 3 && !customList.some((v) => v.category === fallback.category)) {
+                    customList.push(fallback);
+                  }
+                });
+              }
+              videoList = customList;
+            }
+
+            const currentVideo = videoList.find((v) => v.id === activeVideoId) || videoList[0];
             const matchingProduct = featuredProducts.find((p) => p.id === currentVideo.productId || (p.title && p.title.toLowerCase().includes(currentVideo.category.toLowerCase()))) || featuredProducts[0];
 
             return (
@@ -322,32 +350,61 @@ const Home = () => {
 
           {/* Video Selector Thumbnails Deck */}
           <div className="video-deck-grid">
-            {PRODUCT_VIDEOS.map((vid) => {
-              const isActive = vid.id === activeVideoId;
-              return (
-                <div
-                  key={vid.id}
-                  className={`video-deck-card ${isActive ? 'active' : ''}`}
-                  onClick={() => setActiveVideoId(vid.id)}
-                >
-                  <div className="deck-thumb-frame">
-                    <img src={vid.poster} alt={vid.title} />
-                    <div className="deck-play-overlay">
-                      <div className="play-icon-circle">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
+            {(() => {
+              const customVideoProducts = featuredProducts.filter((p) => p.videoUrl && p.videoUrl.trim() !== '');
+              let videoList = PRODUCT_VIDEOS;
+
+              if (customVideoProducts.length > 0) {
+                const customList = customVideoProducts.map((p) => ({
+                  id: `custom-vid-${p.id}`,
+                  productId: p.id,
+                  title: `${p.title} - Video Demo`,
+                  category: p.category || 'Product Showcase',
+                  badge: 'Official Demo',
+                  duration: 'Demo Reel',
+                  videoUrl: p.videoUrl,
+                  poster: p.image || p.logo || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800',
+                  description: p.description || 'Watch hands-on video demonstration of this software package.',
+                  features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
+                }));
+
+                if (customList.length < 3) {
+                  PRODUCT_VIDEOS.forEach((fallback) => {
+                    if (customList.length < 3 && !customList.some((v) => v.category === fallback.category)) {
+                      customList.push(fallback);
+                    }
+                  });
+                }
+                videoList = customList;
+              }
+
+              return videoList.map((vid) => {
+                const isActive = vid.id === activeVideoId;
+                return (
+                  <div
+                    key={vid.id}
+                    className={`video-deck-card ${isActive ? 'active' : ''}`}
+                    onClick={() => setActiveVideoId(vid.id)}
+                  >
+                    <div className="deck-thumb-frame">
+                      <img src={vid.poster} alt={vid.title} />
+                      <div className="deck-play-overlay">
+                        <div className="play-icon-circle">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                          </svg>
+                        </div>
                       </div>
+                      <span className="deck-duration">{vid.duration}</span>
                     </div>
-                    <span className="deck-duration">{vid.duration}</span>
+                    <div className="deck-card-info">
+                      <span className="deck-cat">{vid.category}</span>
+                      <h4>{vid.title}</h4>
+                    </div>
                   </div>
-                  <div className="deck-card-info">
-                    <span className="deck-cat">{vid.category}</span>
-                    <h4>{vid.title}</h4>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              });
+            })()}
           </div>
         </div>
       </section>

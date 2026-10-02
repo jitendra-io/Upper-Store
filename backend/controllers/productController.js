@@ -88,7 +88,7 @@ const handlePackageFileUpload = async (apkFile, title, version, description, req
   return await uploadFileToCloudOrLocal(apkFile, 'apks', req);
 };
 
-// Helper to resolve Google Photos & Google Drive sharing links to raw direct image URLs
+// Helper to resolve Google Photos & Google Drive sharing links to raw direct image or video URLs
 const resolveDirectImageUrl = async (url) => {
   if (!url || typeof url !== 'string') return url;
   let cleanUrl = url.trim();
@@ -110,6 +110,13 @@ const resolveDirectImageUrl = async (url) => {
       });
       if (response.ok) {
         const html = await response.text();
+        const ogVideoMatch = html.match(/<meta\s+property="og:video(?::secure_url|:url)?"\s+content="([^"]+)"/i) ||
+                             html.match(/<meta\s+content="([^"]+)"\s+property="og:video(?::secure_url|:url)?"/i);
+        if (ogVideoMatch && ogVideoMatch[1]) {
+          console.log(`🎥 Resolved Google Photos video share link (${cleanUrl}) -> direct video: ${ogVideoMatch[1]}`);
+          return ogVideoMatch[1];
+        }
+
         const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
         if (ogMatch && ogMatch[1]) {
           const directImg = ogMatch[1].replace(/=w\d+-h\d+.*$/, '=s1200');
@@ -145,6 +152,10 @@ const getProducts = async (req, res) => {
         p.logo = await resolveDirectImageUrl(p.logo);
         updated = true;
       }
+      if (p.videoUrl && (p.videoUrl.includes('photos.app.goo.gl') || p.videoUrl.includes('drive.google.com/file'))) {
+        p.videoUrl = await resolveDirectImageUrl(p.videoUrl);
+        updated = true;
+      }
       if (Array.isArray(p.images)) {
         const resolvedImages = [];
         for (const img of p.images) {
@@ -165,6 +176,7 @@ const getProducts = async (req, res) => {
             image: p.image,
             logo: p.logo || '',
             images: p.images || [],
+            videoUrl: p.videoUrl || '',
           });
         } catch (e) {}
       }
@@ -205,6 +217,7 @@ const createProduct = async (req, res) => {
       version,
       releaseNotes,
       directApkUrl,
+      videoUrl,
       logoUrl,
       imageUrl1,
       imageUrl2,
@@ -257,6 +270,11 @@ const createProduct = async (req, res) => {
       finalLogoUrl = await uploadFileToCloudOrLocal(logoFile, 'logos', req);
     }
 
+    let finalVideoUrl = (videoUrl || '').trim();
+    if (finalVideoUrl) {
+      finalVideoUrl = await resolveDirectImageUrl(finalVideoUrl);
+    }
+
     const mainImageUrl = finalImageUrls[0] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600';
 
     const productData = {
@@ -269,6 +287,7 @@ const createProduct = async (req, res) => {
       image: mainImageUrl,
       images: finalImageUrls.length > 0 ? finalImageUrls : [mainImageUrl],
       logo: finalLogoUrl,
+      videoUrl: finalVideoUrl,
       apkFile: apkUrl,
       downloadCount: 0,
       createdAt: new Date().toISOString(),
@@ -301,6 +320,7 @@ const updateProduct = async (req, res) => {
       version,
       releaseNotes,
       directApkUrl,
+      videoUrl,
       logoUrl,
       imageUrl1,
       imageUrl2,
@@ -324,6 +344,10 @@ const updateProduct = async (req, res) => {
         });
       }
       updatedData.apkFile = apkUrl;
+    }
+
+    if (videoUrl !== undefined) {
+      updatedData.videoUrl = videoUrl.trim() ? await resolveDirectImageUrl(videoUrl.trim()) : '';
     }
 
     if (logoUrl !== undefined && logoUrl.trim() !== '') {
