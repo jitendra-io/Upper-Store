@@ -73,6 +73,27 @@ const About = () => {
           </p>
         </div>
 
+        <div className="overview-card" style={{ marginTop: '1.5rem', borderColor: 'rgba(16, 185, 129, 0.35)' }}>
+          <h2 style={{ color: '#10b981' }}>High-Availability System Architecture</h2>
+          <p style={{ fontSize: '1.08rem', color: '#f8fafc', fontWeight: 500 }}>
+            Our architecture has been engineered using modern serverless and CDN distribution patterns that isolate heavy workloads and prevent server crashes.
+          </p>
+          <div style={{ marginTop: '1.2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', textAlign: 'left' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', borderLeft: '3px solid #10b981' }}>
+              <h4 style={{ color: '#10b981', margin: '0 0 0.3rem 0', fontSize: '0.92rem' }}>Edge CDN Asset Delivery</h4>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1' }}>Static frontend assets auto-scale globally across edge nodes for zero-latency UI rendering.</p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', borderLeft: '3px solid #38bdf8' }}>
+              <h4 style={{ color: '#38bdf8', margin: '0 0 0.3rem 0', fontSize: '0.92rem' }}>Offloaded Binary Streams</h4>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1' }}>Multi-gigabyte APK/EXE package downloads stream directly from GitHub Release CDN mirrors.</p>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '10px', borderLeft: '3px solid #d4af37' }}>
+              <h4 style={{ color: '#d4af37', margin: '0 0 0.3rem 0', fontSize: '0.92rem' }}>Autoscaling Serverless DB</h4>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1' }}>Google Firebase Firestore scales to 1,000,000+ concurrent connections without downtime.</p>
+            </div>
+          </div>
+        </div>
+
         <div id="publish" className="overview-card publish-card-target" style={{ marginTop: '1.5rem', borderColor: 'rgba(212, 175, 55, 0.45)' }}>
           <h2>Publishing Your Product on Upper Store</h2>
           <p>
