@@ -44,11 +44,51 @@ const FEATURED_FALLBACKS = [
   }
 ];
 
+const PRODUCT_VIDEOS = [
+  {
+    id: 'vid-1',
+    productId: 'feat-1',
+    title: 'Upper Store Mobile Client Walkthrough',
+    category: 'Mobile App',
+    badge: '4K App Demo',
+    duration: '0:45',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-software-developer-working-on-code-41551-large.mp4',
+    poster: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=800',
+    description: 'Experience real-time direct downloads, SHA-256 integrity verification, and instant push updates in action.',
+    features: ['Direct APK Installation', 'Dark Gold Interface', 'Real-Time Sync']
+  },
+  {
+    id: 'vid-2',
+    productId: 'feat-2',
+    title: 'Luxury Glassmorphism UI Kit Showcase',
+    category: 'Design Asset',
+    badge: 'UI Design Reel',
+    duration: '0:32',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-hands-holding-a-smartphone-with-a-green-screen-41529-large.mp4',
+    poster: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&q=80&w=800',
+    description: 'A complete tour of modern dark-mode components, CSS blur effects, and gold accent micro-interactions.',
+    features: ['React & CSS Modules', 'Glassmorphism Tokens', 'Responsive Grids']
+  },
+  {
+    id: 'vid-3',
+    productId: 'feat-3',
+    title: 'Canvas Animation Engine 60FPS Test',
+    category: 'Software Tool',
+    badge: '60FPS Performance',
+    duration: '0:50',
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-code-on-a-computer-screen-2512-large.mp4',
+    poster: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800',
+    description: 'Live stress-testing of hardware-accelerated particle systems running smoothly at 60 FPS under peak load.',
+    features: ['Zero Dependencies', 'WebGL / Canvas 2D', 'Custom Emitters']
+  }
+];
+
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState(FEATURED_FALLBACKS);
   const [totalProductsCount, setTotalProductsCount] = useState(4);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [reviewModalProduct, setReviewModalProduct] = useState(null);
+  const [activeVideoId, setActiveVideoId] = useState(PRODUCT_VIDEOS[0].id);
   const [, setRefreshDownloads] = useState(0);
 
   useEffect(() => {
@@ -207,6 +247,108 @@ const Home = () => {
           <Link to="/products" className="view-all-link-btn">
             View Complete Product Catalog ({totalProductsCount} {totalProductsCount === 1 ? 'Item' : 'Items'}) ➔
           </Link>
+        </div>
+      </section>
+
+      {/* PRODUCT VIDEO SHOWCASE & VISUAL EXPERIENCE */}
+      <section className="home-section video-showcase-section">
+        <div className="section-header-center">
+          <span className="section-eyebrow">Visual Experience</span>
+          <h2>Interactive Product <span className="gold-gradient-text">Video Demos</span></h2>
+          <p>Watch hands-on video walkthroughs, live feature demonstrations, and UI animations of our software and digital assets.</p>
+        </div>
+
+        <div className="video-showcase-container">
+          {/* Main Active Video Player */}
+          {(() => {
+            const currentVideo = PRODUCT_VIDEOS.find((v) => v.id === activeVideoId) || PRODUCT_VIDEOS[0];
+            const matchingProduct = featuredProducts.find((p) => p.id === currentVideo.productId || (p.title && p.title.toLowerCase().includes(currentVideo.category.toLowerCase()))) || featuredProducts[0];
+
+            return (
+              <div className="main-video-player-card">
+                <div className="video-viewport-wrapper">
+                  <video
+                    key={currentVideo.id}
+                    src={currentVideo.videoUrl}
+                    poster={currentVideo.poster}
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="featured-video-element"
+                  />
+                  <div className="video-badge-tag">{currentVideo.badge}</div>
+                  <div className="video-duration-tag">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    {currentVideo.duration}
+                  </div>
+                </div>
+
+                <div className="video-details-panel">
+                  <div className="video-meta-header">
+                    <span className="video-category-pill">{currentVideo.category}</span>
+                    <h3 className="video-title">{currentVideo.title}</h3>
+                    <p className="video-desc">{currentVideo.description}</p>
+                  </div>
+
+                  <div className="video-features-chips">
+                    {currentVideo.features.map((feat, idx) => (
+                      <span key={idx} className="video-feature-chip">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        {feat}
+                      </span>
+                    ))}
+                  </div>
+
+                  {matchingProduct && (
+                    <button className="video-action-btn" onClick={() => setSelectedProduct(matchingProduct)}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      View Product Details & Downloads
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Video Selector Thumbnails Deck */}
+          <div className="video-deck-grid">
+            {PRODUCT_VIDEOS.map((vid) => {
+              const isActive = vid.id === activeVideoId;
+              return (
+                <div
+                  key={vid.id}
+                  className={`video-deck-card ${isActive ? 'active' : ''}`}
+                  onClick={() => setActiveVideoId(vid.id)}
+                >
+                  <div className="deck-thumb-frame">
+                    <img src={vid.poster} alt={vid.title} />
+                    <div className="deck-play-overlay">
+                      <div className="play-icon-circle">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                      </div>
+                    </div>
+                    <span className="deck-duration">{vid.duration}</span>
+                  </div>
+                  <div className="deck-card-info">
+                    <span className="deck-cat">{vid.category}</span>
+                    <h4>{vid.title}</h4>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </section>
 
