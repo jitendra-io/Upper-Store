@@ -385,6 +385,7 @@ const Home = () => {
                       muted
                       loop
                       playsInline
+                      referrerPolicy="no-referrer"
                       className="featured-video-element"
                     />
                   )}
@@ -482,12 +483,14 @@ const Home = () => {
                           preload="metadata"
                           muted
                           playsInline
+                          referrerPolicy="no-referrer"
                           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
                         />
                       ) : (
                         <img
                           src={safeDeckPoster}
                           alt={vid.title}
+                          referrerPolicy="no-referrer"
                           onError={(e) => {
                             e.currentTarget.onerror = null;
                             e.currentTarget.src = FALLBACK_POSTER;
