@@ -91,11 +91,17 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
     }
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
     };
   }, [isOpen]);
 
@@ -266,17 +272,17 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                 </svg>
               </div>
             )}
-            <div>
-              <h3>{product.title}</h3>
+            <div className="reviews-header-info">
+              <h3 title={product.title}>{product.title}</h3>
               <div className="reviews-header-meta">
                 <span className="reviews-count-badge">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                   <span>{formatCount(reviewsCount)} {reviewsCount === 1 ? 'Comment' : 'Comments'}</span>
                 </span>
                 <span className="reviews-avg-rating">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#d4af37" stroke="#d4af37" strokeWidth="1">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#d4af37" stroke="#d4af37" strokeWidth="1">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                   </svg>
                   <span>{averageRating.toFixed(1)} / 5.0</span>
@@ -472,33 +478,39 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                         />
                         <div className="review-user-info">
                           <div className="review-user-name-row">
-                            <span className="review-user-name">{rev.userName || rev.userEmail?.split('@')[0]}</span>
+                            <span className="review-user-name" title={rev.userName || rev.userEmail?.split('@')[0]}>
+                              {rev.userName || rev.userEmail?.split('@')[0]}
+                            </span>
+                            <div className="review-card-stars">
+                              {[1, 2, 3, 4, 5].map((s) => {
+                                const isFilled = s <= rev.rating;
+                                return (
+                                  <svg
+                                    key={s}
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill={isFilled ? "#d4af37" : "none"}
+                                    stroke={isFilled ? "#d4af37" : "rgba(255,255,255,0.2)"}
+                                    strokeWidth="1.5"
+                                  >
+                                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                  </svg>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="review-meta-subrow">
                             <span className="review-verified-tag">
                               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                               </svg>
-                              <span>Verified Downloader</span>
+                              <span className="verified-text-full">Verified Downloader</span>
+                              <span className="verified-text-short">Verified</span>
                             </span>
+                            <span className="review-dot-sep">•</span>
+                            <span className="review-timestamp">{formatDate(rev.createdAt)}</span>
                           </div>
-                          <span className="review-timestamp">{formatDate(rev.createdAt)}</span>
-                        </div>
-                        <div className="review-card-stars">
-                          {[1, 2, 3, 4, 5].map((s) => {
-                            const isFilled = s <= rev.rating;
-                            return (
-                              <svg
-                                key={s}
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill={isFilled ? "#d4af37" : "none"}
-                                stroke={isFilled ? "#d4af37" : "rgba(255,255,255,0.2)"}
-                                strokeWidth="1.5"
-                              >
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                              </svg>
-                            );
-                          })}
                         </div>
                       </div>
                       <p className="review-comment-body">{rev.comment}</p>

@@ -42,6 +42,31 @@ const Navbar = () => {
     setUserDropdownOpen(false);
   };
 
+  // Lock background scroll when mobile hamburger drawer is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [menuOpen]);
+
+  // Automatically close mobile menu and dropdowns upon navigation
+  useEffect(() => {
+    setMenuOpen(false);
+    setUserDropdownOpen(false);
+    setNotifDropdownOpen(false);
+  }, [location.pathname]);
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -170,26 +195,29 @@ const Navbar = () => {
           </Link>
         </div>
 
-        {/* Mobile Hamburger Toggle Button */}
-        <button
-          className={`mobile-toggle-btn ${menuOpen ? 'active' : ''}`}
-          onClick={() => setMenuOpen(!menuOpen)}
-          aria-label="Toggle Navigation Menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
 
-        {/* Nav Links & User Action */}
+        {/* Backdrop for mobile drawer (inside navbar for correct stacking context) */}
+        {menuOpen && <div className="nav-drawer-backdrop" onClick={closeMenu} />}
+
+        {/* Navigation Links (Desktop bar / Mobile sliding drawer) */}
         <div className={`nav-links ${menuOpen ? 'mobile-active' : ''}`}>
+          <div className="mobile-drawer-header">
+            <span className="drawer-title">Navigation</span>
+            <button className="drawer-close-btn" onClick={closeMenu} aria-label="Close menu">✕</button>
+          </div>
           <Link to="/" onClick={closeMenu} className={location.pathname === '/' ? 'active-link' : ''}>Home</Link>
           <Link to="/products" onClick={closeMenu} className={location.pathname.startsWith('/products') ? 'active-link' : ''}>Products</Link>
           <Link to="/about" onClick={closeMenu} className={location.pathname === '/about' ? 'active-link' : ''}>About</Link>
           <Link to="/blog" onClick={closeMenu} className={location.pathname === '/blog' ? 'active-link' : ''}>Blog</Link>
           <Link to="/faq" onClick={closeMenu} className={location.pathname === '/faq' ? 'active-link' : ''}>FAQ</Link>
           <Link to="/contact" onClick={closeMenu} className={location.pathname === '/contact' ? 'active-link' : ''}>Contact</Link>
+          <div className="mobile-drawer-footer">
+            <span className="drawer-footer-text">Upper Store • Elite Experience</span>
+          </div>
+        </div>
 
+        {/* ALWAYS-VISIBLE TOP HEADER ACTIONS (Notification, User Profile / Sign In, Mobile Toggle) */}
+        <div className="nav-actions">
           {/* BLUE NOTIFICATION BELL */}
           <div className="nav-notif-wrapper" ref={notifDropdownRef}>
             <button
@@ -280,7 +308,10 @@ const Navbar = () => {
               <button
                 type="button"
                 className={`nav-user-pill ${isBanned ? 'banned' : ''}`}
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                onClick={() => {
+                  setUserDropdownOpen(!userDropdownOpen);
+                  setNotifDropdownOpen(false);
+                }}
               >
                 <img
                   src={userAvatar}
@@ -383,6 +414,17 @@ const Navbar = () => {
               Sign In
             </button>
           )}
+
+          {/* Mobile Hamburger Toggle Button */}
+          <button
+            className={`mobile-toggle-btn ${menuOpen ? 'active' : ''}`}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle Navigation Menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
         </div>
       </nav>
 

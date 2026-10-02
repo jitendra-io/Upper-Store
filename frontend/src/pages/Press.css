@@ -370,14 +370,6 @@ button.asset-btn:disabled {
   align-items: center;
 }
 
-@media (max-width: 768px) {
-  .typography-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
-  }
-}
-
 .font-preview-left {
   display: flex;
   align-items: center;
@@ -434,13 +426,6 @@ button.asset-btn:disabled {
   align-items: center;
   gap: 2rem;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
-}
-
-@media (max-width: 768px) {
-  .leader-card {
-    flex-direction: column;
-    text-align: center;
-  }
 }
 
 .leader-avatar-frame {
@@ -586,13 +571,6 @@ button.asset-btn:disabled {
   transition: border-color 0.3s ease;
 }
 
-@media (max-width: 768px) {
-  .pr-item-card {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-}
-
 .pr-item-card:hover {
   border-color: rgba(212, 175, 55, 0.35);
 }
@@ -693,15 +671,6 @@ button.asset-btn:disabled {
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(212, 175, 55, 0.15);
 }
 
-@media (max-width: 768px) {
-  .dedicated-pr-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
-    padding: 2rem;
-  }
-}
-
 .pr-channel-tag {
   display: inline-block;
   background: rgba(16, 185, 129, 0.15);
@@ -736,6 +705,8 @@ button.asset-btn:disabled {
   padding: 0.3rem 0.75rem;
   border-radius: 8px;
   border: 1px solid rgba(212, 175, 55, 0.25);
+  display: inline-block;
+  word-break: break-all;
 }
 
 .pr-contact-action-btn {
@@ -758,4 +729,177 @@ button.asset-btn:disabled {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(212, 175, 55, 0.55);
   background: #e5be3b;
+}
+
+/* ==========================================================================
+   PRESS KIT MOBILE RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+@media (max-width: 768px) {
+  .press-container {
+    padding: 2.5rem 4%;
+  }
+
+  .press-hero {
+    margin-bottom: 2.5rem;
+  }
+
+  .press-hero h1 {
+    font-size: clamp(2rem, 7vw, 2.8rem);
+  }
+
+  .press-hero p {
+    font-size: 1rem;
+    line-height: 1.55;
+    margin-bottom: 1.5rem;
+  }
+
+  .press-card-section {
+    margin-bottom: 3rem;
+  }
+
+  .press-section-header h2 {
+    font-size: 1.45rem;
+  }
+
+  .press-primary-dl-btn {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+    padding: 0.85rem 1.5rem;
+  }
+
+  .boilerplate-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .boilerplate-content {
+    padding-left: 1.25rem;
+  }
+
+  .quote-mark {
+    font-size: 3rem;
+    top: -1rem;
+    left: 0.25rem;
+  }
+
+  .brand-assets-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .palette-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .typography-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.25rem;
+    padding: 1.5rem 1.25rem;
+  }
+
+  .font-preview-left {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .leader-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.75rem 1.25rem;
+    gap: 1.25rem;
+  }
+
+  .imagery-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .pr-item-card {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+
+  .stats-metric-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .dedicated-pr-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+    padding: 1.75rem 1.25rem;
+  }
+
+  .pr-contact-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .press-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .press-hero h1 {
+    font-size: 1.85rem;
+  }
+
+  .press-hero p {
+    font-size: 0.92rem;
+  }
+
+  .boilerplate-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .boilerplate-content {
+    padding-left: 0.85rem;
+    border-left-width: 2px;
+  }
+
+  .boilerplate-content p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+  }
+
+  .palette-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-metric-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .asset-card-details {
+    padding: 1.25rem 1rem;
+  }
+
+  .asset-tag-group,
+  .asset-btn-group {
+    flex-wrap: wrap;
+  }
+
+  .asset-btn {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .metric-card {
+    padding: 1.25rem 1rem;
+  }
+
+  .metric-val {
+    font-size: 1.8rem;
+  }
+
+  .pr-email-badge {
+    word-break: break-all;
+    font-size: 0.8rem;
+  }
 }

@@ -397,24 +397,256 @@
 /* RESPONSIVE STYLING */
 @media (max-width: 768px) {
   .policies-page-container {
-    padding: 2.5rem 4%;
+    padding: 1.75rem 3% 3rem;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .policies-header {
+    margin-bottom: 2rem;
   }
 
   .policies-header h1 {
-    font-size: 2.2rem;
+    font-size: clamp(1.8rem, 6.5vw, 2.5rem);
+    line-height: 1.25;
+  }
+
+  .policies-subtitle {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    margin-bottom: 1.5rem;
+  }
+
+  .policies-search-box {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .policies-search-box input {
+    font-size: 16px; /* Prevents auto-zoom on iOS Safari */
+    padding: 0.75rem 2.6rem 0.75rem 2.8rem;
+    box-sizing: border-box;
+  }
+
+  .policies-tabs-nav {
+    display: flex !important;
+    justify-content: flex-start !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
+    padding: 0.35rem 0.25rem 0.75rem !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 0.6rem !important;
+    margin-bottom: 1.5rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .policies-tabs-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .policy-nav-tab {
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    padding: 0.55rem 1rem !important;
+    font-size: 0.84rem !important;
   }
 
   .policies-content-card {
-    padding: 1.5rem;
+    padding: 1.5rem 1.15rem;
+    border-radius: 14px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .policy-meta-bar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 1rem;
+    width: 100%;
+  }
+
+  .meta-left {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.85rem;
+    width: 100%;
+  }
+
+  .policy-big-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.6rem;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .meta-left h2 {
+    font-size: 1.35rem;
+    line-height: 1.25;
+    margin: 0 0 0.25rem;
+  }
+
+  .meta-left p {
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: #94a3b8;
+  }
+
+  .meta-right {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding-top: 0.65rem;
+    border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  }
+
+  .last-updated-badge {
+    font-size: 0.72rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .print-policy-btn {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.78rem;
+  }
+
+  .policy-divider {
+    margin: 1.25rem 0 1.5rem;
+  }
+
+  .policy-sections-wrapper {
+    gap: 1.25rem;
+  }
+
+  .policy-section-block {
+    padding: 1.25rem 1.1rem;
+    border-radius: 12px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .section-header {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.65rem !important;
+    margin-bottom: 0.85rem !important;
+  }
+
+  .section-header h3 {
+    font-size: 1.15rem;
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  .copy-clause-btn {
+    align-self: flex-start;
+    padding: 0.3rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .section-body p {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: #cbd5e1;
+    word-break: break-word;
+    margin-bottom: 0.5rem;
   }
 
   .policy-contact-box {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    padding: 1.35rem 1.1rem;
+    gap: 1.25rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .contact-box-left h4 {
+    font-size: 1.1rem;
+  }
+
+  .contact-box-left p {
+    font-size: 0.88rem;
+  }
+
+  .contact-box-right {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .policy-contact-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    font-size: 0.88rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .policies-page-container {
+    padding: 1.25rem 10px 3rem;
+  }
+
+  .policies-header h1 {
+    font-size: 1.85rem;
+  }
+
+  .policies-subtitle {
+    font-size: 0.88rem;
+  }
+
+  .policies-search-box input {
+    padding: 0.7rem 2.5rem 0.7rem 2.8rem;
+  }
+
+  .policies-content-card {
+    padding: 1.15rem 0.85rem;
+    border-radius: 12px;
+  }
+
+  .policy-big-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 1.4rem;
+    border-radius: 8px;
+  }
+
+  .meta-left h2 {
+    font-size: 1.2rem;
+  }
+
+  .meta-left p {
+    font-size: 0.82rem;
+  }
+
+  .policy-section-block {
+    padding: 1rem 0.85rem;
+    border-radius: 10px;
+  }
+
+  .section-header h3 {
+    font-size: 1.05rem;
+  }
+
+  .section-body p {
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+
+  .policy-contact-box {
+    padding: 1.15rem 0.85rem;
   }
 }
