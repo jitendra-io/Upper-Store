@@ -62,8 +62,8 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
           <p style="font-size: 13px; color: #94a3b8;">If you did not create this account, please contact our security team immediately.</p>
         </div>
         <div class="email-footer">
-          &copy; ${new Date().getFullYear()} Upper Store — All Rights Reserved.<br>
-          Cryptographically Verified & SHA-256 Protected Releases.
+          &copy; ${new Date().getFullYear()} Upper Store — All Rights Reserved.
+          
         </div>
       </div>
     </body>
@@ -137,8 +137,7 @@ const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email 
           <p style="font-size: 13px; color: #94a3b8;">If this was you, no action is needed. If you did not log in, please secure your account credentials immediately.</p>
         </div>
         <div class="email-footer">
-          &copy; ${new Date().getFullYear()} Upper Store — Security Alert Center.<br>
-          Cryptographically Verified & SHA-256 Protected Releases.
+          &copy; ${new Date().getFullYear()} Upper Store — Security Alert Center.
         </div>
       </div>
     </body>
