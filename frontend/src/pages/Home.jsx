@@ -104,15 +104,17 @@ const getVideoPlayerSource = (url) => {
     };
   }
 
-  // 3. Google Photos share link
-  if (clean.includes('photos.app.goo.gl') || clean.includes('photos.google.com')) {
-    if (clean.includes('lh3.googleusercontent.com') || clean.match(/\.(mp4|webm|ogg|mov)(\?|$)/i)) {
-      return { type: 'video', src: clean };
-    }
-    return { type: 'iframe', src: clean };
+  // 3. Direct Google Photos Stream or Direct Video File (lh3.googleusercontent.com, video-downloads, .mp4)
+  if (clean.includes('lh3.googleusercontent.com') || clean.includes('video-downloads.googleusercontent.com') || clean.match(/\.(mp4|webm|ogg|mov)(\?|$)/i)) {
+    return { type: 'video', src: clean };
   }
 
-  // 4. Standard Direct MP4 / Video Link
+  // 4. Raw Google Photos share link (photos.app.goo.gl or photos.google.com)
+  if (clean.includes('photos.app.goo.gl') || clean.includes('photos.google.com')) {
+    return { type: 'gphotos_link', src: clean };
+  }
+
+  // 5. Standard Direct MP4 / Video Link
   return { type: 'video', src: clean };
 };
 
@@ -329,7 +331,28 @@ const Home = () => {
             return (
               <div className="main-video-player-card">
                 <div className="video-viewport-wrapper">
-                  {playerSrc.type === 'iframe' ? (
+                  {playerSrc.type === 'gphotos_link' ? (
+                    <div className="gphotos-card-overlay">
+                      <img src={currentVideo.poster} alt={currentVideo.title} className="gphotos-poster-img" />
+                      <div className="gphotos-card-body">
+                        <div className="gphotos-icon-badge">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                          </svg>
+                        </div>
+                        <h4>Google Photos Video Demo</h4>
+                        <p>Click below to stream the official high-resolution product demo video directly on Google Photos.</p>
+                        <a href={playerSrc.src} target="_blank" rel="noopener noreferrer" className="gphotos-open-btn">
+                          <span>Watch Video on Google Photos</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '6px' }}>
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                            <polyline points="15 3 21 3 21 9"></polyline>
+                            <line x1="10" y1="14" x2="21" y2="3"></line>
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                  ) : playerSrc.type === 'iframe' ? (
                     <iframe
                       key={currentVideo.id}
                       src={playerSrc.src}

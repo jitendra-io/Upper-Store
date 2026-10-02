@@ -110,6 +110,7 @@ const resolveDirectImageUrl = async (url) => {
       });
       if (response.ok) {
         const html = await response.text();
+        // Check 1: og:video meta tags
         const ogVideoMatch = html.match(/<meta\s+property="og:video(?::secure_url|:url)?"\s+content="([^"]+)"/i) ||
                              html.match(/<meta\s+content="([^"]+)"\s+property="og:video(?::secure_url|:url)?"/i);
         if (ogVideoMatch && ogVideoMatch[1]) {
@@ -117,6 +118,17 @@ const resolveDirectImageUrl = async (url) => {
           return ogVideoMatch[1];
         }
 
+        // Check 2: direct googleusercontent video stream URLs in page HTML
+        const videoStreamMatch = html.match(/https:\/\/video-downloads\.googleusercontent\.com\/[^\s"'\\]+/i) ||
+                                 html.match(/https:\/\/lh3\.googleusercontent\.com\/[^\s"'\\]+=m\d+/i) ||
+                                 html.match(/https:\/\/[^"'\s]+\.mp4[^\s"'\\]*/i);
+        if (videoStreamMatch && videoStreamMatch[0]) {
+          const streamUrl = videoStreamMatch[0].replace(/\\u003d/g, '=').replace(/\\u0026/g, '&');
+          console.log(`🎥 Resolved Google Photos stream link (${cleanUrl}) -> ${streamUrl}`);
+          return streamUrl;
+        }
+
+        // Check 3: og:image meta tags for thumbnails
         const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
         if (ogMatch && ogMatch[1]) {
           const directImg = ogMatch[1].replace(/=w\d+-h\d+.*$/, '=s1200');
