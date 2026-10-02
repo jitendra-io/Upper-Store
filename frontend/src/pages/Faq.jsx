@@ -38,6 +38,12 @@ const FAQ_DATA = [
     category: 'Developer & Support',
     question: 'How do I receive app updates?',
     answer: 'We regularly publish updated packages on Upper Store. Check the version pills and Release Notes section in the Product Details modal to see recent changelogs.'
+  },
+  {
+    id: '7',
+    category: 'Developer & Support',
+    question: 'How do I list or publish my software product on Upper Store?',
+    answer: 'Developers and digital creators wishing to feature their applications on Upper Store can submit a listing request to upper.official.in@gmail.com. Submissions must include: (1) Product Details (Title, Category, Version, Features, Description & YouTube Demo Video URL), (2) Official GitHub Profile Link, and (3) Aadhaar Card Image / Identity Verification Document. All submissions undergo security audit prior to approval.'
   }
 ];
 

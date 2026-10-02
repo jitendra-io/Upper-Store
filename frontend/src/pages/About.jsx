@@ -47,7 +47,7 @@ const About = () => {
         </div>
       </section>
 
-      {/* Brand Overview Writing Section */}
+      {/* Brand Overview & Developer Listing Requirements Section */}
       <section className="about-overview-section">
         <div className="overview-card">
           <h2>Our Vision & Commitment</h2>
@@ -55,6 +55,27 @@ const About = () => {
             At Upper Store, we believe software delivery should be effortless, secure, and visually extraordinary. 
             Whether you are a developer looking for standalone desktop utilities or a mobile user seeking verified applications, 
             our platform guarantees zero bloatware, authentic releases, and uncompromised speed.
+          </p>
+        </div>
+
+        <div className="overview-card" style={{ marginTop: '1.5rem', borderColor: 'rgba(212, 175, 55, 0.35)' }}>
+          <h2>Publishing Your Product on Upper Store</h2>
+          <p>
+            We welcome independent developers, software engineers, and digital creators to list their verified software applications, Android APKs, and developer tools on Upper Store.
+          </p>
+          <div style={{ marginTop: '1rem', background: 'rgba(255, 255, 255, 0.03)', padding: '1.2rem', borderRadius: '10px', borderLeft: '3px solid #d4af37' }}>
+            <h4 style={{ color: '#d4af37', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>Developer Submission Requirements:</h4>
+            <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.9rem', color: '#cbd5e1' }}>
+              To list your software product, please send an official listing request to <a href="mailto:upper.official.in@gmail.com" style={{ color: '#38bdf8', fontWeight: 700, textDecoration: 'none' }}>upper.official.in@gmail.com</a> with the following mandatory details:
+            </p>
+            <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#94a3b8', fontSize: '0.88rem', lineHeight: '1.6' }}>
+              <li><strong>Complete Product Specifications:</strong> Title, Category, Version, Description, Key Features, & YouTube Demo Video URL.</li>
+              <li><strong>GitHub Developer Account:</strong> Direct link to your active, verified GitHub profile.</li>
+              <li><strong>Identity Verification:</strong> Clear digital image copy of your official Aadhaar Card / Government Identity Proof.</li>
+            </ul>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.8rem', fontStyle: 'italic' }}>
+            All product submissions undergo thorough security auditing and identity verification by our administration team prior to public listing.
           </p>
         </div>
       </section>

@@ -53,11 +53,11 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
         </div>
         <div class="email-body">
           <div class="welcome-badge">Account Created</div>
-          <h2 style="color: #ffffff; margin-top: 0;">Welcome, ${name}! 👋</h2>
+          <h2 style="color: #ffffff; margin-top: 0;">Welcome, ${name}!</h2>
           <p>Thank you for joining <strong>Upper Store</strong> — your elite destination for high-performance software, Android APKs, developer tools, and digital assets.</p>
-          <p>Your account (<strong>${userEmail}</strong>) is now active and ready. You can now browse verified products, download software releases, leave reviews, and receive instant push updates.</p>
+          <p>Your account (<strong>${userEmail}</strong>) is now active and ready. You can now browse verified products, download software releases, leave reviews, and receive instant updates.</p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="cta-btn">Explore Product Catalog ➔</a>
+            <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}" class="cta-btn">Explore Product Catalog</a>
           </div>
           <p style="font-size: 13px; color: #94a3b8;">If you did not create this account, please contact our security team immediately.</p>
         </div>
@@ -74,7 +74,7 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
     const info = await transporter.sendMail({
       from: defaultFrom,
       to: userEmail,
-      subject: '🎉 Welcome to Upper Store — Account Activated!',
+      subject: 'Welcome to Upper Store - Account Activated',
       html: htmlContent,
     });
     console.log(`✅ Welcome email sent to ${userEmail} (Msg ID: ${info.messageId})`);
@@ -126,7 +126,7 @@ const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email 
         </div>
         <div class="email-body">
           <div class="alert-badge">Security Notification</div>
-          <h2 style="color: #ffffff; margin-top: 0;">New Account Sign-In Detected 🔒</h2>
+          <h2 style="color: #ffffff; margin-top: 0;">New Account Sign-In Detected</h2>
           <p>Hello <strong>${name}</strong>,</p>
           <p>We noticed a successful login to your <strong>Upper Store</strong> account.</p>
           <div class="info-box">
@@ -149,7 +149,7 @@ const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email 
     const info = await transporter.sendMail({
       from: defaultFrom,
       to: userEmail,
-      subject: '🔑 Security Notification: New Login to Upper Store',
+      subject: 'Security Notification: New Login to Upper Store',
       html: htmlContent,
     });
     console.log(`✅ Login alert email sent to ${userEmail} (Msg ID: ${info.messageId})`);
