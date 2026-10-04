@@ -55,6 +55,10 @@ const AdminDashboard = () => {
   const [notifLink, setNotifLink] = useState('');
   const [sendingNotif, setSendingNotif] = useState(false);
 
+  // Download Analytics State
+  const [allDownloads, setAllDownloads] = useState([]);
+  const [loadingDownloads, setLoadingDownloads] = useState(false);
+
   // UI Feedback
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -71,8 +75,24 @@ const AdminDashboard = () => {
       fetchAppeals(savedToken);
       fetchMessages(savedToken);
       fetchBroadcastNotifications();
+      fetchAllDownloads();
     }
   }, [navigate]);
+
+  const fetchAllDownloads = async () => {
+    setLoadingDownloads(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/downloads/admin/all`);
+      if (res.ok) {
+        const data = await res.json();
+        setAllDownloads(data || []);
+      }
+    } catch (err) {
+      console.warn('Error fetching all download history for admin:', err);
+    } finally {
+      setLoadingDownloads(false);
+    }
+  };
 
   const fetchBroadcastNotifications = async () => {
     setLoadingNotifications(true);
@@ -803,6 +823,7 @@ const AdminDashboard = () => {
                       <th>Product</th>
                       <th>Category</th>
                       <th>Version</th>
+                      <th>Total Downloads</th>
                       <th>Download Link</th>
                       <th>Actions</th>
                     </tr>
@@ -819,6 +840,11 @@ const AdminDashboard = () => {
                         </td>
                         <td><span className="cat-pill">{p.category}</span></td>
                         <td><code>v{p.version}</code></td>
+                        <td>
+                          <span className="cat-pill" style={{ background: 'rgba(212, 175, 55, 0.15)', color: '#d4af37', border: '1px solid rgba(212, 175, 55, 0.3)' }}>
+                            {p.downloadCount || 0} Downloads
+                          </span>
+                        </td>
                         <td className="link-cell">
                           <a href={p.apkFile} target="_blank" rel="noreferrer" title={p.apkFile}>
                             GitHub Release
@@ -1252,6 +1278,61 @@ const AdminDashboard = () => {
                             </svg>
                             <span>Delete</span>
                           </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* DOWNLOAD LOGS & ANALYTICS TAB */}
+      {activeTab === 'downloads' && (
+        <div className="admin-section">
+          <div className="section-header">
+            <h3>Database Download Analytics & Activity Logs</h3>
+            <button className="admin-btn outline" onClick={fetchAllDownloads} disabled={loadingDownloads}>
+              {loadingDownloads ? 'Syncing Logs...' : 'Refresh Logs'}
+            </button>
+          </div>
+
+          <div className="admin-card">
+            {loadingDownloads ? (
+              <p className="loading-text">Fetching database download history...</p>
+            ) : allDownloads.length === 0 ? (
+              <div className="no-data-placeholder">
+                <p>No software download activity recorded in the database yet.</p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>User Account</th>
+                      <th>Product Software</th>
+                      <th>Category</th>
+                      <th>Version</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allDownloads.map((dl) => (
+                      <tr key={dl.id || dl.downloadId}>
+                        <td>
+                          <strong>{dl.userEmail || 'anonymous'}</strong>
+                        </td>
+                        <td>
+                          <strong>{dl.title}</strong>
+                        </td>
+                        <td>
+                          <span className="cat-pill">{dl.category}</span>
+                        </td>
+                        <td><code>v{dl.version}</code></td>
+                        <td className="time-cell">
+                          {dl.downloadedAt ? new Date(dl.downloadedAt).toLocaleString() : 'Recent'}
                         </td>
                       </tr>
                     ))}
