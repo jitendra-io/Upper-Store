@@ -62,11 +62,11 @@ export const incrementProductDownloadCount = async (productId, userEmail = '') =
   }
 };
 
-// Record download in database & local storage cache
+// Record download in database & local storage cache (supports signed-in and anonymous users)
 export const recordUserDownload = async (userEmail, product) => {
-  if (!userEmail || !product) return;
-  const cleanEmail = userEmail.trim().toLowerCase();
-  const storageKey = `upper_user_download_history_${cleanEmail}`;
+  if (!product) return;
+  const cleanEmail = userEmail ? userEmail.trim().toLowerCase() : '';
+  const storageKey = cleanEmail ? `upper_user_download_history_${cleanEmail}` : null;
 
   const newRecord = {
     downloadId: `dl_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -81,13 +81,18 @@ export const recordUserDownload = async (userEmail, product) => {
   };
 
   try {
-    // 1. Instant local cache update for zero UI latency
-    const existingStr = localStorage.getItem(storageKey);
-    const history = existingStr ? JSON.parse(existingStr) : [];
-    const updatedHistory = [newRecord, ...history];
-    localStorage.setItem(storageKey, JSON.stringify(updatedHistory));
+    // 1. Instant local user history cache update (if signed in)
+    if (storageKey) {
+      const existingStr = localStorage.getItem(storageKey);
+      const history = existingStr ? JSON.parse(existingStr) : [];
+      const updatedHistory = [newRecord, ...history];
+      localStorage.setItem(storageKey, JSON.stringify(updatedHistory));
+      window.dispatchEvent(
+        new CustomEvent('downloadHistoryUpdated', { detail: { userEmail: cleanEmail, record: newRecord } })
+      );
+    }
 
-    // Instant product download count increment
+    // 2. Instant local product download count increment
     if (product && product.id) {
       const prodMap = getProductDownloadCountMap();
       prodMap[product.id] = (Number(prodMap[product.id]) || 0) + 1;
@@ -97,17 +102,12 @@ export const recordUserDownload = async (userEmail, product) => {
       );
     }
 
-    // Dispatch local reactive event for history
-    window.dispatchEvent(
-      new CustomEvent('downloadHistoryUpdated', { detail: { userEmail: cleanEmail, record: newRecord } })
-    );
-
-    // 2. Persist download history record to backend database (Firestore)
+    // 3. ALWAYS persist download record & increment product count in backend database (Firestore)
     fetch(`${API_BASE}/api/downloads/record`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        userEmail: cleanEmail,
+        userEmail: cleanEmail || 'anonymous',
         productId: product.id,
         title: product.title,
         category: product.category,
@@ -119,7 +119,7 @@ export const recordUserDownload = async (userEmail, product) => {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.record) {
+        if (cleanEmail && data.record) {
           fetchUserDownloadHistoryFromDB(cleanEmail);
         }
         if (data.newDownloadCount && product?.id) {
@@ -129,7 +129,7 @@ export const recordUserDownload = async (userEmail, product) => {
         }
       })
       .catch((err) => {
-        console.warn('Failed to persist user download history to database:', err);
+        console.warn('Failed to persist download to database:', err);
       });
   } catch (err) {
     console.warn('Failed to record user download history:', err);

@@ -74,10 +74,8 @@ const ProductDetailModal = ({ product, onClose }) => {
       return;
     }
 
-    // Terms already accepted! Track download
-    if (user && user.email) {
-      recordUserDownload(user.email, product);
-    }
+    // Terms already accepted! Track download in database
+    recordUserDownload(user?.email || '', product);
   };
 
   const handleAcceptTerms = () => {
@@ -86,7 +84,7 @@ const ProductDetailModal = ({ product, onClose }) => {
       localStorage.setItem(`upper_terms_accepted_${cleanEmail}`, 'true');
     }
     setTermsModalOpen(false);
-    recordUserDownload(user.email, product);
+    recordUserDownload(user?.email || '', product);
 
     // Trigger download programmatically
     const targetUrl = product.apkFile && product.apkFile !== '#' ? product.apkFile : '/products';
