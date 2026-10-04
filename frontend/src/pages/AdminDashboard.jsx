@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserDownloadHistory } from '../utils/downloadTracker';
+import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
 import './AdminDashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -35,6 +35,7 @@ const AdminDashboard = () => {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedUserDetail, setSelectedUserDetail] = useState(null);
   const [userReviewsMap, setUserReviewsMap] = useState({});
+  const [userDownloadsMap, setUserDownloadsMap] = useState({});
 
   // Appeals State
   const [appeals, setAppeals] = useState([]);
@@ -392,6 +393,19 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       console.warn('Error fetching user reviews:', err);
+    }
+
+    try {
+      const dbHistory = await fetchUserDownloadHistoryFromDB(cleanEmail);
+      if (dbHistory) {
+        setUserDownloadsMap((prev) => ({
+          ...prev,
+          [cleanEmail]: dbHistory,
+          [userObj.email]: dbHistory,
+        }));
+      }
+    } catch (err) {
+      console.warn('Error fetching user download history:', err);
     }
   };
 
@@ -945,18 +959,26 @@ const AdminDashboard = () => {
                   <button className="modal-close-icon" onClick={() => setSelectedUserDetail(null)}>✕</button>
                 </div>
                 <div className="admin-modal-body">
-                  <h5>Download History ({getUserDownloadHistory(selectedUserDetail.email).length})</h5>
-                  {getUserDownloadHistory(selectedUserDetail.email).length === 0 ? (
-                    <p className="no-data">No recorded downloads for this user in local history.</p>
-                  ) : (
-                    <ul className="activity-list">
-                      {getUserDownloadHistory(selectedUserDetail.email).map((dl, idx) => (
-                        <li key={idx}>
-                          <strong>{dl.title}</strong> (v{dl.version}) — {new Date(dl.downloadedAt).toLocaleDateString()}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                  {(() => {
+                    const clean = (selectedUserDetail.email || '').trim().toLowerCase();
+                    const dlList = userDownloadsMap[clean] || getUserDownloadHistory(clean);
+                    return (
+                      <>
+                        <h5>Download History ({dlList.length})</h5>
+                        {dlList.length === 0 ? (
+                          <p className="no-data">No recorded downloads for this user in database.</p>
+                        ) : (
+                          <ul className="activity-list">
+                            {dlList.map((dl, idx) => (
+                              <li key={idx}>
+                                <strong>{dl.title}</strong> (v{dl.version}) — {new Date(dl.downloadedAt).toLocaleDateString()}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   <h5 style={{ marginTop: '1.2rem' }}>Review Comments ({userReviewsMap[selectedUserDetail.email]?.length || 0})</h5>
                   {(!userReviewsMap[selectedUserDetail.email] || userReviewsMap[selectedUserDetail.email].length === 0) ? (

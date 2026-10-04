@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
-import { getUserDownloadHistory, recordUserDownload } from '../utils/downloadTracker';
+import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, recordUserDownload } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
 import './ProductReviewsModal.css';
 
@@ -51,6 +51,15 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     };
     checkBanStatus();
   }, [user, isOpen]);
+
+  // Sync user download history from DB when modal opens
+  useEffect(() => {
+    if (isOpen && user && user.email) {
+      fetchUserDownloadHistoryFromDB(user.email).then(() => {
+        setForceUpdate((prev) => prev + 1);
+      });
+    }
+  }, [isOpen, user]);
 
   // Fetch reviews on load
   const loadReviews = async () => {

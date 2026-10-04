@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import { useAuth } from '../context/AuthContext';
 import DownloadHistoryModal from './DownloadHistoryModal';
-import { getUserDownloadHistory } from '../utils/downloadTracker';
+import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -18,15 +18,22 @@ const Navbar = () => {
   useEffect(() => {
     if (user && user.email) {
       setDownloadCount(getUserDownloadHistory(user.email).length);
+      fetchUserDownloadHistoryFromDB(user.email).then((dbHistory) => {
+        if (dbHistory) setDownloadCount(dbHistory.length);
+      });
     } else {
       setDownloadCount(0);
     }
   }, [user]);
 
   useEffect(() => {
-    const handleHistoryUpdate = () => {
+    const handleHistoryUpdate = (e) => {
       if (user && user.email) {
-        setDownloadCount(getUserDownloadHistory(user.email).length);
+        if (e.detail?.history) {
+          setDownloadCount(e.detail.history.length);
+        } else {
+          setDownloadCount(getUserDownloadHistory(user.email).length);
+        }
       }
     };
     window.addEventListener('downloadHistoryUpdated', handleHistoryUpdate);

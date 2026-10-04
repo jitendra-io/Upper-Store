@@ -49,6 +49,7 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/downloads', require('./routes/downloadRoutes'));
 
 // Health check
 app.get('/', (req, res) => res.json({ status: 'Upper Store API is running ✅' }));

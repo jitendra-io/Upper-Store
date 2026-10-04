@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getUserDownloadHistory, clearUserDownloadHistory, recordUserDownload } from '../utils/downloadTracker';
+import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, clearUserDownloadHistory, recordUserDownload } from '../utils/downloadTracker';
 import './DownloadHistoryModal.css';
 
 const DownloadHistoryModal = ({ isOpen, onClose }) => {
@@ -16,8 +16,11 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
   };
 
   useEffect(() => {
-    if (user && user.email) {
+    if (user && user.email && isOpen) {
       setHistory(getUserDownloadHistory(user.email));
+      fetchUserDownloadHistoryFromDB(user.email).then((dbHistory) => {
+        if (dbHistory) setHistory(dbHistory);
+      });
     }
   }, [user, isOpen]);
 
