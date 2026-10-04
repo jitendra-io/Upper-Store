@@ -44,7 +44,9 @@ const recordDownload = async (req, res) => {
       const pDoc = await pRef.get();
       if (pDoc.exists) {
         const curCount = Number(pDoc.data().downloadCount) || 0;
-        updatedCount = curCount + 1;
+        const historySnap = await db.collection('download_history').where('productId', '==', String(productId)).get();
+        const historyCount = historySnap.size;
+        updatedCount = Math.max(curCount + 1, historyCount);
         await pRef.update({ downloadCount: updatedCount });
       }
     }

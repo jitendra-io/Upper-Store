@@ -87,7 +87,17 @@ export const recordUserDownload = async (userEmail, product) => {
     const updatedHistory = [newRecord, ...history];
     localStorage.setItem(storageKey, JSON.stringify(updatedHistory));
 
-    // Dispatch local reactive event
+    // Instant product download count increment
+    if (product && product.id) {
+      const prodMap = getProductDownloadCountMap();
+      prodMap[product.id] = (Number(prodMap[product.id]) || 0) + 1;
+      localStorage.setItem('upper_product_downloads', JSON.stringify(prodMap));
+      window.dispatchEvent(
+        new CustomEvent('productDownloadsUpdated', { detail: { productId: product.id, newCount: prodMap[product.id] } })
+      );
+    }
+
+    // Dispatch local reactive event for history
     window.dispatchEvent(
       new CustomEvent('downloadHistoryUpdated', { detail: { userEmail: cleanEmail, record: newRecord } })
     );
@@ -110,8 +120,12 @@ export const recordUserDownload = async (userEmail, product) => {
       .then((res) => res.json())
       .then((data) => {
         if (data.record) {
-          // Re-sync with backend DB payload
           fetchUserDownloadHistoryFromDB(cleanEmail);
+        }
+        if (data.newDownloadCount && product?.id) {
+          window.dispatchEvent(
+            new CustomEvent('productDownloadsUpdated', { detail: { productId: product.id, newCount: data.newDownloadCount } })
+          );
         }
       })
       .catch((err) => {

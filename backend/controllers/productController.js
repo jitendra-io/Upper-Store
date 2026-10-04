@@ -155,10 +155,30 @@ const resolveDirectImageUrl = async (url) => {
 const getProducts = async (req, res) => {
   try {
     const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
+
+    // Aggregate download history counts per product from database
+    const historyCountsMap = {};
+    try {
+      const historySnapshot = await db.collection('download_history').get();
+      historySnapshot.forEach((hDoc) => {
+        const hData = hDoc.data();
+        if (hData && hData.productId) {
+          const pId = String(hData.productId);
+          historyCountsMap[pId] = (historyCountsMap[pId] || 0) + 1;
+        }
+      });
+    } catch (hErr) {
+      console.warn('Could not query download_history for product counts:', hErr);
+    }
+
     const products = [];
 
     for (const doc of snapshot.docs) {
       const p = { id: doc.id, ...doc.data() };
+      const storedCount = Number(p.downloadCount) || 0;
+      const historyCount = historyCountsMap[doc.id] || 0;
+      p.downloadCount = Math.max(storedCount, historyCount);
+
       let updated = false;
 
       if (p.image && (p.image.includes('photos.app.goo.gl') || p.image.includes('drive.google.com/file') || p.image.includes('photos.google.com'))) {
