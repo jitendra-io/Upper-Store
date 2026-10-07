@@ -1,0 +1,22 @@
+# Dependencies & Build Artifacts
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Environment variables & secrets (NEVER commit these)
+.env
+.env.*
+*.env
+backend/.env
+frontend/.env
+
+# Local deployment workflows
+.github/
+
+# Logs & Editor
+logs/
+*.log
+.DS_Store
+.vscode/
+.idea/

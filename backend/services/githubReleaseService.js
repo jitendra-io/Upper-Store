@@ -7,8 +7,8 @@ const path = require('path');
  */
 const uploadToGitHubRelease = async ({ filePath, fileName, version, title, description, customToken, customOwner, customRepo }) => {
   const token = customToken || process.env.GITHUB_TOKEN;
-  const repoOwner = customOwner || process.env.GITHUB_REPO_OWNER || 'Upper-Official';
-  const repoName = customRepo || process.env.GITHUB_REPO_NAME || 'Upper-Official';
+  const repoOwner = customOwner || process.env.GITHUB_REPO_OWNER || 'jitendra-io';
+  const repoName = customRepo || process.env.GITHUB_REPO_NAME || 'Upper-Store';
 
   if (!token || token.includes('your_github_token')) {
     console.warn('⚠️ GITHUB_TOKEN is not configured in backend/.env or form request. Skipping GitHub Release upload.');
@@ -30,7 +30,7 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',
         'Content-Type': 'application/json',
-        'User-Agent': 'Upper-Official-Backend',
+        'User-Agent': 'Upper-Store-Backend',
       },
       body: JSON.stringify({
         tag_name: tagName,
@@ -70,7 +70,7 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
         Accept: 'application/vnd.github+json',
         'Content-Type': contentType,
         'Content-Length': fileStats.size.toString(),
-        'User-Agent': 'Upper-Official-Backend',
+        'User-Agent': 'Upper-Store-Backend',
       },
       duplex: 'half',
       body: fileStream,
