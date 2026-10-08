@@ -85,4 +85,17 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`[INFO] Server running on http://localhost:${PORT}`));
+const server = app.listen(PORT, () => {
+  console.log(`[INFO] Server running on http://localhost:${PORT}`);
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[ERROR] Port ${PORT} is already in use by another process.`);
+    console.error(`[ERROR] Either stop the existing process on port ${PORT} or change PORT in backend/.env (e.g. PORT=5001).`);
+  } else {
+    console.error('[ERROR] Server error:', err.message);
+  }
+  process.exit(1);
+});
+
