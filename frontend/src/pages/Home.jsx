@@ -124,7 +124,7 @@ const Home = () => {
         </div>
         
         <h1 className="home-hero-title">
-          Empowering Creators with <br />
+          Empowering Creators with <br className="hero-desktop-br" />
           <span className="gold-gradient-text">Premier Software & Assets</span>
         </h1>
         
