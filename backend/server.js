@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 
+dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
 
 // Ensure upload directories exist
@@ -51,8 +52,20 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/downloads', require('./routes/downloadRoutes'));
 
-// Health check
-app.get('/', (req, res) => res.json({ status: 'Upper Store API is running ✅' }));
+// Serve static frontend in production if built dist exists
+const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/uploads')) {
+      return res.sendFile(path.join(frontendDist, 'index.html'));
+    }
+    next();
+  });
+} else {
+  // Health check fallback when backend is deployed as a standalone API
+  app.get('/', (req, res) => res.json({ status: 'Upper Store API is running' }));
+}
 
 // Global error handler
 app.use((err, req, res, next) => {
@@ -64,12 +77,12 @@ app.use((err, req, res, next) => {
 
 // Process-level crash prevention guards
 process.on('uncaughtException', (err) => {
-  console.error('⚠️ Uncaught Exception caught (process guarded):', err.message);
+  console.error('[WARN] Uncaught Exception caught (process guarded):', err.message);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('⚠️ Unhandled Promise Rejection caught (process guarded):', reason);
+  console.error('[WARN] Unhandled Promise Rejection caught (process guarded):', reason);
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`[INFO] Server running on http://localhost:${PORT}`));
