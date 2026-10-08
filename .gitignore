@@ -13,8 +13,6 @@ frontend/.env
 !.env.example
 !**/.env.example
 
-# Local deployment workflows
-.github/
 
 # Logs & Editor
 logs/
