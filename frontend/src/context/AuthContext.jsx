@@ -26,6 +26,12 @@ export const AuthProvider = ({ children }) => {
             isBanned: Boolean(statusData.isBanned),
             bannedAt: statusData.bannedAt || null,
             lastAppealedAt: statusData.lastAppealedAt || null,
+            membership: statusData.membership || prevUser.membership || { plan: 'free', badge: null, validUntil: null },
+            subscriptionCount: statusData.subscriptionCount ?? prevUser.subscriptionCount ?? 0,
+            totalVipDays: statusData.totalVipDays ?? prevUser.totalVipDays ?? 0,
+            totalAmountSpent: statusData.totalAmountSpent ?? prevUser.totalAmountSpent ?? 0,
+            lastSubscribedAt: statusData.lastSubscribedAt ?? prevUser.lastSubscribedAt ?? null,
+            subscriptionData: statusData.subscriptionData || prevUser.subscriptionData || null,
           };
           localStorage.setItem('upper_user_data', JSON.stringify(updated));
           return updated;
@@ -36,6 +42,22 @@ export const AuthProvider = ({ children }) => {
       console.warn('Failed to refresh user status:', err);
     }
     return null;
+  };
+
+  const updateMembership = (newMembership) => {
+    setUser((prevUser) => {
+      if (!prevUser) return prevUser;
+      const isCancellation = !newMembership?.plan || newMembership.plan === 'free';
+      const updated = {
+        ...prevUser,
+        membership: newMembership,
+        subscriptionCount: isCancellation ? (prevUser.subscriptionCount || 0) : (prevUser.subscriptionCount || 0) + 1,
+        totalVipDays: isCancellation ? (prevUser.totalVipDays || 0) : (prevUser.totalVipDays || 0) + (newMembership.plan === 'elite' ? 365 : 30),
+      };
+      localStorage.setItem('upper_user_data', JSON.stringify(updated));
+      return updated;
+    });
+    window.dispatchEvent(new CustomEvent('membershipUpdated', { detail: { membership: newMembership } }));
   };
 
   // Load saved session on mount and sync live status from server
@@ -169,6 +191,7 @@ export const AuthProvider = ({ children }) => {
         loginWithGoogle,
         logout,
         refreshUserStatus,
+        updateMembership,
       }}
     >
       {children}

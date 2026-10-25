@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import ProductDetailModal from '../components/ProductDetailModal';
 import ProductReviewsModal from '../components/ProductReviewsModal';
+import VipPromoBanner from '../components/VipPromoBanner';
+import VipClubModal from '../components/VipClubModal';
 import StarRatingBadge from '../components/StarRatingBadge';
+import { ArrowRightIcon } from '../components/Icons';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Home.css';
 import './Products.css';
@@ -68,6 +71,8 @@ const Home = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [reviewModalProduct, setReviewModalProduct] = useState(null);
   const [activeVideoId, setActiveVideoId] = useState(null);
+  const [vipModalOpen, setVipModalOpen] = useState(false);
+  const [vipModalPlan, setVipModalPlan] = useState('elite');
   const [, setRefreshDownloads] = useState(0);
 
   const deckTrackRef = useRef(null);
@@ -169,6 +174,16 @@ const Home = () => {
         </div>
       </section>
 
+      {/* INTERACTIVE VIP PROMO BANNER */}
+      <section className="home-vip-banner-section" style={{ maxWidth: '1240px', margin: '0 auto 2.5rem auto', padding: '0 1.5rem', boxSizing: 'border-box' }}>
+        <VipPromoBanner
+          onOpenVipModal={(plan) => {
+            setVipModalPlan(plan);
+            setVipModalOpen(true);
+          }}
+        />
+      </section>
+
       {/* FEATURED PRODUCTS SPOTLIGHT */}
       <section className="home-section featured-section">
         <div className="section-header-center">
@@ -251,8 +266,8 @@ const Home = () => {
         )}
 
         <div className="section-cta-row">
-          <Link to="/products" className="view-all-link-btn">
-            View Complete Product Catalog ({totalProductsCount} {totalProductsCount === 1 ? 'Item' : 'Items'}) ➔
+          <Link to="/products" className="view-all-link-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            View Complete Product Catalog ({totalProductsCount} {totalProductsCount === 1 ? 'Item' : 'Items'}) <ArrowRightIcon size={14} style={{ marginLeft: '6px' }} />
           </Link>
         </div>
       </section>
@@ -555,6 +570,13 @@ const Home = () => {
           onClose={() => setReviewModalProduct(null)}
         />
       )}
+
+      {/* VIP CLUB CHECKOUT MODAL */}
+      <VipClubModal
+        isOpen={vipModalOpen}
+        onClose={() => setVipModalOpen(false)}
+        defaultPlan={vipModalPlan}
+      />
     </div>
   );
 };

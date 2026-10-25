@@ -1,0 +1,841 @@
+/* User Licenses Modal Styles */
+.license-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  background: rgba(5, 5, 8, 0.85);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: licenseFadeIn 0.25s ease-out;
+}
+
+@keyframes licenseFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.license-modal-box {
+  background: #0f0f13;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 18px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
+  animation: licenseSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes licenseSlideUp {
+  from { transform: translateY(20px) scale(0.97); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Header */
+.license-modal-header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.06) 0%, transparent 100%);
+}
+
+.license-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.license-modal-title h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.license-modal-subtitle {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+
+.license-close-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.license-close-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Body */
+.license-modal-body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.license-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #94a3b8;
+  gap: 1rem;
+}
+
+.license-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(212, 175, 55, 0.2);
+  border-top-color: #d4af37;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.license-empty-state {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.license-empty-icon {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.license-empty-state h4 {
+  font-size: 1.15rem;
+  color: #ffffff;
+  margin: 0 0 0.5rem 0;
+}
+
+.license-empty-state p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  max-width: 440px;
+  line-height: 1.55;
+  margin: 0 0 1.5rem 0;
+}
+
+.license-explore-btn {
+  background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+  color: #0b0b0e;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.65rem 1.35rem;
+  border-radius: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  transition: all 0.2s ease;
+}
+
+.license-explore-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
+}
+
+/* License List */
+.license-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.license-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 14px;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  transition: border-color 0.2s ease;
+}
+
+.license-card:hover {
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.license-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.license-product-name {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.license-order-ref {
+  display: block;
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 0.2rem;
+}
+
+.license-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.license-plan-badge {
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #d4af37;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+
+.license-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 8px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+}
+
+/* Key box */
+.license-key-wrapper {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+}
+
+.key-label {
+  display: block;
+  font-size: 0.68rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.key-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.key-code {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #facc15;
+  letter-spacing: 1.2px;
+  word-break: break-all;
+}
+
+.copy-key-btn {
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #d4af37;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.copy-key-btn:hover {
+  background: #d4af37;
+  color: #0b0b0e;
+}
+
+/* Meta & Features */
+.license-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.license-gateway-tag {
+  color: #64748b;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.license-features-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.feature-pill {
+  font-size: 0.68rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.12rem 0.45rem;
+  border-radius: 6px;
+  text-transform: capitalize;
+}
+
+/* Footer */
+.license-modal-footer {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.footer-tip {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.license-done-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 0.45rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.license-done-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ========================================================
+   CANCELLED & EXPIRED LICENSE STATUS STYLING
+   ======================================================== */
+
+.license-card.is-cancelled {
+  background: rgba(239, 68, 68, 0.03);
+  border-color: rgba(239, 68, 68, 0.3);
+  opacity: 0.88;
+}
+
+.license-card.is-cancelled:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  opacity: 1;
+}
+
+.license-status-badge.cancelled {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.status-dot.cancelled-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.license-status-badge.expired {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.status-dot.expired-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
+
+.license-status-badge.rejected {
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  color: #f87171;
+}
+
+.status-dot.rejected-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+}
+
+.license-status-badge.pending {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fcd34d;
+}
+
+.status-dot.pending-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+}
+
+/* Rejected Card Variant */
+.license-card.is-rejected {
+  background: rgba(20, 10, 14, 0.65);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.license-card.is-rejected:hover {
+  border-color: rgba(239, 68, 68, 0.65);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.12);
+}
+
+/* Pending Card Variant */
+.license-card.is-pending {
+  background: rgba(20, 16, 10, 0.65);
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+/* Rejection Box Container */
+.license-rejection-box {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  padding: 0.95rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.rejection-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.rejection-box-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fca5a5;
+  letter-spacing: 0.3px;
+}
+
+.rejection-date-tag {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* High-Visibility Rejection Reason Callout */
+.rejection-reason-callout {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3.5px solid #ef4444;
+  border-radius: 6px;
+  padding: 0.65rem 0.9rem;
+}
+
+.rejection-reason-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fca5a5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.25rem;
+}
+
+.rejection-reason-text {
+  margin: 0;
+  font-size: 0.84rem;
+  color: #ffffff;
+  font-weight: 600;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+/* Rejection Details Grid */
+.rejection-details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+}
+
+.rejection-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.rej-detail-label {
+  font-size: 0.66rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.rej-detail-value {
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.rej-detail-value.utr-val {
+  font-family: monospace;
+  color: #fca5a5;
+  letter-spacing: 0.5px;
+}
+
+/* Rejection Action Row */
+.rejection-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.25rem;
+}
+
+.rejection-action-tip {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  line-height: 1.4;
+  flex: 1;
+  min-width: 200px;
+}
+
+.rejection-retry-btn {
+  background: linear-gradient(135deg, #d4af37, #b8860b);
+  color: #0b0f19;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.45rem 0.95rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.rejection-retry-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+}
+
+/* Pending Approval Box */
+.license-pending-box {
+  background: rgba(245, 158, 11, 0.06);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+
+.pending-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.pending-box-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fcd34d;
+}
+
+.pending-date-tag {
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+
+.pending-box-msg {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.pending-box-msg code {
+  font-family: monospace;
+  color: #fcd34d;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+}
+
+.key-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.key-wrapper-cancelled {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(20, 10, 10, 0.6);
+}
+
+.cancelled-pill-tag {
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 0.12rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  display: inline-flex;
+  align-items: center;
+}
+
+.key-code-cancelled {
+  color: #94a3b8;
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+
+.copy-key-btn-cancelled {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+}
+
+.expiry-cancelled {
+  color: #f87171 !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.expiry-expired {
+  color: #fbbf24 !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.license-cancelled-notice {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cancelled-notice-text {
+  font-size: 0.76rem;
+  color: #fca5a5;
+  line-height: 1.45;
+  flex: 1;
+  min-width: 220px;
+}
+
+.reactivate-vip-btn {
+  background: linear-gradient(135deg, #d4af37, #996515);
+  color: #0b0f19;
+  border: none;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.reactivate-vip-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.features-cancelled {
+  opacity: 0.6;
+}
+
+.feature-pill-cancelled {
+  text-decoration: line-through;
+  color: #94a3b8;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+}
+
+/* ========================================================
+   RESPONSIVE DESIGN (MOBILE PHONES & TABLETS)
+   ======================================================== */
+
+@media (max-width: 600px) {
+  .license-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .license-badges {
+    align-self: flex-start;
+    margin-top: 0.25rem;
+  }
+
+  .license-cancelled-notice {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reactivate-vip-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.6rem;
+  }
+
+  .rejection-details-grid {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .rejection-action-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rejection-retry-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .license-modal-box {
+    max-height: 94vh;
+    border-radius: 14px;
+  }
+
+  .license-modal-header,
+  .license-modal-body,
+  .license-modal-footer {
+    padding: 0.85rem 1rem;
+  }
+
+  .license-product-name {
+    font-size: 0.92rem;
+  }
+
+  .key-box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+  }
+
+  .key-code {
+    font-size: 0.74rem;
+    text-align: center;
+    word-break: break-all;
+  }
+
+  .copy-key-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.45rem;
+  }
+
+  .license-meta-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .license-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .license-done-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .license-modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .key-code {
+    font-size: 0.7rem;
+  }
+}
+

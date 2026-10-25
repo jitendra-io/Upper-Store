@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protectAdmin } = require('../middleware/authMiddleware');
+const { contactLimiter } = require('../middleware/rateLimiter');
 const {
   createMessage,
   getMessages,
@@ -13,9 +14,9 @@ const {
   deleteAppeal,
 } = require('../controllers/contactController');
 
-// Public routes
-router.post('/', createMessage);
-router.post('/appeal', submitAppeal);
+// Public routes (Rate-limited to protect SMTP quota and prevent spam)
+router.post('/', contactLimiter, createMessage);
+router.post('/appeal', contactLimiter, submitAppeal);
 
 // Protected Admin routes for Inbox & Appeals
 router.get('/', protectAdmin, getMessages);

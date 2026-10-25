@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, recordUserDownload } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
+import { CrownIcon, DiamondIcon, StarIcon } from './Icons';
 import './ProductReviewsModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -14,6 +15,23 @@ const formatCount = (num) => {
     return `${formatted}k`;
   }
   return num;
+};
+
+const sortVipReviews = (reviewList) => {
+  const getRank = (r) => {
+    const m = r.userMembership || r.membership;
+    if (!m) return 0;
+    if (m.validUntil && new Date(m.validUntil) < new Date()) return 0;
+    const plan = m.plan || 'free';
+    if (plan === 'elite') return 2;
+    if (plan === 'pro') return 1;
+    return 0;
+  };
+  return [...reviewList].sort((a, b) => {
+    const rankDiff = getRank(b) - getRank(a);
+    if (rankDiff !== 0) return rankDiff;
+    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+  });
 };
 
 const ProductReviewsModal = ({ product, isOpen, onClose }) => {
@@ -69,7 +87,8 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
       const res = await fetch(`${API_BASE}/api/reviews/product/${product.id}`);
       if (res.ok) {
         const data = await res.json();
-        setReviews(data.reviews || []);
+        const sorted = sortVipReviews(data.reviews || []);
+        setReviews(sorted);
         setAverageRating(data.averageRating || 5.0);
         setReviewsCount(data.reviewsCount || 0);
 
@@ -147,9 +166,15 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     try {
       const userAvatar = user.photoURL || `https://unavatar.io/${encodeURIComponent(cleanUserEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanUserEmail)}`;
 
+      const token = localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${API_BASE}/api/reviews/product/${product.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           userEmail: user.email,
           userName: user.displayName || user.email.split('@')[0],
@@ -182,8 +207,15 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
 
     setDeletingId(reviewId);
     try {
+      const token = localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
         method: 'DELETE',
+        headers,
       });
       if (res.ok) {
         setFormMsg({ type: 'success', text: 'Your review was deleted. You can now submit a new review.' });
@@ -410,6 +442,28 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                   </div>
                 )}
 
+                {/* VIP REVIEWING STATUS PILL */}
+                {(() => {
+                  const isUserVipActive = (user?.membership?.plan === 'pro' || user?.membership?.plan === 'elite') &&
+                    user?.membership?.validUntil &&
+                    new Date(user.membership.validUntil) > new Date();
+
+                  if (!isUserVipActive) return null;
+                  return user?.membership?.plan === 'elite' ? (
+                    <div className="review-posting-tier elite">
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <DiamondIcon size={14} /> Posting as <strong>Elite VIP</strong> &bull; Pinned at top of reviews
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="review-posting-tier pro">
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                        <CrownIcon size={14} /> Posting as <strong>Pro VIP</strong> &bull; Priority Golden badge
+                      </span>
+                    </div>
+                  );
+                })()}
+
                 {/* STAR RATING INTERACTIVE SELECTOR */}
                 <div className="rating-picker-row">
                   <span className="picker-label">Your Rating:</span>
@@ -469,24 +523,47 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
               <div className="reviews-cards-stack">
                 {reviews.map((rev) => {
                   const isUserCard = cleanUserEmail && rev.userEmail === cleanUserEmail;
+                  const m = rev.userMembership || rev.membership;
+                  const isVipValid = m && m.plan && m.plan !== 'free' && (!m.validUntil || new Date(m.validUntil) > new Date());
+                  const isElite = isVipValid && (m.plan === 'elite' || m.badge === 'purple');
+                  const isPro = isVipValid && (m.plan === 'pro' || m.badge === 'gold');
+
                   return (
-                    <div key={rev.id || rev.userEmail} className={`review-comment-card ${isUserCard ? 'user-own-card' : ''}`}>
+                    <div key={rev.id || rev.userEmail} className={`review-comment-card ${isUserCard ? 'user-own-card' : ''} ${isElite ? 'elite-card' : isPro ? 'pro-card' : ''}`}>
+                      {isElite && (
+                        <div className="pinned-elite-ribbon">
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <StarIcon size={12} fill="currentColor" /> PINNED ELITE VIP REVIEW
+                          </span>
+                        </div>
+                      )}
                       <div className="review-comment-header">
-                        <img
-                          src={rev.userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`}
-                          alt={rev.userName || 'User'}
-                          className="review-user-avatar"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`;
-                          }}
-                        />
+                        <div className={`review-avatar-frame ${isElite ? 'frame-purple' : isPro ? 'frame-gold' : ''}`}>
+                          <img
+                            src={rev.userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`}
+                            alt={rev.userName || 'User'}
+                            className="review-user-avatar"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`;
+                            }}
+                          />
+                        </div>
                         <div className="review-user-info">
                           <div className="review-user-name-row">
                             <span className="review-user-name" title={rev.userName || rev.userEmail?.split('@')[0]}>
                               {rev.userName || rev.userEmail?.split('@')[0]}
                             </span>
+                            {isElite ? (
+                              <span className="user-membership-pill elite" title="Official Upper Elite VIP">
+                                <DiamondIcon size={12} style={{ marginRight: '4px' }} /> Elite VIP
+                              </span>
+                            ) : isPro ? (
+                              <span className="user-membership-pill pro" title="Official Upper Pro VIP">
+                                <CrownIcon size={12} style={{ marginRight: '4px' }} /> Pro VIP
+                              </span>
+                            ) : null}
                             <div className="review-card-stars">
                               {[1, 2, 3, 4, 5].map((s) => {
                                 const isFilled = s <= rev.rating;

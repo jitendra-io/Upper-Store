@@ -3,6 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import { useAuth } from '../context/AuthContext';
 import DownloadHistoryModal from './DownloadHistoryModal';
+import UserLicensesModal from './UserLicensesModal';
+import VipClubModal from './VipClubModal';
+import CancelSubscriptionModal from './CancelSubscriptionModal';
+import { CrownIcon, DiamondIcon, SparkleIcon, AlertTriangleIcon, ArrowRightIcon, CloseIcon, ShieldOffIcon } from './Icons';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
 import './Navbar.css';
 
@@ -10,7 +14,11 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [licensesModalOpen, setLicensesModalOpen] = useState(false);
+  const [vipModalOpen, setVipModalOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [downloadCount, setDownloadCount] = useState(0);
+  const [licenseCount, setLicenseCount] = useState(0);
   const location = useLocation();
   const { user, isLoggedIn, openAuthModal, logout } = useAuth();
   const dropdownRef = useRef(null);
@@ -38,6 +46,38 @@ const Navbar = () => {
     };
     window.addEventListener('downloadHistoryUpdated', handleHistoryUpdate);
     return () => window.removeEventListener('downloadHistoryUpdated', handleHistoryUpdate);
+  }, [user]);
+
+  const fetchLicenseCount = async () => {
+    if (!user || !user.email) {
+      setLicenseCount(0);
+      return;
+    }
+    try {
+      const token = localStorage.getItem('upper_user_token');
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiBase}/api/payments/my-licenses`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setLicenseCount(Array.isArray(data) ? data.length : 0);
+      }
+    } catch {
+      // Silently fall back
+    }
+  };
+
+  useEffect(() => {
+    fetchLicenseCount();
+  }, [user]);
+
+  useEffect(() => {
+    const handleLicenseIssued = () => {
+      fetchLicenseCount();
+    };
+    window.addEventListener('licenseIssued', handleLicenseIssued);
+    return () => window.removeEventListener('licenseIssued', handleLicenseIssued);
   }, [user]);
 
   if (location.pathname.startsWith('/admin')) {
@@ -210,10 +250,16 @@ const Navbar = () => {
         <div className={`nav-links ${menuOpen ? 'mobile-active' : ''}`}>
           <div className="mobile-drawer-header">
             <span className="drawer-title">Navigation</span>
-            <button className="drawer-close-btn" onClick={closeMenu} aria-label="Close menu">✕</button>
+            <button className="drawer-close-btn" onClick={closeMenu} aria-label="Close menu">
+              <CloseIcon size={16} />
+            </button>
           </div>
           <Link to="/" onClick={closeMenu} className={location.pathname === '/' ? 'active-link' : ''}>Home</Link>
           <Link to="/products" onClick={closeMenu} className={location.pathname.startsWith('/products') ? 'active-link' : ''}>Products</Link>
+          <Link to="/vip-club" onClick={closeMenu} className={`vip-nav-link ${location.pathname === '/vip-club' || location.pathname === '/vip' ? 'active-link' : ''}`}>
+            <SparkleIcon size={13} style={{ marginRight: '5px' }} />
+            VIP Club
+          </Link>
           <Link to="/about" onClick={closeMenu} className={location.pathname === '/about' ? 'active-link' : ''}>About</Link>
           <Link to="/blog" onClick={closeMenu} className={location.pathname === '/blog' ? 'active-link' : ''}>Blog</Link>
           <Link to="/faq" onClick={closeMenu} className={location.pathname === '/faq' ? 'active-link' : ''}>FAQ</Link>
@@ -296,8 +342,8 @@ const Navbar = () => {
                           <h5 className="notif-item-title">{n.title}</h5>
                           <p className="notif-item-msg">{n.message}</p>
                           {n.link && (
-                            <a href={n.link} target="_blank" rel="noopener noreferrer" className="notif-item-link">
-                              Open Link ➔
+                            <a href={n.link} target="_blank" rel="noopener noreferrer" className="notif-item-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              Open Link <ArrowRightIcon size={12} />
                             </a>
                           )}
                         </div>
@@ -331,37 +377,96 @@ const Navbar = () => {
                   }}
                 />
                 <span className="nav-user-name">{user?.displayName || user?.email?.split('@')[0]}</span>
+                {(() => {
+                  const isVipActive = (user?.membership?.plan === 'pro' || user?.membership?.plan === 'elite') &&
+                    user?.membership?.validUntil &&
+                    new Date(user.membership.validUntil) > new Date();
+
+                  if (!isVipActive) return null;
+                  return user?.membership?.plan === 'elite' ? (
+                    <span className="nav-vip-badge-pill elite" title="Elite VIP Member">
+                      <DiamondIcon size={14} />
+                    </span>
+                  ) : (
+                    <span className="nav-vip-badge-pill pro" title="Pro VIP Member">
+                      <CrownIcon size={14} />
+                    </span>
+                  );
+                })()}
                 {isBanned && <span className="nav-banned-tag">BANNED</span>}
                 <span className="dropdown-caret">▾</span>
               </button>
 
               {/* DROPDOWN MENU */}
-              {userDropdownOpen && (
-                <div className="nav-user-dropdown">
-                  <div className="dropdown-user-header">
-                    <div className="dropdown-avatar-wrapper">
-                      <img
-                        src={userAvatar}
-                        alt={user?.displayName || 'User'}
-                        className="dropdown-user-avatar-large"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.email || 'user')}&backgroundColor=d4af37&textColor=000000`;
-                        }}
-                      />
-                    </div>
-                    <p className="dropdown-user-title">
-                      {user?.displayName || 'User'}
-                      {isBanned && <span className="nav-banned-tag sm">BANNED</span>}
-                    </p>
-                    <p className="dropdown-user-email">{user?.email}</p>
-                    <span className="dropdown-provider-tag">
-                      {user?.provider === 'google' ? 'Google Sign-In' : 'Email Account'}
-                    </span>
+              {userDropdownOpen && (() => {
+                const isVipActive = (user?.membership?.plan === 'pro' || user?.membership?.plan === 'elite') &&
+                  user?.membership?.validUntil &&
+                  new Date(user.membership.validUntil) > new Date();
+
+                return (
+                  <div className="nav-user-dropdown">
+                    <div className="dropdown-user-header">
+                      <div className="dropdown-avatar-wrapper">
+                        <img
+                          src={userAvatar}
+                          alt={user?.displayName || 'User'}
+                          className="dropdown-user-avatar-large"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.email || 'user')}&backgroundColor=d4af37&textColor=000000`;
+                          }}
+                        />
+                      </div>
+                      <p className="dropdown-user-title">
+                        {user?.displayName || 'User'}
+                        {isBanned && <span className="nav-banned-tag sm">BANNED</span>}
+                      </p>
+                      <p className="dropdown-user-email">{user?.email}</p>
+                      <div className="dropdown-badges-row">
+                        <span className="dropdown-provider-tag">
+                          {user?.provider === 'google' ? 'Google Sign-In' : 'Email Account'}
+                        </span>
+                        {isVipActive && user?.membership?.plan === 'elite' ? (
+                          <span className="dropdown-vip-status-badge elite" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <DiamondIcon size={12} /> Elite VIP
+                          </span>
+                        ) : isVipActive && user?.membership?.plan === 'pro' ? (
+                          <span className="dropdown-vip-status-badge pro" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <CrownIcon size={12} /> Pro VIP
+                          </span>
+                        ) : (
+                          <span className="dropdown-vip-status-badge free">Free Tier</span>
+                        )}
+                      </div>
+                      {isVipActive && user?.membership?.validUntil && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: '6px' }}>
+                          <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8' }}>
+                            Badge until: <strong>{new Date(user.membership.validUntil).toLocaleDateString()}</strong>
+                          </p>
+                          <button
+                            type="button"
+                            className="nav-cancel-sub-link"
+                            onClick={() => {
+                              setCancelModalOpen(true);
+                              setUserDropdownOpen(false);
+                            }}
+                            title="Cancel subscription"
+                          >
+                            Cancel Plan
+                          </button>
+                        </div>
+                      )}
+                    {user?.subscriptionCount > 0 && (
+                      <p style={{ margin: '2px 0 0', fontSize: '10.5px', color: '#64748b' }}>
+                        Total Subscriptions: {user.subscriptionCount} &bull; {user.totalVipDays || 0} VIP Days
+                      </p>
+                    )}
                     {isBanned && (
                       <div className="nav-banned-notice">
-                        <p>⚠️ Account Banned: Downloads restricted.</p>
+                        <p style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <AlertTriangleIcon size={14} style={{ color: '#ef4444' }} /> Account Banned: Downloads restricted.
+                        </p>
                         <Link to="/contact" onClick={closeMenu} className="nav-banned-appeal-btn">
                           Submit Ban Appeal
                         </Link>
@@ -370,6 +475,25 @@ const Navbar = () => {
                   </div>
                   
                   <hr className="dropdown-divider" />
+
+                  {/* UPPER VIP CLUB BUTTON */}
+                  <button
+                    className="dropdown-item-btn vip-action-btn"
+                    onClick={() => {
+                      setVipModalOpen(true);
+                      closeMenu();
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', color: user?.membership?.plan === 'elite' ? '#c084fc' : '#ffd700' }}>
+                        {user?.membership?.plan === 'elite' ? <DiamondIcon size={16} /> : <CrownIcon size={16} />}
+                      </span>
+                      <span>Upper VIP Club</span>
+                    </div>
+                    <span className={`dropdown-history-count-tag vip-perk-badge ${user?.membership?.plan ? 'active' : ''}`}>
+                      {user?.membership?.plan === 'elite' ? 'ELITE' : user?.membership?.plan === 'pro' ? 'PRO' : '₹0 FEES'}
+                    </span>
+                  </button>
 
                   {/* DOWNLOAD HISTORY BUTTON */}
                   <button
@@ -386,6 +510,22 @@ const Navbar = () => {
                     </svg>
                     Download History
                     <span className="dropdown-history-count-tag">{downloadCount}</span>
+                  </button>
+
+                  {/* MY LICENSES BUTTON */}
+                  <button
+                    className="dropdown-item-btn"
+                    onClick={() => {
+                      setLicensesModalOpen(true);
+                      closeMenu();
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
+                      <path d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2m-1-1l-2 2m-1-1l-2 2m-1-1l-3 3"></path>
+                      <circle cx="7.5" cy="15.5" r="5.5"></circle>
+                    </svg>
+                    My Licenses
+                    <span className="dropdown-history-count-tag license-count-badge">{licenseCount}</span>
                   </button>
 
                   <hr className="dropdown-divider" />
@@ -407,7 +547,7 @@ const Navbar = () => {
                     Sign Out
                   </button>
                 </div>
-              )}
+              )})()}
             </div>
           ) : (
             <button
@@ -456,6 +596,27 @@ const Navbar = () => {
       <DownloadHistoryModal
         isOpen={historyModalOpen}
         onClose={() => setHistoryModalOpen(false)}
+      />
+
+      {/* USER LICENSES MODAL */}
+      <UserLicensesModal
+        isOpen={licensesModalOpen}
+        onClose={() => {
+          setLicensesModalOpen(false);
+          fetchLicenseCount();
+        }}
+      />
+
+      {/* VIP CLUB SUBSCRIPTION MODAL */}
+      <VipClubModal
+        isOpen={vipModalOpen}
+        onClose={() => setVipModalOpen(false)}
+      />
+
+      {/* CANCEL SUBSCRIPTION CONFIRMATION MODAL */}
+      <CancelSubscriptionModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
       />
     </>
   );

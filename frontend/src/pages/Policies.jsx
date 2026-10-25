@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { CheckIcon } from '../components/Icons';
 import './Policies.css';
 
 // Sleek SVG Icon Components
@@ -89,25 +90,40 @@ const POLICIES_DATA = {
       {
         title: '1. Information We Collect',
         content: `We collect minimal necessary data to operate our official platform:
-• Contact Information: Email address and name provided when submitting support inquiries, feedback, or newsletter subscriptions.
+• Contact Information: Email address and name provided when submitting support inquiries, feedback, or ban appeals.
 • System & Diagnostic Data: IP address, browser type, device information, and download timestamps collected automatically for rate-limiting, security monitoring, and anti-abuse safeguards.
-• Account Credentials: Cryptographically hashed passwords for administrative or registered user sessions.`
+• Account Credentials: Cryptographically hashed passwords (via bcrypt) for administrative or registered user sessions.`
       },
       {
         title: '2. How We Store & Secure Data',
         content: `Your data is processed and secured using modern cloud infrastructure:
 • Real-time Databases: Encrypted at rest and in transit via Firebase Firestore (TLS 1.3).
-• Media & CDN Storage: Visual branding, logos, and screenshots are optimized and served securely via ImageKit CDN.
-• Binary Package Integrity: Application installers (.apk / .exe) are mirrored through SSL-encrypted GitHub Release repositories.
-• Zero SMTP Block Exposure: Inbound support communications are routed directly to encrypted database collections, bypassing insecure third-party email relays.`
+• Media & CDN Storage: Visual branding, logos, and screenshots are served securely via ImageKit CDN.
+• Binary Package Integrity: Application installers (.apk / .exe) are delivered through SSL-encrypted GitHub Release repositories.
+• Zero Unencrypted Relays: Inbound support inquiries and ban appeals are stored in encrypted database collections with restricted admin-only access.`
       },
       {
-        title: '3. Cookies & Session Storage',
-        content: `Upper Store uses local storage and essential cookies strictly to maintain user authentication state, active theme preferences, and cart sessions. We do not sell user data to advertising networks or employ intrusive cross-site tracking pixels.`
+        title: '3. Cookies & Local Storage Disclosure',
+        content: `Upper Store uses local storage and essential cookies strictly to maintain user authentication state, active theme preferences, and cart sessions:
+• Strictly Necessary: Session tokens (e.g. upper_user_token) required for authenticated features, reviews, and download verification.
+• Functional Preferences: LocalStorage keys for sound/visual boosters, dark mode, and UI accessibility settings.
+We do not sell user data to advertising networks, profile users across external platforms, or employ intrusive third-party tracking pixels.`
       },
       {
-        title: '4. Third-Party Data Disclosures',
-        content: `We do not sell, rent, or trade your personal information. We disclose data only when legally required by law enforcement compliance or to protect Upper Store infrastructure against malicious cyber threats.`
+        title: '4. Third-Party Data Disclosures & No-Sale Pledge',
+        content: `We do not sell, rent, monetize, or trade your personal information to data brokers or advertisers. We disclose data only when legally required by law enforcement compliance or to protect Upper Store infrastructure against malicious cyber threats.`
+      },
+      {
+        title: '5. Data Retention & Automatic Purge Schedule',
+        content: `Personal data is retained only as long as necessary to fulfill operational obligations:
+• Support & Contact Messages: Inactive support tickets and contact submissions are automatically purged after 180 days.
+• Download Tracking: Metrics are stored as aggregate numerical counters; individual IP download logs are rotated and purged periodically.
+• Account Data: Maintained as long as your account remains active.`
+      },
+      {
+        title: '6. User Data Rights (GDPR & DPDP Act Compliance)',
+        content: `Under global privacy frameworks, including India's Digital Personal Data Protection (DPDP) Act and the General Data Protection Regulation (GDPR), you have the right to access, rectify, or request complete erasure of your personal data.
+To request account deletion or data extraction, submit a request via our Contact page or email upper.official.in@gmail.com. Verified deletion requests are executed within 14 calendar days.`
       }
     ]
   },
@@ -118,8 +134,8 @@ const POLICIES_DATA = {
     iconComponent: TermsIcon,
     sections: [
       {
-        title: '1. Acceptance of Terms',
-        content: `By accessing or downloading items from Upper Store (upperstore.com and affiliated subdomains), you agree to be legally bound by these Terms of Service. Download access requires a one-time agreement to these terms.`
+        title: '1. Acceptance of Terms & Eligibility',
+        content: `By accessing, browsing, or downloading items from Upper Store (including associated subdomains and endpoints), you acknowledge that you have read, understood, and agreed to be legally bound by these Terms of Service. You affirm that you are at least 18 years of age or possess legal parental consent to access these services.`
       },
       {
         title: '2. User Misuse & Zero Financial Liability Shield',
@@ -132,7 +148,33 @@ The user bears 100% full personal, legal, and financial responsibility for their
       },
       {
         title: '4. Account Termination & Suspension Rights',
-        content: `Upper Store reserves the absolute right to suspend or terminate any user account or download access at any moment without prior warning if we detect suspicious activity, code of conduct violations, or platform policy breaches.`
+        content: `Upper Store reserves the absolute right to suspend or terminate any user account, API access, or download privileges at any moment without prior notice if we detect suspicious activity, rate-limit evasion, automated scraping, abusive reviews, or platform policy breaches.`
+      },
+      {
+        title: '5. Software Integrity & Cryptographic SHA-256 Checksums',
+        content: `All executable application packages (.apk, .exe, .zip) hosted or linked via Upper Store are provided with cryptographic SHA-256 checksums. Users are explicitly instructed to verify the SHA-256 hash displayed in the product modal against their local file before execution. Upper Store disclaims all liability for package tampering, unauthorized third-party mirrors, or network-level modifications outside of our verified distribution endpoints.`
+      },
+      {
+        title: '6. Comprehensive "AS-IS" & Statutory Warranty Disclaimer',
+        content: `TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE, SERVICES, AND ASSETS ARE PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS, WITHOUT WARRANTIES OF ANY KIND, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. UPPER STORE DOES NOT WARRANT THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR FREE FROM HARMFUL COMPONENTS.`
+      },
+      {
+        title: '7. Cap on Aggregate Monetary Liability',
+        content: `IN NO EVENT SHALL UPPER STORE, ITS DIRECTORS, EMPLOYEES, AFFILIATES, OR DEVELOPERS BE LIABLE FOR ANY INDIRECT, PUNITIVE, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES ARISING FROM THE USE OF OR INABILITY TO USE OUR SERVICES OR SOFTWARE. UPPER STORE'S TOTAL AGGREGATE LIABILITY UNDER ANY CLAIM ARISING OUT OF OR RELATING TO THESE TERMS SHALL NOT EXCEED THE TOTAL AMOUNT ACTUALLY PAID BY YOU TO UPPER STORE IN THE TWELVE (12) MONTHS PRECEDING THE CLAIM, OR FIFTY US DOLLARS ($50 USD), WHICHEVER IS LESS.`
+      },
+      {
+        title: '8. DMCA Copyright & Intellectual Property Takedown Procedure',
+        content: `Upper Store respects intellectual property rights and operates under the DMCA Safe Harbor framework. If you believe your copyrighted software, design kit, or asset has been listed without authorization, please submit a formal takedown notice to our designated agent at upper.official.in@gmail.com containing:
+1. Identification of the copyrighted work claimed to have been infringed.
+2. Direct URL or catalog title of the material to be removed.
+3. Your full legal name, company name, address, and email.
+4. A statement of good faith belief that the disputed use is unauthorized.
+5. A statement under penalty of perjury that the information in the notification is accurate and that you are authorized to act on behalf of the copyright owner.
+Valid notices will be acted upon within 48 to 72 business hours.`
+      },
+      {
+        title: '9. Governing Law & Dispute Jurisdiction',
+        content: `These Terms shall be governed by and construed in accordance with the laws of India, without regard to its conflict of law principles. Any legal suit, action, or proceeding arising out of or related to Upper Store shall be instituted exclusively in the competent courts of India.`
       }
     ]
   },
@@ -143,20 +185,25 @@ The user bears 100% full personal, legal, and financial responsibility for their
     iconComponent: ShieldIcon,
     sections: [
       {
-        title: '1. Ethical Usage & Integrity',
-        content: `Users and developers interacting with Upper Store services, API endpoints, or public communities agree to maintain high standards of integrity. Reverse engineering, decompiling applications for malicious distribution, or injecting malware into distribution packages is prohibited.`
+        title: '1. Ethical Usage & Developer Integrity',
+        content: `Users and developers interacting with Upper Store services, API endpoints, or public communities agree to maintain high standards of integrity. Reverse engineering, decompiling applications for malicious distribution, or injecting unauthorized telemetry scrapers, keyloggers, bundled adware, or crypto-miners into distribution packages is strictly prohibited.`
       },
       {
         title: '2. Anti-Piracy & Unauthorized Mirroring',
-        content: `We actively enforce copyright protection against unauthorized mirror websites, pirate forums, and automated scrapers. Official releases must only be downloaded directly from Upper Store or verified GitHub Release mirrors.`
+        content: `We actively enforce copyright protection against unauthorized mirror websites, pirate forums, and automated scrapers. Official releases must only be downloaded directly from Upper Store or verified GitHub Release mirrors. Redistributing raw application binaries without developer authorization is grounds for immediate permanent ban.`
       },
       {
-        title: '3. Community Respect & Support Etiquette',
-        content: `Upper Store values respectful, professional communication. Harassment, abuse, or spam directed at support staff, developers, or community members will result in immediate termination of account access and service support.`
+        title: '3. Community Respect & Zero-Tolerance Harassment',
+        content: `Upper Store values respectful, professional communication. Harassment, abusive reviews, spam, hate speech, or defamation directed at support staff, developers, or community members will result in immediate termination of account access and service support.`
       },
       {
-        title: '4. Reporting Security Vulnerabilities',
-        content: `We encourage responsible security disclosure. If you discover a potential vulnerability in our APIs, CDN infrastructure, or authentication systems, please report it directly to upper.official.in@gmail.com. We acknowledge security researchers promptly.`
+        title: '4. Account Ban Enforcement & Human Review Appeal Process',
+        content: `Accounts violating platform policies, attempting automated API abuse, or submitting deceptive software packages will be banned. Banned accounts are restricted from downloading software or submitting product reviews.
+Suspended users may submit an appeal via the Contact page once every 7 calendar days. All ban appeals are reviewed by human platform administrators within 5 business days.`
+      },
+      {
+        title: '5. Responsible Security Vulnerability Disclosure',
+        content: `We encourage responsible security disclosure. If you discover a potential vulnerability in our APIs, CDN infrastructure, or authentication systems, please report it directly to upper.official.in@gmail.com. We acknowledge security researchers promptly and commit to swift remediation.`
       }
     ]
   }
@@ -289,7 +336,15 @@ const Policies = () => {
                     className="copy-clause-btn"
                     onClick={() => handleCopyText(`${sec.title}\n\n${sec.content}`, idx)}
                   >
-                    <CopyIcon /> {copiedSection === idx ? '✓ Copied' : 'Copy Clause'}
+                    {copiedSection === idx ? (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <CheckIcon size={12} /> Copied
+                      </span>
+                    ) : (
+                      <>
+                        <CopyIcon /> Copy Clause
+                      </>
+                    )}
                   </button>
                 </div>
                 <div className="section-body">

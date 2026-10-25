@@ -143,7 +143,15 @@ export const fetchUserDownloadHistoryFromDB = async (userEmail) => {
   const storageKey = `upper_user_download_history_${cleanEmail}`;
 
   try {
-    const res = await fetch(`${API_BASE}/api/downloads/history/${encodeURIComponent(cleanEmail)}`);
+    const token = localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${API_BASE}/api/downloads/history/${encodeURIComponent(cleanEmail)}`, {
+      headers,
+    });
     if (res.ok) {
       const dbHistory = await res.json();
       if (Array.isArray(dbHistory)) {
@@ -184,9 +192,16 @@ export const clearUserDownloadHistory = async (userEmail) => {
     localStorage.removeItem(storageKey);
     window.dispatchEvent(new CustomEvent('downloadHistoryUpdated', { detail: { userEmail: cleanEmail } }));
 
+    const token = localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
     // Delete history in backend database
     fetch(`${API_BASE}/api/downloads/history/${encodeURIComponent(cleanEmail)}`, {
       method: 'DELETE',
+      headers,
     }).catch((err) => {
       console.warn('Failed to clear download history in DB:', err);
     });

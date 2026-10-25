@@ -72,6 +72,7 @@ const Footer = () => {
           <div className="footer-column">
             <h4>Company</h4>
             <ul>
+              <li><Link to="/vip-club" style={{ color: '#ffd700', fontWeight: 600 }}>VIP Club &amp; Badges</Link></li>
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/blog">Blog & Updates</Link></li>
               <li><Link to="/press">Press Kit</Link></li>

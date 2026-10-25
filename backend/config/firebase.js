@@ -1,5 +1,5 @@
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
@@ -45,5 +45,5 @@ const dbProxy = new Proxy({}, {
   }
 });
 
-module.exports = { db: dbProxy };
+module.exports = { db: dbProxy, FieldValue };
 

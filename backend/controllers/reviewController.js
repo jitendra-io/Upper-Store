@@ -54,8 +54,36 @@ const getProductReviews = async (req, res) => {
       reviews = DEMO_REVIEWS[productId];
     }
 
-    // Sort by newest first
-    reviews.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    // Filter out badges and priority for expired VIP subscriptions
+    reviews = reviews.map((r) => {
+      const m = r.userMembership || r.membership;
+      if (m && m.validUntil && new Date(m.validUntil) < new Date()) {
+        const expiredDefault = { plan: 'free', badge: null, validUntil: null };
+        return {
+          ...r,
+          userMembership: expiredDefault,
+          membership: expiredDefault,
+        };
+      }
+      return r;
+    });
+
+    // Sort VIP comments first: Elite (Purple) -> Pro (Gold) -> then newest date
+    const getVipRank = (r) => {
+      const m = r.userMembership || r.membership;
+      if (!m) return 0;
+      if (m.validUntil && new Date(m.validUntil) < new Date()) return 0;
+      const plan = m.plan || 'free';
+      if (plan === 'elite') return 2;
+      if (plan === 'pro') return 1;
+      return 0;
+    };
+
+    reviews.sort((a, b) => {
+      const rankDiff = getVipRank(b) - getVipRank(a);
+      if (rankDiff !== 0) return rankDiff;
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
 
     const totalRatings = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
     const averageRating = reviews.length > 0 ? Number((totalRatings / reviews.length).toFixed(1)) : 5.0;
@@ -81,13 +109,29 @@ const getProductReviews = async (req, res) => {
 
 // @desc    Add or Update a review for a product
 // @route   POST /api/reviews/product/:productId
-// @access  Public (Verified User)
+// @access  Protected (Verified User)
 const addOrUpdateReview = async (req, res) => {
   const { productId } = req.params;
   const { userEmail, userName, userAvatar, rating, comment } = req.body;
 
-  if (!userEmail) {
-    return res.status(400).json({ message: 'User email is required to submit a review.' });
+  // 1. Determine verified user identity from authenticated JWT token
+  let cleanEmail = (req.user?.email || '').trim().toLowerCase();
+  if (!cleanEmail && req.user?.uid) {
+    const userDoc = await db.collection('users').doc(req.user.uid).get();
+    if (userDoc.exists) {
+      cleanEmail = (userDoc.data().email || '').trim().toLowerCase();
+    }
+  }
+
+  if (!cleanEmail) {
+    return res.status(401).json({ message: 'Authentication required: Verified email missing from token.' });
+  }
+
+  // Prevent author spoofing if userEmail is supplied in body
+  if (userEmail && userEmail.trim().toLowerCase() !== cleanEmail && req.user?.role !== 'admin') {
+    return res.status(403).json({
+      message: 'Forbidden: You cannot submit reviews under another user’s email address.',
+    });
   }
 
   if (!rating || rating < 1 || rating > 5) {
@@ -99,14 +143,27 @@ const addOrUpdateReview = async (req, res) => {
   }
 
   try {
-    const cleanEmail = userEmail.trim().toLowerCase();
-
     // Check if user account is banned in Firestore
     const userSnapshot = await db.collection('users').where('email', '==', cleanEmail).get();
     if (!userSnapshot.empty && userSnapshot.docs[0].data().isBanned) {
       return res.status(403).json({
         message: 'Your account has been banned. You cannot submit product reviews while banned.',
       });
+    }
+
+    let userMembership = { plan: 'free', badge: null };
+    if (!userSnapshot.empty) {
+      const uData = userSnapshot.docs[0].data();
+      if (uData.membership && uData.membership.plan && uData.membership.plan !== 'free') {
+        const isExpired = uData.membership.validUntil && new Date(uData.membership.validUntil) < new Date();
+        if (!isExpired) {
+          userMembership = {
+            plan: uData.membership.plan,
+            badge: uData.membership.badge || (uData.membership.plan === 'elite' ? 'purple' : 'gold'),
+            validUntil: uData.membership.validUntil || null,
+          };
+        }
+      }
     }
 
     const reviewId = `${productId}_${cleanEmail.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
@@ -119,6 +176,7 @@ const addOrUpdateReview = async (req, res) => {
       userAvatar: userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanEmail)}&backgroundColor=d4af37&textColor=000000`,
       rating: Number(rating),
       comment: comment.trim(),
+      userMembership,
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     };
@@ -155,7 +213,7 @@ const addOrUpdateReview = async (req, res) => {
 
 // @desc    Delete a review for a product
 // @route   DELETE /api/reviews/:reviewId
-// @access  Public (User owner)
+// @access  Protected (Review Author or Admin)
 const deleteReview = async (req, res) => {
   const { reviewId } = req.params;
 
@@ -169,6 +227,24 @@ const deleteReview = async (req, res) => {
 
     const reviewData = doc.data();
     const productId = reviewData.productId;
+    const reviewOwnerEmail = (reviewData.userEmail || '').trim().toLowerCase();
+
+    // Verify ownership: Admin OR verified author
+    if (req.user?.role !== 'admin') {
+      let requesterEmail = (req.user?.email || '').trim().toLowerCase();
+      if (!requesterEmail && req.user?.uid) {
+        const userDoc = await db.collection('users').doc(req.user.uid).get();
+        if (userDoc.exists) {
+          requesterEmail = (userDoc.data().email || '').trim().toLowerCase();
+        }
+      }
+
+      if (!requesterEmail || requesterEmail !== reviewOwnerEmail) {
+        return res.status(403).json({
+          message: 'Forbidden: You are not authorized to delete another user’s review.',
+        });
+      }
+    }
 
     await docRef.delete();
 

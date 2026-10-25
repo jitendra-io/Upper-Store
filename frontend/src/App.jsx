@@ -13,6 +13,7 @@ import Press from './pages/Press';
 import Policies from './pages/Policies';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
+import VipClub from './pages/VipClub';
 import Footer from './components/Footer';
 import MiniFooter from './components/MiniFooter';
 import { AuthProvider } from './context/AuthContext';
@@ -55,6 +56,8 @@ function AppContent() {
         <Route path="/policies" element={<Policies />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/vip" element={<VipClub />} />
+        <Route path="/vip-club" element={<VipClub />} />
       </Routes>
       {showFullFooter && <Footer />}
       <AuthModal />

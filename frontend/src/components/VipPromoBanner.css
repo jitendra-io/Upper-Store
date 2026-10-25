@@ -1,0 +1,395 @@
+/* VIP PROMO BANNER STYLING */
+
+.vip-promo-banner-container {
+  position: relative;
+  width: 100%;
+  max-width: 1240px;
+  margin: 2.2rem auto;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(20, 20, 28, 0.92) 0%, rgba(13, 14, 20, 0.95) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.vip-promo-banner-container:hover {
+  transform: translateY(-3px);
+  border-color: rgba(168, 85, 247, 0.55);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(168, 85, 247, 0.22);
+}
+
+.vip-promo-banner-container.compact {
+  margin: 1.2rem auto;
+  border-radius: 16px;
+}
+
+/* AMBIENT AURORA GLOWS */
+.vip-banner-glow-left {
+  position: absolute;
+  top: -60px;
+  left: -40px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.16) 0%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.vip-banner-glow-right {
+  position: absolute;
+  bottom: -60px;
+  right: -40px;
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, transparent 70%);
+  filter: blur(45px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* INNER LAYOUT */
+.vip-banner-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1.8rem 2.2rem;
+}
+
+/* LEFT COLUMN: TEXT CONTENT */
+.vip-banner-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.vip-banner-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.vip-sparkle-icon {
+  color: #ffd700;
+  display: inline-flex;
+  animation: vipSparklePulse 2.5s ease-in-out infinite;
+}
+
+@keyframes vipSparklePulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.15); opacity: 1; filter: drop-shadow(0 0 6px #ffd700); }
+}
+
+.eyebrow-text {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #d4af37;
+  text-transform: uppercase;
+}
+
+.vip-fee-waive-tag {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.vip-banner-headline {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.55rem;
+  line-height: 1.3;
+}
+
+.text-gold {
+  color: #ffd700;
+  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-purple {
+  color: #c084fc;
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.vip-banner-subtext {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  line-height: 1.55;
+  margin: 0 0 1.1rem;
+  max-width: 620px;
+}
+
+.vip-banner-subtext strong {
+  color: #f1f5f9;
+}
+
+/* PERKS ROW */
+.vip-banner-perks-row {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  flex-wrap: wrap;
+}
+
+.banner-perk-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.perk-check {
+  color: #22c55e;
+}
+
+.perk-gold {
+  color: #ffd700;
+}
+
+.perk-purple {
+  color: #c084fc;
+}
+
+/* RIGHT COLUMN: ACTIONS & CHIPS */
+.vip-banner-actions-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.vip-banner-plans-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+/* MINI PLAN CHIPS */
+.vip-mini-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.vip-mini-chip:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vip-mini-chip.pro:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.2);
+}
+
+.vip-mini-chip.elite:hover {
+  border-color: rgba(168, 85, 247, 0.6);
+  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.25);
+}
+
+.chip-save-ribbon {
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.4);
+}
+
+.chip-badge-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chip-badge-circle.gold {
+  background: rgba(212, 175, 55, 0.18);
+  border: 1.5px solid #d4af37;
+  color: #ffd700;
+}
+
+.chip-badge-circle.purple {
+  background: rgba(168, 85, 247, 0.18);
+  border: 1.5px solid #a855f7;
+  color: #c084fc;
+}
+
+.chip-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.chip-tier-name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chip-tier-price {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.chip-tier-price small {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.chip-arrow {
+  color: #64748b;
+  font-weight: 800;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.vip-mini-chip:hover .chip-arrow {
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+/* EXPLORE CTA BUTTON */
+.vip-banner-btn-group {
+  width: 100%;
+}
+
+.vip-banner-explore-btn {
+  width: 100%;
+  padding: 0.85rem 1.6rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+  color: #0b0b0f;
+  font-size: 0.88rem;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.35);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+.vip-banner-explore-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.55);
+  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+}
+
+/* ============================================================
+   RESPONSIVE DESIGN (TABLETS & MOBILE PHONES)
+   ============================================================ */
+
+@media (max-width: 992px) {
+  .vip-banner-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+    padding: 1.6rem 1.6rem;
+  }
+
+  .vip-banner-actions-wrapper {
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .vip-banner-plans-chips {
+    width: 100%;
+  }
+
+  .vip-mini-chip {
+    flex: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .vip-promo-banner-container {
+    margin: 1.2rem auto;
+    border-radius: 16px;
+  }
+
+  .vip-banner-inner {
+    padding: 1.3rem 1.1rem;
+    gap: 1.2rem;
+  }
+
+  .vip-banner-headline {
+    font-size: 1.22rem;
+    line-height: 1.35;
+  }
+
+  .vip-banner-subtext {
+    font-size: 0.82rem;
+    line-height: 1.5;
+    margin-bottom: 0.9rem;
+  }
+
+  .vip-banner-perks-row {
+    gap: 0.6rem 0.9rem;
+  }
+
+  .banner-perk-item {
+    font-size: 0.74rem;
+  }
+
+  .vip-banner-plans-chips {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .vip-mini-chip {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    box-sizing: border-box;
+  }
+
+  .chip-save-ribbon {
+    top: -6px;
+    right: 8px;
+    font-size: 0.55rem;
+  }
+
+  .vip-banner-explore-btn {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.85rem;
+  }
+}

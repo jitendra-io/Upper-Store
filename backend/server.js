@@ -22,35 +22,72 @@ require('./config/firebase');
 const app = express();
 
 // Middleware
-// Dynamic CORS middleware supporting local dev and deployed GitHub Pages domains
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (
-      origin.includes('github.io') ||
-      origin.includes('localhost') ||
-      (process.env.FRONTEND_URL && origin.includes(process.env.FRONTEND_URL))
-    ) {
-      return callback(null, true);
-    }
-    return callback(null, true);
-  },
-  credentials: true,
-}));
+// Strict CORS configuration allowing designated origins and rejecting arbitrary domains
+const allowedOrigins = [
+  'https://jitendra-io.github.io',
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  process.env.FRONTEND_URL,
+].filter(Boolean).map((o) => o.replace(/\/$/, ''));
 
-app.use(express.json({ limit: '1000mb' }));
-app.use(express.urlencoded({ limit: '1000mb', extended: true }));
+const isOriginAllowed = (origin) => {
+  if (!origin) return true; // Allow server-to-server, mobile app webviews, Postman, or curl
+  const cleanOrigin = origin.replace(/\/$/, '');
+
+  if (allowedOrigins.includes(cleanOrigin)) return true;
+
+  // Allow localhost / 127.0.0.1 on any port during local development
+  if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(cleanOrigin)) return true;
+
+  // Allow official GitHub Pages subdomains
+  if (/^https:\/\/([a-zA-Z0-9_-]+)\.github\.io$/.test(cleanOrigin)) return true;
+
+  return false;
+};
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (isOriginAllowed(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS policy restriction: Origin '${origin}' is not permitted.`));
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-setup-key'],
+  })
+);
+
+// Body parser with safe payload limits and raw body buffer preservation for webhooks
+app.use(
+  express.json({
+    limit: '2mb',
+    verify: (req, res, buf) => {
+      req.rawBody = buf;
+    },
+  })
+);
+app.use(express.urlencoded({ limit: '2mb', extended: true }));
 
 // Static directory for uploaded files (APKs and Images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Rate Limiting (Protects against scraping and DoS)
+const { apiLimiter } = require('./middleware/rateLimiter');
+app.use('/api', apiLimiter);
+
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/downloads', require('./routes/downloadRoutes'));
+app.use('/api/settings', require('./routes/settingsRoutes'));
 
 // Serve static frontend in production if built dist exists
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');
@@ -89,13 +126,55 @@ const server = app.listen(PORT, () => {
   console.log(`[INFO] Server running on http://localhost:${PORT}`);
 });
 
+// Windows Socket Tracking for Clean Nodemon Restarts
+const connections = new Set();
+server.on('connection', (socket) => {
+  connections.add(socket);
+  socket.on('close', () => connections.delete(socket));
+});
+
+const closeConnectionsAndServer = () => {
+  for (const socket of connections) {
+    try {
+      socket.destroy();
+    } catch (_) {}
+  }
+  connections.clear();
+  return new Promise((resolve) => server.close(resolve));
+};
+
+// Gracefully release port on nodemon restart (SIGUSR2) and termination
+process.once('SIGUSR2', async () => {
+  try {
+    await closeConnectionsAndServer();
+  } catch (_) {}
+  process.kill(process.pid, 'SIGUSR2');
+});
+
+process.on('SIGINT', async () => {
+  try {
+    await closeConnectionsAndServer();
+  } catch (_) {}
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  try {
+    await closeConnectionsAndServer();
+  } catch (_) {}
+  process.exit(0);
+});
+
 server.on('error', (err) => {
   if (err.code === 'EADDRINUSE') {
-    console.error(`[ERROR] Port ${PORT} is already in use by another process.`);
-    console.error(`[ERROR] Either stop the existing process on port ${PORT} or change PORT in backend/.env (e.g. PORT=5001).`);
+    console.error(`[ERROR] Port ${PORT} is temporarily busy. Waiting to retry...`);
+    setTimeout(() => {
+      server.close();
+      server.listen(PORT);
+    }, 1000);
   } else {
     console.error('[ERROR] Server error:', err.message);
+    process.exit(1);
   }
-  process.exit(1);
 });
 

@@ -3,8 +3,42 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendWelcomeEmail, sendLoginAlertEmail } = require('../services/emailService');
 
-const generateToken = (uid, role = 'user') => {
-  return jwt.sign({ uid, role }, process.env.JWT_SECRET || 'upper_store_jwt_secret_key_2026', { expiresIn: '7d' });
+const generateToken = (uid, role = 'user', email = null) => {
+  const payload = { uid, role };
+  if (email) payload.email = email.trim().toLowerCase();
+  return jwt.sign(payload, process.env.JWT_SECRET || 'upper_store_jwt_secret_key_2026', { expiresIn: '7d' });
+};
+
+const resolveUserMembership = async (userData, userDocRef = null) => {
+  const defaultMembership = { plan: 'free', badge: null, validUntil: null };
+  if (!userData || !userData.membership) return defaultMembership;
+  const m = userData.membership;
+  if (m.plan && m.plan !== 'free') {
+    if (m.validUntil && new Date(m.validUntil) < new Date()) {
+      // Expiration date has passed! Automatically remove user's badge in Firestore
+      if (userDocRef && typeof userDocRef.update === 'function') {
+        try {
+          await userDocRef.update({
+            membership: defaultMembership,
+            isVip: false,
+            vipPlan: 'free',
+            vipExpiredAt: m.validUntil,
+            updatedAt: new Date().toISOString(),
+          });
+          console.log(`⭐ [VIP Expiry] Subscription expired for ${userData.email || 'user'}. Badge removed and reverted to free in Firestore.`);
+        } catch (err) {
+          console.warn('⚠️ [VIP Expiry] Error removing expired badge in Firestore:', err.message);
+        }
+      }
+      return defaultMembership; // Expired: badge removed!
+    }
+    return {
+      plan: m.plan,
+      badge: m.badge || (m.plan === 'elite' ? 'purple' : 'gold'),
+      validUntil: m.validUntil || null,
+    };
+  }
+  return defaultMembership;
 };
 
 // ==========================================
@@ -44,27 +78,50 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-// @desc    One-time admin setup
+// @desc    One-time initial admin setup (Permanently locked if an admin exists)
 // @route   POST /api/auth/setup
-// @access  Public
+// @access  Restricted / Setup Secret
 const setupAdmin = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, setupSecret } = req.body;
+  const setupKeyHeader = req.headers['x-setup-key'];
+
   try {
-    const snapshot = await db.collection('admins').where('username', '==', username).get();
-    if (!snapshot.empty) {
-      return res.status(400).json({ message: 'Admin already exists.' });
+    // 1. Check if ANY admin already exists in the database
+    const existingAdmins = await db.collection('admins').limit(1).get();
+    if (!existingAdmins.empty) {
+      return res.status(403).json({
+        message: 'Forbidden: Admin setup is permanently locked because an admin account already exists.',
+      });
+    }
+
+    // 2. If an ADMIN_SETUP_SECRET is configured in .env, verify it
+    const configuredSecret = process.env.ADMIN_SETUP_SECRET || process.env.SETUP_SECRET_TOKEN;
+    if (configuredSecret) {
+      const providedSecret = setupSecret || setupKeyHeader;
+      if (providedSecret !== configuredSecret) {
+        return res.status(401).json({ message: 'Unauthorized: Invalid setup secret key.' });
+      }
+    }
+
+    // 3. Validate input
+    if (!username || !password || username.trim().length < 3 || password.trim().length < 6) {
+      return res.status(400).json({
+        message: 'Username must be at least 3 characters and password at least 6 characters.',
+      });
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password.trim(), salt);
 
     await db.collection('admins').add({
-      username,
+      username: username.trim(),
       password: hashedPassword,
       createdAt: new Date().toISOString(),
     });
 
-    res.status(201).json({ message: 'Admin created successfully.' });
+    res.status(201).json({
+      message: 'Admin created successfully. Setup is now permanently locked.',
+    });
   } catch (error) {
     console.error('Setup error:', error);
     res.status(500).json({ message: 'Error creating admin.' });
@@ -110,6 +167,11 @@ const registerUser = async (req, res) => {
       displayName: displayName ? displayName.trim() : cleanEmail.split('@')[0],
       photoURL,
       provider: 'email',
+      membership: { plan: 'free', badge: null, validUntil: null },
+      subscriptionCount: 0,
+      totalVipDays: 0,
+      totalAmountSpent: 0,
+      lastSubscribedAt: null,
       createdAt: new Date().toISOString(),
     });
 
@@ -119,6 +181,11 @@ const registerUser = async (req, res) => {
       displayName: displayName ? displayName.trim() : cleanEmail.split('@')[0],
       photoURL,
       provider: 'email',
+      membership: { plan: 'free', badge: null, validUntil: null },
+      subscriptionCount: 0,
+      totalVipDays: 0,
+      totalAmountSpent: 0,
+      lastSubscribedAt: null,
       role: 'user',
     };
 
@@ -130,7 +197,7 @@ const registerUser = async (req, res) => {
     res.status(201).json({
       message: 'Account created successfully.',
       user: userProfile,
-      token: generateToken(newUserRef.id, 'user'),
+      token: generateToken(newUserRef.id, 'user', cleanEmail),
     });
   } catch (error) {
     console.error('User registration error:', error);
@@ -171,6 +238,8 @@ const loginUser = async (req, res) => {
 
     const photoURL = userData.photoURL || `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
+    const membership = await resolveUserMembership(userData, userDoc.ref);
+
     const userProfile = {
       uid: userDoc.id,
       email: userData.email,
@@ -180,6 +249,12 @@ const loginUser = async (req, res) => {
       isBanned: Boolean(userData.isBanned),
       bannedAt: userData.bannedAt || null,
       lastAppealedAt: userData.lastAppealedAt || null,
+      membership,
+      subscriptionCount: Number(userData.subscriptionCount) || 0,
+      totalVipDays: Number(userData.totalVipDays) || 0,
+      totalAmountSpent: Number(userData.totalAmountSpent) || 0,
+      lastSubscribedAt: userData.lastSubscribedAt || null,
+      lastSubscriptionPlan: userData.lastSubscriptionPlan || null,
       role: 'user',
     };
 
@@ -191,7 +266,7 @@ const loginUser = async (req, res) => {
     res.json({
       message: 'Logged in successfully.',
       user: userProfile,
-      token: generateToken(userDoc.id, 'user'),
+      token: generateToken(userDoc.id, 'user', cleanEmail),
     });
   } catch (error) {
     console.error('User login error:', error);
@@ -227,6 +302,11 @@ const googleOAuthLogin = async (req, res) => {
         googleId: googleId || null,
         provider: 'google',
         isBanned: false,
+        membership: { plan: 'free', badge: null, validUntil: null },
+        subscriptionCount: 0,
+        totalVipDays: 0,
+        totalAmountSpent: 0,
+        lastSubscribedAt: null,
         createdAt: new Date().toISOString(),
       });
       uid = newUserRef.id;
@@ -237,6 +317,11 @@ const googleOAuthLogin = async (req, res) => {
         photoURL: computedPhoto,
         provider: 'google',
         isBanned: false,
+        membership: { plan: 'free', badge: null, validUntil: null },
+        subscriptionCount: 0,
+        totalVipDays: 0,
+        totalAmountSpent: 0,
+        lastSubscribedAt: null,
         role: 'user',
       };
 
@@ -258,6 +343,8 @@ const googleOAuthLogin = async (req, res) => {
         lastLogin: new Date().toISOString(),
       });
 
+      const membership = await resolveUserMembership(existingData, userDoc.ref);
+
       finalProfile = {
         uid,
         email: cleanEmail,
@@ -267,6 +354,12 @@ const googleOAuthLogin = async (req, res) => {
         isBanned: Boolean(existingData.isBanned),
         bannedAt: existingData.bannedAt || null,
         lastAppealedAt: existingData.lastAppealedAt || null,
+        membership,
+        subscriptionCount: Number(existingData.subscriptionCount) || 0,
+        totalVipDays: Number(existingData.totalVipDays) || 0,
+        totalAmountSpent: Number(existingData.totalAmountSpent) || 0,
+        lastSubscribedAt: existingData.lastSubscribedAt || null,
+        lastSubscriptionPlan: existingData.lastSubscriptionPlan || null,
         role: 'user',
       };
 
@@ -279,7 +372,7 @@ const googleOAuthLogin = async (req, res) => {
     res.json({
       message: 'Google Sign-In successful.',
       user: finalProfile,
-      token: generateToken(uid, 'user'),
+      token: generateToken(uid, 'user', cleanEmail),
     });
   } catch (error) {
     console.error('Google OAuth error:', error);
@@ -293,11 +386,22 @@ const googleOAuthLogin = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const snapshot = await db.collection('users').get();
-    const users = snapshot.docs.map((doc) => ({
-      uid: doc.id,
-      ...doc.data(),
-      isBanned: Boolean(doc.data().isBanned),
-    }));
+    const users = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const data = doc.data();
+        const membership = await resolveUserMembership(data, doc.ref);
+        return {
+          uid: doc.id,
+          ...data,
+          isBanned: Boolean(data.isBanned),
+          membership,
+          subscriptionCount: Number(data.subscriptionCount) || 0,
+          totalVipDays: Number(data.totalVipDays) || 0,
+          totalAmountSpent: Number(data.totalAmountSpent) || 0,
+          lastSubscribedAt: data.lastSubscribedAt || null,
+        };
+      })
+    );
 
     users.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
@@ -358,7 +462,7 @@ const unbanUser = async (req, res) => {
   }
 };
 
-// @desc    Get real-time user status (check if banned)
+// @desc    Get real-time user status (check if banned & membership)
 // @route   GET /api/auth/user/status/:email
 // @access  Public
 const getUserStatus = async (req, res) => {
@@ -368,16 +472,39 @@ const getUserStatus = async (req, res) => {
     const snapshot = await db.collection('users').where('email', '==', cleanEmail).get();
 
     if (snapshot.empty) {
-      return res.json({ isBanned: false });
+      return res.json({
+        isBanned: false,
+        membership: { plan: 'free', badge: null, validUntil: null },
+        subscriptionCount: 0,
+        totalVipDays: 0,
+        totalAmountSpent: 0,
+        lastSubscribedAt: null,
+      });
     }
 
-    const userData = snapshot.docs[0].data();
+    const userDoc = snapshot.docs[0];
+    const userData = userDoc.data();
+    const membership = await resolveUserMembership(userData, userDoc.ref);
+
     res.json({
-      uid: snapshot.docs[0].id,
+      uid: userDoc.id,
       email: userData.email,
       isBanned: Boolean(userData.isBanned),
       bannedAt: userData.bannedAt || null,
       lastAppealedAt: userData.lastAppealedAt || null,
+      membership,
+      subscriptionCount: Number(userData.subscriptionCount) || 0,
+      totalVipDays: Number(userData.totalVipDays) || 0,
+      totalAmountSpent: Number(userData.totalAmountSpent) || 0,
+      lastSubscribedAt: userData.lastSubscribedAt || null,
+      lastSubscriptionPlan: userData.lastSubscriptionPlan || null,
+      subscriptionData: {
+        subscriptionCount: Number(userData.subscriptionCount) || 0,
+        totalVipDays: Number(userData.totalVipDays) || 0,
+        totalAmountSpent: Number(userData.totalAmountSpent) || 0,
+        lastSubscribedAt: userData.lastSubscribedAt || null,
+        lastSubscriptionPlan: userData.lastSubscriptionPlan || null,
+      },
     });
   } catch (error) {
     console.error('Error fetching user status:', error);

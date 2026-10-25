@@ -1,4 +1,5 @@
-const { db } = require('../config/firebase');
+const { db, FieldValue } = require('../config/firebase');
+const cacheService = require('../services/cacheService');
 
 // @desc    Record a new download (saves to download_history & increments product downloadCount in DB)
 // @route   POST /api/downloads/record
@@ -37,18 +38,26 @@ const recordDownload = async (req, res) => {
     const historyRef = await db.collection('download_history').add(downloadRecord);
     downloadRecord.id = historyRef.id;
 
-    // 2. Increment total product downloadCount in Firestore database
+    // 2. Atomically increment total product downloadCount in Firestore database (Zero history scanning)
     let updatedCount = 1;
     if (productId && productId !== 'custom') {
       const pRef = db.collection('products').doc(String(productId));
+      try {
+        await pRef.update({
+          downloadCount: FieldValue.increment(1),
+        });
+      } catch (incErr) {
+        // Self-heal if document is missing initial count field
+        await pRef.set({ downloadCount: 1 }, { merge: true });
+      }
+
       const pDoc = await pRef.get();
       if (pDoc.exists) {
-        const curCount = Number(pDoc.data().downloadCount) || 0;
-        const historySnap = await db.collection('download_history').where('productId', '==', String(productId)).get();
-        const historyCount = historySnap.size;
-        updatedCount = Math.max(curCount + 1, historyCount);
-        await pRef.update({ downloadCount: updatedCount });
+        updatedCount = Number(pDoc.data().downloadCount) || 1;
       }
+
+      // Invalidate products cache so catalog immediately reflects updated count
+      cacheService.invalidate('products_list');
     }
 
     res.status(201).json({
@@ -64,7 +73,7 @@ const recordDownload = async (req, res) => {
 
 // @desc    Get user download history from database
 // @route   GET /api/downloads/history/:userEmail
-// @access  Public
+// @access  Protected (User or Admin)
 const getUserDownloadHistory = async (req, res) => {
   try {
     const { userEmail } = req.params;
@@ -73,6 +82,24 @@ const getUserDownloadHistory = async (req, res) => {
     }
 
     const cleanEmail = decodeURIComponent(userEmail).trim().toLowerCase();
+
+    // IDOR Protection: Admin OR authenticated owner of this email
+    if (req.user?.role !== 'admin') {
+      let requesterEmail = req.user?.email;
+      if (!requesterEmail && req.user?.uid) {
+        const userDoc = await db.collection('users').doc(req.user.uid).get();
+        if (userDoc.exists) {
+          requesterEmail = userDoc.data().email;
+        }
+      }
+
+      if (!requesterEmail || requesterEmail.trim().toLowerCase() !== cleanEmail) {
+        return res.status(403).json({
+          message: 'Forbidden: You are not authorized to view another user’s download history.',
+        });
+      }
+    }
+
     const snapshot = await db
       .collection('download_history')
       .where('userEmail', '==', cleanEmail)
@@ -95,7 +122,7 @@ const getUserDownloadHistory = async (req, res) => {
 
 // @desc    Clear user download history from database
 // @route   DELETE /api/downloads/history/:userEmail
-// @access  Public
+// @access  Protected (User or Admin)
 const clearUserDownloadHistory = async (req, res) => {
   try {
     const { userEmail } = req.params;
@@ -104,6 +131,24 @@ const clearUserDownloadHistory = async (req, res) => {
     }
 
     const cleanEmail = decodeURIComponent(userEmail).trim().toLowerCase();
+
+    // IDOR Protection: Admin OR authenticated owner of this email
+    if (req.user?.role !== 'admin') {
+      let requesterEmail = req.user?.email;
+      if (!requesterEmail && req.user?.uid) {
+        const userDoc = await db.collection('users').doc(req.user.uid).get();
+        if (userDoc.exists) {
+          requesterEmail = userDoc.data().email;
+        }
+      }
+
+      if (!requesterEmail || requesterEmail.trim().toLowerCase() !== cleanEmail) {
+        return res.status(403).json({
+          message: 'Forbidden: You are not authorized to clear another user’s download history.',
+        });
+      }
+    }
+
     const snapshot = await db
       .collection('download_history')
       .where('userEmail', '==', cleanEmail)
@@ -125,7 +170,7 @@ const clearUserDownloadHistory = async (req, res) => {
 
 // @desc    Get all user download history stats (for Admin dashboard)
 // @route   GET /api/downloads/admin/all
-// @access  Public
+// @access  Protected (Admin only)
 const getAllDownloadHistoryAdmin = async (req, res) => {
   try {
     const snapshot = await db.collection('download_history').get();

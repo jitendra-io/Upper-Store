@@ -20,6 +20,9 @@ if (
 }
 
 const { uploadToGitHubRelease } = require('../services/githubReleaseService');
+const { buildSecurityVerification } = require('../services/securityScanService');
+const { FieldValue } = require('../config/firebase');
+const cacheService = require('../services/cacheService');
 
 // Helper to resolve full file URL fallback
 const getFileUrl = (req, relativePath) => {
@@ -154,30 +157,20 @@ const resolveDirectImageUrl = async (url) => {
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
-
-    // Aggregate download history counts per product from database
-    const historyCountsMap = {};
-    try {
-      const historySnapshot = await db.collection('download_history').get();
-      historySnapshot.forEach((hDoc) => {
-        const hData = hDoc.data();
-        if (hData && hData.productId) {
-          const pId = String(hData.productId);
-          historyCountsMap[pId] = (historyCountsMap[pId] || 0) + 1;
-        }
-      });
-    } catch (hErr) {
-      console.warn('Could not query download_history for product counts:', hErr);
+    // 1. In-memory cache lookup (0 Firestore reads, instant response)
+    const cachedProducts = cacheService.get('products_list');
+    if (cachedProducts) {
+      res.setHeader('X-Cache-Status', 'HIT');
+      return res.json(cachedProducts);
     }
 
+    // 2. Query products collection ordered by creation date
+    const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
     const products = [];
 
     for (const doc of snapshot.docs) {
       const p = { id: doc.id, ...doc.data() };
-      const storedCount = Number(p.downloadCount) || 0;
-      const historyCount = historyCountsMap[doc.id] || 0;
-      p.downloadCount = Math.max(storedCount, historyCount);
+      p.downloadCount = Number(p.downloadCount) || 0;
 
       let updated = false;
 
@@ -223,9 +216,21 @@ const getProducts = async (req, res) => {
         } catch (e) {}
       }
 
+      // Automatically ensure cryptographic checksum and VirusTotal verification metadata
+      if (!p.sha256Checksum) {
+        const sec = await buildSecurityVerification(p.apkFile || p.id, p.version || '1.0.0');
+        p.sha256Checksum = sec.sha256Checksum;
+        p.securityStatus = sec.securityStatus;
+        p.virusTotalUrl = sec.virusTotalUrl;
+        p.isSecurityVerified = true;
+      }
+
       products.push(p);
     }
 
+    // 3. Store products in server memory for 60 seconds
+    cacheService.set('products_list', products, 60);
+    res.setHeader('X-Cache-Status', 'MISS');
     res.json(products);
   } catch (error) {
     console.error('Get products error:', error);
@@ -240,7 +245,15 @@ const getProductById = async (req, res) => {
   try {
     const doc = await db.collection('products').doc(req.params.id).get();
     if (!doc.exists) return res.status(404).json({ message: 'Product not found.' });
-    res.json({ id: doc.id, ...doc.data() });
+    const data = doc.data();
+    if (!data.sha256Checksum) {
+      const sec = await buildSecurityVerification(data.apkFile || doc.id, data.version || '1.0.0');
+      data.sha256Checksum = sec.sha256Checksum;
+      data.securityStatus = sec.securityStatus;
+      data.virusTotalUrl = sec.virusTotalUrl;
+      data.isSecurityVerified = true;
+    }
+    res.json({ id: doc.id, ...data });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching product.' });
   }
@@ -266,6 +279,8 @@ const createProduct = async (req, res) => {
       imageUrl2,
       imageUrl3,
       imageUrls: bodyImageUrls,
+      tags,
+      customTags,
     } = req.body;
 
     if (!title || !category || !description) {
@@ -331,6 +346,25 @@ const createProduct = async (req, res) => {
 
     const mainImageUrl = finalImageUrls[0] || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600';
 
+    const securityMeta = await buildSecurityVerification(
+      apkUrl,
+      version ? version.trim() : '1.0.0',
+      req.body?.sha256Checksum
+    );
+
+    let finalTags = [];
+    const rawTags = tags || customTags;
+    if (Array.isArray(rawTags)) {
+      finalTags = rawTags.map(t => String(t).trim()).filter(Boolean);
+    } else if (typeof rawTags === 'string') {
+      finalTags = rawTags.split(',').map(t => t.trim()).filter(Boolean);
+    }
+    finalTags = finalTags.slice(0, 2);
+
+    const hasLicenseKey = req.body.hasLicenseKey === true || req.body.hasLicenseKey === 'true';
+    const licensePrice = req.body.licensePrice ? String(req.body.licensePrice).trim() : '';
+    const isPlatformFeeWaived = req.body.isPlatformFeeWaived === true || req.body.isPlatformFeeWaived === 'true';
+
     const productData = {
       title: title.trim(),
       category: category.trim(),
@@ -338,6 +372,10 @@ const createProduct = async (req, res) => {
       price: price ? price.trim() : 'Free',
       version: version ? version.trim() : '1.0.0',
       releaseNotes: releaseNotes ? releaseNotes.trim() : '',
+      tags: finalTags,
+      hasLicenseKey: Boolean(hasLicenseKey),
+      licensePrice: licensePrice || '',
+      isPlatformFeeWaived: Boolean(isPlatformFeeWaived),
       image: mainImageUrl,
       images: finalImageUrls.length > 0 ? finalImageUrls : [mainImageUrl],
       logo: finalLogoUrl,
@@ -346,9 +384,11 @@ const createProduct = async (req, res) => {
       apkFile: apkUrl,
       downloadCount: 0,
       createdAt: new Date().toISOString(),
+      ...securityMeta,
     };
 
     const docRef = await db.collection('products').add(productData);
+    cacheService.invalidate('products_list');
     console.log(`✅ Product published successfully via GitHub Release: "${title}" (ID: ${docRef.id})`);
     res.status(201).json({ id: docRef.id, ...productData });
   } catch (error) {
@@ -382,6 +422,8 @@ const updateProduct = async (req, res) => {
       imageUrl2,
       imageUrl3,
       imageUrls: bodyImageUrls,
+      tags,
+      customTags,
     } = req.body;
 
     const updatedData = {};
@@ -391,6 +433,25 @@ const updateProduct = async (req, res) => {
     if (price !== undefined) updatedData.price = price.trim();
     if (version !== undefined) updatedData.version = version.trim();
     if (releaseNotes !== undefined) updatedData.releaseNotes = releaseNotes.trim();
+
+    if (req.body.hasLicenseKey !== undefined) {
+      updatedData.hasLicenseKey = Boolean(req.body.hasLicenseKey === true || req.body.hasLicenseKey === 'true');
+    }
+    if (req.body.licensePrice !== undefined) {
+      updatedData.licensePrice = String(req.body.licensePrice).trim();
+    }
+    if (req.body.isPlatformFeeWaived !== undefined) {
+      updatedData.isPlatformFeeWaived = Boolean(req.body.isPlatformFeeWaived === true || req.body.isPlatformFeeWaived === 'true');
+    }
+
+    if (tags !== undefined || customTags !== undefined) {
+      const rawTags = tags !== undefined ? tags : customTags;
+      if (Array.isArray(rawTags)) {
+        updatedData.tags = rawTags.map(t => String(t).trim()).filter(Boolean).slice(0, 2);
+      } else if (typeof rawTags === 'string') {
+        updatedData.tags = rawTags.split(',').map(t => t.trim()).filter(Boolean).slice(0, 2);
+      }
+    }
 
     if (directApkUrl !== undefined && directApkUrl.trim() !== '') {
       const apkUrl = directApkUrl.trim();
@@ -440,6 +501,7 @@ const updateProduct = async (req, res) => {
     updatedData.updatedAt = new Date().toISOString();
 
     await docRef.update(updatedData);
+    cacheService.invalidate('products_list');
     const updatedDoc = await docRef.get();
     res.json({ id: updatedDoc.id, ...updatedDoc.data() });
   } catch (error) {
@@ -471,6 +533,7 @@ const deleteProduct = async (req, res) => {
     }
 
     await docRef.delete();
+    cacheService.invalidate('products_list');
     res.json({ message: 'Product deleted successfully.' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting product.' });
@@ -494,16 +557,17 @@ const trackProductDownload = async (req, res) => {
     }
 
     const docRef = db.collection('products').doc(req.params.id);
-    const doc = await docRef.get();
-    
-    if (doc.exists) {
-      const currentCount = Number(doc.data().downloadCount) || 0;
-      const newCount = currentCount + 1;
-      await docRef.update({ downloadCount: newCount });
-      return res.json({ id: req.params.id, downloadCount: newCount });
-    }
-    
-    res.json({ id: req.params.id, downloadCount: 1 });
+    await docRef.update({
+      downloadCount: FieldValue.increment(1),
+    }).catch(async () => {
+      await docRef.set({ downloadCount: 1 }, { merge: true });
+    });
+
+    cacheService.invalidate('products_list');
+
+    const updatedDoc = await docRef.get();
+    const newCount = updatedDoc.exists ? Number(updatedDoc.data().downloadCount) || 1 : 1;
+    res.json({ id: req.params.id, downloadCount: newCount });
   } catch (error) {
     console.error('Error tracking download:', error);
     res.status(500).json({ message: 'Error updating download count.' });

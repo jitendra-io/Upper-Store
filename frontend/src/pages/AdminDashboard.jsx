@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
+import {
+  AlertTriangleIcon,
+  CheckIcon,
+  CoinsIcon,
+  SettingsSlidersIcon,
+  ToggleOnIcon,
+  ToggleOffIcon,
+  SparkleIcon,
+  CrownIcon,
+  DiamondIcon,
+  LockIcon,
+  QrCodeIcon,
+  CreditCardIcon,
+  CloseIcon,
+} from '../components/Icons';
 import './AdminDashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -8,7 +23,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [token, setToken] = useState(localStorage.getItem('adminToken'));
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'users', 'appeals', 'inbox'
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'platformFee', 'users', 'appeals', 'inbox'
 
   // Products State
   const [products, setProducts] = useState([]);
@@ -29,6 +44,18 @@ const AdminDashboard = () => {
   const [imageUrl1, setImageUrl1] = useState('');
   const [imageUrl2, setImageUrl2] = useState('');
   const [imageUrl3, setImageUrl3] = useState('');
+  const [customTags, setCustomTags] = useState('');
+  const [hasLicenseKey, setHasLicenseKey] = useState(false);
+  const [licensePrice, setLicensePrice] = useState('');
+  const [isPlatformFeeWaived, setIsPlatformFeeWaived] = useState(false);
+
+  // Platform Fee Settings State
+  const [platformFeeEnabled, setPlatformFeeEnabled] = useState(true);
+  const [platformFeeAmount, setPlatformFeeAmount] = useState(19);
+  const [originalFeeSettings, setOriginalFeeSettings] = useState({ enabled: true, amount: 19 });
+  const [loadingFeeSettings, setLoadingFeeSettings] = useState(false);
+  const [savingFeeSettings, setSavingFeeSettings] = useState(false);
+  const [feeValidationError, setFeeValidationError] = useState('');
 
   // Users State
   const [users, setUsers] = useState([]);
@@ -59,6 +86,24 @@ const AdminDashboard = () => {
   const [allDownloads, setAllDownloads] = useState([]);
   const [loadingDownloads, setLoadingDownloads] = useState(false);
 
+  // UPI QR Payments & Approvals State
+  const [upiPayments, setUpiPayments] = useState([]);
+  const [loadingUpiPayments, setLoadingUpiPayments] = useState(false);
+  const [upiStats, setUpiStats] = useState({ total: 0, pending: 0, approved: 0, totalRevenueINR: 0 });
+  const [paymentSettings, setPaymentSettings] = useState({
+    paymentMode: 'upi_qr',
+    upiId: '9692093386@naviaxis',
+    payeeName: 'JITENDRA KUMAR MISHRA',
+    autoApproveUpi: false,
+    qrImageUrl: '/src/assets/upper-upi-qr.png',
+  });
+  const [loadingPaymentSettings, setLoadingPaymentSettings] = useState(false);
+  const [savingPaymentSettings, setSavingPaymentSettings] = useState(false);
+  const [selectedPaymentFilter, setSelectedPaymentFilter] = useState('all');
+  const [processingPaymentId, setProcessingPaymentId] = useState(null);
+  const [rejectPromptPaymentId, setRejectPromptPaymentId] = useState(null);
+  const [rejectReasonInput, setRejectReasonInput] = useState('');
+
   // UI Feedback
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -75,14 +120,196 @@ const AdminDashboard = () => {
       fetchAppeals(savedToken);
       fetchMessages(savedToken);
       fetchBroadcastNotifications();
-      fetchAllDownloads();
+      fetchAllDownloads(savedToken);
+      fetchPlatformFeeSettings();
+      fetchUpiPayments(savedToken);
+      fetchPaymentSettings();
     }
   }, [navigate]);
 
-  const fetchAllDownloads = async () => {
+  const fetchUpiPayments = async (currentToken) => {
+    const activeTok = currentToken || token;
+    if (!activeTok) return;
+    setLoadingUpiPayments(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/payments/admin/upi-payments`, {
+        headers: { Authorization: `Bearer ${activeTok}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUpiPayments(data.payments || []);
+        if (data.stats) setUpiStats(data.stats);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch UPI payments:', err);
+    } finally {
+      setLoadingUpiPayments(false);
+    }
+  };
+
+  const fetchPaymentSettings = async () => {
+    setLoadingPaymentSettings(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/settings/payment-config`);
+      if (res.ok) {
+        const data = await res.json();
+        setPaymentSettings({
+          paymentMode: data.paymentMode || 'upi_qr',
+          upiId: data.upiId || '9692093386@naviaxis',
+          payeeName: data.payeeName || 'JITENDRA KUMAR MISHRA',
+          autoApproveUpi: Boolean(data.autoApproveUpi),
+          qrImageUrl: data.qrImageUrl || '/src/assets/upper-upi-qr.png',
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to fetch payment config:', err);
+    } finally {
+      setLoadingPaymentSettings(false);
+    }
+  };
+
+  const handleSavePaymentSettings = async (updates) => {
+    setSavingPaymentSettings(true);
+    try {
+      const payload = { ...paymentSettings, ...updates };
+      const res = await fetch(`${API_BASE}/api/settings/payment-config`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update payment settings.');
+      setPaymentSettings(data.settings);
+      setMessage({ type: 'success', text: 'Payment settings successfully updated.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || 'Failed to update payment settings.' });
+    } finally {
+      setSavingPaymentSettings(false);
+    }
+  };
+
+  const handleVerifyUpiPayment = async (paymentId, action, rejectReason = '') => {
+    setProcessingPaymentId(paymentId);
+    try {
+      const res = await fetch(`${API_BASE}/api/payments/admin/verify-upi-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ paymentId, action, rejectReason }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Verification action failed.');
+      setMessage({ type: 'success', text: data.message });
+      setRejectPromptPaymentId(null);
+      setRejectReasonInput('');
+      fetchUpiPayments();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message || 'Error verifying payment.' });
+    } finally {
+      setProcessingPaymentId(null);
+    }
+  };
+
+  const fetchPlatformFeeSettings = async () => {
+    setLoadingFeeSettings(true);
+    setFeeValidationError('');
+    try {
+      const res = await fetch(`${API_BASE}/api/settings/platform-fee`);
+      if (res.ok) {
+        const data = await res.json();
+        const isEn = data.enabled !== false;
+        const amt = typeof data.amount === 'number' ? data.amount : 19;
+        setPlatformFeeEnabled(isEn);
+        setPlatformFeeAmount(amt);
+        setOriginalFeeSettings({ enabled: isEn, amount: amt });
+      }
+    } catch (err) {
+      console.warn('Error fetching platform fee in admin dashboard:', err);
+    } finally {
+      setLoadingFeeSettings(false);
+    }
+  };
+
+  const handleSavePlatformFee = async (overrideEnabled, overrideAmount) => {
+    const targetEnabled = overrideEnabled !== undefined ? overrideEnabled : platformFeeEnabled;
+    const rawAmount = overrideAmount !== undefined ? overrideAmount : platformFeeAmount;
+    const targetAmount = Number(rawAmount);
+
+    // Production-grade validation
+    if (isNaN(targetAmount)) {
+      setFeeValidationError('Validation Error: Platform fee must be a valid number.');
+      return;
+    }
+    if (targetAmount < 0) {
+      setFeeValidationError('Validation Error: Platform fee cannot be negative.');
+      return;
+    }
+    if (targetAmount > 999) {
+      setFeeValidationError('Validation Error: Platform fee cannot exceed ₹999 INR.');
+      return;
+    }
+
+    setSavingFeeSettings(true);
+    setFeeValidationError('');
+    setMessage({ type: '', text: '' });
+
+    try {
+      const activeToken = token || localStorage.getItem('adminToken');
+      const res = await fetch(`${API_BASE}/api/settings/platform-fee`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify({
+          enabled: targetEnabled,
+          amount: targetAmount,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to update platform fee settings.');
+
+      const updatedEn = data.settings?.enabled !== false;
+      const updatedAmt = typeof data.settings?.amount === 'number' ? data.settings.amount : targetAmount;
+
+      setPlatformFeeEnabled(updatedEn);
+      setPlatformFeeAmount(updatedAmt);
+      setOriginalFeeSettings({ enabled: updatedEn, amount: updatedAmt });
+
+      setMessage({
+        type: 'success',
+        text: updatedEn
+          ? `Platform fee successfully updated to ₹${updatedAmt} INR! Standard users must pay this fee on free downloads.`
+          : 'Platform fee successfully removed! All free products can now be downloaded for ₹0 by any user.',
+      });
+
+      // Broadcast update event so any active modals react in real time
+      window.dispatchEvent(new CustomEvent('platformFeeUpdated', {
+        detail: { enabled: updatedEn, amount: updatedAmt },
+      }));
+    } catch (err) {
+      setFeeValidationError(err.message || 'Failed to save settings.');
+      setMessage({ type: 'error', text: err.message || 'Error updating platform fee settings.' });
+    } finally {
+      setSavingFeeSettings(false);
+    }
+  };
+
+  const fetchAllDownloads = async (authToken = token) => {
     setLoadingDownloads(true);
     try {
-      const res = await fetch(`${API_BASE}/api/downloads/admin/all`);
+      const activeToken = authToken || localStorage.getItem('adminToken');
+      const headers = {};
+      if (activeToken) {
+        headers['Authorization'] = `Bearer ${activeToken}`;
+      }
+      const res = await fetch(`${API_BASE}/api/downloads/admin/all`, { headers });
       if (res.ok) {
         const data = await res.json();
         setAllDownloads(data || []);
@@ -445,6 +672,10 @@ const AdminDashboard = () => {
     setImageUrl1(p.images?.[0] || p.image || '');
     setImageUrl2(p.images?.[1] || '');
     setImageUrl3(p.images?.[2] || '');
+    setCustomTags(Array.isArray(p.tags) ? p.tags.slice(0, 2).join(', ') : (p.customTags || ''));
+    setHasLicenseKey(Boolean(p.hasLicenseKey));
+    setLicensePrice(p.licensePrice || '');
+    setIsPlatformFeeWaived(Boolean(p.isPlatformFeeWaived));
     setMessage({ type: '', text: '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -464,6 +695,10 @@ const AdminDashboard = () => {
     setImageUrl1('');
     setImageUrl2('');
     setImageUrl3('');
+    setCustomTags('');
+    setHasLicenseKey(false);
+    setLicensePrice('');
+    setIsPlatformFeeWaived(false);
     setMessage({ type: '', text: '' });
   };
 
@@ -504,6 +739,10 @@ const AdminDashboard = () => {
           imageUrl1,
           imageUrl2,
           imageUrl3,
+          hasLicenseKey,
+          licensePrice: licensePrice.trim() || undefined,
+          isPlatformFeeWaived: Boolean(isPlatformFeeWaived),
+          tags: customTags.split(',').map(t => t.trim()).filter(Boolean).slice(0, 2),
         }),
       });
 
@@ -513,6 +752,7 @@ const AdminDashboard = () => {
       setMessage({ type: 'success', text: `Product ${isEditing ? 'updated' : 'published'} successfully via GitHub Release!` });
       cancelEdit();
       fetchProducts();
+      window.dispatchEvent(new Event('productsUpdated'));
     } catch (err) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -579,6 +819,37 @@ const AdminDashboard = () => {
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
           </svg>
           <span>Products ({products.length})</span>
+        </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'platformFee' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('platformFee');
+            fetchPlatformFeeSettings();
+          }}
+        >
+          <CoinsIcon size={16} />
+          <span>Platform Fee</span>
+          <span className={`tab-badge ${platformFeeEnabled ? 'fee-active-badge' : 'fee-disabled-badge'}`}>
+            {platformFeeEnabled ? `₹${platformFeeAmount}` : '₹0 Removed'}
+          </span>
+        </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'payments' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('payments');
+            fetchUpiPayments();
+            fetchPaymentSettings();
+          }}
+        >
+          <QrCodeIcon size={16} />
+          <span>UPI Payments</span>
+          {upiStats.pending > 0 ? (
+            <span className="tab-badge warning">{upiStats.pending} Pending</span>
+          ) : (
+            <span className="tab-badge" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}>Active</span>
+          )}
         </button>
 
         <button
@@ -699,6 +970,306 @@ const AdminDashboard = () => {
                     placeholder="1.0.0"
                   />
                 </div>
+              </div>
+
+              {/* PRODUCT BADGES & TAGS (ADMIN EDITABLE - MAX 2) */}
+              <div className="form-group highlight-box" style={{ borderColor: 'rgba(212, 175, 55, 0.35)', background: 'rgba(212, 175, 55, 0.04)' }}>
+                {(() => {
+                  const currentItems = customTags.split(',').map(s => s.trim()).filter(Boolean);
+                  return (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <label style={{ color: '#d4af37', margin: 0 }}>Product Badges & Tags (Max 2)</label>
+                          <span style={{
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            padding: '0.1rem 0.4rem',
+                            borderRadius: '8px',
+                            background: currentItems.length >= 2 ? 'rgba(234, 179, 8, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                            color: currentItems.length >= 2 ? '#facc15' : '#aaa',
+                            border: currentItems.length >= 2 ? '1px solid rgba(234, 179, 8, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)'
+                          }}>
+                            {currentItems.length} / 2 tags
+                          </span>
+                        </div>
+                        {currentItems.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setCustomTags('')}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#f87171',
+                              fontSize: '0.72rem',
+                              cursor: 'pointer',
+                              padding: '0 0.2rem',
+                              textDecoration: 'underline'
+                            }}
+                            title="Remove all tags from this product"
+                          >
+                            Remove All Tags
+                          </button>
+                        )}
+                      </div>
+
+                      <input
+                        type="text"
+                        value={customTags}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const splitItems = val.split(',').map(s => s.trim()).filter(Boolean);
+                          if (splitItems.length > 2) {
+                            // Enforce max 2 tags
+                            setCustomTags(splitItems.slice(0, 2).join(', '));
+                          } else {
+                            setCustomTags(val);
+                          }
+                        }}
+                        placeholder="e.g. Ad-Free APK, Portable .exe (Maximum 2 tags)"
+                      />
+
+                      {/* Active Tag Badges with 1-Click Remove (✕) */}
+                      {currentItems.length > 0 && (
+                        <div style={{ marginTop: '0.5rem', marginBottom: '0.25rem' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#999', display: 'block', marginBottom: '0.3rem' }}>
+                            Active badges ({currentItems.length}/2 — Click ✕ to remove):
+                          </span>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                            {currentItems.slice(0, 2).map((tag, idx) => (
+                              <span
+                                key={idx}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.3rem',
+                                  background: 'rgba(212, 175, 55, 0.14)',
+                                  border: '1px solid rgba(212, 175, 55, 0.4)',
+                                  color: '#d4af37',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  padding: '0.2rem 0.55rem',
+                                  borderRadius: '12px'
+                                }}
+                              >
+                                <span>{tag}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const remaining = currentItems.filter((_, i) => i !== idx);
+                                    setCustomTags(remaining.join(', '));
+                                  }}
+                                  title={`Remove "${tag}"`}
+                                  style={{
+                                    background: 'rgba(239, 68, 68, 0.2)',
+                                    border: 'none',
+                                    color: '#fca5a5',
+                                    cursor: 'pointer',
+                                    borderRadius: '50%',
+                                    width: '16px',
+                                    height: '16px',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.7rem',
+                                    padding: 0,
+                                    lineHeight: 1,
+                                    transition: 'all 0.15s ease'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = '#ef4444';
+                                    e.currentTarget.style.color = '#ffffff';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                                    e.currentTarget.style.color = '#fca5a5';
+                                  }}
+                                >
+                                  ✕
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <span className="field-hint" style={{ marginTop: '0.45rem', display: 'block' }}>
+                        {currentItems.length >= 2 ? (
+                          <span style={{ color: '#fbbf24', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <AlertTriangleIcon size={14} /> Maximum 2 tags reached. Remove a tag above if you wish to select a different one.
+                          </span>
+                        ) : (
+                          <span>Click preset badges below to add (up to 2), or type custom tags above:</span>
+                        )}
+                      </span>
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.35rem' }}>
+                        {[
+                          'Ad-Free APK',
+                          'Portable .exe',
+                          'SHA-256 Verified',
+                          'Zero Telemetry',
+                          'Open Source',
+                          'Commercial Asset',
+                          'Developer Tool'
+                        ].map((preset) => {
+                          const isActive = currentItems.includes(preset);
+                          const isMaxReached = !isActive && currentItems.length >= 2;
+                          return (
+                            <button
+                              key={preset}
+                              type="button"
+                              style={{
+                                background: isActive ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                                border: isActive ? '1px solid #d4af37' : '1px solid rgba(212, 175, 55, 0.25)',
+                                color: isActive ? '#fff' : isMaxReached ? '#666' : '#d4af37',
+                                fontSize: '0.72rem',
+                                fontWeight: 600,
+                                padding: '0.2rem 0.55rem',
+                                borderRadius: '12px',
+                                cursor: isMaxReached ? 'not-allowed' : 'pointer',
+                                opacity: isMaxReached ? 0.45 : 1,
+                                transition: 'all 0.2s ease',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '0.25rem'
+                              }}
+                              onClick={() => {
+                                if (isActive) {
+                                  // Toggle off (remove)
+                                  setCustomTags(currentItems.filter(t => t !== preset).join(', '));
+                                } else {
+                                  // Check max 2 limit
+                                  if (currentItems.length >= 2) {
+                                    alert('Maximum 2 tags allowed per product. Please remove an existing tag first.');
+                                    return;
+                                  }
+                                  setCustomTags([...currentItems, preset].join(', '));
+                                }
+                              }}
+                              title={isActive ? `Click to remove "${preset}"` : isMaxReached ? 'Maximum 2 tags already selected' : `Click to add "${preset}"`}
+                            >
+                              {isActive ? `✓ ${preset}` : `+ ${preset}`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+
+              {/* DIGITAL LICENSE KEY SYSTEM TOGGLE */}
+              <div className="form-group highlight-box" style={{
+                borderColor: hasLicenseKey ? 'rgba(212, 175, 55, 0.45)' : 'rgba(255, 255, 255, 0.1)',
+                background: hasLicenseKey ? 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(20, 16, 32, 0.4) 100%)' : 'rgba(255, 255, 255, 0.02)',
+                padding: '1.1rem',
+                borderRadius: '12px',
+                transition: 'all 0.25s ease'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.6rem' }}>
+                  <label
+                    htmlFor="licenseKeyCheckbox"
+                    style={{
+                      color: hasLicenseKey ? '#ffd700' : '#f1f5f9',
+                      margin: 0,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      fontSize: '0.92rem',
+                      fontWeight: 700
+                    }}
+                  >
+                    <input
+                      id="licenseKeyCheckbox"
+                      type="checkbox"
+                      checked={hasLicenseKey}
+                      onChange={(e) => setHasLicenseKey(e.target.checked)}
+                      style={{ width: '18px', height: '18px', accentColor: '#d4af37', cursor: 'pointer' }}
+                    />
+                    <span>Offer Pro License Key for this Product</span>
+                  </label>
+                  <span style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    padding: '0.15rem 0.55rem',
+                    borderRadius: '8px',
+                    background: hasLicenseKey ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                    color: hasLicenseKey ? '#4ade80' : '#94a3b8',
+                    border: hasLicenseKey ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)'
+                  }}>
+                    {hasLicenseKey ? 'ENABLED' : 'OFF'}
+                  </span>
+                </div>
+
+                <span className="field-hint" style={{ marginTop: '0.5rem', display: 'block', color: '#94a3b8', fontSize: '0.78rem' }}>
+                  When enabled, buyers of this specific product will see the <strong>&quot;Buy Pro License&quot;</strong> button to purchase and generate a cryptographically signed HMAC-SHA256 license key. If unchecked, license key purchasing is disabled for this product.
+                </span>
+
+                {hasLicenseKey && (
+                  <div style={{ marginTop: '0.85rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(212, 175, 55, 0.2)' }}>
+                    <label style={{ fontSize: '0.8rem', color: '#ffd700', marginBottom: '0.35rem', display: 'block', fontWeight: 600 }}>
+                      Pro License Price Override (Optional &bull; Defaults to product price or $19):
+                    </label>
+                    <input
+                      type="text"
+                      value={licensePrice}
+                      onChange={(e) => setLicensePrice(e.target.value)}
+                      placeholder="e.g. $19, $49, or 1499 INR"
+                      style={{ maxWidth: '320px' }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* SPECIFIC PRODUCT PLATFORM FEE WAIVER TOGGLE */}
+              <div className="form-group highlight-box" style={{
+                borderColor: isPlatformFeeWaived ? 'rgba(56, 189, 248, 0.45)' : 'rgba(255, 255, 255, 0.1)',
+                background: isPlatformFeeWaived ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(20, 16, 32, 0.4) 100%)' : 'rgba(255, 255, 255, 0.02)',
+                padding: '1.1rem',
+                borderRadius: '12px',
+                transition: 'all 0.25s ease'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.6rem' }}>
+                  <label
+                    htmlFor="platformFeeWaivedCheckbox"
+                    style={{
+                      color: isPlatformFeeWaived ? '#38bdf8' : '#f1f5f9',
+                      margin: 0,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.65rem',
+                      fontSize: '0.92rem',
+                      fontWeight: 700
+                    }}
+                  >
+                    <input
+                      id="platformFeeWaivedCheckbox"
+                      type="checkbox"
+                      checked={isPlatformFeeWaived}
+                      onChange={(e) => setIsPlatformFeeWaived(e.target.checked)}
+                      style={{ width: '18px', height: '18px', accentColor: '#38bdf8', cursor: 'pointer' }}
+                    />
+                    <span>Waive Platform Fee on this Product (Always 100% Free)</span>
+                  </label>
+                  <span style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 800,
+                    padding: '0.15rem 0.55rem',
+                    borderRadius: '8px',
+                    background: isPlatformFeeWaived ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                    color: isPlatformFeeWaived ? '#38bdf8' : '#94a3b8',
+                    border: isPlatformFeeWaived ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)'
+                  }}>
+                    {isPlatformFeeWaived ? 'WAIVED (₹0 FEE)' : 'FOLLOWS STORE POLICY'}
+                  </span>
+                </div>
+
+                <span className="field-hint" style={{ marginTop: '0.5rem', display: 'block', color: '#94a3b8', fontSize: '0.78rem' }}>
+                  If checked, non-VIP users can download this product completely free without paying any platform fee, even when global store platform fee is active. If unchecked, this product follows the global store platform fee policy ({platformFeeEnabled ? `₹${platformFeeAmount} INR` : 'Currently Removed / Free'}).
+                </span>
               </div>
 
               {/* REQUIREMENT: GITHUB RELEASE URL REQUIREMENT */}
@@ -835,7 +1406,23 @@ const AdminDashboard = () => {
                           <img src={p.logo || p.image} alt="" className="admin-prod-thumb" referrerPolicy="no-referrer" />
                           <div>
                             <strong>{p.title}</strong>
-                            <span className="sub-text">{p.price}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.2rem', flexWrap: 'wrap' }}>
+                              <span className="sub-text">{p.price}</span>
+                              {p.hasLicenseKey ? (
+                                <span style={{ fontSize: '0.65rem', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', border: '1px solid rgba(34, 197, 94, 0.35)', padding: '0.08rem 0.4rem', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
+                                  <CheckIcon size={10} /> Pro License: {p.licensePrice || 'Active'}
+                                </span>
+                              ) : null}
+                            </div>
+                            {Array.isArray(p.tags) && p.tags.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginTop: '0.25rem' }}>
+                                {p.tags.map((t, idx) => (
+                                  <span key={idx} style={{ fontSize: '0.65rem', background: 'rgba(212, 175, 55, 0.12)', color: '#d4af37', border: '1px solid rgba(212, 175, 55, 0.3)', padding: '0.08rem 0.35rem', borderRadius: '4px' }}>
+                                    {t}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td><span className="cat-pill">{p.category}</span></td>
@@ -1286,6 +1873,660 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* TAB: PLATFORM FEE MANAGEMENT */}
+      {activeTab === 'platformFee' && (
+        <div className="admin-section platform-fee-section">
+          {/* Section Header */}
+          <div className="section-header platform-fee-header">
+            <div>
+              <h3>
+                <CoinsIcon size={22} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#d4af37' }} />
+                Platform Fee Management on Free Products
+              </h3>
+              <p className="section-desc">
+                Completely control, toggle, or remove the download platform fee charged to standard customers on free software. Upper VIP Club members (Pro &amp; Elite) are always granted ₹0 fee immunity.
+              </p>
+            </div>
+            <button
+              className="admin-btn outline"
+              onClick={fetchPlatformFeeSettings}
+              disabled={loadingFeeSettings || savingFeeSettings}
+            >
+              {loadingFeeSettings ? 'Syncing Settings...' : 'Refresh Status'}
+            </button>
+          </div>
+
+          {/* Quick Status Hero Card */}
+          <div className={`platform-fee-status-banner ${platformFeeEnabled ? 'banner-active' : 'banner-removed'}`}>
+            <div className="status-banner-left">
+              <div className="status-indicator-dot">
+                <span className="dot-pulse"></span>
+              </div>
+              <div className="status-banner-text">
+                <div className="status-badge-title">
+                  <span className="status-label">CURRENT GLOBAL STORE POLICY:</span>
+                  <span className="status-val">
+                    {platformFeeEnabled ? `ACTIVE • ₹${platformFeeAmount} INR CHARGED ON FREE DOWNLOADS` : 'REMOVED • 100% COMPLIMENTARY (₹0 FEE FOR ALL)'}
+                  </span>
+                </div>
+                <p className="status-explanation">
+                  {platformFeeEnabled
+                    ? `Standard non-VIP users are prompted to pay ₹${platformFeeAmount} INR to unlock free community software downloads. VIP Club members download with zero fees.`
+                    : 'The platform fee is completely removed. All customers (both standard users and VIP members) can download any free software with ₹0 platform fee.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="status-banner-actions">
+              {platformFeeEnabled ? (
+                <button
+                  type="button"
+                  className="quick-action-btn remove-fee-action"
+                  onClick={() => handleSavePlatformFee(false, 0)}
+                  disabled={savingFeeSettings}
+                >
+                  <ToggleOffIcon size={18} />
+                  <span>Remove Platform Fee (Set to ₹0)</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="quick-action-btn activate-fee-action"
+                  onClick={() => handleSavePlatformFee(true, 19)}
+                  disabled={savingFeeSettings}
+                >
+                  <ToggleOnIcon size={18} />
+                  <span>Restore Standard Fee (₹19)</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Main Controls & Live Preview Grid */}
+          <div className="admin-grid-2-col">
+            {/* Left Column: Settings Configuration Form */}
+            <div className="admin-form-card fee-settings-card">
+              <h4>
+                <SettingsSlidersIcon size={18} style={{ marginRight: '6px', verticalAlign: 'middle', color: '#d4af37' }} />
+                Platform Fee Settings &amp; Rules
+              </h4>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleSavePlatformFee(); }} className="admin-form">
+                {/* Master Switch Toggle */}
+                <div className="fee-toggle-box">
+                  <div className="fee-toggle-text">
+                    <span className="fee-toggle-title">Charge Platform Fee on Free Products</span>
+                    <span className="fee-toggle-subtitle">
+                      When enabled, non-VIP users are required to pay the configured fee before initiating an APK/software download.
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className={`fee-switch-button ${platformFeeEnabled ? 'is-enabled' : 'is-disabled'}`}
+                    onClick={() => {
+                      const next = !platformFeeEnabled;
+                      setPlatformFeeEnabled(next);
+                      if (!next) {
+                        setFeeValidationError('');
+                      }
+                    }}
+                    role="switch"
+                    aria-checked={platformFeeEnabled}
+                  >
+                    <span className="switch-slider"></span>
+                    <span className="switch-text">{platformFeeEnabled ? 'ACTIVE (ON)' : 'REMOVED (OFF)'}</span>
+                  </button>
+                </div>
+
+                {/* Amount Input */}
+                <div className={`fee-amount-control-group ${!platformFeeEnabled ? 'fee-input-dimmed' : ''}`}>
+                  <label htmlFor="platformFeeInput" className="fee-input-label">
+                    <span>Platform Fee Amount (INR)</span>
+                    <span className="fee-range-hint">Valid Range: ₹0 to ₹999</span>
+                  </label>
+
+                  <div className="fee-input-wrapper">
+                    <span className="fee-currency-prefix">₹</span>
+                    <input
+                      id="platformFeeInput"
+                      type="number"
+                      min="0"
+                      max="999"
+                      step="1"
+                      disabled={!platformFeeEnabled}
+                      value={platformFeeAmount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setPlatformFeeAmount('');
+                          setFeeValidationError('Fee amount cannot be empty.');
+                          return;
+                        }
+                        const num = Number(val);
+                        setPlatformFeeAmount(val);
+                        if (isNaN(num)) {
+                          setFeeValidationError('Please enter a valid numeric amount.');
+                        } else if (num < 0) {
+                          setFeeValidationError('Fee amount cannot be negative.');
+                        } else if (num > 999) {
+                          setFeeValidationError('Fee amount cannot exceed ₹999 INR.');
+                        } else {
+                          setFeeValidationError('');
+                        }
+                      }}
+                      className="fee-number-input"
+                      placeholder="19"
+                    />
+                    <span className="fee-currency-suffix">INR per download</span>
+                  </div>
+
+                  {feeValidationError && (
+                    <div className="fee-validation-error">
+                      <AlertTriangleIcon size={14} />
+                      <span>{feeValidationError}</span>
+                    </div>
+                  )}
+
+                  {!feeValidationError && platformFeeEnabled && Number(platformFeeAmount) === 0 && (
+                    <div className="fee-validation-info">
+                      <CheckIcon size={14} />
+                      <span>Setting the amount to ₹0 effectively removes the platform fee for all users.</span>
+                    </div>
+                  )}
+
+                  {/* Preset Pills */}
+                  <div className="fee-presets-wrapper">
+                    <span className="presets-label">Quick Preset Fee Amounts:</span>
+                    <div className="fee-presets-pills">
+                      {[
+                        { label: '₹0 (Remove)', value: 0 },
+                        { label: '₹9', value: 9 },
+                        { label: '₹19 (Standard)', value: 19 },
+                        { label: '₹29', value: 29 },
+                        { label: '₹49', value: 49 },
+                        { label: '₹99', value: 99 },
+                      ].map((preset) => {
+                        const isSelected = Number(platformFeeAmount) === preset.value && (preset.value === 0 ? !platformFeeEnabled : platformFeeEnabled);
+                        return (
+                          <button
+                            type="button"
+                            key={preset.value}
+                            className={`preset-pill ${isSelected ? 'pill-selected' : ''}`}
+                            onClick={() => {
+                              if (preset.value === 0) {
+                                setPlatformFeeAmount(0);
+                                setPlatformFeeEnabled(false);
+                              } else {
+                                setPlatformFeeAmount(preset.value);
+                                setPlatformFeeEnabled(true);
+                              }
+                              setFeeValidationError('');
+                            }}
+                          >
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Buttons */}
+                <div className="fee-form-actions">
+                  <button
+                    type="submit"
+                    className="admin-btn primary fee-save-btn"
+                    disabled={savingFeeSettings || Boolean(feeValidationError)}
+                  >
+                    {savingFeeSettings ? (
+                      <span>Saving Changes...</span>
+                    ) : (
+                      <>
+                        <CheckIcon size={16} />
+                        <span>Save Platform Fee Settings</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="admin-btn outline"
+                    onClick={() => {
+                      setPlatformFeeEnabled(originalFeeSettings.enabled);
+                      setPlatformFeeAmount(originalFeeSettings.amount);
+                      setFeeValidationError('');
+                    }}
+                    disabled={savingFeeSettings}
+                  >
+                    Discard Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Right Column: Live Store Simulator & Logic Rules */}
+            <div className="admin-form-card fee-simulator-card">
+              <h4>Live Storefront Preview</h4>
+              <p className="simulator-subtitle">
+                Real-time preview of download buttons and VIP promotions seen by customers on product pages.
+              </p>
+
+              {/* Simulation 1: Standard User */}
+              <div className="simulator-box">
+                <div className="simulator-header">
+                  <span className="simulator-user-type">Standard Customer (Free Account)</span>
+                  <span className={`simulator-status-pill ${platformFeeEnabled && Number(platformFeeAmount) > 0 ? 'pill-fee' : 'pill-free'}`}>
+                    {platformFeeEnabled && Number(platformFeeAmount) > 0 ? `Requires ₹${platformFeeAmount}` : '₹0 Free Download'}
+                  </span>
+                </div>
+
+                <div className="simulator-preview-area">
+                  {platformFeeEnabled && Number(platformFeeAmount) > 0 ? (
+                    <>
+                      <div className="simulated-cta-btn simulated-fee-btn">
+                        <LockIcon size={15} style={{ marginRight: '6px' }} />
+                        <span>Download (₹{platformFeeAmount} Platform Fee)</span>
+                      </div>
+
+                      <div className="simulated-upsell-box">
+                        <div className="simulated-upsell-top">
+                          <span className="sim-badge"><SparkleIcon size={11} /> UPPER VIP CLUB</span>
+                          <span className="sim-gold">Get ₹0 Platform Fee on ALL downloads</span>
+                        </div>
+                        <span className="sim-desc">
+                          Pro (₹99/mo) &bull; Elite (₹399/yr) &bull; Official Badges
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="simulated-cta-btn simulated-free-cleared-btn">
+                      <CheckIcon size={15} style={{ marginRight: '6px' }} />
+                      <span>Free Download (₹0 Fee)</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Simulation 2: VIP User */}
+              <div className="simulator-box">
+                <div className="simulator-header">
+                  <span className="simulator-user-type">Upper VIP Club Member (Pro / Elite)</span>
+                  <span className="simulator-status-pill pill-vip">Always ₹0 Waived</span>
+                </div>
+
+                <div className="simulator-preview-area">
+                  <div className="simulated-cta-btn simulated-vip-btn">
+                    <CrownIcon size={15} style={{ marginRight: '6px', color: '#ffd700' }} />
+                    <span>Free Download (₹0 Platform Fee)</span>
+                  </div>
+                  <span className="simulated-vip-note">
+                    <CheckIcon size={13} style={{ color: '#10b981', marginRight: '4px' }} />
+                    VIP members automatically bypass all platform download fees.
+                  </span>
+                </div>
+              </div>
+
+              {/* Policy Rules & Instructions */}
+              <div className="fee-guidelines-box">
+                <h5>Platform Fee Logic &amp; Validations</h5>
+                <ul>
+                  <li><strong>Admin Controlled:</strong> The platform fee amount and active state depend entirely on admin configuration.</li>
+                  <li><strong>Instant Real-time Sync:</strong> Changes take effect immediately across all active browser sessions without restarts.</li>
+                  <li><strong>Per-Product Exemption:</strong> You can also exempt specific software from the fee via the &quot;Waive Platform Fee&quot; toggle in the Products tab.</li>
+                  <li><strong>VIP Immunity:</strong> Pro (₹99/mo) and Elite (₹399/yr) VIP subscribers always retain permanent ₹0 platform fee download privileges.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: UPI PAYMENTS & APPROVALS CONSOLE */}
+      {activeTab === 'payments' && (
+        <div className="admin-section upi-payments-section">
+          <div className="section-header">
+            <div>
+              <h3>
+                <QrCodeIcon size={22} style={{ marginRight: '8px', verticalAlign: 'middle', color: '#ffd700' }} />
+                Real UPI QR Payments &amp; Subscription Approvals
+              </h3>
+              <p className="section-subtitle">
+                Verify incoming direct bank payments via UPI QR, approve pending VIP subscriptions, and issue cryptographic licenses.
+              </p>
+            </div>
+            <button
+              className="admin-btn outline"
+              onClick={() => {
+                fetchUpiPayments();
+                fetchPaymentSettings();
+              }}
+              disabled={loadingUpiPayments}
+            >
+              {loadingUpiPayments ? 'Syncing...' : 'Refresh Payments'}
+            </button>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div className="upi-metrics-grid">
+            <div className={`upi-metric-card metric-pending ${upiStats.pending > 0 ? 'has-pending' : ''}`}>
+              <span className="metric-label">PENDING VERIFICATION</span>
+              <div className="metric-val-wrap">
+                <span className="metric-val">{upiStats.pending}</span>
+                {upiStats.pending > 0 && <span className="pulse-indicator"></span>}
+              </div>
+              <span className="metric-hint">Awaiting Admin Bank Match</span>
+            </div>
+
+            <div className="upi-metric-card metric-approved">
+              <span className="metric-label">APPROVED ORDERS</span>
+              <span className="metric-val">{upiStats.approved}</span>
+              <span className="metric-hint">Active VIP Licenses Issued</span>
+            </div>
+
+            <div className="upi-metric-card metric-revenue">
+              <span className="metric-label">TOTAL REVENUE</span>
+              <span className="metric-val font-gold">₹{upiStats.totalRevenueINR} INR</span>
+              <span className="metric-hint">Real Bank Inflow via QR</span>
+            </div>
+
+            <div className="upi-metric-card metric-mode">
+              <span className="metric-label">PAYMENT GATEWAY MODE</span>
+              <span className="metric-val font-green">
+                {paymentSettings.paymentMode === 'upi_qr'
+                  ? 'UPI QR Direct Bank'
+                  : paymentSettings.paymentMode === 'merchant_gateway'
+                  ? 'Merchant Gateway'
+                  : 'Sandbox Test'}
+              </span>
+              <span className="metric-hint">
+                {paymentSettings.autoApproveUpi ? 'Auto-Approve ON' : 'Manual Review (Secure)'}
+              </span>
+            </div>
+          </div>
+
+          {/* Payment Settings Card */}
+          <div className="admin-card payment-settings-card">
+            <div className="card-header-row" style={{ marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <SettingsSlidersIcon size={18} style={{ color: '#ffd700' }} />
+                <h4 style={{ margin: 0 }}>Payment Gateway &amp; QR Control</h4>
+              </div>
+            </div>
+
+            <div className="payment-settings-grid">
+              <div className="setting-field">
+                <label className="field-title-label">Active Store Payment Mode:</label>
+                <div className="mode-pill-selector">
+                  <button
+                    type="button"
+                    className={`mode-pill ${paymentSettings.paymentMode === 'upi_qr' ? 'active' : ''}`}
+                    onClick={() => handleSavePaymentSettings({ paymentMode: 'upi_qr' })}
+                    disabled={savingPaymentSettings}
+                  >
+                    <QrCodeIcon size={14} />
+                    <span>UPI QR Direct Bank (Real Payments)</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`mode-pill ${paymentSettings.paymentMode === 'merchant_gateway' ? 'active' : ''}`}
+                    onClick={() => handleSavePaymentSettings({ paymentMode: 'merchant_gateway' })}
+                    disabled={savingPaymentSettings}
+                  >
+                    <CreditCardIcon size={14} />
+                    <span>Merchant Gateway (Stripe/Razorpay)</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`mode-pill ${paymentSettings.paymentMode === 'sandbox' ? 'active' : ''}`}
+                    onClick={() => handleSavePaymentSettings({ paymentMode: 'sandbox' })}
+                    disabled={savingPaymentSettings}
+                  >
+                    <LockIcon size={14} />
+                    <span>Sandbox Test Mode</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="setting-field">
+                <label className="field-title-label">Instant Auto-Approval on Valid 12-Digit UTR:</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <button
+                    type="button"
+                    className="auto-approve-toggle-btn"
+                    onClick={() => handleSavePaymentSettings({ autoApproveUpi: !paymentSettings.autoApproveUpi })}
+                    disabled={savingPaymentSettings}
+                  >
+                    {paymentSettings.autoApproveUpi ? <ToggleOnIcon size={26} /> : <ToggleOffIcon size={26} />}
+                    <span style={{ fontWeight: 700, color: paymentSettings.autoApproveUpi ? '#10b981' : '#94a3b8' }}>
+                      {paymentSettings.autoApproveUpi ? 'AUTO-APPROVE ON (Instant Activation)' : 'MANUAL REVIEW (Admin Match Required)'}
+                    </span>
+                  </button>
+                </div>
+                <span className="field-hint">
+                  {paymentSettings.autoApproveUpi
+                    ? 'Caution: Any valid 12-digit UTR will instantly grant VIP access. Useful for frictionless onboarding.'
+                    : 'Recommended: Admin verifies money received in UPI/bank app before approving VIP subscription. This prevents fake UTR submissions.'}
+                </span>
+              </div>
+            </div>
+
+            <div className="payment-upi-details-row">
+              <div className="detail-item">
+                <span className="detail-label">Configured Payee:</span>
+                <span className="detail-val">{paymentSettings.payeeName}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Official UPI ID (VPA):</span>
+                <code className="detail-vpa">{paymentSettings.upiId}</code>
+              </div>
+            </div>
+          </div>
+
+          {/* Transactions List */}
+          <div className="admin-card">
+            <div className="card-header-row" style={{ marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <CoinsIcon size={18} style={{ color: '#ffd700' }} />
+                <h4 style={{ margin: 0 }}>Incoming UPI Payment Submissions</h4>
+              </div>
+
+              <div className="payment-filter-pills">
+                <button
+                  type="button"
+                  className={`filter-pill ${selectedPaymentFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setSelectedPaymentFilter('all')}
+                >
+                  All ({upiPayments.length})
+                </button>
+                <button
+                  type="button"
+                  className={`filter-pill ${selectedPaymentFilter === 'pending' ? 'active' : ''}`}
+                  onClick={() => setSelectedPaymentFilter('pending')}
+                >
+                  Pending ({upiStats.pending})
+                </button>
+                <button
+                  type="button"
+                  className={`filter-pill ${selectedPaymentFilter === 'approved' ? 'active' : ''}`}
+                  onClick={() => setSelectedPaymentFilter('approved')}
+                >
+                  Approved ({upiStats.approved})
+                </button>
+                <button
+                  type="button"
+                  className={`filter-pill ${selectedPaymentFilter === 'rejected' ? 'active' : ''}`}
+                  onClick={() => setSelectedPaymentFilter('rejected')}
+                >
+                  Rejected
+                </button>
+              </div>
+            </div>
+
+            {loadingUpiPayments ? (
+              <p className="loading-text">Fetching payment submissions...</p>
+            ) : upiPayments.filter(p => {
+                if (selectedPaymentFilter === 'pending') return p.status === 'pending_verification';
+                if (selectedPaymentFilter === 'approved') return p.status === 'approved';
+                if (selectedPaymentFilter === 'rejected') return p.status === 'rejected';
+                return true;
+              }).length === 0 ? (
+              <div className="no-data-placeholder">
+                <p>No payment records found under &quot;{selectedPaymentFilter}&quot; filter.</p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Plan / Item</th>
+                      <th>Amount</th>
+                      <th>12-Digit UTR Number</th>
+                      <th>Submitted</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {upiPayments
+                      .filter(p => {
+                        if (selectedPaymentFilter === 'pending') return p.status === 'pending_verification';
+                        if (selectedPaymentFilter === 'approved') return p.status === 'approved';
+                        if (selectedPaymentFilter === 'rejected') return p.status === 'rejected';
+                        return true;
+                      })
+                      .map((p) => {
+                        const isPending = p.status === 'pending_verification';
+                        const isApproved = p.status === 'approved';
+                        const isRejected = p.status === 'rejected';
+
+                        return (
+                          <tr key={p.id}>
+                            <td>
+                              <strong>{p.userName || p.userEmail.split('@')[0]}</strong>
+                              <div className="table-sub-text">{p.userEmail}</div>
+                              {p.payerUpiId && <div className="table-vpa-text">UPI: {p.payerUpiId}</div>}
+                            </td>
+                            <td>
+                              <span className={`plan-badge-inline ${p.plan === 'elite' ? 'badge-elite' : 'badge-pro'}`}>
+                                {p.plan === 'elite' ? 'Elite VIP' : 'Pro Member'}
+                              </span>
+                              <div className="table-sub-text">{p.orderId}</div>
+                            </td>
+                            <td>
+                              <span className="font-gold font-bold">₹{p.amount} INR</span>
+                            </td>
+                            <td>
+                              <div className="utr-display-wrap">
+                                <code className="utr-code">{p.utrNumber}</code>
+                                <button
+                                  type="button"
+                                  className="copy-mini-btn"
+                                  onClick={() => navigator.clipboard.writeText(p.utrNumber)}
+                                  title="Copy UTR Number"
+                                >
+                                  Copy
+                                </button>
+                              </div>
+                            </td>
+                            <td>
+                              {new Date(p.submittedAt).toLocaleString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                              })}
+                            </td>
+                            <td>
+                              <span className={`status-pill ${isPending ? 'pending-pill' : isApproved ? 'approved-pill' : 'rejected-pill'}`}>
+                                {isPending ? 'PENDING REVIEW' : isApproved ? 'APPROVED' : 'REJECTED'}
+                              </span>
+                            </td>
+                            <td>
+                              {isPending ? (
+                                <div className="action-buttons-wrap">
+                                  <button
+                                    type="button"
+                                    className="admin-btn approve-btn"
+                                    onClick={() => handleVerifyUpiPayment(p.id, 'approve')}
+                                    disabled={processingPaymentId === p.id}
+                                  >
+                                    <CheckIcon size={13} />
+                                    <span>{processingPaymentId === p.id ? 'Approving...' : 'Approve & Activate'}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="admin-btn reject-btn"
+                                    onClick={() => setRejectPromptPaymentId(p.id)}
+                                    disabled={processingPaymentId === p.id}
+                                  >
+                                    <CloseIcon size={13} />
+                                    <span>Reject</span>
+                                  </button>
+                                </div>
+                              ) : isApproved ? (
+                                <div className="approved-info">
+                                  <span className="license-tag">{p.licenseKey || 'Activated'}</span>
+                                </div>
+                              ) : (
+                                <span className="reject-reason-text">{p.rejectReason || 'Declined'}</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* REJECT MODAL */}
+          {rejectPromptPaymentId && (
+            <div className="admin-modal-backdrop" onClick={() => setRejectPromptPaymentId(null)}>
+              <div className="admin-modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+                <div className="admin-modal-header">
+                  <h4>Reject Payment Submission</h4>
+                  <button className="admin-modal-close" onClick={() => setRejectPromptPaymentId(null)}>
+                    <CloseIcon size={16} />
+                  </button>
+                </div>
+                <div className="admin-modal-body">
+                  <p style={{ fontSize: '0.85rem', color: '#cbd5e1', marginBottom: '1rem' }}>
+                    Are you sure you want to reject this payment? Please provide a reason (e.g. UTR not found in bank statement, invalid amount).
+                  </p>
+                  <input
+                    type="text"
+                    className="admin-input"
+                    placeholder="Rejection reason (e.g. UTR not found in bank)"
+                    value={rejectReasonInput}
+                    onChange={(e) => setRejectReasonInput(e.target.value)}
+                    style={{ width: '100%', boxSizing: 'border-box', marginBottom: '1.2rem' }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      className="admin-btn outline"
+                      onClick={() => setRejectPromptPaymentId(null)}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-btn delete-sm"
+                      onClick={() => handleVerifyUpiPayment(rejectPromptPaymentId, 'reject', rejectReasonInput)}
+                      disabled={processingPaymentId === rejectPromptPaymentId}
+                    >
+                      Confirm Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
