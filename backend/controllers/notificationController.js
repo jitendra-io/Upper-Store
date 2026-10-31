@@ -1,15 +1,45 @@
 const { db } = require('../config/firebase');
+const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../config/jwtConfig');
 
-// @desc    Get all broadcast notifications
+// @desc    Get broadcast and user notifications (privacy-scoped)
 // @route   GET /api/notifications
-// @access  Public
+// @access  Public / Authenticated
 const getNotifications = async (req, res) => {
   try {
+    let currentUser = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        currentUser = jwt.verify(token, getJwtSecret());
+      } catch (tokenErr) {
+        // Ignored; treated as unauthenticated public visitor
+      }
+    }
+
     const snapshot = await db.collection('notifications').get();
-    const notifications = snapshot.docs.map((doc) => ({
+    let notifications = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
+
+    // Filter by privacy boundary
+    if (currentUser && currentUser.role === 'admin') {
+      // Admin sees all broadcast & user notification records
+    } else if (currentUser && currentUser.email) {
+      // Authenticated user: sees broadcast notices + their own targeted notifications
+      const userEmail = currentUser.email.trim().toLowerCase();
+      notifications = notifications.filter((n) => {
+        if (!n.targetEmail) return true;
+        return n.targetEmail.trim().toLowerCase() === userEmail;
+      });
+    } else {
+      // Unauthenticated public: only general broadcasts without targetEmail and non-security category
+      notifications = notifications.filter((n) => {
+        return !n.targetEmail && n.category !== 'Security';
+      });
+    }
 
     // Sort newest first
     notifications.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));

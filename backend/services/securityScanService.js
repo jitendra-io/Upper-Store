@@ -28,14 +28,16 @@ const generateDeterministicChecksum = (urlOrIdentifier, version = '1.0.0') => {
 };
 
 /**
- * Builds standard VirusTotal and security verification payload
+ * Builds standard cryptographic integrity and security verification payload
  */
 const buildSecurityVerification = async (apkFileOrUrl, version = '1.0.0', customChecksum = null) => {
   let hash = customChecksum ? customChecksum.trim().toLowerCase() : null;
+  let isPhysicalFile = false;
 
   if (!hash && typeof apkFileOrUrl === 'object' && apkFileOrUrl?.path) {
     try {
       hash = await computeFileSha256(apkFileOrUrl.path);
+      if (hash) isPhysicalFile = true;
     } catch (err) {
       console.warn('Could not compute local SHA256:', err.message);
     }
@@ -45,10 +47,12 @@ const buildSecurityVerification = async (apkFileOrUrl, version = '1.0.0', custom
     hash = generateDeterministicChecksum(apkFileOrUrl, version);
   }
 
+  const isVerified = Boolean(isPhysicalFile || customChecksum);
+
   return {
     sha256Checksum: hash,
-    securityStatus: 'Clean (0/72 Antivirus Engines)',
-    isSecurityVerified: true,
+    securityStatus: isVerified ? 'SHA-256 Verified' : 'Checksum Generated',
+    isSecurityVerified: isVerified,
     scannedAt: new Date().toISOString(),
     virusTotalUrl: `https://www.virustotal.com/gui/search/${hash}`,
   };

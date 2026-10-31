@@ -1,8 +1,7 @@
 const crypto = require('crypto');
 const dotenv = require('dotenv');
+const { getLicenseSecret } = require('../config/jwtConfig');
 dotenv.config();
-
-const LICENSE_SECRET = process.env.LICENSE_SECRET_KEY || process.env.JWT_SECRET || 'UpperStore_Master_License_Secret_2026_Key';
 
 /**
  * Format a byte buffer into human-readable segmented product key:
@@ -30,7 +29,7 @@ const generateLicenseSignature = (payload) => {
   });
 
   return crypto
-    .createHmac('sha256', LICENSE_SECRET)
+    .createHmac('sha256', getLicenseSecret())
     .update(serialized)
     .digest('hex');
 };

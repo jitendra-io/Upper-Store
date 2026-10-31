@@ -1,11 +1,13 @@
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
 const path = require('path');
 const dotenv = require('dotenv');
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 dotenv.config();
 
 let db = null;
+let authAdmin = null;
 
 if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL) {
   try {
@@ -27,6 +29,11 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL) {
     }
 
     db = getFirestore();
+    try {
+      authAdmin = getAuth();
+    } catch (authErr) {
+      console.warn('[WARN] Firebase Admin Auth initialization failed:', authErr.message);
+    }
     console.log('[INFO] Firebase Admin initialized');
   } catch (err) {
     console.error('[WARN] Firebase Admin initialization failed:', err.message);
@@ -45,5 +52,4 @@ const dbProxy = new Proxy({}, {
   }
 });
 
-module.exports = { db: dbProxy, FieldValue };
-
+module.exports = { db: dbProxy, authAdmin: () => authAdmin, FieldValue };

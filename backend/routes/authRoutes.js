@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protectAdmin } = require('../middleware/authMiddleware');
+const { protect, protectAdmin } = require('../middleware/authMiddleware');
 const { authLimiter } = require('../middleware/rateLimiter');
 const {
   loginAdmin,
@@ -27,7 +27,6 @@ router.post('/users/:userId/unban', protectAdmin, unbanUser);
 router.post('/user/register', authLimiter, registerUser);
 router.post('/user/login', authLimiter, loginUser);
 router.post('/user/google', authLimiter, googleOAuthLogin);
-router.get('/user/status/:email', getUserStatus);
+router.get('/user/status/:email', protect, getUserStatus);
 
 module.exports = router;
-

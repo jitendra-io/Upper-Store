@@ -102,9 +102,11 @@ const resolveDirectImageUrl = async (url) => {
     return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
   }
 
-  // 2. Resolve Google Photos app share links: photos.app.goo.gl/ID or photos.google.com/share/ID
-  if (cleanUrl.includes('photos.app.goo.gl') || cleanUrl.includes('photos.google.com')) {
-    try {
+  // 2. Resolve Google Photos app share links (strictly validated hostname to prevent SSRF)
+  try {
+    const parsed = new URL(cleanUrl);
+    const validHosts = ['photos.app.goo.gl', 'photos.google.com'];
+    if (parsed.protocol === 'https:' && validHosts.includes(parsed.hostname.toLowerCase())) {
       const response = await fetch(cleanUrl, {
         redirect: 'follow',
         headers: {
@@ -144,9 +146,9 @@ const resolveDirectImageUrl = async (url) => {
           return directImg;
         }
       }
-    } catch (err) {
-      console.warn('Google Photos link resolution failed, using original URL:', err.message);
     }
+  } catch (err) {
+    // Malformed URL or resolution error; safe to ignore and return cleanUrl
   }
 
   return cleanUrl;
@@ -522,15 +524,25 @@ const deleteProduct = async (req, res) => {
 
     const data = doc.data();
 
-    // Clean up local files if present
-    if (data.image && data.image.includes('/uploads/')) {
-      const imgPath = path.join(__dirname, '..', data.image.split('/uploads/')[1]);
-      if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
-    }
-    if (data.apkFile && data.apkFile.includes('/uploads/')) {
-      const apkPath = path.join(__dirname, '..', data.apkFile.split('/uploads/')[1]);
-      if (fs.existsSync(apkPath)) fs.unlinkSync(apkPath);
-    }
+    // Clean up local files if present (strictly confined to backend/uploads directory)
+    const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+    const safeDeleteFile = (fileUrlOrPath) => {
+      if (!fileUrlOrPath || typeof fileUrlOrPath !== 'string' || !fileUrlOrPath.includes('/uploads/')) return;
+      const rawRel = fileUrlOrPath.split('/uploads/')[1];
+      if (!rawRel) return;
+      const safeFilename = path.basename(rawRel.trim());
+      const resolvedPath = path.resolve(uploadsDir, safeFilename);
+      if (resolvedPath.startsWith(uploadsDir) && fs.existsSync(resolvedPath)) {
+        try {
+          fs.unlinkSync(resolvedPath);
+        } catch (unlinkErr) {
+          console.warn('Failed to delete file from uploads:', unlinkErr.message);
+        }
+      }
+    };
+
+    safeDeleteFile(data.image);
+    safeDeleteFile(data.apkFile);
 
     await docRef.delete();
     cacheService.invalidate('products_list');

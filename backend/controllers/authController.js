@@ -1,4 +1,5 @@
-const { db } = require('../config/firebase');
+const { db, authAdmin } = require('../config/firebase');
+const { getJwtSecret } = require('../config/jwtConfig');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { sendWelcomeEmail, sendLoginAlertEmail } = require('../services/emailService');
@@ -6,7 +7,7 @@ const { sendWelcomeEmail, sendLoginAlertEmail } = require('../services/emailServ
 const generateToken = (uid, role = 'user', email = null) => {
   const payload = { uid, role };
   if (email) payload.email = email.trim().toLowerCase();
-  return jwt.sign(payload, process.env.JWT_SECRET || 'upper_store_jwt_secret_key_2026', { expiresIn: '7d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 };
 
 const resolveUserMembership = async (userData, userDocRef = null) => {
@@ -278,28 +279,78 @@ const loginUser = async (req, res) => {
 // @route   POST /api/auth/user/google
 // @access  Public
 const googleOAuthLogin = async (req, res) => {
-  const { email, displayName, photoURL, googleId } = req.body;
+  const { idToken, credential, displayName, photoURL, googleId } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ message: 'Email is required for Google OAuth.' });
+  const rawToken = idToken || credential;
+  if (!rawToken) {
+    return res.status(400).json({ message: 'Authentication token is required for Google Sign-In.' });
   }
 
   try {
-    const cleanEmail = email.trim().toLowerCase();
+    let verifiedEmail = null;
+    let verifiedName = displayName || null;
+    let verifiedPhoto = photoURL || null;
+    let verifiedUid = googleId || null;
+
+    // 1. Verify token with Firebase Admin Auth if initialized
+    const adminAuth = typeof authAdmin === 'function' ? authAdmin() : authAdmin;
+    if (adminAuth && typeof adminAuth.verifyIdToken === 'function') {
+      try {
+        const decoded = await adminAuth.verifyIdToken(rawToken);
+        if (decoded && decoded.email) {
+          if (decoded.email_verified === false) {
+            return res.status(401).json({ message: 'Google account email is not verified.' });
+          }
+          verifiedEmail = decoded.email.trim().toLowerCase();
+          verifiedName = decoded.name || verifiedName;
+          verifiedPhoto = decoded.picture || verifiedPhoto;
+          verifiedUid = decoded.uid || verifiedUid;
+        }
+      } catch (fbErr) {
+        // Fall back to Google tokeninfo
+      }
+    }
+
+    // 2. Cryptographic verification fallback via Google tokeninfo API
+    if (!verifiedEmail) {
+      try {
+        const gRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(rawToken)}`);
+        if (gRes.ok) {
+          const gData = await gRes.json();
+          if (gData.email) {
+            if (gData.email_verified === 'false' || gData.email_verified === false) {
+              return res.status(401).json({ message: 'Google account email is not verified.' });
+            }
+            verifiedEmail = gData.email.trim().toLowerCase();
+            verifiedName = gData.name || verifiedName;
+            verifiedPhoto = gData.picture || verifiedPhoto;
+            verifiedUid = gData.sub || verifiedUid;
+          }
+        }
+      } catch (gErr) {
+        console.warn('Google tokeninfo verification failed:', gErr.message);
+      }
+    }
+
+    if (!verifiedEmail) {
+      return res.status(401).json({ message: 'Google authentication verification failed. Token is invalid or expired.' });
+    }
+
+    const cleanEmail = verifiedEmail;
     const usersRef = db.collection('users').where('email', '==', cleanEmail);
     const snapshot = await usersRef.get();
 
     let uid;
     let finalProfile;
-    const computedPhoto = photoURL || `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
+    const computedPhoto = verifiedPhoto || `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
     if (snapshot.empty) {
       // Create new user account via Google
       const newUserRef = await db.collection('users').add({
         email: cleanEmail,
-        displayName: displayName || cleanEmail.split('@')[0],
+        displayName: verifiedName || cleanEmail.split('@')[0],
         photoURL: computedPhoto,
-        googleId: googleId || null,
+        googleId: verifiedUid || null,
         provider: 'google',
         isBanned: false,
         membership: { plan: 'free', badge: null, validUntil: null },
@@ -313,7 +364,7 @@ const googleOAuthLogin = async (req, res) => {
       finalProfile = {
         uid,
         email: cleanEmail,
-        displayName: displayName || cleanEmail.split('@')[0],
+        displayName: verifiedName || cleanEmail.split('@')[0],
         photoURL: computedPhoto,
         provider: 'google',
         isBanned: false,
@@ -334,11 +385,11 @@ const googleOAuthLogin = async (req, res) => {
       uid = userDoc.id;
       const existingData = userDoc.data();
 
-      const activePhoto = photoURL || existingData.photoURL || computedPhoto;
+      const activePhoto = verifiedPhoto || existingData.photoURL || computedPhoto;
 
       // Update avatar or display name if missing
       await userDoc.ref.update({
-        displayName: displayName || existingData.displayName || cleanEmail.split('@')[0],
+        displayName: verifiedName || existingData.displayName || cleanEmail.split('@')[0],
         photoURL: activePhoto,
         lastLogin: new Date().toISOString(),
       });
@@ -348,7 +399,7 @@ const googleOAuthLogin = async (req, res) => {
       finalProfile = {
         uid,
         email: cleanEmail,
-        displayName: displayName || existingData.displayName || cleanEmail.split('@')[0],
+        displayName: verifiedName || existingData.displayName || cleanEmail.split('@')[0],
         photoURL: activePhoto,
         provider: existingData.provider || 'google',
         isBanned: Boolean(existingData.isBanned),
@@ -469,6 +520,12 @@ const getUserStatus = async (req, res) => {
   const { email } = req.params;
   try {
     const cleanEmail = email.trim().toLowerCase();
+
+    // Security authorization guard: user must be authenticated as target user or admin
+    if (!req.user || (req.user.role !== 'admin' && req.user.email?.toLowerCase() !== cleanEmail)) {
+      return res.status(403).json({ message: 'Forbidden: Access denied to user profile status.' });
+    }
+
     const snapshot = await db.collection('users').where('email', '==', cleanEmail).get();
 
     if (snapshot.empty) {

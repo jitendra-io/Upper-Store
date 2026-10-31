@@ -649,21 +649,24 @@ const handleStripeWebhook = async (req, res) => {
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  let event;
+  if (!webhookSecret || !stripeClient) {
+    console.error('⚠️ [CRITICAL] Stripe webhook invoked but STRIPE_WEBHOOK_SECRET or stripeClient is unconfigured.');
+    return res.status(500).json({ error: 'Webhook processing is not configured on this server.' });
+  }
 
-  if (stripeClient && webhookSecret) {
-    try {
-      if (!req.rawBody) {
-        throw new Error('Raw body buffer unavailable for Stripe signature verification.');
-      }
-      event = stripeClient.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
-    } catch (err) {
-      console.error(`⚠️ Stripe webhook signature verification failed: ${err.message}`);
-      return res.status(400).send(`Webhook Error: ${err.message}`);
+  if (!sig) {
+    return res.status(400).json({ error: 'Missing stripe-signature header.' });
+  }
+
+  let event;
+  try {
+    if (!req.rawBody) {
+      throw new Error('Raw body buffer unavailable for Stripe signature verification.');
     }
-  } else {
-    // Development sandbox simulation
-    event = req.body;
+    event = stripeClient.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+  } catch (err) {
+    console.error(`⚠️ Stripe webhook signature verification failed: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   // Handle successful checkout with idempotency check
@@ -709,19 +712,26 @@ const handleRazorpayWebhook = async (req, res) => {
   const razorpaySignature = req.headers['x-razorpay-signature'];
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
-  if (webhookSecret) {
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(req.rawBody || JSON.stringify(req.body))
-      .digest('hex');
+  if (!webhookSecret) {
+    console.error('⚠️ [CRITICAL] Razorpay webhook invoked but RAZORPAY_WEBHOOK_SECRET is unconfigured.');
+    return res.status(500).json({ error: 'Webhook processing is not configured on this server.' });
+  }
 
-    const sigBuf = Buffer.from(razorpaySignature || '', 'utf8');
-    const expBuf = Buffer.from(expectedSignature, 'utf8');
+  if (!razorpaySignature) {
+    return res.status(400).json({ message: 'Missing x-razorpay-signature header.' });
+  }
 
-    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
-      console.warn('⚠️ Razorpay webhook signature mismatch.');
-      return res.status(400).json({ message: 'Invalid webhook signature.' });
-    }
+  const expectedSignature = crypto
+    .createHmac('sha256', webhookSecret)
+    .update(req.rawBody || JSON.stringify(req.body))
+    .digest('hex');
+
+  const sigBuf = Buffer.from(razorpaySignature, 'utf8');
+  const expBuf = Buffer.from(expectedSignature, 'utf8');
+
+  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+    console.warn('⚠️ Razorpay webhook signature mismatch.');
+    return res.status(400).json({ message: 'Invalid webhook signature.' });
   }
 
   const payload = req.body;
