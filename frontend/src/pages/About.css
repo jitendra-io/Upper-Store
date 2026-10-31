@@ -1,16 +1,28 @@
+/* ==========================================================================
+   ABOUT PAGE STYLES - FULLY RESPONSIVE (MOBILE, TABLET, DESKTOP)
+   Dark Luxury Aesthetics with Obsidian, Molten Gold, and Cosmic Purple accents.
+   ========================================================================== */
+
 .about-container {
-  padding: 4rem 5%;
+  padding: 3.5rem 5%;
   max-width: 1100px;
   margin: 0 auto;
   min-height: calc(100vh - 120px);
   font-family: 'Outfit', sans-serif;
   color: #e0e0e0;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 /* Hero Section */
 .about-hero {
   text-align: center;
   margin-bottom: 3.5rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .about-pill-tag {
@@ -33,6 +45,8 @@
   margin-bottom: 0.85rem;
   color: #ffffff;
   letter-spacing: -0.5px;
+  line-height: 1.15;
+  word-break: break-word;
 }
 
 .about-hero p {
@@ -41,19 +55,23 @@
   max-width: 650px;
   margin: 0 auto;
   line-height: 1.6;
+  word-break: break-word;
 }
 
 /* Pillars Grid (All Writings First) */
 .about-pillars-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.75rem;
   margin-bottom: 3rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .about-pillar-card {
   background: rgba(20, 20, 24, 0.7);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   padding: 2rem 1.5rem;
@@ -62,6 +80,8 @@
   align-items: flex-start;
   transition: all 0.3s ease;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .about-pillar-card:hover {
@@ -78,6 +98,7 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 1.25rem;
+  flex-shrink: 0;
 }
 
 .pillar-icon-box.gold {
@@ -105,6 +126,7 @@
   font-weight: 700;
   color: #ffffff;
   margin: 0 0 0.6rem 0;
+  word-break: break-word;
 }
 
 .about-pillar-card p {
@@ -112,21 +134,31 @@
   font-size: 0.92rem;
   line-height: 1.6;
   margin: 0;
+  word-break: break-word;
 }
 
 /* Brand Overview Section */
 .about-overview-section {
   margin-bottom: 3.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .overview-card {
   background: linear-gradient(135deg, rgba(24, 24, 28, 0.8) 0%, rgba(18, 18, 22, 0.8) 100%);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: 20px;
   padding: 2.5rem;
   text-align: center;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
 }
 
 .overview-card h2 {
@@ -134,6 +166,8 @@
   font-weight: 700;
   color: #d4af37;
   margin: 0 0 1rem 0;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
 .overview-card p {
@@ -142,6 +176,261 @@
   line-height: 1.7;
   max-width: 850px;
   margin: 0 auto;
+  word-break: break-word;
+}
+
+/* High-Availability Architecture Sub-Card */
+.overview-card.arch-card {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.arch-heading {
+  color: #10b981 !important;
+}
+
+.arch-subtext {
+  font-size: 1.05rem !important;
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+}
+
+.about-arch-grid {
+  margin-top: 1.25rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  text-align: left;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.about-arch-card {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.1rem;
+  border-radius: 10px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.about-arch-card.green {
+  border-left: 3px solid #10b981;
+}
+
+.about-arch-card.blue {
+  border-left: 3px solid #38bdf8;
+}
+
+.about-arch-card.gold {
+  border-left: 3px solid #d4af37;
+}
+
+.about-arch-card h4 {
+  margin: 0 0 0.35rem 0;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.about-arch-card.green h4 { color: #10b981; }
+.about-arch-card.blue h4 { color: #38bdf8; }
+.about-arch-card.gold h4 { color: #d4af37; }
+
+.about-arch-card p {
+  margin: 0 !important;
+  font-size: 0.84rem !important;
+  color: #cbd5e1 !important;
+  line-height: 1.5 !important;
+  text-align: left !important;
+}
+
+/* Publish Card Target */
+.overview-card.publish-card-target {
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+/* Instant VIP Developer Studio Highlight */
+.vip-instant-publish-card {
+  margin-top: 1.35rem;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 14px;
+  padding: 1.4rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.vip-publish-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.vip-publish-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.vip-instant-pill {
+  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  color: #090a0f;
+  font-weight: 800;
+  font-size: 0.7rem;
+  letter-spacing: 0.6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vip-publish-heading {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.vip-publish-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  color: #090a0f;
+  padding: 0.55rem 1.15rem;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: 38px;
+}
+
+.vip-publish-cta-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.45);
+}
+
+.cta-arrow {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.vip-publish-desc {
+  margin: 0 0 1rem 0 !important;
+  font-size: 0.9rem !important;
+  color: #cbd5e1 !important;
+  line-height: 1.55 !important;
+  text-align: left !important;
+}
+
+.vip-tier-perks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.vip-tier-perk-box {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.95rem 1.05rem;
+  border-radius: 8px;
+  text-align: left;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.vip-tier-perk-box.pro {
+  border-left: 3px solid #d4af37;
+}
+
+.vip-tier-perk-box.elite {
+  border-left: 3px solid #c084fc;
+}
+
+.vip-tier-perk-box h5 {
+  margin: 0 0 0.3rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.vip-tier-perk-box.pro h5 { color: #ffd700; }
+.vip-tier-perk-box.elite h5 { color: #c084fc; }
+
+.vip-tier-perk-box p {
+  margin: 0 !important;
+  font-size: 0.82rem !important;
+  color: #94a3b8 !important;
+  line-height: 1.45 !important;
+  text-align: left !important;
+}
+
+/* Standard Manual Email Submission Option */
+.about-manual-req-box {
+  margin-top: 1.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 1.2rem;
+  border-radius: 10px;
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  text-align: left;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.about-manual-req-box h4 {
+  color: #cbd5e1;
+  margin: 0 0 0.5rem 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.about-manual-req-box p {
+  margin: 0 0 0.8rem 0 !important;
+  font-size: 0.86rem !important;
+  color: #94a3b8 !important;
+  line-height: 1.55 !important;
+  text-align: left !important;
+}
+
+.about-email-link {
+  color: #38bdf8;
+  font-weight: 700;
+  text-decoration: none;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.about-email-link:hover {
+  text-decoration: underline;
+}
+
+.about-req-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #94a3b8;
+  font-size: 0.84rem;
+  line-height: 1.6;
+  text-align: left;
+  word-break: break-word;
+}
+
+.about-audit-disclaimer {
+  font-size: 0.82rem !important;
+  color: #64748b !important;
+  margin-top: 0.85rem !important;
+  font-style: italic;
+  text-align: center;
 }
 
 /* LOGO CARD PLACED BELOW ALL THE WRITINGS */
@@ -149,6 +438,8 @@
   display: flex;
   justify-content: center;
   margin-top: 1rem;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .brand-logo-showcase-card {
@@ -163,20 +454,12 @@
   width: 100%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.2);
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .brand-logo-showcase-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(212, 175, 55, 0.35);
-}
-
-@media (max-width: 768px) {
-  .brand-logo-showcase-card {
-    flex-direction: column;
-    text-align: center;
-    padding: 2rem;
-    gap: 1.5rem;
-  }
 }
 
 .showcase-logo-frame {
@@ -206,27 +489,6 @@
   align-items: flex-start;
 }
 
-@media (max-width: 768px) {
-  .showcase-logo-details {
-    align-items: center;
-  }
-}
-
-.brand-verified-pill {
-  display: inline-flex;
-  align-items: center;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 0.2rem 0.65rem;
-  border-radius: 12px;
-  margin-bottom: 0.6rem;
-  letter-spacing: 0.5px;
-}
-
 .showcase-logo-details h2 {
   font-size: 2rem;
   font-weight: 700;
@@ -239,4 +501,155 @@
   font-size: 0.95rem;
   line-height: 1.6;
   margin: 0;
+}
+
+/* ==========================================================================
+   TABLET & MOBILE MEDIA QUERIES (max-width: 860px, 680px, 480px)
+   ========================================================================== */
+
+@media (max-width: 860px) {
+  .about-container {
+    padding: 2.5rem 4%;
+  }
+
+  .about-hero {
+    margin-bottom: 2.5rem;
+  }
+
+  .about-hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .overview-card {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .brand-logo-showcase-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .showcase-logo-details {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 680px) {
+  .about-container {
+    padding: 2rem 3.5%;
+  }
+
+  .about-pillars-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .about-pillar-card {
+    padding: 1.5rem 1.25rem;
+    border-radius: 16px;
+  }
+
+  .about-arch-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .vip-publish-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .vip-publish-cta-btn {
+    width: 100%;
+    min-height: 44px;
+    font-size: 0.9rem;
+  }
+
+  .vip-tier-perks-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .about-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .about-hero h1 {
+    font-size: 1.85rem;
+    letter-spacing: -0.3px;
+  }
+
+  .about-hero p {
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+
+  .overview-card {
+    padding: 1.35rem 1rem;
+    border-radius: 14px;
+  }
+
+  .overview-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .overview-card p {
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .vip-instant-publish-card {
+    padding: 1rem 0.85rem;
+    border-radius: 12px;
+  }
+
+  .vip-publish-heading {
+    font-size: 0.95rem;
+  }
+
+  .vip-publish-desc {
+    font-size: 0.84rem !important;
+  }
+
+  .about-manual-req-box {
+    padding: 1rem 0.85rem;
+  }
+
+  .about-manual-req-box h4 {
+    font-size: 0.88rem;
+  }
+
+  .about-req-list {
+    padding-left: 1rem;
+    font-size: 0.8rem;
+  }
+
+  .showcase-logo-frame {
+    width: 100px;
+    height: 100px;
+    border-radius: 16px;
+  }
+
+  .brand-logo-showcase-card {
+    padding: 1.5rem 1rem;
+    border-radius: 18px;
+  }
+
+  .showcase-logo-details h2 {
+    font-size: 1.6rem;
+  }
+
+  .showcase-logo-details p {
+    font-size: 0.88rem;
+  }
 }
