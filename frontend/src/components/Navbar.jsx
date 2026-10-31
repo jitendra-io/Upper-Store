@@ -143,7 +143,10 @@ const Navbar = () => {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/notifications`);
+      const activeToken = token || localStorage.getItem('upper_user_token');
+      const res = await fetch(`${API_BASE}/api/notifications`, {
+        headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         const newNotifs = data || [];
@@ -204,7 +207,10 @@ const Navbar = () => {
     setIsBanned(Boolean(user.isBanned));
     const checkBanStatus = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(user.email)}`);
+        const activeToken = token || localStorage.getItem('upper_user_token');
+        const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(user.email)}`, {
+          headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
+        });
         if (res.ok) {
           const data = await res.json();
           setIsBanned(Boolean(data.isBanned));

@@ -16,7 +16,10 @@ export const AuthProvider = ({ children }) => {
     if (!targetEmail) return null;
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(targetEmail.trim())}`);
+      const activeToken = token || localStorage.getItem('upper_user_token');
+      const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(targetEmail.trim())}`, {
+        headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
+      });
       if (res.ok) {
         const statusData = await res.json();
         setUser((prevUser) => {

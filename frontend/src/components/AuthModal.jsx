@@ -48,14 +48,15 @@ const AuthModal = () => {
   // Listen for Google OAuth popup messages fallback
   useEffect(() => {
     const handleGoogleMessage = async (event) => {
-      if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS' && event.data.email) {
+      if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS' && (event.data.idToken || event.data.credential || event.data.email)) {
         setLoading(true);
         setErrorMsg('');
         try {
           await loginWithGoogle({
-            email: event.data.email.trim(),
-            displayName: event.data.name || event.data.email.split('@')[0],
-            photoURL: event.data.picture || `https://api.dicebear.com/7.x/bottts/svg?seed=${event.data.email.trim()}`,
+            idToken: event.data.idToken || event.data.credential,
+            email: event.data.email ? event.data.email.trim() : undefined,
+            displayName: event.data.name || (event.data.email ? event.data.email.split('@')[0] : ''),
+            photoURL: event.data.picture || (event.data.email ? `https://api.dicebear.com/7.x/bottts/svg?seed=${event.data.email.trim()}` : null),
           });
         } catch (err) {
           setErrorMsg(err.message || 'Google OAuth login failed.');
@@ -100,8 +101,10 @@ const AuthModal = () => {
       // 1. Primary: Firebase Web SDK Google Auth Provider Popup Window
       const result = await signInWithPopup(auth, googleProvider);
       const googleUser = result.user;
+      const idToken = await googleUser.getIdToken();
       
       await loginWithGoogle({
+        idToken,
         email: googleUser.email,
         displayName: googleUser.displayName || googleUser.email.split('@')[0],
         photoURL: googleUser.photoURL || null,

@@ -324,7 +324,9 @@ const AdminDashboard = () => {
   const fetchBroadcastNotifications = async () => {
     setLoadingNotifications(true);
     try {
-      const res = await fetch(`${API_BASE}/api/notifications`);
+      const res = await fetch(`${API_BASE}/api/notifications`, {
+        headers: adminToken ? { Authorization: `Bearer ${adminToken}` } : {},
+      });
       if (res.ok) {
         const data = await res.json();
         setBroadcastNotifications(data);
