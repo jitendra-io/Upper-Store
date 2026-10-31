@@ -23,14 +23,19 @@ const getMyDeveloperProfile = async (req, res) => {
     const devDoc = devSnap.docs[0];
     const devData = devDoc.data();
 
-    // Count user's uploaded products
+    // Count user's uploaded products (by both email and UID to ensure accuracy)
     let productsCount = 0;
     try {
-      const prodSnap = await db
-        .collection('products')
-        .where('developerEmail', '==', cleanEmail)
-        .get();
-      productsCount = prodSnap.size;
+      const emailSnap = cleanEmail
+        ? await db.collection('products').where('developerEmail', '==', cleanEmail).get()
+        : { docs: [] };
+      const idSnap = userId
+        ? await db.collection('products').where('developerId', '==', userId).get()
+        : { docs: [] };
+      const pSet = new Set();
+      emailSnap.docs.forEach((d) => pSet.add(d.id));
+      idSnap.docs.forEach((d) => pSet.add(d.id));
+      productsCount = pSet.size;
     } catch (e) {
       // Ignore count error
     }

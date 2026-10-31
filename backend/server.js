@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
@@ -72,6 +73,14 @@ app.use(
 );
 app.use(express.urlencoded({ limit: '2mb', extended: true }));
 
+// HTTP Response Compression (Gzip / Deflate, reduces response size by 75-85%)
+app.use(
+  compression({
+    threshold: 1024,
+    level: 6,
+  })
+);
+
 // Static directory for uploaded files (APKs and Images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -89,6 +98,23 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/downloads', require('./routes/downloadRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/developers', require('./routes/developerRoutes'));
+
+// High-Performance Telemetry & Health Endpoint
+const cacheService = require('./services/cacheService');
+app.get('/api/health', (req, res) => {
+  const mem = process.memoryUsage();
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    memory: {
+      rssMB: (mem.rss / (1024 * 1024)).toFixed(1),
+      heapUsedMB: (mem.heapUsed / (1024 * 1024)).toFixed(1),
+      heapTotalMB: (mem.heapTotal / (1024 * 1024)).toFixed(1),
+    },
+    cache: cacheService.getMetrics(),
+  });
+});
 
 // Serve static frontend in production if built dist exists
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');

@@ -1,4 +1,5 @@
 const { db } = require('../config/firebase');
+const cacheService = require('../services/cacheService');
 
 // Baseline fallback ratings for initial visual appeal
 const DEMO_REVIEWS = {
@@ -43,57 +44,64 @@ const DEMO_REVIEWS = {
 // @access  Public
 const getProductReviews = async (req, res) => {
   const { productId } = req.params;
+  const cacheKey = `reviews_${productId}`;
 
   try {
-    const snapshot = await db.collection('reviews').where('productId', '==', productId).get();
-    let reviews = [];
+    const isHit = cacheService.get(cacheKey) !== null;
+    const result = await cacheService.getOrSet(cacheKey, async () => {
+      const snapshot = await db.collection('reviews').where('productId', '==', productId).get();
+      let reviews = [];
 
-    if (!snapshot.empty) {
-      reviews = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    } else if (DEMO_REVIEWS[productId]) {
-      reviews = DEMO_REVIEWS[productId];
-    }
-
-    // Filter out badges and priority for expired VIP subscriptions
-    reviews = reviews.map((r) => {
-      const m = r.userMembership || r.membership;
-      if (m && m.validUntil && new Date(m.validUntil) < new Date()) {
-        const expiredDefault = { plan: 'free', badge: null, validUntil: null };
-        return {
-          ...r,
-          userMembership: expiredDefault,
-          membership: expiredDefault,
-        };
+      if (!snapshot.empty) {
+        reviews = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      } else if (DEMO_REVIEWS[productId]) {
+        reviews = DEMO_REVIEWS[productId];
       }
-      return r;
-    });
 
-    // Sort VIP comments first: Elite (Purple) -> Pro (Gold) -> then newest date
-    const getVipRank = (r) => {
-      const m = r.userMembership || r.membership;
-      if (!m) return 0;
-      if (m.validUntil && new Date(m.validUntil) < new Date()) return 0;
-      const plan = m.plan || 'free';
-      if (plan === 'elite') return 2;
-      if (plan === 'pro') return 1;
-      return 0;
-    };
+      // Filter out badges and priority for expired VIP subscriptions
+      reviews = reviews.map((r) => {
+        const m = r.userMembership || r.membership;
+        if (m && m.validUntil && new Date(m.validUntil) < new Date()) {
+          const expiredDefault = { plan: 'free', badge: null, validUntil: null };
+          return {
+            ...r,
+            userMembership: expiredDefault,
+            membership: expiredDefault,
+          };
+        }
+        return r;
+      });
 
-    reviews.sort((a, b) => {
-      const rankDiff = getVipRank(b) - getVipRank(a);
-      if (rankDiff !== 0) return rankDiff;
-      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-    });
+      // Sort VIP comments first: Elite (Purple) -> Pro (Gold) -> then newest date
+      const getVipRank = (r) => {
+        const m = r.userMembership || r.membership;
+        if (!m) return 0;
+        if (m.validUntil && new Date(m.validUntil) < new Date()) return 0;
+        const plan = m.plan || 'free';
+        if (plan === 'elite') return 2;
+        if (plan === 'pro') return 1;
+        return 0;
+      };
 
-    const totalRatings = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
-    const averageRating = reviews.length > 0 ? Number((totalRatings / reviews.length).toFixed(1)) : 5.0;
+      reviews.sort((a, b) => {
+        const rankDiff = getVipRank(b) - getVipRank(a);
+        if (rankDiff !== 0) return rankDiff;
+        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      });
 
-    res.json({
-      productId,
-      reviews,
-      reviewsCount: reviews.length,
-      averageRating,
-    });
+      const totalRatings = reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0);
+      const averageRating = reviews.length > 0 ? Number((totalRatings / reviews.length).toFixed(1)) : 5.0;
+
+      return {
+        productId,
+        reviews,
+        reviewsCount: reviews.length,
+        averageRating,
+      };
+    }, 30);
+
+    res.setHeader('X-Cache-Status', isHit ? 'HIT' : 'MISS');
+    res.json(result);
   } catch (error) {
     console.error('Error fetching reviews:', error);
     const fallbackList = DEMO_REVIEWS[productId] || [];
@@ -198,6 +206,11 @@ const addOrUpdateReview = async (req, res) => {
         reviewsCount: allReviews.length,
       });
     }
+
+    // Real-time cache invalidation for catalog & reviews
+    cacheService.invalidate(`reviews_${productId}`);
+    cacheService.invalidate('all_reviews');
+    cacheService.invalidate('products_list');
 
     res.status(201).json({
       message: 'Review submitted successfully!',

@@ -379,41 +379,36 @@ const Navbar = () => {
                               </span>
                             </div>
                           ) : (
-                            <div className="notif-item-top">
+                            <div className="notif-official-author-bar">
+                              <div className="notif-official-avatar-frame">
+                                <img src={logoImg} alt="Upper Store Official" className="notif-official-avatar-img" />
+                              </div>
+                              <div className="notif-official-author-meta">
+                                <span className="notif-author-title">{n.authorName || 'Upper Store Official'}</span>
+                                <span className="notif-official-badge">OFFICIAL</span>
+                              </div>
                               <span className={`notif-cat-tag ${(n.category || 'Update').toLowerCase()}`}>
                                 {n.category || 'Update'}
-                              </span>
-                              <span className="notif-time">
-                                {new Date(n.createdAt || Date.now()).toLocaleString(undefined, {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })}
                               </span>
                             </div>
                           )}
                           <h5 className="notif-item-title">{n.title}</h5>
                           <p className="notif-item-msg">{n.message}</p>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.35rem', flexWrap: 'wrap', gap: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.45rem', flexWrap: 'wrap', gap: '6px' }}>
                             {n.link ? (
                               <a href={n.link} target="_blank" rel="noopener noreferrer" className="notif-item-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 Open Link <ArrowRightIcon size={12} />
                               </a>
                             ) : <span />}
-                            {(isEliteAuthor || isProAuthor) && (
-                              <span className="notif-time">
-                                {new Date(n.createdAt || Date.now()).toLocaleString(undefined, {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                  hour12: true
-                                })}
-                              </span>
-                            )}
+                            <span className="notif-time">
+                              {new Date(n.createdAt || Date.now()).toLocaleString(undefined, {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true
+                              })}
+                            </span>
                           </div>
                         </div>
                       );

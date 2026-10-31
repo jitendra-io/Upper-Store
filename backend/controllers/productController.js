@@ -119,6 +119,7 @@ const resolveDirectImageUrl = async (url) => {
     const validHosts = ['photos.app.goo.gl', 'photos.google.com'];
     if (parsed.protocol === 'https:' && validHosts.includes(parsed.hostname.toLowerCase())) {
       const response = await fetch(cleanUrl, {
+        signal: AbortSignal.timeout(3500),
         redirect: 'follow',
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -170,13 +171,10 @@ const resolveDirectImageUrl = async (url) => {
 // @access  Public
 const getProducts = async (req, res) => {
   try {
-    // 1. In-memory cache lookup (0 Firestore reads, instant response)
-    let products = cacheService.get('products_list');
-
-    if (!products) {
-      // 2. Query products collection ordered by creation date
+    const isHit = cacheService.get('products_list') !== null;
+    const products = await cacheService.getOrSet('products_list', async () => {
       const snapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
-      products = snapshot.docs.map((doc) => {
+      return snapshot.docs.map((doc) => {
         const p = { id: doc.id, ...doc.data() };
         p.downloadCount = Number(p.downloadCount) || 0;
         p.image = quickSanitizeImageUrl(p.image);
@@ -193,13 +191,9 @@ const getProducts = async (req, res) => {
         }
         return p;
       });
+    }, 60);
 
-      // Cache products in server memory for 60 seconds
-      cacheService.set('products_list', products, 60);
-      res.setHeader('X-Cache-Status', 'MISS');
-    } else {
-      res.setHeader('X-Cache-Status', 'HIT');
-    }
+    res.setHeader('X-Cache-Status', isHit ? 'HIT' : 'MISS');
 
     // Support pagination query: ?page=1&limit=10
     if (req.query.page) {
@@ -290,6 +284,34 @@ const createProduct = async (req, res) => {
 
     if (!title || !category || !description) {
       return res.status(400).json({ message: 'Title, category, and description are required.' });
+    }
+
+    // Enforce VIP tier upload limits: Pro VIP = max 3 products, Elite VIP = unlimited products (Admin = unlimited)
+    if (!req.isAdmin && req.developer) {
+      const plan = (req.developer.vipPlan || req.membership?.plan || 'pro').toLowerCase();
+      if (plan === 'pro') {
+        const devUid = req.user?.uid || '';
+        const devEmail = (req.developer.email || req.user?.email || '').trim().toLowerCase();
+
+        const productIds = new Set();
+        if (devEmail) {
+          const emailSnap = await db.collection('products').where('developerEmail', '==', devEmail).get();
+          emailSnap.docs.forEach((doc) => productIds.add(doc.id));
+        }
+        if (devUid) {
+          const uidSnap = await db.collection('products').where('developerId', '==', devUid).get();
+          uidSnap.docs.forEach((doc) => productIds.add(doc.id));
+        }
+
+        if (productIds.size >= 3) {
+          return res.status(403).json({
+            message: 'Publishing Limit Reached: Pro VIP members can publish up to 3 products. Upgrade to Elite VIP for unlimited product publishing!',
+            code: 'PRO_LIMIT_REACHED',
+            currentCount: productIds.size,
+            maxAllowed: 3,
+          });
+        }
+      }
     }
 
     // Enforce GitHub Release link requirement

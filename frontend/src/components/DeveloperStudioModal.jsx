@@ -70,6 +70,9 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
 
   const vipTier = getUserVipTier(user);
   const isVipActive = vipTier === 'elite' || vipTier === 'pro';
+  const isPro = vipTier === 'pro';
+  const isElite = vipTier === 'elite';
+  const isProAtLimit = isPro && myProducts.length >= 3;
 
   // Fetch developer profile & products
   const fetchDevData = async () => {
@@ -293,6 +296,14 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       return;
     }
 
+    if (!editingProductId && isProAtLimit) {
+      setFeedback({
+        type: 'error',
+        message: 'Publishing Limit Reached: Pro VIP members can publish up to 3 products. Upgrade to Elite VIP for unlimited product publishing!',
+      });
+      return;
+    }
+
     if (!productForm.title.trim() || !productForm.description.trim() || !productForm.directApkUrl.trim()) {
       setFeedback({ type: 'error', message: 'Product Title, Description, and GitHub Download URL are required.' });
       return;
@@ -399,7 +410,10 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(broadcastForm),
+        body: JSON.stringify({
+          ...broadcastForm,
+          authorAvatar: user?.photoURL || devProfile?.avatar || '',
+        }),
       });
 
       const data = await res.json();
@@ -494,7 +508,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   <line x1="12" y1="3" x2="12" y2="15"/>
                 </svg>
               </span>
-              <span>{editingProductId ? 'Edit Product' : 'Publish Product'}</span>
+              <span>{editingProductId ? 'Edit Product' : isProAtLimit ? 'Publish Product (3/3 Limit)' : 'Publish Product'}</span>
             </button>
 
             <button
@@ -512,7 +526,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   <line x1="12" y1="22.08" x2="12" y2="12"/>
                 </svg>
               </span>
-              <span>My Releases ({myProducts.length})</span>
+              <span>My Releases ({myProducts.length}{isPro ? '/3' : ''})</span>
             </button>
 
             <button
@@ -565,6 +579,27 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                TAB 1: PUBLISH / UPDATE PRODUCT
                =============================================================== */
             <div className="dev-pane-content">
+              {!editingProductId && isProAtLimit && (
+                <div className="dev-limit-alert-card">
+                  <div className="limit-alert-icon">
+                    <AlertTriangleIcon size={24} style={{ color: '#ffd700' }} />
+                  </div>
+                  <div className="limit-alert-content">
+                    <h4>Pro VIP Publishing Limit Reached (3 of 3 Products)</h4>
+                    <p>
+                      Your Pro VIP tier allows publishing up to 3 verified software products in Upper Store. Upgrade to Elite VIP for UNLIMITED product publishing, highest catalog ranking, and dedicated CDN distribution!
+                    </p>
+                  </div>
+                  <a
+                    href="/vip"
+                    className="limit-upgrade-btn"
+                    onClick={() => onClose()}
+                  >
+                    Upgrade to Elite VIP (Unlimited) &rarr;
+                  </a>
+                </div>
+              )}
+
               {!devProfile && (
                 <div className="dev-kyc-gate-card">
                   <div className="gate-icon">
@@ -824,6 +859,21 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                TAB 2: MY RELEASES
                =============================================================== */
             <div className="dev-pane-content">
+              <div className="dev-allowance-strip">
+                <div className="allowance-info">
+                  <span className="allowance-badge">{isElite ? 'Elite VIP' : 'Pro VIP'}</span>
+                  <span className="allowance-text">
+                    {isElite
+                      ? <><strong>UNLIMITED</strong> Products Enabled &bull; {myProducts.length} Currently Active in Catalog</>
+                      : <><strong>{myProducts.length} of 3</strong> Product Slots Used &bull; {Math.max(0, 3 - myProducts.length)} Remaining</>}
+                  </span>
+                </div>
+                {isPro && (
+                  <a href="/vip" className="allowance-upgrade-link" onClick={() => onClose()}>
+                    Unlock Unlimited with Elite VIP &rarr;
+                  </a>
+                )}
+              </div>
               {myProducts.length === 0 ? (
                 <div className="dev-empty-box">
                   <div className="empty-graphic">
@@ -1194,11 +1244,12 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                 type="submit"
                 form="dev-product-form"
                 className="dev-primary-btn"
-                disabled={submittingProduct || devProfile?.isSuspended}
+                disabled={submittingProduct || devProfile?.isSuspended || (!editingProductId && isProAtLimit)}
+                title={!editingProductId && isProAtLimit ? 'Pro VIP limit reached (3/3 products). Upgrade to Elite VIP for unlimited uploads.' : ''}
               >
                 {submittingProduct
                   ? (editingProductId ? 'Saving Changes...' : 'Publishing Release...')
-                  : (editingProductId ? 'Save Product Changes' : 'Publish Product to Store')}
+                  : (editingProductId ? 'Save Product Changes' : isProAtLimit ? 'Publishing Limit Reached (3/3)' : 'Publish Product to Store')}
               </button>
             )}
 

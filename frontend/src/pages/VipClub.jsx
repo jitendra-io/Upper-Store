@@ -470,7 +470,7 @@ const VipClub = () => {
                 <div>
                   <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', fontWeight: 800 }}>VIP Developer Studio Unlocked!</h4>
                   <p style={{ margin: '0.2rem 0 0', fontSize: '0.82rem', color: '#cbd5e1' }}>
-                    Publish your own products to Upper Store &amp; broadcast notifications to all users with your official VIP animated ring.
+                    Publish products to Upper Store (Pro: up to 3 products, Elite: UNLIMITED) &amp; broadcast notifications with your VIP animated ring.
                   </p>
                 </div>
               </div>
@@ -589,6 +589,10 @@ const VipClub = () => {
                 <CheckIcon size={13} className="check-icon-green" />
                 <span>Priority high-speed CDN bandwidth</span>
               </div>
+              <div className="perk-line included">
+                <CheckIcon size={13} className="check-icon-green" />
+                <span><strong>Developer Studio:</strong> Publish up to 3 products</span>
+              </div>
             </div>
 
             {renderPlanButton('pro', 'Get Pro • ₹99 / mo', 'tier-btn pro', <CrownIcon size={15} />)}
@@ -634,6 +638,10 @@ const VipClub = () => {
               <div className="perk-line included">
                 <CheckIcon size={13} className="check-icon-green" />
                 <span>Early access to new app beta releases &amp; updates</span>
+              </div>
+              <div className="perk-line included">
+                <DiamondIcon size={13} className="check-icon-purple" />
+                <span><strong>Developer Studio:</strong> Publish UNLIMITED products</span>
               </div>
             </div>
 
@@ -704,6 +712,12 @@ const VipClub = () => {
                 <td>None</td>
                 <td>Full Email Receipt</td>
                 <td>Full Email Receipt</td>
+              </tr>
+              <tr>
+                <td>Developer Studio Product Uploads</td>
+                <td className="fee-text">&times; (Requires VIP)</td>
+                <td className="gold-text"><strong>Up to 3 Products</strong></td>
+                <td className="purple-text"><strong>UNLIMITED Products</strong></td>
               </tr>
               <tr>
                 <td>Early Beta Access &amp; Feature Voting</td>

@@ -105,6 +105,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
         '₹0 Platform Fee on all free app downloads',
         'Official Golden VIP Badge beside your name',
         'Priority high-speed CDN bandwidth',
+        'VIP Developer Studio: Publish up to 3 products in Store',
         'Gold-highlighted community product reviews',
         'Direct developer feature requests',
       ],
@@ -120,6 +121,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
       perks: [
         '₹0 Platform Fee on all downloads for 1 full year',
         'Official Royal Purple VIP Badge on profile & reviews',
+        'VIP Developer Studio: Publish UNLIMITED products in Store',
         'Top-Ranked Pinned Comments in all review sections',
         'Ultra VIP dedicated CDN download servers',
         'Exclusive early-access to new apps & updates',

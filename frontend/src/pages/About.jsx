@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
 import './About.css';
 
@@ -97,21 +97,96 @@ const About = () => {
         <div id="publish" className="overview-card publish-card-target" style={{ marginTop: '1.5rem', borderColor: 'rgba(212, 175, 55, 0.45)' }}>
           <h2>Publishing Your Product on Upper Store</h2>
           <p>
-            We welcome independent developers, software engineers, and digital creators to list their verified software applications, Android APKs, and developer tools on Upper Store.
+            We welcome independent developers, software engineers, and digital creators to distribute their verified software applications, Android APKs, and developer tools across our global ecosystem.
           </p>
-          <div style={{ marginTop: '1rem', background: 'rgba(255, 255, 255, 0.03)', padding: '1.2rem', borderRadius: '10px', borderLeft: '3px solid #d4af37' }}>
-            <h4 style={{ color: '#d4af37', margin: '0 0 0.5rem 0', fontSize: '1rem' }}>Developer Submission Requirements:</h4>
-            <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.9rem', color: '#cbd5e1' }}>
-              To list your software product, please send an official listing request to <a href="mailto:upper.official.in@gmail.com" style={{ color: '#38bdf8', fontWeight: 700, textDecoration: 'none' }}>upper.official.in@gmail.com</a> with the following mandatory details:
+
+          {/* INSTANT VIP DEVELOPER STUDIO HIGHLIGHT */}
+          <div style={{
+            marginTop: '1.25rem',
+            background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(212, 175, 55, 0.1) 100%)',
+            border: '1px solid rgba(212, 175, 55, 0.4)',
+            borderRadius: '12px',
+            padding: '1.4rem',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{
+                  background: 'linear-gradient(135deg, #ffd700 0%, #d4af37 100%)',
+                  color: '#090a0f',
+                  fontWeight: 800,
+                  fontSize: '0.7rem',
+                  letterSpacing: '0.6px',
+                  padding: '3px 8px',
+                  borderRadius: '6px',
+                  textTransform: 'uppercase'
+                }}>
+                  Instant Publishing
+                </span>
+                <h4 style={{ margin: 0, color: '#f8fafc', fontSize: '1.05rem', fontWeight: 800 }}>
+                  Publish Instantly with VIP Plan
+                </h4>
+              </div>
+              <Link
+                to="/vip"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #ffd700 0%, #d4af37 100%)',
+                  color: '#090a0f',
+                  padding: '0.55rem 1.1rem',
+                  borderRadius: '8px',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  textDecoration: 'none',
+                  boxShadow: '0 4px 14px rgba(212, 175, 55, 0.3)',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                Take VIP Plan &rarr;
+              </Link>
+            </div>
+
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+              If you want to publish your product in the store instantly, take a VIP plan! Complete your quick one-time Aadhaar verification to unlock immediate direct publishing privileges via the VIP Developer Studio:
             </p>
-            <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#94a3b8', fontSize: '0.88rem', lineHeight: '1.6' }}>
-              <li><strong>Complete Product Specifications:</strong> Title, Category, Version, Description, Key Features, & YouTube Demo Video URL.</li>
-              <li><strong>GitHub Developer Account:</strong> Direct link to your active, verified GitHub profile.</li>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.9rem' }}>
+              <div style={{ background: 'rgba(0, 0, 0, 0.35)', padding: '0.9rem 1rem', borderRadius: '8px', borderLeft: '3px solid #d4af37' }}>
+                <h5 style={{ margin: '0 0 0.3rem 0', color: '#ffd700', fontSize: '0.9rem', fontWeight: 700 }}>
+                  Pro VIP Plan
+                </h5>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.45' }}>
+                  Publish up to <strong>3 products</strong> in the Store with official developer attribution, golden animated ring, and community broadcast privileges.
+                </p>
+              </div>
+
+              <div style={{ background: 'rgba(0, 0, 0, 0.35)', padding: '0.9rem 1rem', borderRadius: '8px', borderLeft: '3px solid #c084fc' }}>
+                <h5 style={{ margin: '0 0 0.3rem 0', color: '#c084fc', fontSize: '0.9rem', fontWeight: 700 }}>
+                  Elite VIP Plan
+                </h5>
+                <p style={{ margin: 0, fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.45' }}>
+                  Publish <strong>UNLIMITED products</strong> in the Store with royal purple animated ring, highest catalog ranking, and pinned community reviews.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* STANDARD MANUAL EMAIL SUBMISSION OPTION */}
+          <div style={{ marginTop: '1.25rem', background: 'rgba(255, 255, 255, 0.03)', padding: '1.2rem', borderRadius: '10px', borderLeft: '3px solid rgba(255, 255, 255, 0.2)' }}>
+            <h4 style={{ color: '#cbd5e1', margin: '0 0 0.5rem 0', fontSize: '0.95rem' }}>Standard Developer Review (Manual Email Queue):</h4>
+            <p style={{ margin: '0 0 0.8rem 0', fontSize: '0.86rem', color: '#94a3b8' }}>
+              Creators without a VIP membership can submit software packages for manual administrative auditing by emailing <a href="mailto:upper.official.in@gmail.com" style={{ color: '#38bdf8', fontWeight: 700, textDecoration: 'none' }}>upper.official.in@gmail.com</a> with the following mandatory specifications:
+            </p>
+            <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#94a3b8', fontSize: '0.84rem', lineHeight: '1.6' }}>
+              <li><strong>Complete Product Specifications:</strong> Title, Category, Version, Description, Key Features, &amp; YouTube Demo Video URL.</li>
+              <li><strong>GitHub Developer Account:</strong> Direct link to your active, verified GitHub repository or release binary.</li>
               <li><strong>Identity Verification:</strong> Clear digital image copy of your official Aadhaar Card / Government Identity Proof.</li>
             </ul>
           </div>
           <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: '0.8rem', fontStyle: 'italic' }}>
-            All product submissions undergo thorough security auditing and identity verification by our administration team prior to public listing.
+            All product submissions undergo thorough security auditing and identity verification prior to public listing.
           </p>
         </div>
       </section>

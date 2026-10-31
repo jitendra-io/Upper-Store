@@ -68,9 +68,10 @@ const createNotification = async (req, res) => {
     const authorName = req.developer
       ? (req.developer.displayName || req.user.displayName || req.user.email.split('@')[0])
       : 'Upper Store Official';
+    const passedAvatar = req.body.authorAvatar && typeof req.body.authorAvatar === 'string' ? req.body.authorAvatar.trim() : null;
     const authorAvatar = req.developer
-      ? (req.developer.avatar || req.user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(req.user.email)}`)
-      : null;
+      ? (passedAvatar || req.developer.avatar || req.user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(req.user.email || 'dev')}`)
+      : (passedAvatar || req.user?.photoURL || null);
     const authorTier = req.developer ? (req.developer.vipPlan || req.membership?.plan || 'pro') : 'admin';
 
     const newDoc = {
