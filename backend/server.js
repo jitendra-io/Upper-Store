@@ -26,6 +26,9 @@ const app = express();
 // Strict CORS configuration allowing designated origins and rejecting arbitrary domains
 const allowedOrigins = [
   'https://jitendra-io.github.io',
+  'http://upperstore.bbroot.com',
+  'https://upperstore.bbroot.com',
+  'http://localhost:5173',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://localhost:3000',
