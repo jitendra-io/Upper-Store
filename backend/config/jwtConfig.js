@@ -1,4 +1,9 @@
 const crypto = require('crypto');
+const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
 
 let ephemeralSecret = null;
 
@@ -39,4 +44,3 @@ module.exports = {
   getJwtSecret,
   getLicenseSecret,
 };
-

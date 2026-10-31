@@ -20,7 +20,7 @@ const Navbar = () => {
   const [downloadCount, setDownloadCount] = useState(0);
   const [licenseCount, setLicenseCount] = useState(0);
   const location = useLocation();
-  const { user, isLoggedIn, openAuthModal, logout } = useAuth();
+  const { user, token, isLoggedIn, openAuthModal, logout } = useAuth();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -166,7 +166,7 @@ const Navbar = () => {
               setFlashToast(latest);
               setTimeout(() => {
                 setFlashToast(null);
-              }, 3000);
+              }, 5000);
             }
           }
         }

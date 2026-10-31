@@ -28,16 +28,16 @@ const getNotifications = async (req, res) => {
     if (currentUser && currentUser.role === 'admin') {
       // Admin sees all broadcast & user notification records
     } else if (currentUser && currentUser.email) {
-      // Authenticated user: sees broadcast notices + their own targeted notifications
+      // Authenticated user: sees general broadcast notices + their own targeted notifications
       const userEmail = currentUser.email.trim().toLowerCase();
       notifications = notifications.filter((n) => {
         if (!n.targetEmail) return true;
         return n.targetEmail.trim().toLowerCase() === userEmail;
       });
     } else {
-      // Unauthenticated public: only general broadcasts without targetEmail and non-security category
+      // Unauthenticated public: only general broadcasts without targetEmail
       notifications = notifications.filter((n) => {
-        return !n.targetEmail && n.category !== 'Security';
+        return !n.targetEmail;
       });
     }
 

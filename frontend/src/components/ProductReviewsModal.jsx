@@ -35,7 +35,7 @@ const sortVipReviews = (reviewList) => {
 };
 
 const ProductReviewsModal = ({ product, isOpen, onClose }) => {
-  const { user, isLoggedIn, openAuthModal } = useAuth();
+  const { user, token, isLoggedIn, openAuthModal } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(5.0);
   const [reviewsCount, setReviewsCount] = useState(0);

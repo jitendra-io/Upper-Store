@@ -10,7 +10,7 @@ import { CrownIcon, DiamondIcon, SparkleIcon, LockIcon, CheckIcon, ArrowRightIco
 import './ProductDetailModal.css';
 
 const ProductDetailModal = ({ product, onClose }) => {
-  const { user, isLoggedIn, openAuthModal } = useAuth();
+  const { user, token, isLoggedIn, openAuthModal } = useAuth();
   const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);

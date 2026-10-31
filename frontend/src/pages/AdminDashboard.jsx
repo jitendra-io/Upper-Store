@@ -176,7 +176,7 @@ const AdminDashboard = () => {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token || localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify(payload),
       });
@@ -198,7 +198,7 @@ const AdminDashboard = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token || localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify({ paymentId, action, rejectReason }),
       });
@@ -321,11 +321,12 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchBroadcastNotifications = async () => {
+  const fetchBroadcastNotifications = async (currentToken) => {
+    const activeTok = currentToken || token || localStorage.getItem('adminToken');
     setLoadingNotifications(true);
     try {
       const res = await fetch(`${API_BASE}/api/notifications`, {
-        headers: adminToken ? { Authorization: `Bearer ${adminToken}` } : {},
+        headers: activeTok ? { Authorization: `Bearer ${activeTok}` } : {},
       });
       if (res.ok) {
         const data = await res.json();
@@ -349,7 +350,7 @@ const AdminDashboard = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token || localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify({
           title: notifTitle,
@@ -380,7 +381,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(`${API_BASE}/api/notifications/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Notification deleted successfully.' });
@@ -497,7 +498,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(`${API_BASE}/api/contact/${msgId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Message deleted successfully.' });
@@ -518,7 +519,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(`${API_BASE}/api/contact/${msgId}/read`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Message marked as read.' });
@@ -549,7 +550,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(endpoint, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({
@@ -575,7 +576,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(`${API_BASE}/api/contact/appeals/${appealId}/resolve`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Appeal marked as resolved.' });
@@ -594,7 +595,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(`${API_BASE}/api/contact/appeals/${appealId}/reject`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Appeal marked as rejected.' });
@@ -613,7 +614,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(`${API_BASE}/api/contact/appeals/${appealId}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Appeal record deleted successfully.' });
@@ -725,7 +726,7 @@ const AdminDashboard = () => {
         method,
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token || localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify({
           title,
@@ -768,7 +769,7 @@ const AdminDashboard = () => {
     try {
       const res = await fetch(`${API_BASE}/api/products/${id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
       });
       if (res.ok) {
         setMessage({ type: 'success', text: 'Product deleted successfully.' });
