@@ -16,6 +16,7 @@ import {
   CreditCardIcon,
   CloseIcon,
 } from '../components/Icons';
+import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
 import './AdminDashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -56,6 +57,12 @@ const AdminDashboard = () => {
   const [loadingFeeSettings, setLoadingFeeSettings] = useState(false);
   const [savingFeeSettings, setSavingFeeSettings] = useState(false);
   const [feeValidationError, setFeeValidationError] = useState('');
+
+  // Developers State
+  const [developers, setDevelopers] = useState([]);
+  const [loadingDevelopers, setLoadingDevelopers] = useState(false);
+  const [developerSearch, setDeveloperSearch] = useState('');
+  const [suspendingDevId, setSuspendingDevId] = useState(null);
 
   // Users State
   const [users, setUsers] = useState([]);
@@ -117,6 +124,7 @@ const AdminDashboard = () => {
       setToken(savedToken);
       fetchProducts();
       fetchUsers(savedToken);
+      fetchDevelopers(savedToken);
       fetchAppeals(savedToken);
       fetchMessages(savedToken);
       fetchBroadcastNotifications();
@@ -318,6 +326,70 @@ const AdminDashboard = () => {
       console.warn('Error fetching all download history for admin:', err);
     } finally {
       setLoadingDownloads(false);
+    }
+  };
+
+  const fetchDevelopers = async (currentToken) => {
+    const activeTok = currentToken || token || localStorage.getItem('adminToken');
+    if (!activeTok) return;
+    setLoadingDevelopers(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/developers`, {
+        headers: { Authorization: `Bearer ${activeTok}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDevelopers(data);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch developers:', err);
+    } finally {
+      setLoadingDevelopers(false);
+    }
+  };
+
+  const handleToggleSuspendDev = async (dev) => {
+    const action = dev.isSuspended ? 'reinstate' : 'suspend';
+    let reason = '';
+    if (!dev.isSuspended) {
+      reason = window.prompt(
+        `Enter suspension reason for developer "${dev.displayName || dev.email}":`,
+        'Policy violation or unverified software distribution'
+      );
+      if (reason === null) return;
+    } else {
+      if (!window.confirm(`Are you sure you want to reinstate developer "${dev.displayName || dev.email}"?`)) {
+        return;
+      }
+    }
+
+    setSuspendingDevId(dev.id);
+    try {
+      const activeTok = token || localStorage.getItem('adminToken');
+      const res = await fetch(`${API_BASE}/api/developers/${dev.id}/suspend`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeTok}`,
+        },
+        body: JSON.stringify({
+          isSuspended: !dev.isSuspended,
+          reason,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update developer suspension status.');
+      }
+      setMessage({
+        type: 'success',
+        text: data.message || `Developer ${dev.displayName || dev.email} updated.`,
+      });
+      fetchDevelopers(activeTok);
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setSuspendingDevId(null);
     }
   };
 
@@ -904,6 +976,21 @@ const AdminDashboard = () => {
           </svg>
           <span>Broadcasts ({broadcastNotifications.length})</span>
         </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'developers' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('developers');
+            fetchDevelopers();
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <polyline points="17 11 19 13 23 9"></polyline>
+          </svg>
+          <span>VIP Developers ({developers.length})</span>
+        </button>
       </div>
 
       {/* FEEDBACK ALERT MESSAGE */}
@@ -1463,6 +1550,200 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* TAB: VIP DEVELOPERS OVERSIGHT & AADHAAR VERIFICATION */}
+      {activeTab === 'developers' && (
+        <div className="admin-section-block">
+          <div className="admin-section-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+            <div>
+              <h3 style={{ margin: 0 }}>VIP Developers &amp; Aadhaar Verification ({developers.length})</h3>
+              <p className="admin-section-desc" style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
+                Review submitted Aadhaar proofs via Google Drive, inspect developer contact details, and suspend or reinstate publishing access.
+              </p>
+            </div>
+            <button className="admin-btn outline-sm" onClick={() => fetchDevelopers()} disabled={loadingDevelopers}>
+              {loadingDevelopers ? 'Refreshing...' : 'Refresh Developers'}
+            </button>
+          </div>
+
+          <div className="admin-stats-pills-row" style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+            <div className="stat-pill" style={{ background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '0.65rem 1rem', borderRadius: '10px' }}>
+              <span className="stat-val" style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: '#ffffff' }}>{developers.length}</span>
+              <span className="stat-lbl" style={{ fontSize: '0.72rem', color: '#94a3b8', textTransform: 'uppercase' }}>Registered Developers</span>
+            </div>
+            <div className="stat-pill" style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.25)', padding: '0.65rem 1rem', borderRadius: '10px' }}>
+              <span className="stat-val" style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: '#22c55e' }}>
+                {developers.filter(d => !d.isSuspended).length}
+              </span>
+              <span className="stat-lbl" style={{ fontSize: '0.72rem', color: '#86efac', textTransform: 'uppercase' }}>Active Publishers</span>
+            </div>
+            <div className="stat-pill" style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)', padding: '0.65rem 1rem', borderRadius: '10px' }}>
+              <span className="stat-val" style={{ display: 'block', fontSize: '1.25rem', fontWeight: 800, color: '#ef4444' }}>
+                {developers.filter(d => d.isSuspended).length}
+              </span>
+              <span className="stat-lbl" style={{ fontSize: '0.72rem', color: '#fca5a5', textTransform: 'uppercase' }}>Suspended Accounts</span>
+            </div>
+          </div>
+
+          <div className="admin-search-bar" style={{ margin: '1rem 0' }}>
+            <input
+              type="text"
+              placeholder="Search developers by public name, legal name, email, phone, or Aadhaar number..."
+              value={developerSearch}
+              onChange={(e) => setDeveloperSearch(e.target.value)}
+              className="admin-search-input"
+              style={{
+                width: '100%',
+                padding: '0.65rem 1rem',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                color: '#ffffff',
+                boxSizing: 'border-box',
+                fontSize: '0.85rem'
+              }}
+            />
+          </div>
+
+          {loadingDevelopers ? (
+            <div className="admin-loading">Loading developer directory...</div>
+          ) : developers.length === 0 ? (
+            <div className="admin-empty">No VIP developers have registered for publishing yet.</div>
+          ) : (
+            <div className="admin-table-wrapper">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Developer Profile</th>
+                    <th>Contact &amp; VIP Tier</th>
+                    <th>12-Digit Aadhaar</th>
+                    <th>Aadhaar Proof (Drive)</th>
+                    <th>Published Products</th>
+                    <th>Status</th>
+                    <th>Account Moderation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {developers
+                    .filter((d) => {
+                      if (!developerSearch.trim()) return true;
+                      const q = developerSearch.toLowerCase();
+                      return (
+                        (d.displayName && d.displayName.toLowerCase().includes(q)) ||
+                        (d.legalName && d.legalName.toLowerCase().includes(q)) ||
+                        (d.email && d.email.toLowerCase().includes(q)) ||
+                        (d.phone && d.phone.includes(q)) ||
+                        (d.aadhaarNumber && d.aadhaarNumber.includes(q))
+                      );
+                    })
+                    .map((dev) => {
+                      return (
+                        <tr key={dev.id} className={dev.isSuspended ? 'row-banned' : ''}>
+                          <td className="user-profile-cell">
+                            <VipAvatar
+                              src={dev.avatar}
+                              alt={dev.displayName || dev.legalName}
+                              plan={dev.vipPlan || 'pro'}
+                              size="md"
+                              fallbackSeed={dev.email || 'dev'}
+                            />
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <strong>{dev.displayName || 'Developer'}</strong>
+                                <VipFlairBadge plan={dev.vipPlan || 'pro'} compact={true} />
+                              </div>
+                              <span className="sub-text">Legal: {dev.legalName}</span>
+                              <span className="sub-text">Joined: {new Date(dev.createdAt || Date.now()).toLocaleDateString()}</span>
+                            </div>
+                          </td>
+
+                          <td>
+                            <div>
+                              <span style={{ color: '#ffffff', fontWeight: 600 }}>{dev.email}</span>
+                              <div className="sub-text">Phone: {dev.phone}</div>
+                              <span className={`provider-pill ${dev.vipPlan === 'elite' ? 'elite' : 'pro'}`} style={{ marginTop: '4px', display: 'inline-block' }}>
+                                {dev.vipPlan ? dev.vipPlan.toUpperCase() : 'PRO'} VIP
+                              </span>
+                            </div>
+                          </td>
+
+                          <td>
+                            <span style={{ letterSpacing: '1px', fontFamily: 'monospace', fontWeight: 700, color: '#ffd700' }}>
+                              {dev.aadhaarNumber
+                                ? `${dev.aadhaarNumber.slice(0, 4)} ${dev.aadhaarNumber.slice(4, 8)} ${dev.aadhaarNumber.slice(8, 12)}`
+                                : 'N/A'}
+                            </span>
+                          </td>
+
+                          <td>
+                            {dev.aadhaarDriveLink ? (
+                              <a
+                                href={dev.aadhaarDriveLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="admin-btn outline-sm drive-link-btn"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', background: 'rgba(212, 175, 55, 0.1)', borderColor: '#d4af37', color: '#ffd700' }}
+                                title="Open Google Drive document in new tab"
+                              >
+                                View Aadhaar Proof ↗
+                              </a>
+                            ) : (
+                              <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>No link</span>
+                            )}
+                          </td>
+
+                          <td>
+                            <span style={{ fontWeight: 700, color: '#e2e8f0' }}>
+                              {dev.productsCount || 0} {dev.productsCount === 1 ? 'Product' : 'Products'}
+                            </span>
+                          </td>
+
+                          <td>
+                            {dev.isSuspended ? (
+                              <span className="status-badge banned">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                </svg>
+                                <span>SUSPENDED</span>
+                              </span>
+                            ) : (
+                              <span className="status-badge active">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>ACTIVE</span>
+                              </span>
+                            )}
+                          </td>
+
+                          <td>
+                            <button
+                              className={`admin-btn ${dev.isSuspended ? 'success-sm' : 'danger-sm'}`}
+                              onClick={() => handleToggleSuspendDev(dev)}
+                              disabled={suspendingDevId === dev.id}
+                            >
+                              {suspendingDevId === dev.id
+                                ? 'Updating...'
+                                : dev.isSuspended
+                                ? 'Reinstate Account'
+                                : 'Suspend Account'}
+                            </button>
+                            {dev.isSuspended && dev.suspensionReason && (
+                              <div style={{ fontSize: '0.72rem', color: '#fca5a5', marginTop: '4px' }}>
+                                Reason: {dev.suspensionReason}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

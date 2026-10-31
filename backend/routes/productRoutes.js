@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { protectAdmin } = require('../middleware/authMiddleware');
+const { protectPublisher } = require('../middleware/publisherMiddleware');
 const {
   getProducts,
   getProductById,
@@ -88,8 +89,8 @@ router.get('/:id', getProductById);
 router.post('/:id/download', trackProductDownload);
 
 // Protected admin routes
-router.post('/', protectAdmin, uploadFields, createProduct);
-router.put('/:id', protectAdmin, uploadFields, updateProduct);
-router.delete('/:id', protectAdmin, deleteProduct);
+router.post('/', protectPublisher, uploadFields, createProduct);
+router.put('/:id', protectPublisher, uploadFields, updateProduct);
+router.delete('/:id', protectPublisher, deleteProduct);
 
 module.exports = router;

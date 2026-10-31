@@ -19,6 +19,8 @@ const AuthModal = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,6 +35,8 @@ const AuthModal = () => {
       setEmail('');
       setPassword('');
       setDisplayName('');
+      setUsername('');
+      setUsernameError('');
     } else {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
@@ -71,6 +75,23 @@ const AuthModal = () => {
 
   if (!authModalOpen) return null;
 
+  const handleUsernameChange = (e) => {
+    const raw = e.target.value.toLowerCase();
+    const filtered = raw.replace(/[^a-z0-9_.]/g, '');
+    setUsername(filtered);
+    if (!filtered) {
+      setUsernameError('Username is required.');
+    } else if (filtered.length < 3) {
+      setUsernameError('Username must be at least 3 characters.');
+    } else if (filtered.length > 30) {
+      setUsernameError('Username cannot exceed 30 characters.');
+    } else if (!/^[a-z0-9_.]+$/.test(filtered)) {
+      setUsernameError('Only small letters, numbers, _ and . allowed.');
+    } else {
+      setUsernameError('');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -80,11 +101,24 @@ const AuthModal = () => {
       if (authModalTab === 'login') {
         await login(email, password);
       } else {
-        await register(email, password, displayName);
+        const cleanUser = username.trim().toLowerCase();
+        if (!cleanUser || cleanUser.length < 3) {
+          setErrorMsg('Username must be at least 3 characters long.');
+          setLoading(false);
+          return;
+        }
+        if (!/^[a-z0-9_.]+$/.test(cleanUser)) {
+          setErrorMsg('Username can only contain small letters (a-z), numbers (0-9), underscores (_), and dots (.).');
+          setLoading(false);
+          return;
+        }
+        await register(email, password, displayName, cleanUser);
       }
       setEmail('');
       setPassword('');
       setDisplayName('');
+      setUsername('');
+      setUsernameError('');
     } catch (err) {
       setErrorMsg(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
@@ -220,6 +254,30 @@ const AuthModal = () => {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
               />
+            </div>
+          )}
+
+          {/* REGISTER USERNAME FIELD */}
+          {authModalTab === 'register' && (
+            <div className="auth-field">
+              <label>
+                Username <span className="req-star">*</span>
+                <span className="auth-field-subhint">(small letters, numbers, _, . only)</span>
+              </label>
+              <div className="auth-username-input-wrap">
+                <span className="auth-username-prefix">@</span>
+                <input
+                  type="text"
+                  name="user_username_new"
+                  autoComplete="off"
+                  required
+                  placeholder="alex.dev_99"
+                  value={username}
+                  onChange={handleUsernameChange}
+                  maxLength={30}
+                />
+              </div>
+              {usernameError && <small className="auth-field-error-msg">{usernameError}</small>}
             </div>
           )}
 

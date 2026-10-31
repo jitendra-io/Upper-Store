@@ -133,11 +133,67 @@ const setupAdmin = async (req, res) => {
 // USER AUTHENTICATION (REGISTER, LOGIN, GOOGLE OAUTH)
 // ==========================================
 
+/**
+ * Validate strict username rules:
+ * - Unique across users
+ * - Can contain small letters (a-z), numbers (0-9), underscores (_), and dots (.) only
+ * - No uppercase letters, spaces, or other special characters
+ * - Length: 3 to 30 characters
+ */
+const validateUsernameFormat = (username) => {
+  if (!username || typeof username !== 'string') {
+    return { valid: false, message: 'Username is required.' };
+  }
+  const clean = username.trim().toLowerCase();
+  if (clean.length < 3) {
+    return { valid: false, message: 'Username must be at least 3 characters long.' };
+  }
+  if (clean.length > 30) {
+    return { valid: false, message: 'Username cannot exceed 30 characters.' };
+  }
+  if (!/^[a-z0-9_.]+$/.test(clean)) {
+    return {
+      valid: false,
+      message: 'Username can only contain small letters (a-z), numbers (0-9), underscores (_), and dots (.). No uppercase or other special characters are allowed.',
+    };
+  }
+  return { valid: true, clean };
+};
+
+/**
+ * Generate a unique compliant username from email/name
+ */
+const generateUniqueUsername = async (identifier, excludeUserId = null) => {
+  let base = (identifier || 'user')
+    .split('@')[0]
+    .toLowerCase()
+    .replace(/[^a-z0-9_.]/g, '_')
+    .slice(0, 20);
+  if (!base || base.length < 3) {
+    base = 'user_' + Math.floor(100 + Math.random() * 900);
+  }
+  base = base.replace(/[^a-z0-9_.]/g, '_');
+  let candidate = base;
+  let counter = 1;
+  while (true) {
+    const snap = await db.collection('users').where('username', '==', candidate).limit(1).get();
+    if (snap.empty) {
+      return candidate;
+    }
+    const doc = snap.docs[0];
+    if (excludeUserId && doc.id === excludeUserId) {
+      return candidate;
+    }
+    candidate = base.slice(0, 22) + '_' + counter;
+    counter++;
+  }
+};
+
 // @desc    Register new end-user
 // @route   POST /api/auth/user/register
 // @access  Public
 const registerUser = async (req, res) => {
-  const { email, password, displayName } = req.body;
+  const { email, password, displayName, username } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required.' });
@@ -146,6 +202,13 @@ const registerUser = async (req, res) => {
   if (password.length < 6) {
     return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
   }
+
+  // Validate Username: must be unique, lowercase letters, numbers, _, and . only
+  const uv = validateUsernameFormat(username);
+  if (!uv.valid) {
+    return res.status(400).json({ message: uv.message });
+  }
+  const cleanUsername = uv.clean;
 
   try {
     const cleanEmail = email.trim().toLowerCase();
@@ -158,14 +221,21 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'An account with this email already exists.' });
     }
 
+    // Check if username is already taken
+    const usernameSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
+    if (!usernameSnap.empty) {
+      return res.status(400).json({ message: 'Username @' + cleanUsername + ' is already taken. Please choose another.' });
+    }
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const photoURL = `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
     const newUserRef = await db.collection('users').add({
       email: cleanEmail,
+      username: cleanUsername,
       password: hashedPassword,
-      displayName: displayName ? displayName.trim() : cleanEmail.split('@')[0],
+      displayName: displayName ? displayName.trim() : cleanUsername,
       photoURL,
       provider: 'email',
       membership: { plan: 'free', badge: null, validUntil: null },
@@ -179,7 +249,8 @@ const registerUser = async (req, res) => {
     const userProfile = {
       uid: newUserRef.id,
       email: cleanEmail,
-      displayName: displayName ? displayName.trim() : cleanEmail.split('@')[0],
+      username: cleanUsername,
+      displayName: displayName ? displayName.trim() : cleanUsername,
       photoURL,
       provider: 'email',
       membership: { plan: 'free', badge: null, validUntil: null },
@@ -239,12 +310,19 @@ const loginUser = async (req, res) => {
 
     const photoURL = userData.photoURL || `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
+    let userUsername = userData.username;
+    if (!userUsername) {
+      userUsername = await generateUniqueUsername(userData.email, userDoc.id);
+      await userDoc.ref.update({ username: userUsername });
+    }
+
     const membership = await resolveUserMembership(userData, userDoc.ref);
 
     const userProfile = {
       uid: userDoc.id,
       email: userData.email,
-      displayName: userData.displayName || userData.email.split('@')[0],
+      username: userUsername,
+      displayName: userData.displayName || userUsername || userData.email.split('@')[0],
       provider: userData.provider || 'email',
       photoURL,
       isBanned: Boolean(userData.isBanned),
@@ -345,10 +423,12 @@ const googleOAuthLogin = async (req, res) => {
     const computedPhoto = verifiedPhoto || `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
     if (snapshot.empty) {
-      // Create new user account via Google
+      // Create new user account via Google with unique username
+      const generatedUsername = await generateUniqueUsername(cleanEmail);
       const newUserRef = await db.collection('users').add({
         email: cleanEmail,
-        displayName: verifiedName || cleanEmail.split('@')[0],
+        username: generatedUsername,
+        displayName: verifiedName || generatedUsername || cleanEmail.split('@')[0],
         photoURL: computedPhoto,
         googleId: verifiedUid || null,
         provider: 'google',
@@ -364,7 +444,8 @@ const googleOAuthLogin = async (req, res) => {
       finalProfile = {
         uid,
         email: cleanEmail,
-        displayName: verifiedName || cleanEmail.split('@')[0],
+        username: generatedUsername,
+        displayName: verifiedName || generatedUsername || cleanEmail.split('@')[0],
         photoURL: computedPhoto,
         provider: 'google',
         isBanned: false,
@@ -394,12 +475,19 @@ const googleOAuthLogin = async (req, res) => {
         lastLogin: new Date().toISOString(),
       });
 
+      let userUsername = existingData.username;
+      if (!userUsername) {
+        userUsername = await generateUniqueUsername(cleanEmail, userDoc.id);
+        await userDoc.ref.update({ username: userUsername });
+      }
+
       const membership = await resolveUserMembership(existingData, userDoc.ref);
 
       finalProfile = {
         uid,
         email: cleanEmail,
-        displayName: verifiedName || existingData.displayName || cleanEmail.split('@')[0],
+        username: userUsername,
+        displayName: verifiedName || existingData.displayName || userUsername || cleanEmail.split('@')[0],
         photoURL: activePhoto,
         provider: existingData.provider || 'google',
         isBanned: Boolean(existingData.isBanned),
@@ -569,6 +657,86 @@ const getUserStatus = async (req, res) => {
   }
 };
 
+// @desc    Update authenticated user's username
+// @route   PUT /api/auth/user/username
+// @access  Private (Authenticated User)
+const updateUsername = async (req, res) => {
+  const { username } = req.body;
+  const userId = req.user.uid;
+  const cleanEmail = (req.user.email || '').trim().toLowerCase();
+
+  const uv = validateUsernameFormat(username);
+  if (!uv.valid) {
+    return res.status(400).json({ message: uv.message });
+  }
+  const cleanUsername = uv.clean;
+
+  try {
+    // Check if taken by another user
+    const checkSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
+    if (!checkSnap.empty && checkSnap.docs[0].id !== userId) {
+      return res.status(400).json({ message: 'Username @' + cleanUsername + ' is already taken. Please choose another.' });
+    }
+
+    let userDocRef = db.collection('users').doc(userId);
+    let userDoc = await userDocRef.get();
+    if (!userDoc.exists && cleanEmail) {
+      const snap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!snap.empty) {
+        userDocRef = snap.docs[0].ref;
+        userDoc = snap.docs[0];
+      }
+    }
+
+    if (!userDoc || !userDoc.exists) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    await userDocRef.update({
+      username: cleanUsername,
+      updatedAt: new Date().toISOString(),
+    });
+
+    // If developer profile exists, update developer username as well
+    const devSnap = await db.collection('developers').where('userId', '==', userId).limit(1).get();
+    if (!devSnap.empty) {
+      await devSnap.docs[0].ref.update({
+        username: cleanUsername,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    res.json({
+      message: 'Username updated successfully.',
+      username: cleanUsername,
+    });
+  } catch (error) {
+    console.error('Error updating username:', error);
+    res.status(500).json({ message: 'Failed to update username.' });
+  }
+};
+
+// @desc    Check if username is available
+// @route   GET /api/auth/username/check/:username
+// @access  Public
+const checkUsernameAvailability = async (req, res) => {
+  const { username } = req.params;
+  const uv = validateUsernameFormat(username);
+  if (!uv.valid) {
+    return res.json({ available: false, message: uv.message });
+  }
+  try {
+    const checkSnap = await db.collection('users').where('username', '==', uv.clean).limit(1).get();
+    if (!checkSnap.empty) {
+      return res.json({ available: false, message: 'Username is already taken.' });
+    }
+    return res.json({ available: true, message: 'Username is available!' });
+  } catch (error) {
+    console.error('Check username error:', error);
+    res.status(500).json({ message: 'Failed to check username availability.' });
+  }
+};
+
 module.exports = {
   loginAdmin,
   setupAdmin,
@@ -579,5 +747,9 @@ module.exports = {
   banUser,
   unbanUser,
   getUserStatus,
+  validateUsernameFormat,
+  generateUniqueUsername,
+  updateUsername,
+  checkUsernameAvailability,
 };
 

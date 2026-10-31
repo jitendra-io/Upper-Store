@@ -1,9 +1,17 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { isUserVipActive } from '../utils/vipValidator';
 import { CrownIcon, DiamondIcon, SparkleIcon, ArrowRightIcon, CheckIcon } from './Icons';
 import './VipPromoBanner.css';
 
 const VipPromoBanner = ({ onOpenVipModal, compact = false }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Premium Members: Remove the promotional subscription banner completely
+  if (isUserVipActive(user)) {
+    return null;
+  }
 
   const handleBannerClick = () => {
     navigate('/vip-club');

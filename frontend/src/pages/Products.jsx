@@ -5,6 +5,9 @@ import ProductReviewsModal from '../components/ProductReviewsModal';
 import VipPromoBanner from '../components/VipPromoBanner';
 import StarRatingBadge from '../components/StarRatingBadge';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
+import { useAuth } from '../context/AuthContext';
+import { isUserVipActive } from '../utils/vipValidator';
+import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
 import './Products.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -82,6 +85,7 @@ const getProductTags = (product) => {
 };
 
 const Products = () => {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -89,6 +93,9 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+  const MAX_PAGES_LIMIT = 10;
   const [, setRefreshDownloads] = useState(0);
 
   const loadProducts = async () => {
@@ -140,11 +147,13 @@ const Products = () => {
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     setActiveSearch(searchQuery);
+    setCurrentPage(1);
   };
 
   const handleClearSearch = () => {
     setSearchQuery('');
     setActiveSearch('');
+    setCurrentPage(1);
   };
 
   const filteredProducts = products.filter((p) => {
@@ -187,6 +196,14 @@ const Products = () => {
     return matchesCategory && matchesSearch;
   });
 
+  // Calculate 10 items per page with max 10 pages limit
+  const totalItems = filteredProducts.length;
+  const rawTotalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+  const totalPages = Math.min(rawTotalPages, MAX_PAGES_LIMIT);
+  const activePage = Math.min(currentPage, totalPages);
+  const startIndex = (activePage - 1) * ITEMS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
   return (
     <div className="products-container" style={{ zIndex: 1, position: 'relative' }}>
       <header className="products-header">
@@ -228,9 +245,11 @@ const Products = () => {
       </header>
 
       {/* COMPACT VIP PROMO BANNER */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto 1.5rem auto' }}>
-        <VipPromoBanner compact={true} />
-      </div>
+      {!isUserVipActive(user) && (
+        <div style={{ maxWidth: '1200px', margin: '0 auto 1.5rem auto' }}>
+          <VipPromoBanner compact={true} />
+        </div>
+      )}
 
       {/* Category Filter Tabs */}
       <div className="catalog-category-bar">
@@ -238,7 +257,7 @@ const Products = () => {
           <button
             key={cat}
             className={`catalog-tab ${selectedCategory === cat ? 'active' : ''}`}
-            onClick={() => setSelectedCategory(cat)}
+            onClick={() => { setSelectedCategory(cat); setCurrentPage(1); }}
           >
             {cat}
           </button>
@@ -264,7 +283,7 @@ const Products = () => {
         </div>
       ) : (
         <div className="products-grid">
-          {filteredProducts.map((product) => {
+          {paginatedProducts.map((product) => {
             const downloadsCount = getProductDownloadCount(product.id, product.downloadCount);
             return (
               <div key={product.id} className="product-card">
@@ -312,6 +331,19 @@ const Products = () => {
                       ))}
                     </div>
                   )}
+                  {product.developerName && (
+                    <div className="product-developer-attribution">
+                      <VipAvatar
+                        src={product.developerAvatar}
+                        alt={product.developerName}
+                        plan={product.developerTier || 'pro'}
+                        size="sm"
+                        fallbackSeed={product.developerEmail || product.developerName}
+                      />
+                      <span className="product-developer-name">{product.developerName}{product.developerUsername && (<span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.78rem', fontFamily: 'monospace' }}>@{product.developerUsername}</span>)}</span>
+                      <VipFlairBadge plan={product.developerTier || 'pro'} compact={true} />
+                    </div>
+                  )}
                   <p>{product.description}</p>
                   <div className="product-footer">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
@@ -333,6 +365,66 @@ const Products = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* LUXURY ENTERPRISE PAGINATION (LIMIT 10 PAGES, 10 PRODUCTS PER PAGE) */}
+      {!loading && totalPages > 1 && (
+        <div className="catalog-pagination-wrap">
+          <div className="pagination-info">
+            Showing <strong>{startIndex + 1}–{Math.min(startIndex + ITEMS_PER_PAGE, totalItems)}</strong> of <strong>{totalItems}</strong> products
+          </div>
+
+          <div className="pagination-nav-bar">
+            <button
+              type="button"
+              className="pagination-btn nav-btn prev"
+              disabled={activePage <= 1}
+              onClick={() => {
+                setCurrentPage((p) => Math.max(1, p - 1));
+                const catBar = document.querySelector('.catalog-category-bar');
+                if (catBar) catBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+              <span>Previous</span>
+            </button>
+
+            <div className="pagination-page-pills">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  type="button"
+                  className={`page-pill-btn ${activePage === pageNum ? 'active' : ''}`}
+                  onClick={() => {
+                    setCurrentPage(pageNum);
+                    const catBar = document.querySelector('.catalog-category-bar');
+                    if (catBar) catBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                >
+                  {pageNum}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="pagination-btn nav-btn next"
+              disabled={activePage >= totalPages}
+              onClick={() => {
+                setCurrentPage((p) => Math.min(totalPages, p + 1));
+                const catBar = document.querySelector('.catalog-category-bar');
+                if (catBar) catBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+            >
+              <span>Next</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 

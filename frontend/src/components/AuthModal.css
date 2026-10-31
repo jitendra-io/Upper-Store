@@ -370,3 +370,50 @@
     padding: 1.2rem 1.1rem 1.5rem;
   }
 }
+
+
+/* Username Field Styling */
+.auth-field-subhint {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-weight: normal;
+  margin-left: 0.4rem;
+}
+
+.auth-username-input-wrap {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.auth-username-input-wrap:focus-within {
+  border-color: #d4af37;
+  background: rgba(20, 20, 24, 0.95);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+}
+
+.auth-username-prefix {
+  padding: 0.7rem 0.2rem 0.7rem 0.9rem;
+  color: #fbbf24;
+  font-weight: 800;
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+.auth-username-input-wrap input {
+  border: none !important;
+  background: transparent !important;
+  padding-left: 0.2rem !important;
+  box-shadow: none !important;
+  flex: 1;
+}
+
+.auth-field-error-msg {
+  font-size: 0.75rem;
+  color: #f87171;
+  margin-top: 0.2rem;
+}

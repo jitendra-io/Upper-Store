@@ -88,6 +88,7 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/downloads', require('./routes/downloadRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/developers', require('./routes/developerRoutes'));
 
 // Serve static frontend in production if built dist exists
 const frontendDist = path.join(__dirname, '..', 'frontend', 'dist');

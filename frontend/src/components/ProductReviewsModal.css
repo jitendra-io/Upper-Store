@@ -11,13 +11,13 @@
   width: 100vw;
   height: 100vh;
   background: rgba(10, 10, 14, 0.88);
-  z-index: 99990;
+  z-index: 100020;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
   font-family: 'Outfit', sans-serif;
-  animation: reviewsFadeIn 0.22s ease-out;
+  animation: reviewsFadeIn 0.2s ease-out forwards;
   box-sizing: border-box;
   overscroll-behavior: contain;
   touch-action: pan-y;
@@ -39,7 +39,7 @@
   flex-direction: column;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(212, 175, 55, 0.15);
   overflow: hidden;
-  animation: reviewsSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: reviewsSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   box-sizing: border-box;
   overscroll-behavior: contain;
 }

@@ -120,11 +120,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Register with Email & Password
-  const register = async (email, password, displayName) => {
+  const register = async (email, password, displayName, username) => {
     const res = await fetch(`${API_BASE}/api/auth/user/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, displayName }),
+      body: JSON.stringify({ email, password, displayName, username }),
     });
 
     const data = await res.json();
@@ -170,6 +170,27 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  // Update user username
+  const updateUsername = async (newUsername) => {
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(`${API_BASE}/api/auth/user/username`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ username: newUsername }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to update username.');
+    }
+    const updatedUser = { ...user, username: data.username };
+    setUser(updatedUser);
+    localStorage.setItem('upper_user_data', JSON.stringify(updatedUser));
+    return data;
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -190,6 +211,7 @@ export const AuthProvider = ({ children }) => {
         openAuthModal,
         closeAuthModal,
         register,
+        updateUsername,
         login,
         loginWithGoogle,
         logout,

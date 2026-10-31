@@ -7,6 +7,7 @@ import ProductReviewsModal from './ProductReviewsModal';
 import CheckoutModal from './CheckoutModal';
 import VipClubModal from './VipClubModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, LockIcon, CheckIcon, ArrowRightIcon, CloseIcon } from './Icons';
+import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import './ProductDetailModal.css';
 
 const ProductDetailModal = ({ product, onClose }) => {
@@ -279,6 +280,20 @@ const ProductDetailModal = ({ product, onClose }) => {
                   </span>
                   <span className="pill-item price-pill">{product.price}</span>
                 </div>
+                {product.developerName && (
+                  <div className="modal-developer-attribution">
+                    <span className="modal-dev-label">Published by:</span>
+                    <VipAvatar
+                      src={product.developerAvatar}
+                      alt={product.developerName}
+                      plan={product.developerTier || 'pro'}
+                      size="sm"
+                      fallbackSeed={product.developerEmail || product.developerName}
+                    />
+                    <span className="modal-dev-name">{product.developerName}{product.developerUsername && (<span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.8rem', fontFamily: 'monospace' }}>@{product.developerUsername}</span>)}</span>
+                    <VipFlairBadge plan={product.developerTier || 'pro'} compact={true} />
+                  </div>
+                )}
                 {Array.isArray(product.tags) && product.tags.filter(Boolean).length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.45rem' }}>
                     {product.tags.filter(Boolean).slice(0, 2).map((tag, idx) => (

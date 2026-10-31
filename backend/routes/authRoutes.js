@@ -12,6 +12,8 @@ const {
   banUser,
   unbanUser,
   getUserStatus,
+  updateUsername,
+  checkUsernameAvailability,
 } = require('../controllers/authController');
 
 // Admin Auth Routes (Protected against brute-force attacks)
@@ -28,5 +30,7 @@ router.post('/user/register', authLimiter, registerUser);
 router.post('/user/login', authLimiter, loginUser);
 router.post('/user/google', authLimiter, googleOAuthLogin);
 router.get('/user/status/:email', protect, getUserStatus);
+router.get('/username/check/:username', checkUsernameAvailability);
+router.put('/user/username', protect, updateUsername);
 
 module.exports = router;

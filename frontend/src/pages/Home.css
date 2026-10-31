@@ -1359,3 +1359,8 @@
     box-sizing: border-box !important;
   }
 }
+.home-vip-banner-section:empty {
+  display: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}

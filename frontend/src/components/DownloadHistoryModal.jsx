@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, clearUserDownloadHistory, recordUserDownload } from '../utils/downloadTracker';
+import { VipAvatar, VipFlairBadge } from './VipAvatar';
+import { getUserVipTier } from '../utils/vipValidator';
 import './DownloadHistoryModal.css';
 
 const DownloadHistoryModal = ({ isOpen, onClose }) => {
@@ -96,18 +98,18 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
         {/* HEADER */}
         <div className="history-modal-header">
           <div className="history-user-info">
-            <img
+            <VipAvatar
               src={userAvatar}
               alt={user.displayName || 'User'}
-              className="history-avatar"
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.email)}&backgroundColor=d4af37&textColor=000000`;
-              }}
+              plan={getUserVipTier(user)}
+              size="md"
+              fallbackSeed={user.email || 'user'}
             />
             <div>
-              <h3>My Download History</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ margin: 0 }}>My Download History</h3>
+                <VipFlairBadge plan={getUserVipTier(user)} compact={true} />
+              </div>
               <p className="history-user-sub">{user.email} • {history.length} {history.length === 1 ? 'Item' : 'Items'} Downloaded</p>
             </div>
           </div>

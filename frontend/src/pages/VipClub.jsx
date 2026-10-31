@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import VipClubModal from '../components/VipClubModal';
 import CancelSubscriptionModal from '../components/CancelSubscriptionModal';
+import DeveloperStudioModal from '../components/DeveloperStudioModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, CheckIcon, StarIcon, ArrowRightIcon, CloseIcon, ShieldOffIcon, LockIcon } from '../components/Icons';
 import eliteBadgeScreenshot from '../assets/elite-badge-preview.png';
 import proBadgeScreenshot from '../assets/pro-badge-preview.png';
@@ -13,6 +14,7 @@ const VipClub = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalPlan, setModalPlan] = useState('elite');
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [devStudioOpen, setDevStudioOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
   const [lightboxImg, setLightboxImg] = useState(null);
   const [eligibility, setEligibility] = useState(null);
@@ -460,6 +462,28 @@ const VipClub = () => {
           <p className="vip-section-subtitle">
             Cancel or renew anytime. Instant activation with zero hidden fees.
           </p>
+
+          {hasActiveSubscription && (
+            <div className="vip-developer-portal-banner" style={{ margin: '1.5rem auto 2rem', maxWidth: '820px', background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(212, 175, 55, 0.12) 100%)', border: '1px solid rgba(212, 175, 55, 0.35)', borderRadius: '16px', padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5), 0 0 25px rgba(212, 175, 55, 0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 9v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff', fontWeight: 800 }}>VIP Developer Studio Unlocked!</h4>
+                  <p style={{ margin: '0.2rem 0 0', fontSize: '0.82rem', color: '#cbd5e1' }}>
+                    Publish your own products to Upper Store &amp; broadcast notifications to all users with your official VIP animated ring.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="launch-dev-studio-btn"
+                onClick={() => setDevStudioOpen(true)}
+                style={{ background: 'linear-gradient(135deg, #ffd700 0%, #d4af37 100%)', color: '#090a0f', border: 'none', padding: '0.65rem 1.3rem', borderRadius: '10px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(212, 175, 55, 0.35)' }}
+              >
+                Launch Developer Studio ↗
+              </button>
+            </div>
+          )}
 
           {/* BILLING TOGGLE */}
           <div className="vip-billing-toggle-wrap">

@@ -62,7 +62,24 @@ const createNotification = async (req, res) => {
   }
 
   try {
+    const authorType = req.developer ? 'developer' : 'admin';
+    const authorId = req.developer ? req.user.uid : null;
+    const authorEmail = req.developer ? (req.developer.email || req.user.email || '').toLowerCase() : null;
+    const authorName = req.developer
+      ? (req.developer.displayName || req.user.displayName || req.user.email.split('@')[0])
+      : 'Upper Store Official';
+    const authorAvatar = req.developer
+      ? (req.developer.avatar || req.user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(req.user.email)}`)
+      : null;
+    const authorTier = req.developer ? (req.developer.vipPlan || req.membership?.plan || 'pro') : 'admin';
+
     const newDoc = {
+      authorType,
+      authorId,
+      authorEmail,
+      authorName,
+      authorAvatar,
+      authorTier,
       title: title.trim(),
       message: message.trim(),
       category: category || 'Update', // 'Update' | 'Release' | 'Notice' | 'Announcement'
@@ -97,6 +114,19 @@ const deleteNotification = async (req, res) => {
 
     if (!doc.exists) {
       return res.status(404).json({ message: 'Notification not found.' });
+    }
+
+    const nData = doc.data();
+    if (!req.isAdmin) {
+      const currentEmail = (req.user?.email || '').toLowerCase();
+      const currentUid = req.user?.uid;
+      const isOwner =
+        (nData.authorEmail && nData.authorEmail.toLowerCase() === currentEmail) ||
+        (nData.authorId && nData.authorId === currentUid);
+
+      if (!isOwner) {
+        return res.status(403).json({ message: 'Forbidden: You can only delete broadcast notifications you sent.' });
+      }
     }
 
     await docRef.delete();

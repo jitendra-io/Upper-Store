@@ -6,7 +6,10 @@ import ProductReviewsModal from '../components/ProductReviewsModal';
 import VipPromoBanner from '../components/VipPromoBanner';
 import VipClubModal from '../components/VipClubModal';
 import StarRatingBadge from '../components/StarRatingBadge';
+import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
 import { ArrowRightIcon } from '../components/Icons';
+import { useAuth } from '../context/AuthContext';
+import { isUserVipActive } from '../utils/vipValidator';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Home.css';
 import './Products.css';
@@ -65,6 +68,7 @@ const getSafeImageUrl = (url) => {
 };
 
 const Home = () => {
+  const { user } = useAuth();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [catalogProducts, setCatalogProducts] = useState([]);
   const [totalProductsCount, setTotalProductsCount] = useState(0);
@@ -175,14 +179,16 @@ const Home = () => {
       </section>
 
       {/* INTERACTIVE VIP PROMO BANNER */}
-      <section className="home-vip-banner-section" style={{ maxWidth: '1240px', margin: '0 auto 2.5rem auto', padding: '0 1.5rem', boxSizing: 'border-box' }}>
+      {!isUserVipActive(user) && (
+        <section className="home-vip-banner-section" style={{ maxWidth: '1240px', margin: '0 auto 2.5rem auto', padding: '0 1.5rem', boxSizing: 'border-box' }}>
         <VipPromoBanner
-          onOpenVipModal={(plan) => {
-            setVipModalPlan(plan);
-            setVipModalOpen(true);
-          }}
-        />
-      </section>
+            onOpenVipModal={(plan) => {
+              setVipModalPlan(plan);
+              setVipModalOpen(true);
+            }}
+          />
+        </section>
+      )}
 
       {/* FEATURED PRODUCTS SPOTLIGHT */}
       <section className="home-section featured-section">
@@ -241,6 +247,19 @@ const Home = () => {
                         </div>
                       </div>
                     </div>
+                    {prod.developerName && (
+                      <div className="product-developer-attribution">
+                        <VipAvatar
+                          src={prod.developerAvatar}
+                          alt={prod.developerName}
+                          plan={prod.developerTier || 'pro'}
+                          size="sm"
+                          fallbackSeed={prod.developerEmail || prod.developerName}
+                        />
+                        <span className="product-developer-name">{prod.developerName}</span>
+                        <VipFlairBadge plan={prod.developerTier || 'pro'} compact={true} />
+                      </div>
+                    )}
                     <p>{prod.description}</p>
                     <div className="product-footer">
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>

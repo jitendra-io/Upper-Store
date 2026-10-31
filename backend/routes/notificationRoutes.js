@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protectAdmin } = require('../middleware/authMiddleware');
+const { protectPublisher } = require('../middleware/publisherMiddleware');
 const {
   getNotifications,
   createNotification,
@@ -11,7 +12,7 @@ const {
 router.get('/', getNotifications);
 
 // Admin routes to send and delete broadcasts
-router.post('/', protectAdmin, createNotification);
-router.delete('/:id', protectAdmin, deleteNotification);
+router.post('/', protectPublisher, createNotification);
+router.delete('/:id', protectPublisher, deleteNotification);
 
 module.exports = router;

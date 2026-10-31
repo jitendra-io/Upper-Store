@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, recordUserDownload } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
 import { CrownIcon, DiamondIcon, StarIcon } from './Icons';
+import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import './ProductReviewsModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -37,10 +38,10 @@ const sortVipReviews = (reviewList) => {
 const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   const { user, token, isLoggedIn, openAuthModal } = useAuth();
   const [reviews, setReviews] = useState([]);
-  const [averageRating, setAverageRating] = useState(5.0);
-  const [reviewsCount, setReviewsCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(() => Number(product?.averageRating) || 5.0);
+  const [reviewsCount, setReviewsCount] = useState(() => Number(product?.reviewsCount) || 0);
   const [loading, setLoading] = useState(true);
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [, setDownloadHistorySync] = useState(0);
 
   // Review Form state
   const [userRating, setUserRating] = useState(5);
@@ -52,11 +53,13 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [isBanned, setIsBanned] = useState(Boolean(user?.isBanned));
 
+  // Sync ban status safely on modal open
   useEffect(() => {
-    if (!user || !user.email) {
+    if (!isOpen || !user?.email) {
       setIsBanned(false);
       return;
     }
+    let isMounted = true;
     setIsBanned(Boolean(user.isBanned));
     const checkBanStatus = async () => {
       try {
@@ -64,45 +67,46 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
         const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(user.email)}`, {
           headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
         });
-        if (res.ok) {
+        if (res.ok && isMounted) {
           const data = await res.json();
           setIsBanned(Boolean(data.isBanned));
         }
       } catch (err) {}
     };
     checkBanStatus();
-  }, [user, isOpen]);
+    return () => { isMounted = false; };
+  }, [isOpen, user?.email]);
 
-  // Sync user download history from DB when modal opens
+  // Sync user download history from DB when modal opens (purely local sync, never re-fetches reviews)
   useEffect(() => {
-    if (isOpen && user && user.email) {
+    let isMounted = true;
+    if (isOpen && user?.email) {
       fetchUserDownloadHistoryFromDB(user.email).then(() => {
-        setForceUpdate((prev) => prev + 1);
+        if (isMounted) {
+          setDownloadHistorySync((prev) => prev + 1);
+        }
       });
     }
-  }, [isOpen, user]);
+    return () => { isMounted = false; };
+  }, [isOpen, user?.email]);
 
-  // Fetch reviews on load
-  const loadReviews = async () => {
+  // Fetch reviews on load - background safe, never blinks or destroys rendered reviews
+  const loadReviews = async (showSpinner = false) => {
     if (!product?.id) return;
-    setLoading(true);
+    if (showSpinner) {
+      setLoading(true);
+    }
     try {
       const res = await fetch(`${API_BASE}/api/reviews/product/${product.id}`);
       if (res.ok) {
         const data = await res.json();
         const sorted = sortVipReviews(data.reviews || []);
         setReviews(sorted);
-        setAverageRating(data.averageRating || 5.0);
-        setReviewsCount(data.reviewsCount || 0);
-
-        // Pre-fill user review if exists
-        if (user && user.email) {
-          const cleanEmail = user.email.trim().toLowerCase();
-          const existing = (data.reviews || []).find(r => r.userEmail === cleanEmail);
-          if (existing) {
-            setUserRating(existing.rating || 5);
-            setUserComment(existing.comment || '');
-          }
+        if (typeof data.averageRating === 'number') {
+          setAverageRating(data.averageRating);
+        }
+        if (typeof data.reviewsCount === 'number') {
+          setReviewsCount(data.reviewsCount);
         }
       }
     } catch (err) {
@@ -112,25 +116,34 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     }
   };
 
+  // Only trigger review load on open or product change - strictly decoupled from user identity updates
   useEffect(() => {
     if (isOpen && product?.id) {
-      loadReviews();
+      loadReviews(reviews.length === 0);
     }
-  }, [isOpen, product, user, forceUpdate]);
+  }, [isOpen, product?.id]);
 
-  // Lock background scroll without blur
+  // Pre-fill user review if exists once reviews or user email are resolved
+  useEffect(() => {
+    if (user?.email && reviews.length > 0) {
+      const cleanEmail = user.email.trim().toLowerCase();
+      const existing = reviews.find(r => (r.userEmail || '').trim().toLowerCase() === cleanEmail);
+      if (existing) {
+        setUserRating(existing.rating || 5);
+        setUserComment(existing.comment || '');
+      }
+    }
+  }, [user?.email, reviews]);
+
+  // Lock background scroll smoothly without layout thrashing
   useEffect(() => {
     if (isOpen) {
+      const prevBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
+      return () => {
+        document.body.style.overflow = prevBodyOverflow;
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-    };
   }, [isOpen]);
 
   if (!isOpen || !product) return null;
@@ -271,7 +284,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     if (targetUrl && targetUrl !== '#') {
       window.open(targetUrl, '_blank');
     }
-    setForceUpdate((prev) => prev + 1);
+    setDownloadHistorySync((prev) => prev + 1);
   };
 
   const handleAcceptTerms = () => {
@@ -541,32 +554,23 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                         </div>
                       )}
                       <div className="review-comment-header">
-                        <div className={`review-avatar-frame ${isElite ? 'frame-purple' : isPro ? 'frame-gold' : ''}`}>
-                          <img
-                            src={rev.userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`}
-                            alt={rev.userName || 'User'}
-                            className="review-user-avatar"
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(rev.userEmail || 'user')}&backgroundColor=d4af37&textColor=000000`;
-                            }}
-                          />
-                        </div>
+                        <VipAvatar
+                          src={rev.userAvatar}
+                          alt={rev.userName || 'User'}
+                          plan={isElite ? 'elite' : isPro ? 'pro' : 'free'}
+                          size="md"
+                          fallbackSeed={rev.userEmail || 'user'}
+                        />
                         <div className="review-user-info">
                           <div className="review-user-name-row">
                             <span className="review-user-name" title={rev.userName || rev.userEmail?.split('@')[0]}>
                               {rev.userName || rev.userEmail?.split('@')[0]}
                             </span>
                             {isElite ? (
-                              <span className="user-membership-pill elite" title="Official Upper Elite VIP">
-                                <DiamondIcon size={12} style={{ marginRight: '4px' }} /> Elite VIP
-                              </span>
-                            ) : isPro ? (
-                              <span className="user-membership-pill pro" title="Official Upper Pro VIP">
-                                <CrownIcon size={12} style={{ marginRight: '4px' }} /> Pro VIP
-                              </span>
-                            ) : null}
+                                <VipFlairBadge plan="elite" compact={true} />
+                              ) : isPro ? (
+                                <VipFlairBadge plan="pro" compact={true} />
+                              ) : null}
                             <div className="review-card-stars">
                               {[1, 2, 3, 4, 5].map((s) => {
                                 const isFilled = s <= rev.rating;
