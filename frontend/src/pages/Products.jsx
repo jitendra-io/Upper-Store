@@ -16,9 +16,12 @@ const CATEGORIES = [
   'All',
   'Android Tools',
   'Windows & Desktop',
+  'AI Tools',
+  'Games',
   'Developer Utilities',
   'Design Assets',
-  'Privacy Clean'
+  'Privacy Clean',
+  'Others'
 ];
 
 const renderBadgeIcon = (type) => {
@@ -168,9 +171,12 @@ const Products = () => {
       p.category === selectedCategory ||
       (selectedCategory === 'Android Tools' && (catLower.includes('mobile') || catLower.includes('android') || apkLower.endsWith('.apk'))) ||
       (selectedCategory === 'Windows & Desktop' && (catLower.includes('windows') || catLower.includes('desktop') || catLower.includes('exe') || apkLower.endsWith('.exe'))) ||
-      (selectedCategory === 'Developer Utilities' && (catLower.includes('developer') || catLower.includes('tool') || catLower.includes('software') || titleLower.includes('dev') || descLower.includes('api'))) ||
+      (selectedCategory === 'AI Tools' && (catLower.includes('ai') || titleLower.includes('ai') || descLower.includes('ai') || catLower.includes('model'))) ||
+      (selectedCategory === 'Games' && (catLower.includes('game') || titleLower.includes('game') || descLower.includes('game'))) ||
+      (selectedCategory === 'Developer Utilities' && (catLower.includes('developer') || catLower.includes('tool') || catLower.includes('software') || titleLower.includes('dev') || descLower.includes('api') || catLower.includes('library'))) ||
       (selectedCategory === 'Design Assets' && (catLower.includes('design') || catLower.includes('vector') || catLower.includes('asset') || catLower.includes('graphic') || apkLower.endsWith('.zip'))) ||
-      (selectedCategory === 'Privacy Clean' && (catLower.includes('privacy') || catLower.includes('offline') || descLower.includes('offline') || descLower.includes('privacy') || !catLower.includes('ad')));
+      (selectedCategory === 'Privacy Clean' && (catLower.includes('privacy') || catLower.includes('offline') || descLower.includes('offline') || descLower.includes('privacy') || !catLower.includes('ad'))) ||
+      (selectedCategory === 'Others' && (catLower.includes('other') || (!catLower.includes('mobile') && !catLower.includes('windows') && !catLower.includes('desktop') && !catLower.includes('ai') && !catLower.includes('game') && !catLower.includes('developer'))));
     
     // 2. Word-level description & title search matching
     const queryToUse = activeSearch || searchQuery;

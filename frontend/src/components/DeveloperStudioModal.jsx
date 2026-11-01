@@ -10,13 +10,15 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const CATEGORIES = [
   'Mobile App',
-  'Windows Software',
+  'Windows App',
   'Mac App',
-  'Web Tool',
+  'AI Tool',
   'Game',
   'Developer Library',
-  'AI Model',
-  'Other',
+  'Web Tool',
+  'Software Tool',
+  'Design Asset',
+  'Others',
 ];
 
 export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) => {

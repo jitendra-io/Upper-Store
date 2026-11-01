@@ -735,7 +735,7 @@ const AdminDashboard = () => {
   const startEditProduct = (p) => {
     setEditingProduct(p);
     setTitle(p.title || '');
-    setCategory(p.category || 'Mobile App');
+    setCategory(p.category === 'Other' ? 'Others' : (p.category || 'Mobile App'));
     setPrice(p.price || 'Free');
     setVersion(p.version || '1.0.0');
     setDescription(p.description || '');
@@ -1035,8 +1035,14 @@ const AdminDashboard = () => {
                   <select value={category} onChange={(e) => setCategory(e.target.value)}>
                     <option value="Mobile App">Mobile App (.apk)</option>
                     <option value="Windows App">Windows App (.exe)</option>
-                    <option value="Design Asset">Design Asset (.zip)</option>
+                    <option value="AI Tool">AI Tool</option>
+                    <option value="Game">Game</option>
+                    <option value="Developer Library">Developer Library</option>
+                    <option value="Web Tool">Web Tool</option>
                     <option value="Software Tool">Software Tool</option>
+                    <option value="Design Asset">Design Asset (.zip)</option>
+                    <option value="Others">Others</option>
+                    {category === 'Other' && <option value="Other">Other</option>}
                   </select>
                 </div>
               </div>

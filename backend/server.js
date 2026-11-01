@@ -28,7 +28,7 @@ const allowedOrigins = [
   'https://jitendra-io.github.io',
   'http://upperstore.bbroot.com',
   'https://upperstore.bbroot.com',
-  'https://upper-store.vercel.app/',
+  "https://upperstore.pages.dev",
   'http://localhost:5173',
   'http://localhost:5173',
   'http://localhost:5174',
@@ -48,6 +48,12 @@ const isOriginAllowed = (origin) => {
 
   // Allow official GitHub Pages subdomains
   if (/^https:\/\/([a-zA-Z0-9_-]+)\.github\.io$/.test(cleanOrigin)) return true;
+
+  // Allow Cloudflare Pages subdomains (*.pages.dev)
+  if (/^https:\/\/([a-zA-Z0-9_.-]+)\.pages\.dev$/.test(cleanOrigin)) return true;
+
+  // Allow Vercel app subdomains (*.vercel.app)
+  if (/^https:\/\/([a-zA-Z0-9_.-]+)\.vercel\.app$/.test(cleanOrigin)) return true;
 
   return false;
 };
