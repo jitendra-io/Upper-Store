@@ -28,6 +28,7 @@ const allowedOrigins = [
   'https://jitendra-io.github.io',
   'http://upperstore.bbroot.com',
   'https://upperstore.bbroot.com',
+  'https://upper-store.vercel.app/',
   'http://localhost:5173',
   'http://localhost:5173',
   'http://localhost:5174',
