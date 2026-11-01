@@ -13,6 +13,7 @@ const {
   unbanUser,
   getUserStatus,
   updateUsername,
+  getUsernameStatus,
   checkUsernameAvailability,
 } = require('../controllers/authController');
 
@@ -31,6 +32,7 @@ router.post('/user/login', authLimiter, loginUser);
 router.post('/user/google', authLimiter, googleOAuthLogin);
 router.get('/user/status/:email', protect, getUserStatus);
 router.get('/username/check/:username', checkUsernameAvailability);
+router.get('/user/username/status', protect, getUsernameStatus);
 router.put('/user/username', protect, updateUsername);
 
 module.exports = router;

@@ -298,6 +298,7 @@
   padding: 1.4rem 1.6rem;
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
@@ -1050,38 +1051,85 @@
 @media (max-width: 768px) {
   .dev-modal-backdrop {
     padding: 0;
+    align-items: stretch;
   }
 
   .dev-modal-card {
-    width: 100vw;
+    width: 100%;
+    max-width: 100vw;
     height: 100%;
-    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     border-radius: 0;
     border: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   .dev-modal-header {
-    padding: 0.9rem 1rem;
+    padding: 0.75rem 1rem;
+    flex-shrink: 0;
+    gap: 0.65rem;
   }
 
+  .dev-vip-icon-box {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dev-modal-title h3 {
+    font-size: 0.94rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dev-modal-title p {
+    font-size: 0.7rem;
+  }
+
+  /* CRITICAL: Smooth horizontal swipeable tabs on phone screens */
   .dev-tabs-container {
-    padding: 0.5rem 1rem;
+    padding: 0.45rem 0.75rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+
+  .dev-tabs-container::-webkit-scrollbar {
+    display: none;
   }
 
   .dev-segmented-tabs {
-    width: 100%;
-    justify-content: space-between;
+    display: inline-flex;
+    width: max-content;
+    gap: 0.35rem;
+    padding: 3px;
+    justify-content: flex-start;
   }
 
   .dev-segmented-tab {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.74rem;
-    flex: 1;
-    justify-content: center;
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
   }
 
+  /* CRITICAL: Flex 1 + min-height 0 for smooth vertical scrolling */
   .dev-modal-body {
-    padding: 1rem;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.95rem;
+  }
+
+  .dev-form-section {
+    padding: 1rem 0.85rem;
+    border-radius: 14px;
+    gap: 0.85rem;
   }
 
   .form-fields-grid.grid-2,
@@ -1089,6 +1137,7 @@
   .dev-broadcast-layout {
     grid-template-columns: 1fr;
     gap: 0.85rem;
+    width: 100%;
   }
 
   .dev-field-group input,
@@ -1096,30 +1145,86 @@
   .dev-field-group textarea {
     font-size: 16px !important; /* CRITICAL: Prevents iOS/Android viewport zoom */
     min-height: 44px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .dev-kyc-gate-card,
+  .dev-limit-alert-card,
+  .dev-edit-active-banner,
+  .dev-kyc-intro-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 0.9rem;
+  }
+
+  .gate-action-btn,
+  .limit-upgrade-btn,
+  .dev-cancel-edit-btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .dev-release-card {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.85rem;
+  }
+
+  .release-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .release-edit-btn,
+  .release-del-btn {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
   }
 
   .dev-modal-footer {
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
     flex-direction: column-reverse;
     gap: 0.65rem;
+    flex-shrink: 0;
   }
 
   .footer-left-status {
     width: 100%;
     justify-content: center;
+    font-size: 0.72rem;
   }
 
   .footer-right-actions {
     width: 100%;
+    display: flex;
+    gap: 0.55rem;
   }
 
   .dev-cancel-btn {
     flex: 1;
-    text-align: center;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .dev-primary-btn {
     flex: 2;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
   }
 }

@@ -26,6 +26,7 @@ export const AuthProvider = ({ children }) => {
           if (!prevUser) return prevUser;
           const updated = {
             ...prevUser,
+            username: statusData.username || prevUser.username,
             isBanned: Boolean(statusData.isBanned),
             bannedAt: statusData.bannedAt || null,
             lastAppealedAt: statusData.lastAppealedAt || null,

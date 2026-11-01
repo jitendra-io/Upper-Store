@@ -7,6 +7,7 @@ import UserLicensesModal from './UserLicensesModal';
 import VipClubModal from './VipClubModal';
 import CancelSubscriptionModal from './CancelSubscriptionModal';
 import DeveloperStudioModal from './DeveloperStudioModal';
+import { VipUsernameModal } from './VipUsernameModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, AlertTriangleIcon, ArrowRightIcon, CloseIcon, ShieldOffIcon } from './Icons';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
 import { VipAvatar, VipFlairBadge } from './VipAvatar';
@@ -21,6 +22,7 @@ const Navbar = () => {
   const [vipModalOpen, setVipModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [devStudioOpen, setDevStudioOpen] = useState(false);
+  const [vipUsernameModalOpen, setVipUsernameModalOpen] = useState(false);
   const [downloadCount, setDownloadCount] = useState(0);
   const [licenseCount, setLicenseCount] = useState(0);
   const location = useLocation();
@@ -466,7 +468,24 @@ const Navbar = () => {
                         <span>{user?.displayName || 'User'}</span>
                         {isBanned && <span className="nav-banned-tag sm">BANNED</span>}
                       </p>
-                      <p className="dropdown-user-handle">@{user?.username || user?.email?.split('@')[0]}</p>
+                      <div className="dropdown-handle-row">
+                        <p className="dropdown-user-handle">@{user?.username || user?.email?.split('@')[0]}</p>
+                        <button
+                          type="button"
+                          className="nav-edit-username-btn"
+                          onClick={() => {
+                            setVipUsernameModalOpen(true);
+                            setUserDropdownOpen(false);
+                          }}
+                          title="Change VIP Handle (allowed twice per year)"
+                        >
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                          </svg>
+                          <span>Edit</span>
+                        </button>
+                      </div>
                       <p className="dropdown-user-email" title={user?.email}>{user?.email}</p>
                       
                       <div className="dropdown-badges-row">
@@ -714,6 +733,16 @@ const Navbar = () => {
         onClose={() => setDevStudioOpen(false)}
         onProductPublished={() => {
           window.dispatchEvent(new Event('productsUpdated'));
+        }}
+      />
+
+      {/* VIP CUSTOM USERNAME MODAL */}
+      <VipUsernameModal
+        isOpen={vipUsernameModalOpen}
+        onClose={() => setVipUsernameModalOpen(false)}
+        onOpenVipClub={() => {
+          setVipUsernameModalOpen(false);
+          setVipModalOpen(true);
         }}
       />
     </>

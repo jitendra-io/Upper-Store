@@ -144,7 +144,11 @@ const validateUsernameFormat = (username) => {
   if (!username || typeof username !== 'string') {
     return { valid: false, message: 'Username is required.' };
   }
-  const clean = username.trim().toLowerCase();
+  let clean = username.trim().toLowerCase();
+  // Automatically strip leading @ if user entered e.g. "@username"
+  if (clean.startsWith('@')) {
+    clean = clean.replace(/^@+/, '');
+  }
   if (clean.length < 3) {
     return { valid: false, message: 'Username must be at least 3 characters long.' };
   }
@@ -154,7 +158,7 @@ const validateUsernameFormat = (username) => {
   if (!/^[a-z0-9_.]+$/.test(clean)) {
     return {
       valid: false,
-      message: 'Username can only contain small letters (a-z), numbers (0-9), underscores (_), and dots (.). No uppercase or other special characters are allowed.',
+      message: 'Username can only contain small letters (a-z), numbers (0-9), underscores (_), and dots (.). No uppercase, spaces, or other special characters are allowed.',
     };
   }
   return { valid: true, clean };
@@ -634,6 +638,8 @@ const getUserStatus = async (req, res) => {
     res.json({
       uid: userDoc.id,
       email: userData.email,
+      username: userData.username || userData.email.split('@')[0],
+      usernameChangeHistory: userData.usernameChangeHistory || [],
       isBanned: Boolean(userData.isBanned),
       bannedAt: userData.bannedAt || null,
       lastAppealedAt: userData.lastAppealedAt || null,
@@ -657,7 +663,7 @@ const getUserStatus = async (req, res) => {
   }
 };
 
-// @desc    Update authenticated user's username
+// @desc    Update authenticated user's username (VIP members allowed max 2 changes per year)
 // @route   PUT /api/auth/user/username
 // @access  Private (Authenticated User)
 const updateUsername = async (req, res) => {
@@ -672,12 +678,6 @@ const updateUsername = async (req, res) => {
   const cleanUsername = uv.clean;
 
   try {
-    // Check if taken by another user
-    const checkSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
-    if (!checkSnap.empty && checkSnap.docs[0].id !== userId) {
-      return res.status(400).json({ message: 'Username @' + cleanUsername + ' is already taken. Please choose another.' });
-    }
-
     let userDocRef = db.collection('users').doc(userId);
     let userDoc = await userDocRef.get();
     if (!userDoc.exists && cleanEmail) {
@@ -692,27 +692,153 @@ const updateUsername = async (req, res) => {
       return res.status(404).json({ message: 'User account not found.' });
     }
 
-    await userDocRef.update({
-      username: cleanUsername,
-      updatedAt: new Date().toISOString(),
-    });
+    const userData = userDoc.data();
 
-    // If developer profile exists, update developer username as well
-    const devSnap = await db.collection('developers').where('userId', '==', userId).limit(1).get();
-    if (!devSnap.empty) {
-      await devSnap.docs[0].ref.update({
+    // 1. If username is already the requested username, return immediately
+    if (userData.username === cleanUsername) {
+      return res.json({
+        message: 'Your username is already set to @' + cleanUsername + '.',
         username: cleanUsername,
-        updatedAt: new Date().toISOString(),
       });
     }
 
-    res.json({
-      message: 'Username updated successfully.',
+    // 2. VIP Authorization Check
+    const membership = await resolveUserMembership(userData, userDocRef);
+    const isVip = membership.plan === 'pro' || membership.plan === 'elite';
+    if (!isVip) {
+      return res.status(403).json({
+        message: 'Custom username modifications are an exclusive Upper VIP perk. Upgrade to VIP to personalize your @username twice per year.',
+        isVip: false,
+      });
+    }
+
+    // 3. Rate Limit Check: VIP allowed to change username twice per rolling year (365 days)
+    const MAX_CHANGES_PER_YEAR = 2;
+    const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+    const now = new Date();
+    const oneYearAgo = new Date(now.getTime() - ONE_YEAR_MS);
+
+    const changeHistory = Array.isArray(userData.usernameChangeHistory) ? userData.usernameChangeHistory : [];
+    const recentChanges = changeHistory.filter(item => item && item.changedAt && new Date(item.changedAt) > oneYearAgo);
+
+    if (recentChanges.length >= MAX_CHANGES_PER_YEAR) {
+      const sortedRecent = [...recentChanges].sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt));
+      const oldestChangeTime = new Date(sortedRecent[0].changedAt).getTime();
+      const nextEligibleDate = new Date(oldestChangeTime + ONE_YEAR_MS);
+      const dateFormatted = nextEligibleDate.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+
+      return res.status(403).json({
+        message: `VIP members can change their username up to 2 times per year. You have used your 2 annual changes. Next change available on ${dateFormatted}.`,
+        changesUsed: recentChanges.length,
+        maxChangesPerYear: MAX_CHANGES_PER_YEAR,
+        nextEligibleDate: nextEligibleDate.toISOString()
+      });
+    }
+
+    // 4. Check if taken by another user
+    const checkSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
+    if (!checkSnap.empty && checkSnap.docs[0].id !== userDoc.id) {
+      return res.status(400).json({ message: 'Username @' + cleanUsername + ' is already taken. Please choose another.' });
+    }
+
+    // 5. Append new change record to history
+    const newRecord = {
+      changedAt: now.toISOString(),
+      oldUsername: userData.username || '',
+      newUsername: cleanUsername,
+    };
+    const updatedHistory = [...changeHistory, newRecord];
+
+    await userDocRef.update({
       username: cleanUsername,
+      usernameChangeHistory: updatedHistory,
+      updatedAt: now.toISOString(),
+    });
+
+    // If developer profile exists, update developer username as well
+    const devSnap = await db.collection('developers').where('userId', '==', userDoc.id).limit(1).get();
+    if (!devSnap.empty) {
+      await devSnap.docs[0].ref.update({
+        username: cleanUsername,
+        updatedAt: now.toISOString(),
+      });
+    }
+
+    const remainingChanges = Math.max(0, MAX_CHANGES_PER_YEAR - (recentChanges.length + 1));
+
+    res.json({
+      message: `Username successfully updated to @${cleanUsername}.`,
+      username: cleanUsername,
+      changesUsed: recentChanges.length + 1,
+      changesRemaining: remainingChanges,
+      maxChangesPerYear: MAX_CHANGES_PER_YEAR,
     });
   } catch (error) {
     console.error('Error updating username:', error);
     res.status(500).json({ message: 'Failed to update username.' });
+  }
+};
+
+// @desc    Get user's username status and annual change allowance
+// @route   GET /api/auth/user/username/status
+// @access  Private (Authenticated User)
+const getUsernameStatus = async (req, res) => {
+  const userId = req.user.uid;
+  const cleanEmail = (req.user.email || '').trim().toLowerCase();
+
+  try {
+    let userDocRef = db.collection('users').doc(userId);
+    let userDoc = await userDocRef.get();
+    if (!userDoc.exists && cleanEmail) {
+      const snap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!snap.empty) {
+        userDocRef = snap.docs[0].ref;
+        userDoc = snap.docs[0];
+      }
+    }
+
+    if (!userDoc || !userDoc.exists) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    const userData = userDoc.data();
+    const membership = await resolveUserMembership(userData, userDocRef);
+    const isVip = membership.plan === 'pro' || membership.plan === 'elite';
+
+    const MAX_CHANGES_PER_YEAR = 2;
+    const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+    const now = new Date();
+    const oneYearAgo = new Date(now.getTime() - ONE_YEAR_MS);
+
+    const changeHistory = Array.isArray(userData.usernameChangeHistory) ? userData.usernameChangeHistory : [];
+    const recentChanges = changeHistory.filter(item => item && item.changedAt && new Date(item.changedAt) > oneYearAgo);
+
+    let nextEligibleDate = null;
+    if (recentChanges.length >= MAX_CHANGES_PER_YEAR) {
+      const sortedRecent = [...recentChanges].sort((a, b) => new Date(a.changedAt) - new Date(b.changedAt));
+      const oldestChangeTime = new Date(sortedRecent[0].changedAt).getTime();
+      nextEligibleDate = new Date(oldestChangeTime + ONE_YEAR_MS).toISOString();
+    }
+
+    const changesRemaining = Math.max(0, MAX_CHANGES_PER_YEAR - recentChanges.length);
+
+    res.json({
+      username: userData.username || cleanEmail.split('@')[0],
+      isVip,
+      vipPlan: membership.plan,
+      changesUsed: recentChanges.length,
+      changesRemaining,
+      maxChangesPerYear: MAX_CHANGES_PER_YEAR,
+      canChange: isVip && changesRemaining > 0,
+      nextEligibleDate,
+    });
+  } catch (error) {
+    console.error('Error fetching username status:', error);
+    res.status(500).json({ message: 'Failed to fetch username status.' });
   }
 };
 
@@ -728,9 +854,9 @@ const checkUsernameAvailability = async (req, res) => {
   try {
     const checkSnap = await db.collection('users').where('username', '==', uv.clean).limit(1).get();
     if (!checkSnap.empty) {
-      return res.json({ available: false, message: 'Username is already taken.' });
+      return res.json({ available: false, message: 'Username @' + uv.clean + ' is already taken.' });
     }
-    return res.json({ available: true, message: 'Username is available!' });
+    return res.json({ available: true, message: 'Username @' + uv.clean + ' is available!' });
   } catch (error) {
     console.error('Check username error:', error);
     res.status(500).json({ message: 'Failed to check username availability.' });
@@ -750,6 +876,7 @@ module.exports = {
   validateUsernameFormat,
   generateUniqueUsername,
   updateUsername,
+  getUsernameStatus,
   checkUsernameAvailability,
 };
 
