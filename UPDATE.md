@@ -378,7 +378,7 @@ Operating an independent software distribution platform carries legal liability 
 | **Phase 1** | **Security Hardening** | 🔴 Critical | **COMPLETED (100%)** | All Critical & High Vulnerabilities (1.1.1 to 1.2.4) Locked, Fixed & Live-Verified |
 | **Phase 2** | **Infrastructure Sustainability** | 🟡 High | **IN PROGRESS (2.1 & 2.2 Resolved)** | Atomic increment counters, 60s memory caching, & zero-cost GitHub Releases strategy |
 | **Phase 3** | **Legal & Policy Updates** | 🟡 High | **COMPLETED (100%)** | UCC statutory AS-IS disclaimers, liability cap, DMCA procedure, GDPR/DPDP rights, & ban appeals in Policies.jsx |
-| **Phase 4** | **Monetization Engine** | 🟢 Medium | **COMPLETED (Real UPI QR Mode)** | Direct bank UPI QR payments (`xxxxxxxxxx@naviaxis`), 12-digit UTR validation, sandbox bypass prevention, & Admin 1-Click Verification / Licensing Console |
+| **Phase 4** | **Monetization Engine** | 🟢 Medium | **COMPLETED (Real UPI QR Mode)** | Direct bank UPI QR payments (`xxxxxxxxxx@upi`), 12-digit UTR validation, sandbox bypass prevention, & Admin 1-Click Verification / Licensing Console |
 | **Phase 5** | **Growth Features** | 🟢 Medium | **IN PROGRESS** | Persona-aligned categories, card trust micro-badges, & live VirusTotal badges implemented |
 
 ---
