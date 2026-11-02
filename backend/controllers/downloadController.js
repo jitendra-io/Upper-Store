@@ -298,8 +298,14 @@ const proxyDownload = async (req, res) => {
     const cl = upstreamRes.headers.get('content-length');
     if (cl) res.setHeader('Content-Length', cl);
 
-    // Stream the web body directly to the Express response
-    Readable.fromWeb(upstreamRes.body).pipe(res);
+    // Stream the web body directly to the Express response with socket abort cleanup
+    const nodeStream = Readable.fromWeb(upstreamRes.body);
+    req.on('close', () => {
+      try {
+        nodeStream.destroy();
+      } catch (_) {}
+    });
+    nodeStream.pipe(res);
   } catch (error) {
     console.error('Download proxy streaming error:', error);
     if (!res.headersSent) {

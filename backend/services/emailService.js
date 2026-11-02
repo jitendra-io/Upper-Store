@@ -1,5 +1,7 @@
 const nodemailer = require('nodemailer');
 const dotenv = require('dotenv');
+const path = require('path');
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 dotenv.config();
 
 // Create Nodemailer SMTP transporter
@@ -17,14 +19,187 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const defaultFrom = process.env.EMAIL_FROM || '"Upper Store" <no-reply@upperstore.com>';
+const defaultFrom = process.env.EMAIL_FROM || '"Upper Store" <upper.official.in@gmail.com>';
+
+// In-memory token cache for Google Gmail REST API
+let cachedGmailAccessToken = null;
+let gmailTokenExpiresAt = 0;
+
+/**
+ * Acquire fresh Google Gmail access token via OAuth2 Refresh Token (Port 443 HTTPS)
+ */
+const getGmailAccessToken = async () => {
+  const now = Date.now();
+  if (cachedGmailAccessToken && now < gmailTokenExpiresAt - 60000) {
+    return cachedGmailAccessToken;
+  }
+
+  const clientId = process.env.GMAIL_CLIENT_ID ? process.env.GMAIL_CLIENT_ID.trim() : '';
+  const clientSecret = process.env.GMAIL_CLIENT_SECRET ? process.env.GMAIL_CLIENT_SECRET.trim() : '';
+  const refreshToken = process.env.GMAIL_REFRESH_TOKEN ? process.env.GMAIL_REFRESH_TOKEN.trim() : '';
+
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error('Gmail API OAuth credentials not configured in environment');
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+    grant_type: 'refresh_token',
+  });
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.access_token) {
+    throw new Error(`Failed to refresh Gmail access token: ${data.error_description || data.error || 'Unknown error'}`);
+  }
+
+  cachedGmailAccessToken = data.access_token;
+  gmailTokenExpiresAt = Date.now() + ((data.expires_in || 3600) * 1000);
+  return cachedGmailAccessToken;
+};
+
+/**
+ * Dispatch raw RFC 2822 email via Google Gmail REST API (Port 443 HTTPS)
+ */
+const sendViaGmailApi = async ({ to, subject, html, senderName, senderEmail }) => {
+  const accessToken = await getGmailAccessToken();
+  const recipient = Array.isArray(to) ? to.join(', ') : to;
+
+  const utf8Subject = `=?utf-8?B?${Buffer.from(subject).toString('base64')}?=`;
+  const messageParts = [
+    `From: "${senderName}" <${senderEmail}>`,
+    `To: ${recipient}`,
+    `Subject: ${utf8Subject}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    Buffer.from(html, 'utf-8').toString('base64'),
+  ];
+
+  const rawMessage = messageParts.join('\r\n');
+  const encodedMessage = Buffer.from(rawMessage)
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ raw: encodedMessage }),
+  });
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error?.message || JSON.stringify(data));
+  }
+
+  return { success: true, messageId: data.id, provider: 'gmail_api' };
+};
+
+/**
+ * Check if any valid email provider is configured
+ */
+const isEmailConfigured = () => {
+  const hasGmail = !!(process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN);
+  const hasBrevo = !!(process.env.BREVO_API_KEY && process.env.BREVO_API_KEY.trim());
+  const hasSmtp = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+  return hasGmail || hasBrevo || hasSmtp;
+};
+
+/**
+ * Unified Email Dispatcher
+ * Priority 1: Brevo HTTP REST API (Port 443 - 100% bypasses Render & Cloudflare firewall blocks)
+ * Priority 2: Nodemailer SMTP (Works on localhost)
+ */
+const sendDispatchEmail = async ({ to, subject, html, emailType = 'Notification' }) => {
+  const senderEmail = process.env.GMAIL_USER || process.env.EMAIL_FROM_ADDRESS || 'upper.official.in@gmail.com';
+  const senderName = process.env.EMAIL_FROM_NAME || 'Upper Store';
+
+  // 1. Priority 1: Google Gmail REST API (Direct from Google account with Profile Image)
+  if (process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN) {
+    try {
+      const result = await sendViaGmailApi({ to, subject, html, senderName, senderEmail });
+      console.log(`✅ [Gmail REST API] ${emailType} delivered to ${to} (MessageId: ${result.messageId})`);
+      return result;
+    } catch (gmailErr) {
+      console.error(`⚠️ [Gmail API Error] Failed to send ${emailType} to ${to}:`, gmailErr.message);
+      // Fall through to Brevo or SMTP
+    }
+  }
+
+  // 2. Priority 2: Brevo HTTP REST API (Port 443 - Bypasses Render port blocks)
+  const brevoApiKey = process.env.BREVO_API_KEY ? process.env.BREVO_API_KEY.trim() : '';
+  if (brevoApiKey) {
+    try {
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'api-key': brevoApiKey,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: senderName, email: senderEmail },
+          to: Array.isArray(to) 
+            ? to.map(email => ({ email: typeof email === 'string' ? email : email.email }))
+            : [{ email: to }],
+          subject,
+          htmlContent: html,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || JSON.stringify(data));
+      }
+      console.log(`✅ [Brevo API] ${emailType} delivered to ${to} (MessageId: ${data.messageId})`);
+      return { success: true, messageId: data.messageId, provider: 'brevo' };
+    } catch (brevoErr) {
+      console.error(`⚠️ [Brevo API Error] Failed to send ${emailType} to ${to}:`, brevoErr.message);
+      // Fall through to SMTP if configured
+    }
+  }
+
+  // 2. Fallback to Nodemailer SMTP (Works on localhost)
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    try {
+      const info = await transporter.sendMail({
+        from: `"${senderName}" <${senderEmail}>`,
+        to,
+        subject,
+        html,
+      });
+      console.log(`✅ [Nodemailer] ${emailType} sent to ${to} (Msg ID: ${info.messageId})`);
+      return { success: true, messageId: info.messageId, provider: 'nodemailer' };
+    } catch (smtpErr) {
+      console.error(`❌ [Nodemailer Error] Failed to send ${emailType} to ${to}:`, smtpErr.message);
+      return { success: false, error: smtpErr.message };
+    }
+  }
+
+  console.log(`ℹ️ [EmailService] Neither BREVO_API_KEY nor SMTP credentials configured. Skipping ${emailType} to ${to}.`);
+  return { success: false, skipped: true };
+};
+
 
 /**
  * Send Welcome Email to newly registered user
  */
 const sendWelcomeEmail = async (userEmail, displayName) => {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`ℹ️ [Nodemailer] SMTP credentials not set. Skipping Welcome email to ${userEmail}.`);
+  if (!isEmailConfigured()) {
+    console.log(`ℹ️ [EmailService] No email provider configured. Skipping Welcome email to ${userEmail}.`);
     return;
   }
 
@@ -70,25 +245,20 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
     </html>
   `;
 
-  try {
-    const info = await transporter.sendMail({
-      from: defaultFrom,
-      to: userEmail,
-      subject: 'Welcome to Upper Store - Account Activated',
-      html: htmlContent,
-    });
-    console.log(` Welcome email sent to ${userEmail} (Msg ID: ${info.messageId})`);
-  } catch (error) {
-    console.error(` Error sending Welcome email to ${userEmail}:`, error.message);
-  }
+  await sendDispatchEmail({
+    to: userEmail,
+    subject: 'Welcome to Upper Store - Account Activated',
+    html: htmlContent,
+    emailType: 'Welcome Email'
+  });
 };
 
 /**
  * Send Login Alert Email to user
  */
 const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email & Password') => {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`ℹ [Nodemailer] SMTP credentials not set. Skipping Login alert to ${userEmail}.`);
+  if (!isEmailConfigured()) {
+    console.log(`ℹ️ [EmailService] No email provider configured. Skipping Login alert to ${userEmail}.`);
     return;
   }
 
@@ -144,17 +314,12 @@ const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email 
     </html>
   `;
 
-  try {
-    const info = await transporter.sendMail({
-      from: defaultFrom,
-      to: userEmail,
-      subject: 'Security Notification: New Login to Upper Store',
-      html: htmlContent,
-    });
-    console.log(`Login alert email sent to ${userEmail} (Msg ID: ${info.messageId})`);
-  } catch (error) {
-    console.error(`Error sending Login alert email to ${userEmail}:`, error.message);
-  }
+  await sendDispatchEmail({
+    to: userEmail,
+    subject: 'Security Notification: New Login to Upper Store',
+    html: htmlContent,
+    emailType: 'Login Alert'
+  });
 };
 
 /**
@@ -170,8 +335,8 @@ const sendLicenseDeliveryEmail = async ({
   amount,
   currency = 'USD',
 }) => {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`ℹ️ [Nodemailer] SMTP credentials not set. Skipping license email to ${userEmail}. Key: ${licenseKey}`);
+  if (!isEmailConfigured()) {
+    console.log(`ℹ️ [EmailService] No email provider configured. Skipping license email to ${userEmail}. Key: ${licenseKey}`);
     return;
   }
 
@@ -244,17 +409,12 @@ const sendLicenseDeliveryEmail = async ({
     </html>
   `;
 
-  try {
-    const info = await transporter.sendMail({
-      from: defaultFrom,
-      to: userEmail,
-      subject: `Your ${productTitle} License Key & Order Receipt [${orderId}]`,
-      html: htmlContent,
-    });
-    console.log(`License key delivery email sent to ${userEmail} (Msg ID: ${info.messageId})`);
-  } catch (error) {
-    console.error(`Error sending license email to ${userEmail}:`, error.message);
-  }
+  await sendDispatchEmail({
+    to: userEmail,
+    subject: `Your ${productTitle} License Key & Order Receipt [${orderId}]`,
+    html: htmlContent,
+    emailType: 'License Key Delivery'
+  });
 };
 
 /**
@@ -272,8 +432,8 @@ const sendVipSubscriptionEmail = async ({
   amount,
   currency = 'INR',
 }) => {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`ℹ️ [Nodemailer] SMTP credentials not set. Skipping VIP email to ${userEmail}. Plan: ${plan}`);
+  if (!isEmailConfigured()) {
+    console.log(`ℹ️ [EmailService] No email provider configured. Skipping VIP email to ${userEmail}. Plan: ${plan}`);
     return;
   }
 
@@ -402,17 +562,12 @@ const sendVipSubscriptionEmail = async ({
     </html>
   `;
 
-  try {
-    const info = await transporter.sendMail({
-      from: defaultFrom,
-      to: userEmail,
-      subject: `Upper VIP Club Confirmation: ${badgeTitle} Activated [${orderId || 'VIP'}]`,
-      html: htmlContent,
-    });
-    console.log(`VIP Subscription email sent to ${userEmail} (Msg ID: ${info.messageId})`);
-  } catch (error) {
-    console.error(`Error sending VIP subscription email to ${userEmail}:`, error.message);
-  }
+  await sendDispatchEmail({
+    to: userEmail,
+    subject: `Upper VIP Club Confirmation: ${badgeTitle} Activated [${orderId || 'VIP'}]`,
+    html: htmlContent,
+    emailType: 'VIP Subscription Confirmation'
+  });
 };
 
 /**
@@ -502,17 +657,12 @@ const sendSubscriptionCancellationEmail = async (userEmail, userName, previousPl
     </html>
   `;
 
-  try {
-    const info = await transporter.sendMail({
-      from: defaultFrom,
-      to: userEmail,
-      subject: `Upper VIP Club: Subscription Cancelled [${planTitle}]`,
-      html: htmlContent,
-    });
-    console.log(`VIP Cancellation email sent to ${userEmail} (Msg ID: ${info.messageId})`);
-  } catch (error) {
-    console.error(`Error sending VIP cancellation email to ${userEmail}:`, error.message);
-  }
+  await sendDispatchEmail({
+    to: userEmail,
+    subject: `Upper VIP Club: Subscription Cancelled [${planTitle}]`,
+    html: htmlContent,
+    emailType: 'VIP Subscription Cancellation'
+  });
 };
 
 /**
@@ -529,8 +679,8 @@ const sendPaymentRejectionEmail = async ({
   rejectReason = 'Payment could not be verified in bank records.',
   rejectedAt,
 }) => {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`ℹ️ [Nodemailer] SMTP credentials not set. Skipping payment rejection email to ${userEmail}. Reason: ${rejectReason}`);
+  if (!isEmailConfigured()) {
+    console.log(`ℹ️ [EmailService] No email provider configured. Skipping payment rejection email to ${userEmail}. Reason: ${rejectReason}`);
     return;
   }
 
@@ -637,17 +787,12 @@ const sendPaymentRejectionEmail = async ({
     </html>
   `;
 
-  try {
-    const info = await transporter.sendMail({
-      from: defaultFrom,
-      to: userEmail,
-      subject: `Payment Verification Unsuccessful: ${planOrItem} [Order: ${orderId || 'Direct'}]`,
-      html: htmlContent,
-    });
-    console.log(`Payment rejection email sent to ${userEmail} (Msg ID: ${info.messageId})`);
-  } catch (error) {
-    console.error(`Error sending payment rejection email to ${userEmail}:`, error.message);
-  }
+  await sendDispatchEmail({
+    to: userEmail,
+    subject: `Payment Verification Unsuccessful: ${planOrItem} [Order: ${orderId || 'Direct'}]`,
+    html: htmlContent,
+    emailType: 'Payment Verification Rejection'
+  });
 };
 
 module.exports = {

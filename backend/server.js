@@ -160,28 +160,103 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
-  console.log(`[INFO] Server running on http://localhost:${PORT}`);
-});
+let server;
+let retryCount = 0;
+const MAX_PORT_RETRIES = 3;
 
-// Windows Socket Tracking for Clean Nodemon Restarts
+// Active connection tracking for instantaneous zero-latency socket destruction on shutdown
 const connections = new Set();
-server.on('connection', (socket) => {
-  connections.add(socket);
-  socket.on('close', () => connections.delete(socket));
-});
 
+const startServer = () => {
+  server = app.listen(PORT, () => {
+    console.log(`[INFO] Server running on http://localhost:${PORT}`);
+    retryCount = 0; // Reset retries on successful bind
+  });
+
+  // 1. Enforce strict HTTP socket timeouts to prevent Slowloris & hung sockets
+  server.keepAliveTimeout = 65000; // 65s (gracefully handles Cloudflare/Render 60s idle keep-alive)
+  server.headersTimeout = 66000;   // 66s (must be strictly greater than keepAliveTimeout)
+  server.requestTimeout = 30000;   // 30s max for receiving request payloads
+
+  // 2. Track all live sockets
+  server.on('connection', (socket) => {
+    connections.add(socket);
+    socket.on('close', () => connections.delete(socket));
+  });
+
+  // 3. Robust Error Handling (Guarded against infinite EADDRINUSE freeze loops)
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      retryCount++;
+      if (retryCount <= MAX_PORT_RETRIES) {
+        const delay = retryCount * 800;
+        console.warn(`[WARN] Port ${PORT} is busy. Retrying in ${delay}ms (Attempt ${retryCount}/${MAX_PORT_RETRIES})...`);
+        setTimeout(() => {
+          try {
+            server.close();
+          } catch (_) {}
+          startServer();
+        }, delay);
+      } else {
+        console.error(`[FATAL] Port ${PORT} remained busy after ${MAX_PORT_RETRIES} retries. Another process is actively listening.`);
+        console.error(`[DIAGNOSTIC] To release port ${PORT} manually:`);
+        console.error(`  - On Windows: netstat -ano | findstr :${PORT}  (then Stop-Process -Id <PID> -Force)`);
+        console.error(`  - On Linux/Mac: lsof -ti :${PORT} | xargs kill -9`);
+        process.exit(1);
+      }
+    } else {
+      console.error('[FATAL] Unexpected server error:', err.message);
+      process.exit(1);
+    }
+  });
+};
+
+startServer();
+
+// Forceful Cleanup and Zero-Orphan Shutdown
 const closeConnectionsAndServer = () => {
+  // Immediately destroy all open keep-alive and active TCP sockets
   for (const socket of connections) {
     try {
       socket.destroy();
     } catch (_) {}
   }
   connections.clear();
-  return new Promise((resolve) => server.close(resolve));
+
+  return new Promise((resolve) => {
+    if (server && server.listening) {
+      server.close(() => resolve());
+    } else {
+      resolve();
+    }
+  });
 };
 
-// Gracefully release port on nodemon restart (SIGUSR2) and termination
+// Safe Graceful Termination Handler with 4-second Hard Kill Timer (prevents zombie freeze)
+const gracefulShutdown = (signal) => {
+  console.log(`[INFO] Received ${signal}. Shutting down cleanly...`);
+
+  // Hard deadline timer: Guarantee process exits within 4s even if an external call hangs
+  const forceKillTimer = setTimeout(() => {
+    console.warn(`[WARN] Clean shutdown timed out. Forcing process exit.`);
+    process.exit(1);
+  }, 4000);
+  forceKillTimer.unref(); // Prevents timer itself from keeping the event loop alive
+
+  closeConnectionsAndServer()
+    .then(() => {
+      clearTimeout(forceKillTimer);
+      console.log('[INFO] Port released and sockets closed cleanly.');
+      process.exit(0);
+    })
+    .catch((err) => {
+      clearTimeout(forceKillTimer);
+      console.error('[ERROR] Error during shutdown:', err.message);
+      process.exit(1);
+    });
+};
+
+// Listen for termination signals
 process.once('SIGUSR2', async () => {
   try {
     await closeConnectionsAndServer();
@@ -189,30 +264,6 @@ process.once('SIGUSR2', async () => {
   process.kill(process.pid, 'SIGUSR2');
 });
 
-process.on('SIGINT', async () => {
-  try {
-    await closeConnectionsAndServer();
-  } catch (_) {}
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  try {
-    await closeConnectionsAndServer();
-  } catch (_) {}
-  process.exit(0);
-});
-
-server.on('error', (err) => {
-  if (err.code === 'EADDRINUSE') {
-    console.error(`[ERROR] Port ${PORT} is temporarily busy. Waiting to retry...`);
-    setTimeout(() => {
-      server.close();
-      server.listen(PORT);
-    }, 1000);
-  } else {
-    console.error('[ERROR] Server error:', err.message);
-    process.exit(1);
-  }
-});
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 

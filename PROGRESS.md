@@ -42,6 +42,12 @@ This document maintains a record of the major features implemented and outlines 
 - [x] **File Uploads**: ImageKit SDK integrated via Multer memory storage (handling image & APK binary uploads up to 150MB).
 - [x] **API Endpoints**: Full CRUD for products + auth routes (`/api/products`, `/api/auth`).
 
+### 7. Production Hardening & Mail Architecture
+- [x] **Google Gmail REST API Integration**: Direct dispatch from `upper.official.in@gmail.com` over HTTPS Port 443 with official Google profile picture and zero 3rd-party `via` envelope tags.
+- [x] **Render & Cloudflare Port Block Bypass**: Immune to raw mail socket blocks (Ports 25/465/587) via OAuth2 token auto-refresh and HTTPS REST calls.
+- [x] **Fallback Email Pipeline**: High-availability failover to Brevo REST API and Nodemailer SMTP.
+- [x] **Orphan Process & Socket Hardening**: Automatic socket timeout traps and clean exit hooks to prevent server freezes during high-volume transfers.
+
 ---
 
 ## 🚧 Next Tasks to be Done
