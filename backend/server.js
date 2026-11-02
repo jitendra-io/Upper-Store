@@ -105,6 +105,7 @@ app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.get('/api/download', require('./controllers/downloadController').proxyDownload);
 app.use('/api/downloads', require('./routes/downloadRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/developers', require('./routes/developerRoutes'));

@@ -1,3 +1,4 @@
+const { Readable } = require('stream');
 const { db, FieldValue } = require('../config/firebase');
 const cacheService = require('../services/cacheService');
 
@@ -188,9 +189,129 @@ const getAllDownloadHistoryAdmin = async (req, res) => {
   }
 };
 
+
+// @desc    Secure proxy stream for binary downloads (hides raw GitHub releases from user)
+// @route   GET /api/downloads/proxy or GET /api/download
+// @access  Public
+const proxyDownload = async (req, res) => {
+  try {
+    const { id, file, name } = req.query;
+    let targetUrl = '';
+    let customName = name || '';
+
+    // 1. Resolve product from database
+    if (id) {
+      try {
+        const prodDoc = await db.collection('products').doc(String(id)).get();
+        if (prodDoc.exists) {
+          const pData = prodDoc.data();
+          targetUrl = pData.apkFile;
+          if (!customName && pData.title) {
+            const rawExt = targetUrl ? targetUrl.split('?')[0].toLowerCase() : '';
+            const ext = rawExt.endsWith('.exe') ? '.exe' : (rawExt.endsWith('.zip') ? '.zip' : '.apk');
+            customName = `${pData.title.replace(/[^a-zA-Z0-9_-]/g, '_')}${ext}`;
+          }
+        }
+      } catch (dbErr) {
+        console.error('Error fetching product for download proxy:', dbErr);
+      }
+    }
+
+    // 2. Fallback to base64 obfuscated file parameter
+    if (!targetUrl && file) {
+      try {
+        let b64 = file.replace(/-/g, '+').replace(/_/g, '/');
+        while (b64.length % 4) b64 += '=';
+        targetUrl = Buffer.from(b64, 'base64').toString('utf8');
+      } catch (e) {
+        targetUrl = decodeURIComponent(file);
+      }
+    }
+
+    if (!targetUrl || targetUrl === '#' || !targetUrl.startsWith('http')) {
+      return res.status(404).json({ message: 'Valid download target not found.' });
+    }
+
+    const cleanTarget = targetUrl.split('?')[0].toLowerCase();
+    const isWebPage = cleanTarget.includes('/releases/tag/') || 
+                      cleanTarget.endsWith('/releases') || 
+                      cleanTarget.includes('/tree/') || 
+                      cleanTarget.includes('/blob/') ||
+                      (!cleanTarget.includes('/releases/download/') && !/\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf)$/i.test(cleanTarget));
+
+    if (req.query.mode === 'redirect' || isWebPage) {
+      return res.redirect(targetUrl);
+    }
+
+    // 3. Fetch from upstream GitHub release with redirect: follow
+    const upstreamRes = await fetch(targetUrl, {
+      headers: {
+        'User-Agent': 'UpperStore-Proxy/1.0',
+        'Accept': '*/*'
+      },
+      redirect: 'follow'
+    });
+
+    if (!upstreamRes.ok) {
+      return res.status(upstreamRes.status).send(`Upstream download failed with status ${upstreamRes.status}`);
+    }
+
+    const upContentType = upstreamRes.headers.get('content-type') || '';
+    if (upContentType.includes('text/html')) {
+      return res.redirect(targetUrl);
+    }
+
+    // 4. Derive clean filename & extension
+    let finalFileName = customName;
+    if (!finalFileName) {
+      try {
+        const pathname = new URL(targetUrl).pathname;
+        finalFileName = pathname.substring(pathname.lastIndexOf('/') + 1) || 'package.apk';
+      } catch (e) {
+        finalFileName = 'package.apk';
+      }
+    }
+
+    const cleanLower = targetUrl.split('?')[0].toLowerCase();
+    let detectedExt = '.apk';
+    if (cleanLower.endsWith('.exe')) detectedExt = '.exe';
+    else if (cleanLower.endsWith('.zip')) detectedExt = '.zip';
+    else if (cleanLower.endsWith('.dmg')) detectedExt = '.dmg';
+    else if (cleanLower.endsWith('.tar.gz')) detectedExt = '.tar.gz';
+    else if (cleanLower.endsWith('.pdf')) detectedExt = '.pdf';
+    else if (cleanLower.endsWith('.json')) detectedExt = '.json';
+    else if (cleanLower.endsWith('.txt')) detectedExt = '.txt';
+
+    // If filename has no extension, append detected extension
+    if (!/\.[a-zA-Z0-9]{2,5}$/.test(finalFileName)) {
+      finalFileName += detectedExt;
+    }
+
+    let contentType = upstreamRes.headers.get('content-type') || 'application/octet-stream';
+    if (finalFileName.endsWith('.apk')) contentType = 'application/vnd.android.package-archive';
+    else if (finalFileName.endsWith('.exe')) contentType = 'application/x-msdownload';
+    else if (finalFileName.endsWith('.zip')) contentType = 'application/zip';
+
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(finalFileName)}"`);
+    res.setHeader('Content-Type', contentType);
+
+    const cl = upstreamRes.headers.get('content-length');
+    if (cl) res.setHeader('Content-Length', cl);
+
+    // Stream the web body directly to the Express response
+    Readable.fromWeb(upstreamRes.body).pipe(res);
+  } catch (error) {
+    console.error('Download proxy streaming error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Error streaming package download.' });
+    }
+  }
+};
+
 module.exports = {
   recordDownload,
   getUserDownloadHistory,
   clearUserDownloadHistory,
   getAllDownloadHistoryAdmin,
+  proxyDownload,
 };

@@ -10,5 +10,13 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react()],
     base,
+    server: {
+      proxy: {
+        '/api/download': {
+          target: 'http://localhost:5000',
+          changeOrigin: true
+        }
+      }
+    }
   };
 })

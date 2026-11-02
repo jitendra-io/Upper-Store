@@ -209,3 +209,48 @@ export const clearUserDownloadHistory = async (userEmail) => {
     console.warn('Failed to clear user download history:', err);
   }
 };
+
+
+// =========================================================
+// CLOUDFLARE EDGE SECURE DOWNLOAD PROXY
+// Hides original GitHub URL completely - Chrome shows "upperstore.pages.dev"
+// =========================================================
+// Detect if a URL is a direct downloadable binary (.apk, .exe, .zip) vs a GitHub release/web page
+export const isDirectDownloadFile = (url) => {
+  if (!url || url === '#' || !url.startsWith('http')) return false;
+  const clean = url.split('?')[0].toLowerCase();
+  if (clean.includes('/releases/tag/') || clean.endsWith('/releases') || clean.includes('/tree/') || clean.includes('/blob/')) {
+    return false;
+  }
+  return /\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf)$/i.test(clean) || clean.includes('/releases/download/');
+};
+
+export const getSecureDownloadUrl = (product) => {
+  if (!product) return '#';
+  const rawUrl = product.apkFile || '';
+
+  // If the product link is simply a GitHub release page or web tool (not a direct file),
+  // return direct link so browser navigates directly without forcing an APK download!
+  if (rawUrl && !isDirectDownloadFile(rawUrl)) {
+    return rawUrl;
+  }
+
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  
+  if (product.id && product.id !== 'custom') {
+    const safeTitle = (product.title || 'package').replace(/[^a-zA-Z0-9_-]/g, '_');
+    return `${baseUrl}/api/download?id=${encodeURIComponent(product.id)}&name=${encodeURIComponent(safeTitle)}`;
+  }
+  
+  if (rawUrl && rawUrl !== '#' && rawUrl.startsWith('http')) {
+    try {
+      const b64 = btoa(rawUrl).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      const safeTitle = (product.title || 'package').replace(/[^a-zA-Z0-9_-]/g, '_');
+      return `${baseUrl}/api/download?file=${b64}&name=${encodeURIComponent(safeTitle)}`;
+    } catch (e) {
+      return rawUrl;
+    }
+  }
+
+  return rawUrl || '#';
+};

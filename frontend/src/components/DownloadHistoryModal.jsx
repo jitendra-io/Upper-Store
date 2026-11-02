@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, clearUserDownloadHistory, recordUserDownload } from '../utils/downloadTracker';
+import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, clearUserDownloadHistory, recordUserDownload, getSecureDownloadUrl } from '../utils/downloadTracker';
 import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import { getUserVipTier } from '../utils/vipValidator';
 import './DownloadHistoryModal.css';
@@ -179,8 +179,8 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
                   </div>
                   <div className="history-item-action">
                     <a
-                      href={item.apkFile && item.apkFile !== '#' ? item.apkFile : '/products'}
-                      target={item.apkFile && item.apkFile !== '#' ? '_blank' : '_self'}
+                      href={getSecureDownloadUrl(item)}
+                      target="_self"
                       rel="noopener noreferrer"
                       download
                       className="history-redownload-btn"

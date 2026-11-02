@@ -7,9 +7,11 @@ const {
   getUserDownloadHistory,
   clearUserDownloadHistory,
   getAllDownloadHistoryAdmin,
+  proxyDownload,
 } = require('../controllers/downloadController');
 
 // Record a download (Rate-limited to prevent counter spoofing)
+router.get('/proxy', proxyDownload);
 router.post('/record', downloadLimiter, recordDownload);
 
 // Fetch user's download history from DB (Requires authenticated user or admin)

@@ -284,9 +284,9 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     if (user && user.email) {
       recordUserDownload(user.email, product);
     }
-    const targetUrl = product.apkFile && product.apkFile !== '#' ? product.apkFile : '/products';
+    const targetUrl = getSecureDownloadUrl(product);
     if (targetUrl && targetUrl !== '#') {
-      window.open(targetUrl, '_blank');
+      window.location.href = targetUrl;
     }
     setDownloadHistorySync((prev) => prev + 1);
   };

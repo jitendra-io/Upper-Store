@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { recordUserDownload, getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
+import { recordUserDownload, getProductDownloadCount, formatDownloadCount, getSecureDownloadUrl, isDirectDownloadFile } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
 import StarRatingBadge from './StarRatingBadge';
 import ProductReviewsModal from './ProductReviewsModal';
@@ -157,10 +157,10 @@ const ProductDetailModal = ({ product, onClose }) => {
     setTermsModalOpen(false);
     recordUserDownload(user?.email || '', product);
 
-    // Trigger download programmatically
-    const targetUrl = product.apkFile && product.apkFile !== '#' ? product.apkFile : '/products';
+    // Trigger download programmatically via Cloudflare Edge Proxy
+    const targetUrl = getSecureDownloadUrl(product);
     if (targetUrl && targetUrl !== '#') {
-      window.open(targetUrl, '_blank');
+      window.location.href = targetUrl;
     }
   };
 
@@ -359,10 +359,10 @@ const ProductDetailModal = ({ product, onClose }) => {
                     isFeeCleared ? (
                       /* VIP OR FEE-PAID OR FEE REMOVED: UNRESTRICTED FREE DOWNLOAD */
                       <a
-                        href={isLoggedIn ? product.apkFile : '#'}
-                        target={isLoggedIn ? '_blank' : '_self'}
+                        href={isLoggedIn ? getSecureDownloadUrl(product) : '#'}
+                        target={isDirectDownloadFile(product?.apkFile) ? '_self' : '_blank'}
                         rel="noopener noreferrer"
-                        download
+                        download={isDirectDownloadFile(product?.apkFile)}
                         className="modal-download-link"
                         onClick={handleDownloadClick}
                       >
@@ -375,7 +375,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                             )}
                           </span>
                           <span className="btn-text">
-                            {isVip ? 'Free Download (₹0 Platform Fee)' : (isFeeEnforced ? 'Free Download (₹0 Platform Fee)' : 'Free Download (₹0 Fee)')}
+                            {!isDirectDownloadFile(product?.apkFile) ? 'View GitHub Releases' : (isVip ? 'Free Download (₹0 Platform Fee)' : (isFeeEnforced ? 'Free Download (₹0 Platform Fee)' : 'Free Download (₹0 Fee)'))}
                           </span>
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '0.4rem', verticalAlign: 'middle' }}>
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
