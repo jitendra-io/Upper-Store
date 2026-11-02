@@ -9,7 +9,6 @@
 [![Security](https://img.shields.io/badge/Security-SHA--256_Verified-10b981?style=flat-square&logo=shield)](https://upperstore.pages.dev/policies)
 
 > **Live Deployment:** [https://upperstore.pages.dev/](https://upperstore.pages.dev/)  
-> **Backend Service:** [https://upper-store.onrender.com](https://upper-store.onrender.com)  
 > **Production Status:** Live & Fully Verified (Google Trust Services SSL / 200 OK)
 
 ---
