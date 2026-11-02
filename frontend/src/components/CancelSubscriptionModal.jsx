@@ -32,13 +32,19 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onCancelled }) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
       window.dispatchEvent(new CustomEvent('modalToggle', { detail: true }));
     } else {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
       window.dispatchEvent(new CustomEvent('modalToggle', { detail: false }));
     }
     return () => {
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
       window.dispatchEvent(new CustomEvent('modalToggle', { detail: false }));
     };
   }, [isOpen]);

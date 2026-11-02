@@ -7,15 +7,29 @@ import './Footer.css';
 const Footer = () => {
   const [activeModal, setActiveModal] = useState(null); // 'advisories' | 'status' | null
 
+  // Lock background scroll when modal is active
   useEffect(() => {
     if (activeModal) {
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') closeModal();
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        document.body.style.touchAction = '';
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.touchAction = '';
     }
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
   }, [activeModal]);
 
   const closeModal = () => setActiveModal(null);
