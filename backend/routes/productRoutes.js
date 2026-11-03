@@ -3,7 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { protectAdmin } = require('../middleware/authMiddleware');
+const { protectAdmin, protect } = require('../middleware/authMiddleware');
 const { protectPublisher } = require('../middleware/publisherMiddleware');
 const {
   getProducts,
@@ -91,6 +91,6 @@ router.post('/:id/download', trackProductDownload);
 // Protected admin routes
 router.post('/', protectPublisher, uploadFields, createProduct);
 router.put('/:id', protectPublisher, uploadFields, updateProduct);
-router.delete('/:id', protectPublisher, deleteProduct);
+router.delete('/:id', protect, deleteProduct);
 
 module.exports = router;

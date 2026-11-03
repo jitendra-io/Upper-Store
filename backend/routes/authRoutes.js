@@ -15,6 +15,7 @@ const {
   updateUsername,
   getUsernameStatus,
   checkUsernameAvailability,
+  updateFullProfile,
 } = require('../controllers/authController');
 
 // Admin Auth Routes (Protected against brute-force attacks)
@@ -34,5 +35,6 @@ router.get('/user/status/:email', protect, getUserStatus);
 router.get('/username/check/:username', checkUsernameAvailability);
 router.get('/user/username/status', protect, getUsernameStatus);
 router.put('/user/username', protect, updateUsername);
+router.put('/user/profile', protect, updateFullProfile);
 
 module.exports = router;

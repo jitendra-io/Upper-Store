@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
 import StarRatingBadge from '../components/StarRatingBadge';
 import ProductDetailModal from '../components/ProductDetailModal';
+import EditProfileModal from '../components/EditProfileModal';
 import { formatDownloadCount } from '../utils/downloadTracker';
 import './DeveloperProfile.css';
 
@@ -12,7 +13,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const DeveloperProfile = () => {
   const { username } = useParams();
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,6 +21,9 @@ const DeveloperProfile = () => {
   const [stats, setStats] = useState({ productsCount: 0, totalDownloads: 0, averageRating: 5.0 });
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Single Unified Edit Profile Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Filters & Search
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,29 +33,24 @@ const DeveloperProfile = () => {
   // UX Feedback
   const [copied, setCopied] = useState(false);
 
-  // Inline Bio Edit State
-  const [isEditingBio, setIsEditingBio] = useState(false);
-  const [bioInput, setBioInput] = useState('');
-  const [savingBio, setSavingBio] = useState(false);
-  const [bioSuccess, setBioSuccess] = useState(false);
-
   // Clean the username parameter
   const cleanUsername = useMemo(() => {
     return (username || '').replace(/^@/, '').trim().toLowerCase();
   }, [username]);
 
-  // Determine if the current authenticated user owns this developer profile
+  // Determine if the current authenticated user owns this developer/user profile
   const isOwner = useMemo(() => {
     if (!user || !developer) return false;
     const userHandle = (user.username || '').toLowerCase();
     const devHandle = (developer.username || '').toLowerCase();
     if (userHandle && devHandle && userHandle === devHandle) return true;
     if (user.uid && developer.userId && user.uid === developer.userId) return true;
+    if (user.id && developer.id && user.id === developer.id) return true;
     if (user.email && developer.email && user.email.toLowerCase() === developer.email.toLowerCase()) return true;
     return false;
   }, [user, developer]);
 
-  // Fetch Public Developer / User Profile
+  // Fetch Public Profile
   useEffect(() => {
     let isMounted = true;
 
@@ -68,13 +67,12 @@ const DeveloperProfile = () => {
           setDeveloper(data.developer);
           setStats(data.stats || { productsCount: 0, totalDownloads: 0, averageRating: 5.0 });
           setProducts(Array.isArray(data.products) ? data.products : []);
-          setBioInput(data.developer.bio || '');
         } else {
-          setError(data.message || `User @${cleanUsername} was not found.`);
+          setError(data.message || `Profile @${cleanUsername} was not found.`);
         }
       } catch (err) {
         if (!isMounted) return;
-        console.error('Error fetching developer profile:', err);
+        console.error('Error fetching profile:', err);
         setError('Network error: Unable to load profile. Please check your connection.');
       } finally {
         if (isMounted) setLoading(false);
@@ -104,42 +102,7 @@ const DeveloperProfile = () => {
     }
   };
 
-  // Save Updated Bio Handler
-  const handleSaveBio = async (e) => {
-    e.preventDefault();
-    if (!token) return;
-
-    setSavingBio(true);
-    setBioSuccess(false);
-
-    try {
-      const res = await fetch(`${API_BASE}/api/developers/bio`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ bio: bioInput }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setDeveloper((prev) => ({ ...prev, bio: data.bio || bioInput }));
-        setIsEditingBio(false);
-        setBioSuccess(true);
-        setTimeout(() => setBioSuccess(false), 3000);
-      } else {
-        alert(data.message || 'Failed to update bio.');
-      }
-    } catch (err) {
-      console.error('Error updating bio:', err);
-      alert('Network error while saving bio.');
-    } finally {
-      setSavingBio(false);
-    }
-  };
-
-  // Derive unique categories from developer's products
+  // Derive unique categories from products
   const availableCategories = useMemo(() => {
     const cats = new Set(['All']);
     products.forEach((p) => {
@@ -152,11 +115,9 @@ const DeveloperProfile = () => {
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
-        // Category filter
         if (selectedCategory !== 'All' && p.category !== selectedCategory) {
           return false;
         }
-        // Search filter
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase();
           const matchTitle = (p.title || '').toLowerCase().includes(q);
@@ -202,7 +163,7 @@ const DeveloperProfile = () => {
     );
   }
 
-  // Error / 404 Not Found State
+  // Error / 404 Not Found State - Zero Emojis
   if (error || !developer) {
     return (
       <div className="dev-profile-container">
@@ -282,26 +243,9 @@ const DeveloperProfile = () => {
               )}
             </div>
 
+            {/* HANDLE ROW - NO TAGS (Clean and Minimalist) */}
             <div className="dev-handle-row">
               <span className="dev-username-handle">@{developer.username}</span>
-
-              {/* Status Badges - Zero Emojis */}
-              {isDev ? (
-                <>
-                  {developer.isOfficial ? (
-                    <span className="dev-status-pill official">Official Store Creator</span>
-                  ) : isSubscriptionEnded ? (
-                    <span className="dev-status-pill expired">Subscription Ended</span>
-                  ) : (
-                    <span className="dev-status-pill verified">Verified Creator</span>
-                  )}
-                </>
-              ) : (
-                <>
-                  <span className="dev-status-pill community">Community Member</span>
-                  <span className="dev-status-pill not-dev">Not a Developer</span>
-                </>
-              )}
             </div>
 
             {/* EXPIRED SUBSCRIPTION NOTICE BANNER */}
@@ -330,68 +274,27 @@ const DeveloperProfile = () => {
               </div>
             )}
 
-            {/* BIO BOX */}
-            {!isEditingBio ? (
-              <div className="dev-bio-box">
-                <p className="dev-bio-text">{developer.bio}</p>
-                {isOwner && (
-                  <button
-                    className="dev-bio-edit-trigger"
-                    onClick={() => setIsEditingBio(true)}
-                    title="Edit your public bio"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 20h9"></path>
-                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                    </svg>
-                    <span>Edit Bio</span>
-                  </button>
-                )}
-              </div>
-            ) : (
-              <form className="dev-bio-edit-form" onSubmit={handleSaveBio}>
-                <textarea
-                  className="dev-bio-textarea"
-                  value={bioInput}
-                  onChange={(e) => setBioInput(e.target.value)}
-                  placeholder="Share a short summary about your engineering skills, applications, and mission..."
-                  maxLength={400}
-                  rows={3}
-                  required
-                />
-                <div className="dev-bio-edit-actions">
-                  <span className="bio-char-count">{bioInput.length} / 400</span>
-                  <div className="bio-btn-group">
-                    <button
-                      type="button"
-                      className="dev-btn sm-ghost"
-                      onClick={() => {
-                        setBioInput(developer.bio || '');
-                        setIsEditingBio(false);
-                      }}
-                      disabled={savingBio}
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" className="dev-btn sm-gold" disabled={savingBio}>
-                      {savingBio ? 'Saving...' : 'Save Bio'}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            )}
+            {/* BIO BOX - Zero Emojis, No Inline Edit (Handled by Single Edit Profile Button) */}
+            <div className="dev-bio-box">
+              <p className="dev-bio-text">{developer.bio}</p>
+            </div>
 
-            {bioSuccess && (
-              <div className="dev-toast-inline">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Bio updated successfully!</span>
-              </div>
-            )}
-
-            {/* ACTION BUTTONS */}
+            {/* ACTION BUTTONS (Single Edit Profile Button for Owner) */}
             <div className="dev-hero-actions">
+              {isOwner && (
+                <button
+                  className="dev-action-btn edit-profile-btn"
+                  onClick={() => setIsEditModalOpen(true)}
+                  title="Edit Profile Settings"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span>Edit Profile</span>
+                </button>
+              )}
+
               <button
                 className={`dev-action-btn share-btn ${copied ? 'copied' : ''}`}
                 onClick={handleCopyLink}
@@ -428,7 +331,7 @@ const DeveloperProfile = () => {
         </div>
 
         {/* ===============================================================
-            FOUR-METRIC PERFORMANCE STRIP (Tailored for Dev or Member)
+            FOUR-METRIC PERFORMANCE STRIP - Zero Emojis
             =============================================================== */}
         <div className="dev-stats-grid">
           {isDev ? (
@@ -461,14 +364,10 @@ const DeveloperProfile = () => {
               <div className="dev-stat-card">
                 <span className="stat-label">Verification Status</span>
                 <span className="stat-value highlight-verified">
-                  {developer.isSuspended
-                    ? 'Suspended'
-                    : isSubscriptionEnded
-                    ? 'VIP Expired'
-                    : 'Verified Creator'}
+                  {developer.isSuspended ? 'Suspended' : 'Verified'}
                 </span>
                 <span className="stat-sub">
-                  {isSubscriptionEnded ? 'Catalog Apps Active' : 'Aadhaar & VIP Shield'}
+                  Aadhaar &amp; Store Status
                 </span>
               </div>
             </>
@@ -482,14 +381,14 @@ const DeveloperProfile = () => {
 
               <div className="dev-stat-card">
                 <span className="stat-label">Creator Status</span>
-                <span className="stat-value highlight-inactive">Not a Developer</span>
+                <span className="stat-value highlight-inactive">Member</span>
                 <span className="stat-sub">No Releases Published</span>
               </div>
 
               <div className="dev-stat-card">
                 <span className="stat-label">Platform Role</span>
                 <span className="stat-value">Explorer</span>
-                <span className="stat-sub">Verified User</span>
+                <span className="stat-sub">Active Member</span>
               </div>
 
               <div className="dev-stat-card">
@@ -499,7 +398,7 @@ const DeveloperProfile = () => {
                     ? `${developer.vipPlan.toUpperCase()} VIP`
                     : 'Standard'}
                 </span>
-                <span className="stat-sub">Community Tier</span>
+                <span className="stat-sub">Store Tier</span>
               </div>
             </>
           )}
@@ -517,7 +416,7 @@ const DeveloperProfile = () => {
                 Software Releases by <span className="dev-title-highlight">{developer.displayName}</span>
               </h2>
               <p className="dev-catalog-subtitle">
-                Browse, inspect, and download verified applications crafted by @{developer.username}.
+                Browse, inspect, and download applications crafted by @{developer.username}.
               </p>
             </div>
 
@@ -644,6 +543,7 @@ const DeveloperProfile = () => {
               })}
             </div>
           ) : (
+            /* NO RELEASES FOUND - ZERO EMOJIS */
             <div className="dev-no-products-box">
               <div className="no-products-icon">
                 <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="rgba(212, 175, 55, 0.45)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -674,7 +574,7 @@ const DeveloperProfile = () => {
           )}
         </section>
       ) : (
-        /* NON-DEVELOPER: COMMUNITY MEMBER SHOWCASE */
+        /* NON-DEVELOPER: COMMUNITY MEMBER SHOWCASE - ZERO EMOJIS */
         <section className="dev-community-section">
           <div className="dev-community-card">
             <div className="dev-community-icon-frame">
@@ -719,6 +619,34 @@ const DeveloperProfile = () => {
           </div>
         </section>
       )}
+
+      {/* ===============================================================
+          SINGLE UNIFIED EDIT PROFILE MODAL (FOR USER & DEVELOPER)
+          =============================================================== */}
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        developer={developer}
+        products={products}
+        onProfileUpdated={({ displayName, username: newUsername, bio }) => {
+          setDeveloper((prev) => ({
+            ...prev,
+            displayName,
+            username: newUsername,
+            bio,
+          }));
+          if (newUsername && newUsername !== cleanUsername) {
+            navigate(`/developer/${newUsername}`, { replace: true });
+          }
+        }}
+        onProductDeleted={(deletedId) => {
+          setProducts((prev) => prev.filter((p) => p.id !== deletedId));
+          setStats((prev) => ({
+            ...prev,
+            productsCount: Math.max(0, (prev.productsCount || 1) - 1),
+          }));
+        }}
+      />
 
       {/* ===============================================================
           PRODUCT DETAIL MODAL (Opens seamlessly on click)

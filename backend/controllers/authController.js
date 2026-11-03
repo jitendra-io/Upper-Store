@@ -708,15 +708,7 @@ const updateUsername = async (req, res) => {
       });
     }
 
-    // 2. VIP Authorization Check
-    const membership = await resolveUserMembership(userData, userDocRef);
-    const isVip = membership.plan === 'pro' || membership.plan === 'elite';
-    if (!isVip) {
-      return res.status(403).json({
-        message: 'Custom username modifications are an exclusive Upper VIP perk. Upgrade to VIP to personalize your @username twice per year.',
-        isVip: false,
-      });
-    }
+    // 2. Rate limit applies to all members (max 2 changes per rolling year)
 
     // 3. Rate Limit Check: VIP allowed to change username twice per rolling year (365 days)
     const MAX_CHANGES_PER_YEAR = 2;
@@ -869,6 +861,145 @@ const checkUsernameAvailability = async (req, res) => {
   }
 };
 
+// @desc    Update unified user profile (Display Name, Username, Bio)
+// @route   PUT /api/auth/user/profile
+// @access  Private (Authenticated User)
+const updateFullProfile = async (req, res) => {
+  const { displayName, username, bio } = req.body;
+  const userId = req.user.uid;
+  const cleanEmail = (req.user.email || '').trim().toLowerCase();
+
+  try {
+    let userDocRef = db.collection('users').doc(userId);
+    let userDoc = await userDocRef.get();
+    if (!userDoc.exists && cleanEmail) {
+      const snap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!snap.empty) {
+        userDocRef = snap.docs[0].ref;
+        userDoc = snap.docs[0];
+      }
+    }
+
+    if (!userDoc || !userDoc.exists) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    const userData = userDoc.data();
+    const now = new Date().toISOString();
+    const userUpdates = { updatedAt: now };
+
+    // 1. Validate & Update Display Name
+    if (displayName !== undefined) {
+      const cleanDisplayName = String(displayName).trim().slice(0, 50);
+      if (!cleanDisplayName) {
+        return res.status(400).json({ message: 'Display name cannot be empty.' });
+      }
+      userUpdates.displayName = cleanDisplayName;
+    }
+
+    // 2. Validate & Update Bio
+    if (bio !== undefined) {
+      userUpdates.bio = String(bio).trim().slice(0, 500);
+    }
+
+    // 3. Validate & Update Username (if provided and different)
+    let newUsername = userData.username;
+    if (username !== undefined) {
+      const rawUser = String(username).replace(/^@/, '').trim().toLowerCase();
+      if (rawUser && rawUser !== (userData.username || '').toLowerCase()) {
+        const uv = validateUsernameFormat(rawUser);
+        if (!uv.valid) {
+          return res.status(400).json({ message: uv.message });
+        }
+        const cleanUsername = uv.clean;
+
+        // Rate limit: max 2 changes per rolling year
+        const MAX_CHANGES_PER_YEAR = 2;
+        const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+        const oneYearAgo = new Date(Date.now() - ONE_YEAR_MS);
+        const changeHistory = Array.isArray(userData.usernameChangeHistory) ? userData.usernameChangeHistory : [];
+        const recentChanges = changeHistory.filter(item => item && item.changedAt && new Date(item.changedAt) > oneYearAgo);
+
+        if (recentChanges.length >= MAX_CHANGES_PER_YEAR) {
+          return res.status(403).json({
+            message: `Usernames can only be changed up to ${MAX_CHANGES_PER_YEAR} times per rolling year.`,
+          });
+        }
+
+        // Uniqueness check
+        const checkSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
+        if (!checkSnap.empty && checkSnap.docs[0].id !== userDoc.id) {
+          return res.status(400).json({ message: `Username @${cleanUsername} is already taken. Please choose another.` });
+        }
+
+        const newRecord = {
+          changedAt: now,
+          oldUsername: userData.username || '',
+          newUsername: cleanUsername,
+        };
+        userUpdates.username = cleanUsername;
+        userUpdates.usernameChangeHistory = [...changeHistory, newRecord];
+        newUsername = cleanUsername;
+      }
+    }
+
+    // Apply updates to user document
+    await userDocRef.update(userUpdates);
+
+    // Sync to developers collection if this user has developer doc
+    let devSnap = await db.collection('developers').where('userId', '==', userDoc.id).limit(1).get();
+    if (devSnap.empty && cleanEmail) {
+      devSnap = await db.collection('developers').where('email', '==', cleanEmail).limit(1).get();
+    }
+    if (!devSnap.empty) {
+      const devUpdates = { updatedAt: now };
+      if (userUpdates.displayName) devUpdates.displayName = userUpdates.displayName;
+      if (userUpdates.bio !== undefined) devUpdates.bio = userUpdates.bio;
+      if (userUpdates.username) devUpdates.username = userUpdates.username;
+      await devSnap.docs[0].ref.update(devUpdates);
+    }
+
+    // If username or displayName changed, sync to this developer's products
+    if (userUpdates.username || userUpdates.displayName) {
+      try {
+        const prodSnap = await db.collection('products')
+          .where('developerId', '==', userDoc.id)
+          .get();
+        const batch = db.batch();
+        prodSnap.docs.forEach((pDoc) => {
+          const pUpdate = {};
+          if (userUpdates.username) pUpdate.developerUsername = userUpdates.username;
+          if (userUpdates.displayName) pUpdate.developerName = userUpdates.displayName;
+          batch.update(pDoc.ref, pUpdate);
+        });
+        if (prodSnap.size > 0) {
+          await batch.commit();
+        }
+      } catch (pSyncErr) {
+        console.warn('Sync products author error:', pSyncErr.message);
+      }
+    }
+
+    res.json({
+      message: 'Profile updated successfully.',
+      user: {
+        id: userDoc.id,
+        uid: userDoc.id,
+        email: userData.email,
+        displayName: userUpdates.displayName || userData.displayName,
+        username: newUsername,
+        bio: userUpdates.bio !== undefined ? userUpdates.bio : userData.bio || '',
+        photoURL: userData.photoURL,
+        role: userData.role,
+        membership: userData.membership,
+      },
+    });
+  } catch (error) {
+    console.error('Update full profile error:', error);
+    res.status(500).json({ message: 'Failed to update profile.' });
+  }
+};
+
 module.exports = {
   loginAdmin,
   setupAdmin,
@@ -881,8 +1012,11 @@ module.exports = {
   getUserStatus,
   validateUsernameFormat,
   generateUniqueUsername,
+
+
+
   updateUsername,
   getUsernameStatus,
   checkUsernameAvailability,
+  updateFullProfile,
 };
-

@@ -573,6 +573,26 @@ const deleteProduct = async (req, res) => {
 
     const data = doc.data();
 
+    // Verify ownership: Admin can delete any product. Creators can delete their own products.
+    if (req.user?.role !== 'admin') {
+      const userUid = req.user?.uid || '';
+      const userEmail = (req.user?.email || '').trim().toLowerCase();
+      const userUsername = (req.user?.username || '').trim().toLowerCase();
+
+      const prodDevUid = data.developerId || '';
+      const prodDevEmail = (data.developerEmail || '').trim().toLowerCase();
+      const prodDevUsername = (data.developerUsername || '').trim().toLowerCase();
+
+      const isOwner =
+        (userUid && prodDevUid && userUid === prodDevUid) ||
+        (userEmail && prodDevEmail && userEmail === prodDevEmail) ||
+        (userUsername && prodDevUsername && userUsername === prodDevUsername);
+
+      if (!isOwner) {
+        return res.status(403).json({ message: 'Unauthorized. You can only remove products published by your account.' });
+      }
+    }
+
     // Clean up local files if present (strictly confined to backend/uploads directory)
     const uploadsDir = path.resolve(__dirname, '..', 'uploads');
     const safeDeleteFile = (fileUrlOrPath) => {

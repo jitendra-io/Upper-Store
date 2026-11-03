@@ -432,6 +432,20 @@
   transform: translateY(-2px);
 }
 
+.edit-profile-btn {
+  background: rgba(212, 175, 55, 0.15);
+  color: #ffd700;
+  border-color: rgba(212, 175, 55, 0.45);
+}
+
+.edit-profile-btn:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #d4af37 100%);
+  border-color: #ffd700;
+  color: #0b0c10;
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.45);
+  transform: translateY(-2px);
+}
+
 /* --------------------------------------------------------------------------
    FOUR STATS CARDS STRIP
    -------------------------------------------------------------------------- */

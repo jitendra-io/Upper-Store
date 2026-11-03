@@ -192,6 +192,15 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  const updateUserProfile = (newProfileData) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...newProfileData };
+      localStorage.setItem('upper_user_data', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -218,6 +227,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         refreshUserStatus,
         updateMembership,
+        updateUserProfile,
       }}
     >
       {children}
