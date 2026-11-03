@@ -42,7 +42,6 @@ const DeveloperProfile = () => {
 
   // UX Feedback & Interaction States
   const [copied, setCopied] = useState(false);
-  const [likedPosts, setLikedPosts] = useState({});
 
   // Clean the username parameter
   const cleanUsername = useMemo(() => {
@@ -84,17 +83,7 @@ const DeveloperProfile = () => {
     return false;
   }, [user, developer, cleanUsername]);
 
-  // Load liked posts from localStorage
-  useEffect(() => {
-    if (!cleanUsername) return;
-    try {
-      const likesKey = `upper_likes_${cleanUsername}`;
-      const savedLikes = localStorage.getItem(likesKey);
-      if (savedLikes) setLikedPosts(JSON.parse(savedLikes));
-    } catch {
-      // Safe fallback
-    }
-  }, [cleanUsername]);
+
 
   // Fetch Public Profile
   useEffect(() => {
@@ -137,19 +126,7 @@ const DeveloperProfile = () => {
     };
   }, [cleanUsername]);
 
-  // Toggle Like on Product Card
-  const handleToggleLike = (productId) => {
-    setLikedPosts((prev) => {
-      const current = Boolean(prev[productId]);
-      const next = { ...prev, [productId]: !current };
-      try {
-        localStorage.setItem(`upper_likes_${cleanUsername}`, JSON.stringify(next));
-      } catch {
-        // Ignore storage errors
-      }
-      return next;
-    });
-  };
+
 
   // Copy Profile Link Handler
   const handleCopyLink = () => {
@@ -423,142 +400,87 @@ const DeveloperProfile = () => {
       </div>
 
       {/* ===============================================================
-          PRODUCTS FEED LIST
+          PRODUCTS GRID (4 Products per Row on Desktop, 2 on Phone)
+          Compact Mini Cards (1/4th the visual size of catalog cards)
           =============================================================== */}
       <div className="dev-ref-tab-content">
-        <div className="dev-ref-feed-list">
-          {isDev && products.length > 0 ? (
-            products.map((product, index) => {
-              const isLiked = Boolean(likedPosts[product.id]);
-              const baseLikes = 248 + (index * 64) + ((Number(product.downloads) || 0) % 50);
-              const currentLikes = isLiked ? baseLikes + 1 : baseLikes;
-              const commentsCount = 18 + (index * 8);
-
-              const displayImage = product.image || product.logo || product.imageUrl1 || null;
-              const secondaryImage = product.imageUrl2 || product.screenshot || null;
+        {isDev && products.length > 0 ? (
+          <div className="dev-products-grid">
+            {products.map((product) => {
+              const displayImage = product.image || product.logo || product.imageUrl1 || '/logo.png';
+              const downloadsCount = Number(product.downloadsCount) || Number(product.downloads) || 0;
 
               return (
-                <article key={product.id} className="dev-ref-feed-card">
-                  {/* CARD HEADER: AVATAR, NAME, HANDLE, TIME/VERSION */}
-                  <div className="dev-card-header">
+                <div
+                  key={product.id}
+                  className="dev-mini-product-card"
+                  onClick={() => setSelectedProduct(product)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedProduct(product);
+                    }
+                  }}
+                  title={`View ${product.title} details`}
+                >
+                  {/* COMPACT THUMBNAIL */}
+                  <div className="dev-mini-card-thumb">
                     <img
-                      src={developer.avatar}
-                      alt={developer.displayName}
-                      className="dev-card-author-avatar"
+                      src={displayImage}
+                      alt={product.title}
+                      className="dev-mini-card-img"
+                      loading="lazy"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = '/logo.png';
                       }}
                     />
-                    <div className="dev-card-author-meta">
-                      <span className="dev-card-author-name">{developer.displayName || developer.username}</span>
-                      <span className="dev-card-author-handle">@{developer.username}</span>
-                      <span className="dev-card-time-sep">&middot;</span>
-                      <span className="dev-card-time-tag">v{product.version || '1.0.0'}</span>
-                    </div>
+                    <span className="dev-mini-card-price">{product.price || 'Free'}</span>
+                    {product.category && (
+                      <span className="dev-mini-card-cat">{product.category}</span>
+                    )}
                   </div>
 
-                  {/* CARD BODY TEXT / DESCRIPTION */}
-                  <p className="dev-card-body-text">
-                    {product.description || 'Verified software release on Upper Store. Crafted with clean architecture, high reliability, and top-tier performance.'}
-                  </p>
+                  {/* COMPACT DETAILS BODY */}
+                  <div className="dev-mini-card-body">
+                    <div className="dev-mini-card-header-row">
+                      {product.logo ? (
+                        <img
+                          src={product.logo}
+                          alt=""
+                          className="dev-mini-app-logo"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <div className="dev-mini-logo-placeholder">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                          </svg>
+                        </div>
+                      )}
+                      <h4 className="dev-mini-card-title" title={product.title}>
+                        {product.title}
+                      </h4>
+                    </div>
 
-                  {/* CARD MEDIA / PREVIEWS (Single or Dual Split Grid) */}
-                  {displayImage && secondaryImage ? (
-                    <div className="dev-card-media-grid dual">
-                      <img
-                        src={displayImage}
-                        alt={`${product.title} preview 1`}
-                        className="dev-card-media-img"
-                        onClick={() => setSelectedProduct(product)}
-                      />
-                      <img
-                        src={secondaryImage}
-                        alt={`${product.title} preview 2`}
-                        className="dev-card-media-img"
-                        onClick={() => setSelectedProduct(product)}
-                      />
-                    </div>
-                  ) : displayImage ? (
-                    <div className="dev-card-media-grid single">
-                      <img
-                        src={displayImage}
-                        alt={`${product.title} preview`}
-                        className="dev-card-media-img"
-                        onClick={() => setSelectedProduct(product)}
-                      />
-                    </div>
-                  ) : null}
-
-                  {/* CARD EMBED BOX */}
-                  <div
-                    className="dev-card-software-embed"
-                    onClick={() => setSelectedProduct(product)}
-                    title="Inspect and download application"
-                  >
-                    <div className="dev-embed-code-badge">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="16 18 22 12 16 6"></polyline>
-                        <polyline points="8 6 2 12 8 18"></polyline>
-                      </svg>
-                    </div>
-                    <div className="dev-embed-text-group">
-                      <h4 className="dev-embed-title">{product.title} &middot; Upper Store</h4>
-                      <span className="dev-embed-sublink">
-                        upperstore.io/{cleanUsername}/{product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
+                    <div className="dev-mini-card-meta-row">
+                      <span className="dev-mini-card-version">v{product.version || '1.0.0'}</span>
+                      <span className="dev-mini-card-downloads">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        {formatDownloadCount(downloadsCount)}
                       </span>
                     </div>
-                    <div className="dev-embed-arrow-icon">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                        <polyline points="15 3 21 3 21 9"></polyline>
-                        <line x1="10" y1="14" x2="21" y2="3"></line>
-                      </svg>
-                    </div>
                   </div>
-
-                  {/* CARD INTERACTION FOOTER */}
-                  <div className="dev-card-footer">
-                    <div className="dev-card-social-actions">
-                      {/* Heart / Like */}
-                      <button
-                        className={`dev-social-action-btn ${isLiked ? 'liked' : ''}`}
-                        onClick={() => handleToggleLike(product.id)}
-                        title="Like release"
-                      >
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill={isLiked ? '#ef4444' : 'none'} stroke={isLiked ? '#ef4444' : 'currentColor'} strokeWidth="2">
-                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
-                        <span>{currentLikes}</span>
-                      </button>
-
-                      {/* Comments / Reviews */}
-                      <button
-                        className="dev-social-action-btn"
-                        onClick={() => setSelectedProduct(product)}
-                        title="View reviews and feedback"
-                      >
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <span>{commentsCount}</span>
-                      </button>
-                    </div>
-
-                    {/* Right Side: Price & View Details */}
-                    <div className="dev-card-download-actions">
-                      <span className="dev-card-price-pill">{product.price || 'Free'}</span>
-                      <button
-                        className="dev-card-inspect-btn"
-                        onClick={() => setSelectedProduct(product)}
-                      >
-                        View Details &rarr;
-                      </button>
-                    </div>
-                  </div>
-                </article>
+                </div>
               );
-            })
+            })}
+          </div>
           ) : !isDev ? (
             /* NON-DEVELOPER COMMUNITY VIEW */
             <div className="dev-ref-empty-card">
@@ -596,7 +518,6 @@ const DeveloperProfile = () => {
               <p>@{developer.username} has not published any public applications to Upper Store yet.</p>
             </div>
           )}
-        </div>
       </div>
 
       {/* ===============================================================
