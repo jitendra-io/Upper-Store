@@ -365,6 +365,8 @@ const Navbar = () => {
                         (n.authorEmail ? n.authorEmail.split('@')[0] : '') ||
                         (n.authorType === 'admin' ? 'upperstore' : (n.authorName ? n.authorName.toLowerCase().replace(/[^a-z0-9_.-]/g, '') : 'upperstore'));
 
+                      const authorTitle = n.authorName || (n.authorType === 'admin' ? 'Upper Store Official' : 'VIP Creator');
+
                       return (
                         <div key={n.id} className={`notif-item-card ${isUnread ? 'unread' : 'read'} ${tierCardClass}`}>
                           {isEliteAuthor || isProAuthor ? (
@@ -377,17 +379,21 @@ const Navbar = () => {
                               }}
                               title={`View @${authorHandle}'s profile`}
                             >
-                              <VipAvatar
-                                src={n.authorAvatar}
-                                alt={n.authorName || 'VIP Member'}
-                                plan={isEliteAuthor ? 'elite' : 'pro'}
-                                size="sm"
-                                fallbackSeed={n.authorEmail || n.authorName || 'vip'}
-                              />
-                              <div className="notif-vip-author-meta">
-                                <span className="notif-author-title">{n.authorName || 'VIP Developer'}</span>
-                                <span className="notif-author-handle">@{authorHandle}</span>
-                                <VipFlairBadge plan={isEliteAuthor ? 'elite' : 'pro'} compact={true} />
+                              <div className="notif-author-left-cluster">
+                                <VipAvatar
+                                  src={n.authorAvatar}
+                                  alt={authorTitle}
+                                  plan={isEliteAuthor ? 'elite' : 'pro'}
+                                  size="sm"
+                                  fallbackSeed={n.authorEmail || n.authorName || 'vip'}
+                                />
+                                <div className="notif-author-meta-col">
+                                  <div className="notif-author-row-top">
+                                    <span className="notif-author-title">{authorTitle}</span>
+                                    <VipFlairBadge plan={isEliteAuthor ? 'elite' : 'pro'} compact={true} />
+                                  </div>
+                                  <span className="notif-author-handle">@{authorHandle}</span>
+                                </div>
                               </div>
                               <span className={`notif-cat-tag ${isEliteAuthor ? 'elite' : 'pro'}`}>
                                 {n.category || 'Release'}
@@ -403,13 +409,17 @@ const Navbar = () => {
                               }}
                               title={`View @${authorHandle || 'upperstore'} Official Profile`}
                             >
-                              <div className="notif-official-avatar-frame">
-                                <img src={logoImg} alt="Upper Store Official" className="notif-official-avatar-img" />
-                              </div>
-                              <div className="notif-official-author-meta">
-                                <span className="notif-author-title">{n.authorName || 'Upper Store Official'}</span>
-                                <span className="notif-author-handle">@{authorHandle || 'upperstore'}</span>
-                                <span className="notif-official-badge">OFFICIAL</span>
+                              <div className="notif-author-left-cluster">
+                                <div className="notif-official-avatar-frame">
+                                  <img src={logoImg} alt="Upper Store Official" className="notif-official-avatar-img" />
+                                </div>
+                                <div className="notif-author-meta-col">
+                                  <div className="notif-author-row-top">
+                                    <span className="notif-author-title">{n.authorName || 'Upper Store Official'}</span>
+                                    <span className="notif-official-badge">OFFICIAL</span>
+                                  </div>
+                                  <span className="notif-author-handle">@{authorHandle || 'upperstore'}</span>
+                                </div>
                               </div>
                               <span className={`notif-cat-tag ${(n.category || 'Update').toLowerCase()}`}>
                                 {n.category || 'Update'}
