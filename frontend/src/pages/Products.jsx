@@ -338,7 +338,12 @@ const Products = () => {
                     </div>
                   )}
                   {product.developerName && (
-                    <div className="product-developer-attribution">
+                    <Link
+                      to={'/developer/' + (product.developerUsername || 'upperstore')}
+                      className="product-developer-attribution clickable-dev-link"
+                      onClick={(e) => e.stopPropagation()}
+                      title={'View @' + (product.developerUsername || 'upperstore') + ' Developer Profile'}
+                    >
                       <VipAvatar
                         src={product.developerAvatar}
                         alt={product.developerName}
@@ -346,9 +351,17 @@ const Products = () => {
                         size="sm"
                         fallbackSeed={product.developerEmail || product.developerName}
                       />
-                      <span className="product-developer-name">{product.developerName}{product.developerUsername && (<span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.78rem', fontFamily: 'monospace' }}>@{product.developerUsername}</span>)}</span>
+                      <span className="product-developer-name">
+                        {product.developerName}
+                        {product.developerUsername && (
+                          <span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                            @{product.developerUsername}
+                          </span>
+                        )}
+                      </span>
                       <VipFlairBadge plan={product.developerTier || 'pro'} compact={true} />
-                    </div>
+                      <span className="dev-redirect-arrow">↗</span>
+                    </Link>
                   )}
                   <p>{product.description}</p>
                   <div className="product-footer">

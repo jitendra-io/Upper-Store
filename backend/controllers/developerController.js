@@ -58,7 +58,7 @@ const getMyDeveloperProfile = async (req, res) => {
 // @route   POST /api/developers/register
 // @access  Private (Active VIP Member)
 const registerDeveloperKyc = async (req, res) => {
-  const { legalName, displayName, username, phone, aadhaarNumber, aadhaarDriveLink } = req.body;
+  const { legalName, displayName, username, bio, phone, aadhaarNumber, aadhaarDriveLink } = req.body;
   const userId = req.user.uid;
   const cleanEmail = (req.user.email || '').trim().toLowerCase();
 
@@ -171,6 +171,7 @@ const registerDeveloperKyc = async (req, res) => {
       username: cleanDevUsername || userData.username || null,
       legalName: legalName.trim(),
       displayName: displayName.trim(),
+      bio: (bio || userData.bio || '').trim().slice(0, 500),
       phone: cleanPhone,
       aadhaarNumber: cleanAadhaar,
       aadhaarDriveLink: cleanDriveLink,
@@ -214,6 +215,9 @@ const registerDeveloperKyc = async (req, res) => {
         };
         if (cleanDevUsername) {
           uUpdate.username = cleanDevUsername;
+        }
+        if (bio !== undefined) {
+          uUpdate.bio = (bio || '').trim().slice(0, 500);
         }
         await userDocRef.update(uUpdate);
       } catch (uErr) {
@@ -342,10 +346,234 @@ const toggleDeveloperSuspension = async (req, res) => {
   }
 };
 
+// @desc    Get public developer profile and all their published products
+// @route   GET /api/developers/profile/:username
+// @access  Public
+const getPublicDeveloperProfile = async (req, res) => {
+  try {
+    const rawUsername = (req.params.username || '').trim();
+    if (!rawUsername) {
+      return res.status(400).json({ message: 'Developer username is required.' });
+    }
+
+    const cleanUsername = rawUsername.replace(/^@/, '').trim().toLowerCase();
+    if (cleanUsername.length < 2 || cleanUsername.length > 50 || !/^[a-z0-9_.-]+$/.test(cleanUsername)) {
+      return res.status(400).json({ message: 'Invalid developer username format. Must be alphanumeric with underscores or dots.' });
+    }
+
+    // Special Case: Official Upper Store Catalog Creator
+    if (['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'].includes(cleanUsername)) {
+      const prodSnap = await db.collection('products').get();
+      const officialProducts = prodSnap.docs
+        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .filter((p) => p.isStoreOfficial || !p.developerId || !p.isDeveloperProduct);
+
+      const totalDownloads = officialProducts.reduce(
+        (sum, p) => sum + (Number(p.downloadsCount) || Number(p.downloads) || 0),
+        0
+      );
+      const avgRating =
+        officialProducts.length > 0
+          ? (
+              officialProducts.reduce((sum, p) => sum + (Number(p.rating) || 5), 0) / officialProducts.length
+            ).toFixed(1)
+          : '5.0';
+
+      return res.json({
+        developer: {
+          id: 'upper-store-official',
+          username: 'upperstore',
+          displayName: 'Upper Store Official',
+          bio: 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.',
+          avatar: '/logo.png',
+          vipPlan: 'elite', // Conic Royal Purple Elite Ring
+          isVerified: true,
+          isOfficial: true,
+          isSuspended: false,
+          joinedAt: '2026-01-01T00:00:00.000Z',
+        },
+        stats: {
+          productsCount: officialProducts.length,
+          totalDownloads,
+          averageRating: Number(avgRating),
+        },
+        products: officialProducts,
+      });
+    }
+
+    // 1. Locate developer in 'developers' collection
+    let devDoc = null;
+    let devData = null;
+
+    const devSnap = await db.collection('developers').where('username', '==', cleanUsername).limit(1).get();
+    if (!devSnap.empty) {
+      devDoc = devSnap.docs[0];
+      devData = devDoc.data();
+    } else {
+      // Check in 'users' collection
+      const userSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
+      if (!userSnap.empty) {
+        const userDoc = userSnap.docs[0];
+        const uData = userDoc.data();
+
+        let dSnap = await db.collection('developers').where('userId', '==', userDoc.id).limit(1).get();
+        if (dSnap.empty && uData.email) {
+          dSnap = await db.collection('developers').where('email', '==', uData.email.toLowerCase()).limit(1).get();
+        }
+
+        if (!dSnap.empty) {
+          devDoc = dSnap.docs[0];
+          devData = dSnap.docs[0].data();
+        } else {
+          // Construct developer from verified user record
+          devData = {
+            userId: userDoc.id,
+            email: uData.email,
+            username: uData.username || cleanUsername,
+            displayName: uData.displayName || uData.username || cleanUsername,
+            bio: uData.bio || '',
+            avatar: uData.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
+            vipPlan: uData.membership?.plan || 'pro',
+            isSuspended: Boolean(uData.isBanned),
+            createdAt: uData.createdAt,
+          };
+        }
+      }
+    }
+
+    // 2. Query all products published by this developer
+    let matchedProducts = [];
+    try {
+      const prodSnap = await db.collection('products').get();
+      const allProds = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      if (devData) {
+        const devEmail = (devData.email || '').toLowerCase();
+        const devUid = devData.userId || '';
+        matchedProducts = allProds.filter(
+          (p) =>
+            (p.developerUsername && p.developerUsername.toLowerCase() === cleanUsername) ||
+            (devEmail && p.developerEmail && p.developerEmail.toLowerCase() === devEmail) ||
+            (devUid && p.developerId && p.developerId === devUid)
+        );
+      } else {
+        // Fallback: check if products exist attributed to this username
+        matchedProducts = allProds.filter(
+          (p) => p.developerUsername && p.developerUsername.toLowerCase() === cleanUsername
+        );
+        if (matchedProducts.length > 0) {
+          const sample = matchedProducts[0];
+          devData = {
+            username: cleanUsername,
+            displayName: sample.developerName || cleanUsername,
+            bio: '',
+            avatar: sample.developerAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
+            vipPlan: sample.developerTier || 'pro',
+            isSuspended: false,
+            createdAt: sample.createdAt || new Date().toISOString(),
+          };
+        }
+      }
+    } catch (pErr) {
+      console.warn('Error fetching products for public developer profile:', pErr.message);
+    }
+
+    if (!devData) {
+      return res.status(404).json({ message: `Developer @${cleanUsername} was not found.` });
+    }
+
+    // 3. Compute dynamic stats
+    const totalDownloads = matchedProducts.reduce(
+      (sum, p) => sum + (Number(p.downloadsCount) || Number(p.downloads) || 0),
+      0
+    );
+    const avgRating =
+      matchedProducts.length > 0
+        ? (
+            matchedProducts.reduce((sum, p) => sum + (Number(p.rating) || 5), 0) / matchedProducts.length
+          ).toFixed(1)
+        : '5.0';
+
+    // 4. Safe Public Profile (NEVER expose phone, aadhaar, or private IDs)
+    const publicProfile = {
+      id: devDoc ? devDoc.id : devData.userId || cleanUsername,
+      username: devData.username || cleanUsername,
+      displayName: devData.displayName || devData.username || cleanUsername,
+      bio: devData.bio && devData.bio.trim()
+        ? devData.bio.trim()
+        : 'Verified Upper Store Creator. Building high-performance software, mobile APKs, and digital developer utilities.',
+      avatar: devData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
+      vipPlan: devData.vipPlan || 'pro',
+      isVerified: !devData.isSuspended,
+      isSuspended: Boolean(devData.isSuspended),
+      joinedAt: devData.createdAt || null,
+    };
+
+    res.json({
+      developer: publicProfile,
+      stats: {
+        productsCount: matchedProducts.length,
+        totalDownloads,
+        averageRating: Number(avgRating),
+      },
+      products: matchedProducts,
+    });
+  } catch (error) {
+    console.error('Error fetching public developer profile:', error);
+    res.status(500).json({ message: 'Failed to retrieve developer profile.' });
+  }
+};
+
+// @desc    Update authenticated developer's bio
+// @route   PUT /api/developers/bio
+// @access  Private (Authenticated User)
+const updateDeveloperBio = async (req, res) => {
+  try {
+    const { bio } = req.body;
+    const userId = req.user.uid;
+    const cleanEmail = (req.user.email || '').trim().toLowerCase();
+
+    const cleanBio = (bio || '').trim().slice(0, 500);
+
+    // Update in developers collection
+    let devSnap = await db.collection('developers').where('userId', '==', userId).limit(1).get();
+    if (devSnap.empty && cleanEmail) {
+      devSnap = await db.collection('developers').where('email', '==', cleanEmail).limit(1).get();
+    }
+
+    if (!devSnap.empty) {
+      await devSnap.docs[0].ref.update({
+        bio: cleanBio,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    // Also update in users collection
+    try {
+      await db.collection('users').doc(userId).update({
+        bio: cleanBio,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch (uErr) {
+      // Non-critical
+    }
+
+    res.json({
+      message: 'Developer bio updated successfully.',
+      bio: cleanBio,
+    });
+  } catch (error) {
+    console.error('Error updating developer bio:', error);
+    res.status(500).json({ message: 'Failed to update developer bio.' });
+  }
+};
+
 module.exports = {
   getMyDeveloperProfile,
   registerDeveloperKyc,
   getAllDevelopers,
   toggleDeveloperSuspension,
+  getPublicDeveloperProfile,
+  updateDeveloperBio,
 };
 

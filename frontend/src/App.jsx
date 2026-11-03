@@ -14,6 +14,7 @@ import Policies from './pages/Policies';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import VipClub from './pages/VipClub';
+import DeveloperProfile from './pages/DeveloperProfile';
 import Footer from './components/Footer';
 import MiniFooter from './components/MiniFooter';
 import { AuthProvider } from './context/AuthContext';
@@ -58,6 +59,9 @@ function AppContent() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/vip" element={<VipClub />} />
         <Route path="/vip-club" element={<VipClub />} />
+        <Route path="/developer/:username" element={<DeveloperProfile />} />
+        <Route path="/developers/:username" element={<DeveloperProfile />} />
+        <Route path="/dev/:username" element={<DeveloperProfile />} />
       </Routes>
       {showFullFooter && <Footer />}
       <AuthModal />

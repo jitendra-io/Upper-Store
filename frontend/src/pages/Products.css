@@ -621,6 +621,16 @@
   border-radius: 8px;
   width: fit-content;
   max-width: 100%;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-developer-attribution.clickable-dev-link:hover,
+.modal-developer-attribution.clickable-dev-link:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.45);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 10px rgba(212, 175, 55, 0.2);
 }
 
 .product-developer-name {
@@ -630,6 +640,25 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+
+.clickable-dev-link:hover .product-developer-name,
+.clickable-dev-link:hover .modal-dev-name {
+  color: #fbbf24;
+}
+
+.dev-redirect-arrow {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 800;
+  margin-left: 2px;
+  transition: all 0.2s ease;
+}
+
+.clickable-dev-link:hover .dev-redirect-arrow {
+  color: #fbbf24;
+  transform: translate(2px, -2px);
 }
 
 .modal-developer-attribution {
@@ -642,6 +671,8 @@
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 8px;
   width: fit-content;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modal-dev-label {

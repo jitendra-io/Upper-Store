@@ -38,6 +38,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
     legalName: '',
     displayName: '',
     username: '',
+    bio: '',
     phone: '',
     aadhaarNumber: '',
     aadhaarDriveLink: '',
@@ -96,6 +97,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
             legalName: dData.developer.legalName || '',
             displayName: dData.developer.displayName || user?.displayName || '',
             username: dData.developer.username || user?.username || '',
+            bio: dData.developer.bio || '',
             phone: dData.developer.phone || '',
             aadhaarNumber: dData.developer.aadhaarNumber || '',
             aadhaarDriveLink: dData.developer.aadhaarDriveLink || '',
@@ -208,6 +210,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
           legalName: kycForm.legalName,
           displayName: kycForm.displayName || user?.displayName || user?.email?.split('@')[0],
           username: cleanUsername,
+          bio: (kycForm.bio || '').trim(),
           phone: cleanPhone,
           aadhaarNumber: cleanAadhaar,
           aadhaarDriveLink: kycForm.aadhaarDriveLink,
@@ -848,7 +851,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       />
                       <div className="brand-preview-meta">
                         <span className="brand-dev-name">{devProfile?.displayName || user?.displayName || 'VIP Developer'}</span>
-                        <span className="brand-dev-handle">@{kycForm.username || devProfile?.username || user?.username || 'handle'}</span>
+                        <a href={'/developer/' + (kycForm.username || devProfile?.username || user?.username || 'upperstore')} target="_blank" rel="noopener noreferrer" className="brand-dev-handle dev-profile-preview-link" title="Open your public developer profile in new tab">@{kycForm.username || devProfile?.username || user?.username || 'handle'} ↗</a>
                         <VipFlairBadge plan={vipTier} compact={true} />
                       </div>
                     </div>
@@ -1047,7 +1050,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       />
                       <div className="live-author-meta">
                         <span className="live-name">{devProfile?.displayName || user?.displayName || 'VIP Developer'}</span>
-                        <span className="brand-dev-handle">@{kycForm.username || devProfile?.username || user?.username || 'handle'}</span>
+                        <a href={'/developer/' + (kycForm.username || devProfile?.username || user?.username || 'upperstore')} target="_blank" rel="noopener noreferrer" className="brand-dev-handle dev-profile-preview-link" title="Open your public developer profile in new tab">@{kycForm.username || devProfile?.username || user?.username || 'handle'} ↗</a>
                         <VipFlairBadge plan={vipTier} compact={true} />
                       </div>
                       <span className={`live-cat-badge ${vipTier}`}>
@@ -1161,6 +1164,32 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       />
                     </div>
                   </div>
+                </div>
+
+                <div className="dev-field-group">
+                  <label>Developer Bio & Overview</label>
+                  <textarea
+                    placeholder="Tell the community about yourself, your software engineering experience, and what you build..."
+                    value={kycForm.bio || ''}
+                    onChange={(e) => setKycForm({ ...kycForm, bio: e.target.value })}
+                    maxLength={350}
+                    rows={2}
+                    style={{
+                      width: '100%',
+                      background: 'rgba(0,0,0,0.4)',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      borderRadius: '8px',
+                      padding: '0.65rem 0.85rem',
+                      color: '#ffffff',
+                      fontSize: '0.88rem',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                  <small className="field-hint">
+                    This bio will appear on your public profile page (<code>/developer/@{kycForm.username || 'username'}</code>).
+                  </small>
                 </div>
 
                 <div className="form-fields-grid grid-2">

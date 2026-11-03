@@ -6,11 +6,17 @@ const {
   registerDeveloperKyc,
   getAllDevelopers,
   toggleDeveloperSuspension,
+  getPublicDeveloperProfile,
+  updateDeveloperBio,
 } = require('../controllers/developerController');
+
+// Public Developer Profile & Published Products (No Auth required)
+router.get('/profile/:username', getPublicDeveloperProfile);
 
 // User Developer Profile & KYC Registration
 router.get('/me', protect, getMyDeveloperProfile);
 router.post('/register', protect, registerDeveloperKyc);
+router.put('/bio', protect, updateDeveloperBio);
 
 // Admin Developer Oversight Routes
 router.get('/', protectAdmin, getAllDevelopers);

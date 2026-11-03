@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { recordUserDownload, getProductDownloadCount, formatDownloadCount, getSecureDownloadUrl, isDirectDownloadFile } from '../utils/downloadTracker';
@@ -281,7 +282,12 @@ const ProductDetailModal = ({ product, onClose }) => {
                   <span className="pill-item price-pill">{product.price}</span>
                 </div>
                 {product.developerName && (
-                  <div className="modal-developer-attribution">
+                  <Link
+                    to={'/developer/' + (product.developerUsername || 'upperstore')}
+                    className="modal-developer-attribution clickable-dev-link"
+                    title={'View @' + (product.developerUsername || 'upperstore') + ' Developer Profile'}
+                    onClick={() => { if (onClose) onClose(); }}
+                  >
                     <span className="modal-dev-label">Published by:</span>
                     <VipAvatar
                       src={product.developerAvatar}
@@ -290,9 +296,17 @@ const ProductDetailModal = ({ product, onClose }) => {
                       size="sm"
                       fallbackSeed={product.developerEmail || product.developerName}
                     />
-                    <span className="modal-dev-name">{product.developerName}{product.developerUsername && (<span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.8rem', fontFamily: 'monospace' }}>@{product.developerUsername}</span>)}</span>
+                    <span className="modal-dev-name">
+                      {product.developerName}
+                      {product.developerUsername && (
+                        <span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                          @{product.developerUsername}
+                        </span>
+                      )}
+                    </span>
                     <VipFlairBadge plan={product.developerTier || 'pro'} compact={true} />
-                  </div>
+                    <span className="dev-redirect-arrow">↗</span>
+                  </Link>
                 )}
                 {Array.isArray(product.tags) && product.tags.filter(Boolean).length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.45rem' }}>
