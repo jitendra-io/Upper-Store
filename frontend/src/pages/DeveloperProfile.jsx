@@ -5,12 +5,13 @@ import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
 import StarRatingBadge from '../components/StarRatingBadge';
 import ProductDetailModal from '../components/ProductDetailModal';
 import EditProfileModal from '../components/EditProfileModal';
+import DeveloperDownloadsModal from '../components/DeveloperDownloadsModal';
 import { formatDownloadCount } from '../utils/downloadTracker';
 import './DeveloperProfile.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Default atmospheric nature dusk landscape banner matching reference image
+// Default atmospheric dusk landscape banner matching reference image
 const DEFAULT_COVER_BANNER =
   'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1600&q=80';
 
@@ -37,16 +38,15 @@ const DeveloperProfile = () => {
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  // Tabs: 'posts' | 'replies' | 'highlights' | 'about'
-  const [activeTab, setActiveTab] = useState('posts');
-
   // Single Unified Edit Profile Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Private Downloads Telemetry Modal State (Visible only to the developer himself)
+  const [isDownloadsModalOpen, setIsDownloadsModalOpen] = useState(false);
 
   // UX Feedback & Interaction States
   const [copied, setCopied] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followersCount, setFollowersCount] = useState(8412);
   const [likedPosts, setLikedPosts] = useState({});
 
   // Clean the username parameter
@@ -98,13 +98,6 @@ const DeveloperProfile = () => {
           setDeveloper(data.developer);
           setStats(data.stats || { productsCount: 0, totalDownloads: 0, averageRating: 5.0 });
           setProducts(Array.isArray(data.products) ? data.products : []);
-
-          // Derive realistic followers count
-          const baseFollowers = Math.max(
-            8412,
-            ((data.stats?.totalDownloads || 0) * 4) + 1280
-          );
-          setFollowersCount(baseFollowers);
         } else {
           setError(data.message || `Profile @${cleanUsername} was not found.`);
         }
@@ -133,7 +126,6 @@ const DeveloperProfile = () => {
   const handleToggleFollow = () => {
     const nextState = !isFollowing;
     setIsFollowing(nextState);
-    setFollowersCount((prev) => (nextState ? prev + 1 : Math.max(0, prev - 1)));
     try {
       localStorage.setItem(`upper_follow_${cleanUsername}`, String(nextState));
     } catch {
@@ -141,7 +133,7 @@ const DeveloperProfile = () => {
     }
   };
 
-  // Toggle Like on Product Post Card
+  // Toggle Like on Product Card
   const handleToggleLike = (productId) => {
     setLikedPosts((prev) => {
       const current = Boolean(prev[productId]);
@@ -222,21 +214,17 @@ const DeveloperProfile = () => {
     ? 'pro'
     : developer.vipPlan || 'free';
 
-  // Derived highlights: top downloaded / highest rated
-  const highlightProducts = [...products].sort((a, b) => {
-    const dA = Number(a.downloadsCount) || Number(a.downloads) || 0;
-    const dB = Number(b.downloadsCount) || Number(b.downloads) || 0;
-    return dB - dA;
-  }).slice(0, 4);
+  // Resolved cover banner URL
+  const coverBannerUrl = developer.coverImage || developer.banner || DEFAULT_COVER_BANNER;
 
   return (
     <div className="dev-ref-page-container">
       {/* ===============================================================
-          TOP LANDSCAPE COVER BANNER (Matches Reference Image)
+          TOP LANDSCAPE COVER BANNER
           =============================================================== */}
       <div className="dev-ref-banner-frame">
         <img
-          src={developer.coverImage || developer.banner || DEFAULT_COVER_BANNER}
+          src={coverBannerUrl}
           alt="Developer Profile Cover Banner"
           className="dev-ref-banner-img"
           onError={(e) => {
@@ -271,26 +259,8 @@ const DeveloperProfile = () => {
           )}
         </div>
 
-        {/* RIGHT ACTION BUTTONS: MESSAGE, SHARE, FOLLOW / EDIT */}
+        {/* RIGHT ACTION BUTTONS: SHARE, FOLLOW / EDIT */}
         <div className="dev-ref-actions-group">
-          {/* Options / Contact Button */}
-          <button
-            className="dev-ref-circle-btn"
-            title={`Contact @${developer.username}`}
-            onClick={() => {
-              if (developer.email) {
-                window.location.href = `mailto:${developer.email}`;
-              } else {
-                handleCopyLink();
-              }
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
-          </button>
-
           {/* Share Profile Button */}
           <button
             className={`dev-ref-circle-btn ${copied ? 'copied' : ''}`}
@@ -372,26 +342,18 @@ const DeveloperProfile = () => {
         {/* BIO DESCRIPTION */}
         <p className="dev-ref-bio-text">
           {developer.bio || (isDev
-            ? 'Product designer & software developer crafting high-performance tools and applications for Upper Store.'
+            ? 'Verified Upper Store creator crafting high-performance tools and applications.'
             : 'Upper Store Community Member exploring verified developer releases and utilities.')}
         </p>
 
-        {/* METADATA ROW (Location, Role, Joined Date, Website) */}
+        {/* METADATA ROW (Location default 'None', Joined Date) */}
         <div className="dev-ref-meta-row">
           <div className="dev-ref-meta-item">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
               <circle cx="12" cy="10" r="3"></circle>
             </svg>
-            <span>{developer.location || 'India'}</span>
-          </div>
-
-          <div className="dev-ref-meta-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
-            <span>{isDev ? 'Product Designer at Upper Store' : 'Community Explorer'}</span>
+            <span>{developer.location && developer.location.trim() ? developer.location : 'None'}</span>
           </div>
 
           <div className="dev-ref-meta-item">
@@ -403,434 +365,222 @@ const DeveloperProfile = () => {
             </svg>
             <span>{formatJoinedDate(developer.joinedAt || developer.createdAt)}</span>
           </div>
-
-          <div className="dev-ref-meta-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-            <a
-              href={developer.website || `https://upperstore.io/@${developer.username}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="dev-ref-meta-link"
-            >
-              {developer.website ? developer.website.replace(/^https?:\/\//, '') : `${developer.username}.design`}
-            </a>
-          </div>
         </div>
 
-        {/* STATS ROW (Matches: 1,284 Following   8,412 Followers   312 Posts) */}
+        {/* STATS ROW (Products Count + Downloads visible only to developer himself) */}
         <div className="dev-ref-stats-row">
           <div className="dev-ref-stat">
-            <span className="stat-bold-val">1,284</span>
-            <span className="stat-muted-lbl">Following</span>
-          </div>
-
-          <div className="dev-ref-stat">
-            <span className="stat-bold-val">{followersCount.toLocaleString()}</span>
-            <span className="stat-muted-lbl">Followers</span>
-          </div>
-
-          <div className="dev-ref-stat">
             <span className="stat-bold-val">{products.length}</span>
-            <span className="stat-muted-lbl">{isDev ? 'Posts' : 'Saved'}</span>
+            <span className="stat-muted-lbl">Products</span>
           </div>
 
-          {isDev && (
-            <div className="dev-ref-stat">
-              <span className="stat-bold-val">{formatDownloadCount(stats.totalDownloads)}</span>
+          {/* DOWNLOAD TELEMETRY: VISIBLE ONLY TO THE DEVELOPER HIMSELF */}
+          {isOwner && isDev && (
+            <button
+              type="button"
+              className="dev-ref-stat dev-downloads-clickable-stat"
+              onClick={() => setIsDownloadsModalOpen(true)}
+              title="Click to view detailed per-app downloads telemetry"
+            >
+              <span className="stat-bold-val highlight-gold">{formatDownloadCount(stats.totalDownloads)}</span>
               <span className="stat-muted-lbl">Downloads</span>
-            </div>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.5" className="downloads-stat-icon">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </button>
           )}
         </div>
       </div>
 
       {/* ===============================================================
-          TABS NAVIGATION BAR (Posts, Replies, Highlights, About | Edit Profile)
+          PRODUCTS TAB HEADER (Replacing "Post" with "Products")
           =============================================================== */}
       <div className="dev-ref-tabs-container">
         <div className="dev-ref-tabs-bar">
-          <button
-            className={`dev-ref-tab-btn ${activeTab === 'posts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('posts')}
-          >
-            Posts
-          </button>
-
-          <button
-            className={`dev-ref-tab-btn ${activeTab === 'replies' ? 'active' : ''}`}
-            onClick={() => setActiveTab('replies')}
-          >
-            Replies
-          </button>
-
-          <button
-            className={`dev-ref-tab-btn ${activeTab === 'highlights' ? 'active' : ''}`}
-            onClick={() => setActiveTab('highlights')}
-          >
-            Highlights
-          </button>
-
-          <button
-            className={`dev-ref-tab-btn ${activeTab === 'about' ? 'active' : ''}`}
-            onClick={() => setActiveTab('about')}
-          >
-            About
-          </button>
+          <div className="dev-ref-tab-btn active">
+            <span>Products</span>
+            <span className="dev-tab-count-tag">{products.length}</span>
+          </div>
         </div>
-
-        {isOwner && (
-          <button
-            className="dev-ref-tab-edit-link"
-            onClick={() => setIsEditModalOpen(true)}
-            title="Edit profile information"
-          >
-            Edit profile
-          </button>
-        )}
       </div>
 
       {/* ===============================================================
-          TAB CONTENT PANELS
+          PRODUCTS FEED LIST
           =============================================================== */}
       <div className="dev-ref-tab-content">
-        {/* TAB 1: POSTS / PRODUCTS FEED */}
-        {activeTab === 'posts' && (
-          <div className="dev-ref-feed-list">
-            {isDev && products.length > 0 ? (
-              products.map((product, index) => {
-                const isLiked = Boolean(likedPosts[product.id]);
-                const baseLikes = 248 + (index * 64) + ((Number(product.downloads) || 0) % 50);
-                const currentLikes = isLiked ? baseLikes + 1 : baseLikes;
-                const commentsCount = 18 + (index * 8);
-                const repostsCount = 12 + (index * 4);
+        <div className="dev-ref-feed-list">
+          {isDev && products.length > 0 ? (
+            products.map((product, index) => {
+              const isLiked = Boolean(likedPosts[product.id]);
+              const baseLikes = 248 + (index * 64) + ((Number(product.downloads) || 0) % 50);
+              const currentLikes = isLiked ? baseLikes + 1 : baseLikes;
+              const commentsCount = 18 + (index * 8);
 
-                const displayImage = product.image || product.logo || product.imageUrl1 || null;
-                const secondaryImage = product.imageUrl2 || product.screenshot || null;
+              const displayImage = product.image || product.logo || product.imageUrl1 || null;
+              const secondaryImage = product.imageUrl2 || product.screenshot || null;
 
-                return (
-                  <article key={product.id} className="dev-ref-feed-card">
-                    {/* CARD HEADER: AVATAR, NAME, HANDLE, TIME/VERSION */}
-                    <div className="dev-card-header">
-                      <img
-                        src={developer.avatar}
-                        alt={developer.displayName}
-                        className="dev-card-author-avatar"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/logo.png';
-                        }}
-                      />
-                      <div className="dev-card-author-meta">
-                        <span className="dev-card-author-name">{developer.displayName || developer.username}</span>
-                        <span className="dev-card-author-handle">@{developer.username}</span>
-                        <span className="dev-card-time-sep">&middot;</span>
-                        <span className="dev-card-time-tag">v{product.version || '1.0.0'}</span>
-                      </div>
-                    </div>
-
-                    {/* CARD BODY TEXT / DESCRIPTION */}
-                    <p className="dev-card-body-text">
-                      {product.description || 'Verified software release on Upper Store. Crafted with clean architecture, high reliability, and top-tier performance.'}
-                    </p>
-
-                    {/* CARD MEDIA / PREVIEWS (Single or Dual Split Grid) */}
-                    {displayImage && secondaryImage ? (
-                      <div className="dev-card-media-grid dual">
-                        <img
-                          src={displayImage}
-                          alt={`${product.title} preview 1`}
-                          className="dev-card-media-img"
-                          onClick={() => setSelectedProduct(product)}
-                        />
-                        <img
-                          src={secondaryImage}
-                          alt={`${product.title} preview 2`}
-                          className="dev-card-media-img"
-                          onClick={() => setSelectedProduct(product)}
-                        />
-                      </div>
-                    ) : displayImage ? (
-                      <div className="dev-card-media-grid single">
-                        <img
-                          src={displayImage}
-                          alt={`${product.title} preview`}
-                          className="dev-card-media-img"
-                          onClick={() => setSelectedProduct(product)}
-                        />
-                      </div>
-                    ) : null}
-
-                    {/* CARD EMBED BOX (Matches reference image's </> color-ramp · GitHub box) */}
-                    <div
-                      className="dev-card-software-embed"
-                      onClick={() => setSelectedProduct(product)}
-                      title="Inspect and download application"
-                    >
-                      <div className="dev-embed-code-badge">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="16 18 22 12 16 6"></polyline>
-                          <polyline points="8 6 2 12 8 18"></polyline>
-                        </svg>
-                      </div>
-                      <div className="dev-embed-text-group">
-                        <h4 className="dev-embed-title">{product.title} &middot; Upper Store</h4>
-                        <span className="dev-embed-sublink">
-                          upperstore.io/{cleanUsername}/{product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
-                        </span>
-                      </div>
-                      <div className="dev-embed-arrow-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
-                      </div>
-                    </div>
-
-                    {/* CARD INTERACTION FOOTER (Heart, Comments, Downloads, Bookmark/Share) */}
-                    <div className="dev-card-footer">
-                      <div className="dev-card-social-actions">
-                        {/* Heart / Like */}
-                        <button
-                          className={`dev-social-action-btn ${isLiked ? 'liked' : ''}`}
-                          onClick={() => handleToggleLike(product.id)}
-                          title="Like release"
-                        >
-                          <svg width="17" height="17" viewBox="0 0 24 24" fill={isLiked ? '#ef4444' : 'none'} stroke={isLiked ? '#ef4444' : 'currentColor'} strokeWidth="2">
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                          </svg>
-                          <span>{currentLikes}</span>
-                        </button>
-
-                        {/* Comments / Reviews */}
-                        <button
-                          className="dev-social-action-btn"
-                          onClick={() => setSelectedProduct(product)}
-                          title="View reviews and feedback"
-                        >
-                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                          </svg>
-                          <span>{commentsCount}</span>
-                        </button>
-
-                        {/* Installs / Downloads */}
-                        <button
-                          className="dev-social-action-btn"
-                          onClick={() => setSelectedProduct(product)}
-                          title="Verified community downloads"
-                        >
-                          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                          </svg>
-                          <span>{formatDownloadCount(Number(product.downloadsCount) || Number(product.downloads) || repostsCount * 10)}</span>
-                        </button>
-                      </div>
-
-                      {/* Right Side: Price & View Details */}
-                      <div className="dev-card-download-actions">
-                        <span className="dev-card-price-pill">{product.price || 'Free'}</span>
-                        <button
-                          className="dev-card-inspect-btn"
-                          onClick={() => setSelectedProduct(product)}
-                        >
-                          View Details &rarr;
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })
-            ) : !isDev ? (
-              /* NON-DEVELOPER COMMUNITY VIEW */
-              <div className="dev-ref-empty-card">
-                <div className="empty-icon-circle">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                </div>
-                <h3>Community Member Profile</h3>
-                <p>
-                  @{developer.username} is a registered member of Upper Store exploring creator tools and applications.
-                </p>
-                {isOwner && (
-                  <div className="dev-owner-upgrade-cta">
-                    <p>Want to publish and distribute your own software to Upper Store users?</p>
-                    <Link to="/vip" className="dev-ref-follow-pill-btn">
-                      Join VIP &amp; Become a Developer
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* NO RELEASES FOUND */
-              <div className="dev-ref-empty-card">
-                <div className="empty-icon-circle">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2">
-                    <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
-                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
-                  </svg>
-                </div>
-                <h3>No Releases Published Yet</h3>
-                <p>@{developer.username} has not published any public applications to Upper Store yet.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 2: REPLIES / REVIEWS */}
-        {activeTab === 'replies' && (
-          <div className="dev-ref-replies-list">
-            {products.length > 0 ? (
-              <div className="dev-ref-feed-card">
-                <div className="dev-card-header">
-                  <img
-                    src={`https://api.dicebear.com/7.x/initials/svg?seed=UpperCommunity`}
-                    alt="Upper Store Community"
-                    className="dev-card-author-avatar"
-                  />
-                  <div className="dev-card-author-meta">
-                    <span className="dev-card-author-name">Upper Community &middot; Verified Reviews</span>
-                    <span className="dev-card-author-handle">@community</span>
-                    <span className="dev-card-time-sep">&middot;</span>
-                    <span className="dev-card-time-tag">Recent</span>
-                  </div>
-                </div>
-                <p className="dev-card-body-text">
-                  Community feedback, ratings, and performance reports across software releases published by @{developer.username}.
-                </p>
-                <div className="dev-replies-summary-strip">
-                  <div className="summary-stat-box">
-                    <span className="summary-lbl">Average Rating</span>
-                    <span className="summary-val">{stats.averageRating} / 5.0</span>
-                  </div>
-                  <div className="summary-stat-box">
-                    <span className="summary-lbl">Verified Downloads</span>
-                    <span className="summary-val">{formatDownloadCount(stats.totalDownloads)}</span>
-                  </div>
-                  <div className="summary-stat-box">
-                    <span className="summary-lbl">Catalog Applications</span>
-                    <span className="summary-val">{products.length} Active</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="dev-ref-empty-card">
-                <p>No community replies or feedback submitted yet.</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 3: HIGHLIGHTS */}
-        {activeTab === 'highlights' && (
-          <div className="dev-ref-feed-list">
-            {highlightProducts.length > 0 ? (
-              highlightProducts.map((prod) => (
-                <article key={prod.id} className="dev-ref-feed-card highlight-card">
+              return (
+                <article key={product.id} className="dev-ref-feed-card">
+                  {/* CARD HEADER: AVATAR, NAME, HANDLE, TIME/VERSION */}
                   <div className="dev-card-header">
                     <img
                       src={developer.avatar}
                       alt={developer.displayName}
                       className="dev-card-author-avatar"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = '/logo.png';
+                      }}
                     />
                     <div className="dev-card-author-meta">
                       <span className="dev-card-author-name">{developer.displayName || developer.username}</span>
                       <span className="dev-card-author-handle">@{developer.username}</span>
                       <span className="dev-card-time-sep">&middot;</span>
-                      <span className="dev-card-badge-gold">Highlight</span>
+                      <span className="dev-card-time-tag">v{product.version || '1.0.0'}</span>
                     </div>
                   </div>
-                  <h3 className="highlight-prod-title">{prod.title}</h3>
-                  <p className="dev-card-body-text">{prod.description}</p>
+
+                  {/* CARD BODY TEXT / DESCRIPTION */}
+                  <p className="dev-card-body-text">
+                    {product.description || 'Verified software release on Upper Store. Crafted with clean architecture, high reliability, and top-tier performance.'}
+                  </p>
+
+                  {/* CARD MEDIA / PREVIEWS (Single or Dual Split Grid) */}
+                  {displayImage && secondaryImage ? (
+                    <div className="dev-card-media-grid dual">
+                      <img
+                        src={displayImage}
+                        alt={`${product.title} preview 1`}
+                        className="dev-card-media-img"
+                        onClick={() => setSelectedProduct(product)}
+                      />
+                      <img
+                        src={secondaryImage}
+                        alt={`${product.title} preview 2`}
+                        className="dev-card-media-img"
+                        onClick={() => setSelectedProduct(product)}
+                      />
+                    </div>
+                  ) : displayImage ? (
+                    <div className="dev-card-media-grid single">
+                      <img
+                        src={displayImage}
+                        alt={`${product.title} preview`}
+                        className="dev-card-media-img"
+                        onClick={() => setSelectedProduct(product)}
+                      />
+                    </div>
+                  ) : null}
+
+                  {/* CARD EMBED BOX */}
                   <div
                     className="dev-card-software-embed"
-                    onClick={() => setSelectedProduct(prod)}
+                    onClick={() => setSelectedProduct(product)}
+                    title="Inspect and download application"
                   >
                     <div className="dev-embed-code-badge">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="16 18 22 12 16 6"></polyline>
                         <polyline points="8 6 2 12 8 18"></polyline>
                       </svg>
                     </div>
                     <div className="dev-embed-text-group">
-                      <h4 className="dev-embed-title">{prod.title} &middot; Flagship Release</h4>
+                      <h4 className="dev-embed-title">{product.title} &middot; Upper Store</h4>
                       <span className="dev-embed-sublink">
-                        {formatDownloadCount(prod.downloadsCount || prod.downloads || 0)} verified installs &middot; v{prod.version || '1.0'}
+                        upperstore.io/{cleanUsername}/{product.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}
                       </span>
                     </div>
                     <div className="dev-embed-arrow-icon">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                         <polyline points="15 3 21 3 21 9"></polyline>
                         <line x1="10" y1="14" x2="21" y2="3"></line>
                       </svg>
                     </div>
                   </div>
+
+                  {/* CARD INTERACTION FOOTER */}
+                  <div className="dev-card-footer">
+                    <div className="dev-card-social-actions">
+                      {/* Heart / Like */}
+                      <button
+                        className={`dev-social-action-btn ${isLiked ? 'liked' : ''}`}
+                        onClick={() => handleToggleLike(product.id)}
+                        title="Like release"
+                      >
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill={isLiked ? '#ef4444' : 'none'} stroke={isLiked ? '#ef4444' : 'currentColor'} strokeWidth="2">
+                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                        </svg>
+                        <span>{currentLikes}</span>
+                      </button>
+
+                      {/* Comments / Reviews */}
+                      <button
+                        className="dev-social-action-btn"
+                        onClick={() => setSelectedProduct(product)}
+                        title="View reviews and feedback"
+                      >
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span>{commentsCount}</span>
+                      </button>
+                    </div>
+
+                    {/* Right Side: Price & View Details */}
+                    <div className="dev-card-download-actions">
+                      <span className="dev-card-price-pill">{product.price || 'Free'}</span>
+                      <button
+                        className="dev-card-inspect-btn"
+                        onClick={() => setSelectedProduct(product)}
+                      >
+                        View Details &rarr;
+                      </button>
+                    </div>
+                  </div>
                 </article>
-              ))
-            ) : (
-              <div className="dev-ref-empty-card">
-                <p>No flagship highlights found yet.</p>
+              );
+            })
+          ) : !isDev ? (
+            /* NON-DEVELOPER COMMUNITY VIEW */
+            <div className="dev-ref-empty-card">
+              <div className="empty-icon-circle">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
               </div>
-            )}
-          </div>
-        )}
-
-        {/* TAB 4: ABOUT DEVELOPER */}
-        {activeTab === 'about' && (
-          <div className="dev-ref-about-card">
-            <h3 className="about-sec-heading">About @{developer.username}</h3>
-            <p className="about-bio-full">{developer.bio}</p>
-
-            <div className="about-details-grid">
-              <div className="about-detail-item">
-                <span className="about-lbl">Developer Status</span>
-                <span className="about-val highlight-gold">
-                  {isDev ? (developer.isVerified ? 'Verified Authentic Creator' : 'Active Developer') : 'Community Member'}
-                </span>
-              </div>
-
-              <div className="about-detail-item">
-                <span className="about-lbl">Store Membership</span>
-                <span className="about-val">
-                  {developer.vipPlan && developer.vipPlan !== 'free'
-                    ? `${developer.vipPlan.toUpperCase()} VIP`
-                    : 'Standard Member'}
-                </span>
-              </div>
-
-              <div className="about-detail-item">
-                <span className="about-lbl">Total Catalog Applications</span>
-                <span className="about-val">{products.length} Published</span>
-              </div>
-
-              <div className="about-detail-item">
-                <span className="about-lbl">Platform Installs</span>
-                <span className="about-val">{formatDownloadCount(stats.totalDownloads)}</span>
-              </div>
-
-              <div className="about-detail-item">
-                <span className="about-lbl">Average Rating</span>
-                <span className="about-val">{stats.averageRating} / 5.0</span>
-              </div>
-
-              <div className="about-detail-item">
-                <span className="about-lbl">Security &amp; KYC</span>
-                <span className="about-val highlight-gold">
-                  {developer.isVerified ? 'Aadhaar KYC Verified' : 'Standard Validation'}
-                </span>
-              </div>
+              <h3>Community Member Profile</h3>
+              <p>
+                @{developer.username} is a registered member of Upper Store exploring creator tools and applications.
+              </p>
+              {isOwner && (
+                <div className="dev-owner-upgrade-cta">
+                  <p>Want to publish and distribute your own software to Upper Store users?</p>
+                  <Link to="/vip" className="dev-ref-follow-pill-btn">
+                    Join VIP &amp; Become a Developer
+                  </Link>
+                </div>
+              )}
             </div>
-          </div>
-        )}
+          ) : (
+            /* NO RELEASES FOUND */
+            <div className="dev-ref-empty-card">
+              <div className="empty-icon-circle">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2">
+                  <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <h3>No Products Published Yet</h3>
+              <p>@{developer.username} has not published any public applications to Upper Store yet.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ===============================================================
@@ -841,12 +591,16 @@ const DeveloperProfile = () => {
         onClose={() => setIsEditModalOpen(false)}
         developer={developer}
         products={products}
-        onProfileUpdated={({ displayName, username: newUsername, bio }) => {
+        onProfileUpdated={({ displayName, username: newUsername, bio, coverImage: newCover, location: newLoc, locationLocked }) => {
           setDeveloper((prev) => ({
             ...prev,
             displayName,
             username: newUsername,
             bio,
+            coverImage: newCover || prev.coverImage,
+            banner: newCover || prev.banner,
+            location: newLoc !== undefined ? newLoc : prev.location,
+            locationLocked: locationLocked !== undefined ? locationLocked : prev.locationLocked,
           }));
           if (newUsername && newUsername !== cleanUsername) {
             navigate(`/developer/${newUsername}`, { replace: true });
@@ -860,6 +614,20 @@ const DeveloperProfile = () => {
           }));
         }}
       />
+
+      {/* ===============================================================
+          PRIVATE TELEMETRY DOWNLOADS BREAKDOWN MODAL (FOR DEVELOPER ONLY)
+          =============================================================== */}
+      {isOwner && isDev && (
+        <DeveloperDownloadsModal
+          isOpen={isDownloadsModalOpen}
+          onClose={() => setIsDownloadsModalOpen(false)}
+          developer={developer}
+          products={products}
+          totalDownloads={stats.totalDownloads}
+          onSelectProduct={(product) => setSelectedProduct(product)}
+        />
+      )}
 
       {/* ===============================================================
           PRODUCT DETAIL MODAL (Opens seamlessly on click)

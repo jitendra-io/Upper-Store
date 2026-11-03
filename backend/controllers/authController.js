@@ -865,7 +865,7 @@ const checkUsernameAvailability = async (req, res) => {
 // @route   PUT /api/auth/user/profile
 // @access  Private (Authenticated User)
 const updateFullProfile = async (req, res) => {
-  const { displayName, username, bio } = req.body;
+  const { displayName, username, bio, coverImage, banner, location } = req.body;
   const userId = req.user.uid;
   const cleanEmail = (req.user.email || '').trim().toLowerCase();
 
@@ -943,6 +943,54 @@ const updateFullProfile = async (req, res) => {
       }
     }
 
+    // 4. Validate & Update Location (Allowed ONCE throughout account, default 'None')
+    if (location !== undefined) {
+      const rawLoc = String(location).trim();
+      const existingLoc = (userData.location || '').trim();
+      const hasSetExisting = existingLoc && existingLoc.toLowerCase() !== 'none';
+
+      if (hasSetExisting) {
+        // If already set, prohibit changing to a different location
+        if (rawLoc && rawLoc.toLowerCase() !== existingLoc.toLowerCase()) {
+          return res.status(403).json({
+            message: 'Location has already been set and can only be updated once throughout your account.',
+          });
+        }
+      } else if (rawLoc && rawLoc.toLowerCase() !== 'none') {
+        userUpdates.location = rawLoc.slice(0, 80);
+        userUpdates.locationLocked = true;
+        userUpdates.locationSetAt = now;
+      }
+    }
+
+    // 5. Validate & Update Cover / Background Image (Supports Google Drive Links & Direct URLs)
+    const rawCover = coverImage !== undefined ? coverImage : banner;
+    if (rawCover !== undefined) {
+      const trimmed = String(rawCover || '').trim();
+      if (!trimmed) {
+        userUpdates.coverImage = '';
+        userUpdates.banner = '';
+      } else {
+        try {
+          const parsed = new URL(trimmed);
+          if (!['http:', 'https:'].includes(parsed.protocol)) {
+            return res.status(400).json({ message: 'Background image must be a valid HTTP or HTTPS URL.' });
+          }
+        } catch {
+          return res.status(400).json({ message: 'Please provide a valid URL for the background image.' });
+        }
+
+        // Convert Google Drive view/share link to direct embed CDN link
+        let optimizedUrl = trimmed;
+        const driveMatch = trimmed.match(/(?:file\/d\/|id=|open\?id=)([a-zA-Z0-9_-]+)/);
+        if (trimmed.includes('drive.google.com') && driveMatch && driveMatch[1]) {
+          optimizedUrl = `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+        }
+        userUpdates.coverImage = optimizedUrl;
+        userUpdates.banner = optimizedUrl;
+      }
+    }
+
     // Apply updates to user document
     await userDocRef.update(userUpdates);
 
@@ -956,6 +1004,14 @@ const updateFullProfile = async (req, res) => {
       if (userUpdates.displayName) devUpdates.displayName = userUpdates.displayName;
       if (userUpdates.bio !== undefined) devUpdates.bio = userUpdates.bio;
       if (userUpdates.username) devUpdates.username = userUpdates.username;
+      if (userUpdates.location !== undefined) {
+        devUpdates.location = userUpdates.location;
+        devUpdates.locationLocked = true;
+      }
+      if (userUpdates.coverImage !== undefined) {
+        devUpdates.coverImage = userUpdates.coverImage;
+        devUpdates.banner = userUpdates.coverImage;
+      }
       await devSnap.docs[0].ref.update(devUpdates);
     }
 
@@ -980,6 +1036,40 @@ const updateFullProfile = async (req, res) => {
       }
     }
 
+    // If username or displayName changed, update this author's past broadcast notifications
+    if (userUpdates.username || userUpdates.displayName) {
+      try {
+        const notifSnap = await db.collection('notifications')
+          .where('authorId', '==', userDoc.id)
+          .get();
+        let notifDocs = [...notifSnap.docs];
+
+        if (cleanEmail) {
+          const emailSnap = await db.collection('notifications')
+            .where('authorEmail', '==', cleanEmail)
+            .get();
+          emailSnap.docs.forEach((doc) => {
+            if (!notifDocs.some((d) => d.id === doc.id)) {
+              notifDocs.push(doc);
+            }
+          });
+        }
+
+        if (notifDocs.length > 0) {
+          const notifBatch = db.batch();
+          notifDocs.forEach((nDoc) => {
+            const nUpdate = {};
+            if (userUpdates.displayName) nUpdate.authorName = userUpdates.displayName;
+            if (userUpdates.username) nUpdate.authorUsername = userUpdates.username;
+            notifBatch.update(nDoc.ref, nUpdate);
+          });
+          await notifBatch.commit();
+        }
+      } catch (nSyncErr) {
+        console.warn('Sync notifications author error:', nSyncErr.message);
+      }
+    }
+
     res.json({
       message: 'Profile updated successfully.',
       user: {
@@ -989,6 +1079,10 @@ const updateFullProfile = async (req, res) => {
         displayName: userUpdates.displayName || userData.displayName,
         username: newUsername,
         bio: userUpdates.bio !== undefined ? userUpdates.bio : userData.bio || '',
+        location: userUpdates.location !== undefined ? userUpdates.location : userData.location || 'None',
+        locationLocked: Boolean(userUpdates.locationLocked || (userData.location && userData.location.trim().toLowerCase() !== 'none')),
+        coverImage: userUpdates.coverImage !== undefined ? userUpdates.coverImage : userData.coverImage || userData.banner || '',
+        banner: userUpdates.coverImage !== undefined ? userUpdates.coverImage : userData.coverImage || userData.banner || '',
         photoURL: userData.photoURL,
         role: userData.role,
         membership: userData.membership,

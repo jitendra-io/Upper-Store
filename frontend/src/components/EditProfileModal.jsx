@@ -4,6 +4,17 @@ import './EditProfileModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+// Auto-converts Google Drive share/view links to direct embed CDN links
+export const convertGoogleDriveUrl = (url) => {
+  if (!url) return '';
+  const clean = url.trim();
+  const driveMatch = clean.match(/(?:file\/d\/|id=|open\?id=)([a-zA-Z0-9_-]+)/);
+  if (clean.includes('drive.google.com') && driveMatch && driveMatch[1]) {
+    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
+  }
+  return clean;
+};
+
 export const EditProfileModal = ({
   isOpen,
   onClose,
@@ -12,12 +23,15 @@ export const EditProfileModal = ({
   onProfileUpdated,
   onProductDeleted,
 }) => {
-  const { token, updateUserProfile } = useAuth();
+  const { user, token, updateUserProfile } = useAuth();
 
   const [activeTab, setActiveTab] = useState('details'); // 'details' | 'products'
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
+  const [coverImage, setCoverImage] = useState('');
+  const [location, setLocation] = useState('None');
+  const [isLocationLocked, setIsLocationLocked] = useState(false);
 
   // Form State
   const [saving, setSaving] = useState(false);
@@ -35,24 +49,44 @@ export const EditProfileModal = ({
       setDisplayName(developer.displayName || '');
       setUsername(developer.username || '');
       setBio(developer.bio || '');
+
+      const existingBg = developer.coverImage || developer.banner || user?.coverImage || user?.banner || '';
+      setCoverImage(existingBg);
+
+      const existingLoc = (developer.location && developer.location.trim()) || (user?.location && user.location.trim()) || 'None';
+      setLocation(existingLoc);
+
+      const locked = Boolean(
+        (existingLoc && existingLoc.toLowerCase() !== 'none') ||
+        developer.locationLocked ||
+        user?.locationLocked
+      );
+      setIsLocationLocked(locked);
+
       setErrorMessage('');
       setSuccessMessage('');
       setDeleteConfirmId(null);
       setDeleteError('');
       setActiveTab('details');
     }
-  }, [isOpen, developer]);
+  }, [isOpen, developer, user]);
 
   // Lock background scroll when open
   useEffect(() => {
     if (isOpen) {
+      const prevBodyOverflow = document.body.style.overflow;
+      const prevDocOverflow = document.documentElement.style.overflow;
+      const prevBodyTouch = document.body.style.touchAction;
+
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      document.documentElement.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = prevBodyOverflow;
+        document.documentElement.style.overflow = prevDocOverflow;
+        document.body.style.touchAction = prevBodyTouch;
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -90,6 +124,33 @@ export const EditProfileModal = ({
     }
 
     const cleanBio = bio.trim().slice(0, 500);
+    const optimizedBg = convertGoogleDriveUrl(coverImage);
+
+    // Validate background URL if provided
+    if (optimizedBg) {
+      try {
+        const parsed = new URL(optimizedBg);
+        if (!['http:', 'https:'].includes(parsed.protocol)) {
+          setErrorMessage('Background image must be a valid HTTP or HTTPS link.');
+          return;
+        }
+      } catch {
+        setErrorMessage('Please provide a valid URL for the background image.');
+        return;
+      }
+    }
+
+    const payload = {
+      displayName: cleanName,
+      username: cleanUser,
+      bio: cleanBio,
+      coverImage: optimizedBg,
+    };
+
+    if (!isLocationLocked) {
+      const cleanLoc = (location || '').trim();
+      payload.location = cleanLoc ? cleanLoc.slice(0, 80) : 'None';
+    }
 
     setSaving(true);
     try {
@@ -99,11 +160,7 @@ export const EditProfileModal = ({
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          displayName: cleanName,
-          username: cleanUser,
-          bio: cleanBio,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -117,6 +174,10 @@ export const EditProfileModal = ({
           displayName: data.user.displayName,
           username: data.user.username,
           bio: data.user.bio,
+          coverImage: data.user.coverImage,
+          banner: data.user.coverImage,
+          location: data.user.location,
+          locationLocked: data.user.locationLocked,
         });
       }
 
@@ -127,12 +188,16 @@ export const EditProfileModal = ({
           displayName: cleanName,
           username: cleanUser,
           bio: cleanBio,
+          coverImage: optimizedBg,
+          banner: optimizedBg,
+          location: data.user?.location || (isLocationLocked ? location : (payload.location || 'None')),
+          locationLocked: Boolean(data.user?.locationLocked || isLocationLocked || (payload.location && payload.location.toLowerCase() !== 'none')),
         });
       }
 
       setTimeout(() => {
         onClose();
-      }, 1200);
+      }, 1000);
     } catch (err) {
       setErrorMessage(err.message || 'Error saving profile.');
     } finally {
@@ -176,14 +241,14 @@ export const EditProfileModal = ({
         <div className="edit-profile-header">
           <div className="edit-profile-title-wrap">
             <div className="edit-profile-header-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
               </svg>
             </div>
             <div>
               <h3 className="edit-profile-title">Edit Profile</h3>
-              <p className="edit-profile-subtitle">Update your personal identity, handle, bio, and software releases.</p>
+              <p className="edit-profile-subtitle">Update your personal details, background image, location, and bio.</p>
             </div>
           </div>
           <button className="edit-profile-close-btn" onClick={onClose} aria-label="Close modal">
@@ -285,6 +350,78 @@ export const EditProfileModal = ({
               </div>
               <span className="edit-form-hint">
                 Lowercase letters, numbers, underscores, dots, or hyphens (3 to 30 characters).
+              </span>
+            </div>
+
+            {/* Background / Cover Image URL */}
+            <div className="edit-form-group">
+              <label htmlFor="edit-profile-cover" className="edit-form-label">
+                Background / Cover Image
+              </label>
+              <input
+                id="edit-profile-cover"
+                type="text"
+                className="edit-form-input"
+                value={coverImage}
+                onChange={(e) => setCoverImage(e.target.value)}
+                placeholder="Google Drive link (drive.google.com/file/d/...) or direct image URL"
+              />
+              <span className="edit-form-hint">
+                Paste any Google Drive sharing link or direct photo link. Google Drive links are automatically optimized and embedded.
+              </span>
+              {coverImage && (
+                <div className="edit-cover-preview-wrapper">
+                  <img
+                    src={convertGoogleDriveUrl(coverImage)}
+                    alt="Background preview"
+                    className="edit-cover-preview-img"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="edit-cover-clear-btn"
+                    onClick={() => setCoverImage('')}
+                  >
+                    Remove background
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Location (Default None, Can be updated only ONCE) */}
+            <div className="edit-form-group">
+              <div className="edit-form-label-row">
+                <label htmlFor="edit-profile-location" className="edit-form-label">
+                  Location
+                </label>
+                {isLocationLocked && (
+                  <span className="edit-locked-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    Locked · Permanent
+                  </span>
+                )}
+              </div>
+              <input
+                id="edit-profile-location"
+                type="text"
+                className={`edit-form-input ${isLocationLocked ? 'locked-input' : ''}`}
+                value={location}
+                onChange={(e) => {
+                  if (!isLocationLocked) setLocation(e.target.value);
+                }}
+                disabled={isLocationLocked}
+                maxLength={80}
+                placeholder="e.g. India or California, USA (Default is None)"
+              />
+              <span className="edit-form-hint">
+                {isLocationLocked
+                  ? 'Your account location has already been verified and locked. It cannot be altered.'
+                  : 'Notice: Location by default is None. You can set it ONCE throughout the lifetime of this account.'}
               </span>
             </div>
 

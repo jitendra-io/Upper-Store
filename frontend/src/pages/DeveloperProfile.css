@@ -938,3 +938,42 @@
     margin-top: 0.4rem;
   }
 }
+
+/* Private Downloads Telemetry Clickable Stat */
+.dev-downloads-clickable-stat {
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dev-downloads-clickable-stat:hover {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: #fbbf24;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.2);
+}
+
+.downloads-stat-icon {
+  margin-left: 2px;
+  transition: transform 0.2s ease;
+}
+
+.dev-downloads-clickable-stat:hover .downloads-stat-icon {
+  transform: translateY(1px);
+}
+
+.dev-tab-count-tag {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 9999px;
+  margin-left: 0.4rem;
+}

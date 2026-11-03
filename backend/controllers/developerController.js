@@ -559,6 +559,15 @@ const getPublicDeveloperProfile = async (req, res) => {
       subscriptionEnded: subscriptionEnded,
       isVerified: isDeveloper && !devData?.isSuspended,
       isSuspended: Boolean(devData?.isSuspended || userData?.isBanned),
+      coverImage: devData?.coverImage || devData?.banner || userData?.coverImage || userData?.banner || '',
+      banner: devData?.banner || devData?.coverImage || userData?.banner || userData?.coverImage || '',
+      location: (devData?.location && devData.location.trim()) || (userData?.location && userData.location.trim()) || 'None',
+      locationLocked: Boolean(
+        (userData?.location && userData.location.trim().toLowerCase() !== 'none') ||
+        (devData?.location && devData.location.trim().toLowerCase() !== 'none') ||
+        userData?.locationLocked ||
+        devData?.locationLocked
+      ),
       joinedAt: devData?.createdAt || userData?.createdAt || null,
     };
 

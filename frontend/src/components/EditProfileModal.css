@@ -498,3 +498,80 @@
   }
 }
 
+
+/* Background Cover Preview */
+.edit-cover-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 110px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #090a0d;
+}
+
+.edit-cover-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.edit-cover-clear-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #f87171;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.edit-cover-clear-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+/* Locked Location Input */
+.edit-locked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.edit-form-input.locked-input {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.edit-profile-modal-backdrop {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.edit-profile-modal-box {
+  overscroll-behavior: contain;
+}
+
+.edit-profile-body {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
