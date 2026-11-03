@@ -650,6 +650,37 @@ const updateDeveloperBio = async (req, res) => {
 };
 
 
+// @desc    Get Upper Store Official Profile
+// @route   GET /api/developers/official/profile
+// @access  Public
+const getOfficialProfile = async (req, res) => {
+  try {
+    const officialDoc = await db.collection('system_settings').doc('official_profile').get();
+    const officialData = officialDoc.exists ? officialDoc.data() : {};
+
+    return res.json({
+      developer: {
+        id: 'upper-store-official',
+        username: 'upperstore',
+        displayName: officialData.displayName || 'Upper Store Official',
+        bio: officialData.bio || 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.',
+        avatar: officialData.avatar || '/logo.png',
+        coverImage: officialData.coverImage || officialData.banner || '',
+        banner: officialData.coverImage || officialData.banner || '',
+        location: officialData.location || 'None',
+        vipPlan: 'elite',
+        isVerified: true,
+        isOfficial: true,
+        isDeveloper: true,
+        updatedAt: officialData.updatedAt || null,
+      },
+    });
+  } catch (error) {
+    console.error('Get official profile error:', error);
+    return res.status(500).json({ message: 'Failed to fetch official profile.' });
+  }
+};
+
 // @desc    Update Upper Store Official Profile details & cover
 // @route   PUT /api/developers/official/profile
 // @access  Private (Admin or Authorized Owner)
@@ -771,6 +802,7 @@ module.exports = {
   toggleDeveloperSuspension,
   getPublicDeveloperProfile,
   updateDeveloperBio,
+  getOfficialProfile,
   updateOfficialProfile,
   uploadOfficialCoverImage,
   removeOfficialCoverImage,

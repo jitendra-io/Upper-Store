@@ -11,6 +11,7 @@ const {
   toggleDeveloperSuspension,
   getPublicDeveloperProfile,
   updateDeveloperBio,
+  getOfficialProfile,
   updateOfficialProfile,
   uploadOfficialCoverImage,
   removeOfficialCoverImage,
@@ -62,6 +63,7 @@ const handleCoverUpload = (req, res, next) => {
 router.get('/profile/:username', getPublicDeveloperProfile);
 
 // Upper Store Official Profile Management (Admin / Owner)
+router.get('/official/profile', getOfficialProfile);
 router.put('/official/profile', protect, updateOfficialProfile);
 router.post('/official/cover-image', protect, handleCoverUpload, uploadOfficialCoverImage);
 router.delete('/official/cover-image', protect, removeOfficialCoverImage);

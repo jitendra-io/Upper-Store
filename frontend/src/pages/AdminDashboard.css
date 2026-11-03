@@ -1856,3 +1856,158 @@
   font-style: italic;
 }
 
+
+/* =========================================================================
+   OFFICIAL STORE PAGE & BACKGROUND BANNER MANAGEMENT
+   ========================================================================= */
+.official-store-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.official-store-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.official-card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.official-cdn-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.official-banner-preview-box {
+  position: relative;
+  width: 100%;
+  height: 170px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #090a0f;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.official-banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.official-banner-default-mesh {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(251, 191, 36, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, #0e1117 0%, #07080b 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.official-mesh-label {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.official-banner-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(0, 0, 0, 0.6) 100%);
+  pointer-events: none;
+}
+
+.official-banner-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.official-uploading-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 8px;
+  color: #fbbf24;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.official-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  border-top-color: #fbbf24;
+  border-radius: 50%;
+  animation: adminOfficialSpin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes adminOfficialSpin {
+  to { transform: rotate(360deg); }
+}
+
+.official-file-hint {
+  display: block;
+  font-size: 0.74rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.official-profile-form .form-group {
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 960px) {
+  .official-store-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .official-banner-preview-box {
+    height: 120px;
+  }
+  .official-banner-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .official-banner-actions-bar .admin-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

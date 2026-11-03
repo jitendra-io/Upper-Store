@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
 import {
@@ -24,7 +24,19 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [token, setToken] = useState(localStorage.getItem('adminToken'));
-  const [activeTab, setActiveTab] = useState('products'); // 'products', 'platformFee', 'users', 'appeals', 'inbox'
+  const [activeTab, setActiveTab] = useState('products'); // 'products', 'platformFee', 'users', 'appeals', 'inbox', 'storeProfile'
+
+  // Official Store Profile State (Upper Store Official Page)
+  const [officialProfile, setOfficialProfile] = useState(null);
+  const [loadingOfficialProfile, setLoadingOfficialProfile] = useState(false);
+  const [savingOfficialProfile, setSavingOfficialProfile] = useState(false);
+  const [uploadingOfficialCover, setUploadingOfficialCover] = useState(false);
+  const [officialDisplayName, setOfficialDisplayName] = useState('Upper Store Official');
+  const [officialBio, setOfficialBio] = useState('');
+  const [officialLocation, setOfficialLocation] = useState('None');
+  const [officialCoverImage, setOfficialCoverImage] = useState('');
+  const [officialCoverPreview, setOfficialCoverPreview] = useState('');
+  const officialFileInputRef = useRef(null);
 
   // Products State
   const [products, setProducts] = useState([]);
@@ -220,6 +232,139 @@ const AdminDashboard = () => {
       setMessage({ type: 'error', text: err.message || 'Error verifying payment.' });
     } finally {
       setProcessingPaymentId(null);
+    }
+  };
+
+  // Fetch Upper Store Official Profile
+  const fetchOfficialProfile = async () => {
+    setLoadingOfficialProfile(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/developers/official/profile`);
+      const data = await res.json();
+      if (res.ok && data.developer) {
+        setOfficialProfile(data.developer);
+        setOfficialDisplayName(data.developer.displayName || 'Upper Store Official');
+        setOfficialBio(data.developer.bio || '');
+        setOfficialLocation(data.developer.location || 'None');
+        const bg = data.developer.coverImage || data.developer.banner || '';
+        setOfficialCoverImage(bg);
+        setOfficialCoverPreview(bg);
+      }
+    } catch (err) {
+      console.warn('Error fetching official store profile in admin dashboard:', err);
+    } finally {
+      setLoadingOfficialProfile(false);
+    }
+  };
+
+  // Upload Official Store Cover Banner to ImageKit CDN
+  const handleUploadOfficialCover = async (file) => {
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      showMessage('Invalid file format. Please select an image file (JPG, PNG, WEBP, or GIF).', 'error');
+      return;
+    }
+
+    const maxBytes = 8 * 1024 * 1024; // 8MB limit
+    if (file.size > maxBytes) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      showMessage(`Selected image is too large (${sizeMB}MB). Maximum allowed size is 8MB.`, 'error');
+      return;
+    }
+
+    const localUrl = URL.createObjectURL(file);
+    setOfficialCoverPreview(localUrl);
+    setUploadingOfficialCover(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('coverImage', file);
+
+      const res = await fetch(`${API_BASE}/api/developers/official/cover-image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to upload official cover image.');
+      }
+
+      const cdnUrl = data.coverImage || localUrl;
+      setOfficialCoverImage(cdnUrl);
+      setOfficialCoverPreview(cdnUrl);
+      showMessage('Official store background image uploaded to ImageKit CDN successfully!', 'success');
+    } catch (err) {
+      console.error('Upload official cover error:', err);
+      showMessage(err.message || 'Error uploading background image.', 'error');
+      setOfficialCoverPreview(officialCoverImage);
+    } finally {
+      setUploadingOfficialCover(false);
+      if (officialFileInputRef.current) {
+        officialFileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Remove Official Store Cover Banner
+  const handleRemoveOfficialCover = async () => {
+    setOfficialCoverImage('');
+    setOfficialCoverPreview('');
+    try {
+      const res = await fetch(`${API_BASE}/api/developers/official/cover-image`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Failed to remove cover image.');
+      showMessage('Official background image removed. Reverted to default mesh.', 'success');
+    } catch (err) {
+      console.warn('Remove official cover error:', err);
+      showMessage(err.message || 'Error removing cover image.', 'error');
+    }
+  };
+
+  // Save Official Store Profile Details
+  const handleSaveOfficialProfile = async (e) => {
+    e.preventDefault();
+    setSavingOfficialProfile(true);
+
+    try {
+      const payload = {
+        displayName: officialDisplayName.trim() || 'Upper Store Official',
+        bio: officialBio.trim().slice(0, 500),
+        location: (officialLocation || 'None').trim().slice(0, 80),
+        coverImage: (officialCoverImage || '').trim(),
+      };
+
+      const res = await fetch(`${API_BASE}/api/developers/official/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to update official profile.');
+      }
+
+      showMessage('Upper Store Official profile details updated successfully!', 'success');
+      fetchOfficialProfile();
+    } catch (err) {
+      console.error('Save official profile error:', err);
+      showMessage(err.message || 'Error saving official profile.', 'error');
+    } finally {
+      setSavingOfficialProfile(false);
     }
   };
 
@@ -990,6 +1135,21 @@ const AdminDashboard = () => {
             <polyline points="17 11 19 13 23 9"></polyline>
           </svg>
           <span>VIP Developers ({developers.length})</span>
+        </button>
+
+        <button
+          className={`admin-tab-btn ${activeTab === 'storeProfile' ? 'active' : ''}`}
+          onClick={() => {
+            setActiveTab('storeProfile');
+            fetchOfficialProfile();
+          }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          <span>Official Store Page</span>
         </button>
       </div>
 
@@ -2817,6 +2977,225 @@ const AdminDashboard = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* TAB: UPPER STORE OFFICIAL PAGE & COVER BANNER MANAGEMENT */}
+      {activeTab === 'storeProfile' && (
+        <div className="admin-section official-store-section">
+          {/* Section Header */}
+          <div className="section-header official-store-header">
+            <div>
+              <h3>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px', verticalAlign: 'middle' }}>
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                Upper Store Official Page &amp; Banner
+              </h3>
+              <p className="section-desc">
+                Customize the public official @upperstore creator page, upload an ImageKit CDN landscape cover image from your computer, and manage store descriptions.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <a
+                href="/developer/upperstore"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="admin-btn outline"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}
+              >
+                <span>View Public Page @upperstore</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </a>
+              <button
+                type="button"
+                className="admin-btn outline"
+                onClick={fetchOfficialProfile}
+                disabled={loadingOfficialProfile}
+              >
+                {loadingOfficialProfile ? 'Syncing...' : 'Refresh Status'}
+              </button>
+            </div>
+          </div>
+
+          <div className="official-store-grid">
+            {/* LEFT / TOP CARD: COVER BANNER IMAGE (IMAGEKIT CDN) */}
+            <div className="admin-form-card official-cover-card">
+              <div className="official-card-title-row">
+                <h4 style={{ margin: 0, color: '#ffffff', fontSize: '1rem', fontWeight: 700 }}>
+                  Header Background Cover Banner
+                </h4>
+                {officialCoverImage && (
+                  <span className="official-cdn-pill">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    </svg>
+                    ImageKit CDN Active
+                  </span>
+                )}
+              </div>
+              <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0.35rem 0 1rem', lineHeight: 1.5 }}>
+                Upload a high-resolution landscape banner directly from your computer. Streams globally through ImageKit CDN at high speed.
+              </p>
+
+              {/* Hidden file input */}
+              <input
+                ref={officialFileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleUploadOfficialCover(e.target.files[0]);
+                }}
+                disabled={uploadingOfficialCover}
+              />
+
+              {/* Cover Preview Card */}
+              <div className="official-banner-preview-box">
+                {officialCoverPreview ? (
+                  <img
+                    src={officialCoverPreview}
+                    alt="Upper Store Official Cover Banner"
+                    className="official-banner-img"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="official-banner-default-mesh">
+                    <span className="official-mesh-label">Default Luxury Dark Mesh Cover</span>
+                  </div>
+                )}
+                <div className="official-banner-overlay"></div>
+              </div>
+
+              {/* Upload Controls */}
+              {uploadingOfficialCover ? (
+                <div className="official-uploading-bar">
+                  <div className="official-spinner"></div>
+                  <span>Uploading to ImageKit CDN... Optimizing resolution...</span>
+                </div>
+              ) : (
+                <div className="official-banner-actions-bar">
+                  <button
+                    type="button"
+                    className="admin-btn primary"
+                    onClick={() => officialFileInputRef.current?.click()}
+                    disabled={uploadingOfficialCover}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                      <polyline points="17 8 12 3 7 8"></polyline>
+                      <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>{officialCoverImage ? 'Replace Cover from Computer' : 'Upload Cover from Computer'}</span>
+                  </button>
+
+                  {officialCoverImage && (
+                    <button
+                      type="button"
+                      className="admin-btn danger"
+                      onClick={handleRemoveOfficialCover}
+                      disabled={uploadingOfficialCover}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      </svg>
+                      <span>Remove Banner</span>
+                    </button>
+                  )}
+                </div>
+              )}
+              <span className="official-file-hint">Supported formats: JPG, PNG, WEBP, GIF · Maximum size: 8MB</span>
+            </div>
+
+            {/* RIGHT / BOTTOM CARD: OFFICIAL STORE DETAILS FORM */}
+            <div className="admin-form-card official-info-card">
+              <h4 style={{ margin: '0 0 0.5rem', color: '#ffffff', fontSize: '1rem', fontWeight: 700 }}>
+                Official Page Information
+              </h4>
+              <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
+                Public publisher credentials presented to visitors on the official store showcase.
+              </p>
+
+              <form onSubmit={handleSaveOfficialProfile} className="official-profile-form">
+                <div className="form-group">
+                  <label className="form-label">Display Name</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={officialDisplayName}
+                    onChange={(e) => setOfficialDisplayName(e.target.value)}
+                    maxLength={60}
+                    required
+                    placeholder="Upper Store Official"
+                  />
+                  <span className="field-hint">Primary name rendered on the store header.</span>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">System Handle</label>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', fontWeight: 700 }}>@</span>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value="upperstore"
+                      disabled
+                      style={{ paddingLeft: '30px', background: 'rgba(255, 255, 255, 0.04)', color: '#94a3b8', cursor: 'not-allowed' }}
+                    />
+                  </div>
+                  <span className="field-hint">Permanent official platform publishing handle.</span>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Location / Origin</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={officialLocation}
+                    onChange={(e) => setOfficialLocation(e.target.value)}
+                    maxLength={80}
+                    placeholder="e.g. India or Global Cloud (Default is None)"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="form-label">Store Bio / Description</label>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b' }}>{officialBio.length} / 500</span>
+                  </div>
+                  <textarea
+                    className="form-textarea"
+                    rows={4}
+                    value={officialBio}
+                    onChange={(e) => setOfficialBio(e.target.value)}
+                    maxLength={500}
+                    placeholder="Describe the official publishing house mission, curated categories, and security standards..."
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1.25rem' }}>
+                  <button
+                    type="submit"
+                    className="admin-btn primary"
+                    disabled={savingOfficialProfile}
+                  >
+                    {savingOfficialProfile ? 'Saving Details...' : 'Save Official Profile'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
 
