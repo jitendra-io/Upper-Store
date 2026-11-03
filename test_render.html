@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body { background: #0b0c10; color: white; font-family: sans-serif; padding: 40px; }
+.card {
+  background: rgba(56, 189, 248, 0.07);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: 10px;
+  padding: 12px 14px;
+  width: 320px;
+  margin-bottom: 20px;
+}
+.cluster-old {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  overflow: hidden; /* OLD CSS */
+}
+.cluster-new {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  overflow: visible; /* NEW CSS */
+}
+.vip-avatar-wrap-old {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  isolation: isolate; /* OLD */
+  width: 32px;
+  height: 32px;
+  padding: 2.5px;
+  box-shadow: 0 0 24px rgba(52, 211, 153, 0.65), 0 0 40px rgba(16, 185, 129, 0.3);
+}
+.vip-avatar-wrap-new {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  padding: 2.5px;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.6), 0 0 14px rgba(16, 185, 129, 0.25);
+}
+.conic-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #10b981 0%, #d1fae5 25%, #059669 50%, #6ee7b7 75%, #10b981 100%);
+}
+.inner-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #000;
+  position: relative;
+  z-index: 2;
+  border: 2px solid #000;
+}
+</style>
+</head>
+<body>
+<h3>OLD (With overflow: hidden & large box-shadow):</h3>
+<div class="card">
+  <div class="cluster-old">
+    <div class="vip-avatar-wrap-old">
+      <div class="conic-ring"></div>
+      <div class="inner-img"></div>
+    </div>
+    <span>Upper Store Official</span>
+  </div>
+</div>
+
+<h3>NEW (With overflow: visible & calibrated glow):</h3>
+<div class="card">
+  <div class="cluster-new">
+    <div class="vip-avatar-wrap-new">
+      <div class="conic-ring"></div>
+      <div class="inner-img"></div>
+    </div>
+    <span>Upper Store Official</span>
+  </div>
+</div>
+</body>
+</html>
