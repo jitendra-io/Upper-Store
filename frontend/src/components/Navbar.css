@@ -1437,3 +1437,83 @@
   color: #ffffff;
   transform: translateY(-1px);
 }
+
+
+/* Clickable User Handle Link */
+.dropdown-user-handle-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fbbf24;
+  letter-spacing: 0.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  transition: all 0.2s ease;
+}
+
+.dropdown-user-handle-link:hover {
+  color: #ffffff;
+  background: rgba(251, 191, 36, 0.2);
+  border-color: #fbbf24;
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+/* Public Profile Action Button in Dropdown */
+.public-profile-action-btn {
+  border-left: 2px solid #d4af37;
+}
+
+.profile-icon-box {
+  color: #fbbf24;
+}
+
+.profile-tag-handle {
+  font-family: ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: #cbd5e1;
+}
+
+/* Mobile Drawer Public Profile Button */
+.mobile-drawer-profile-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin: 0.4rem 0;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+  color: #ffffff;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.mobile-drawer-profile-btn:hover {
+  background: rgba(212, 175, 55, 0.16);
+  border-color: #fbbf24;
+}
+
+.mobile-drawer-profile-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #fbbf24;
+  font-family: ui-monospace, monospace;
+}
+
+.mobile-drawer-profile-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+}

@@ -160,22 +160,47 @@
   color: #fbbf24;
 }
 
-.dev-tier-pill {
-  font-size: 0.75rem;
+/* Status Badges - Zero Emojis */
+.dev-status-pill {
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  padding: 0.2rem 0.65rem;
+  padding: 0.22rem 0.65rem;
   border-radius: 20px;
-  background: rgba(212, 175, 55, 0.15);
-  color: #d4af37;
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.tier-elite .dev-tier-pill {
-  background: rgba(168, 85, 247, 0.15);
-  color: #c084fc;
-  border-color: rgba(168, 85, 247, 0.4);
+.dev-status-pill.verified {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.dev-status-pill.official {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.dev-status-pill.expired {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.dev-status-pill.community {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.dev-status-pill.not-dev {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
 .dev-official-pill {
@@ -186,6 +211,72 @@
   background: rgba(56, 189, 248, 0.15);
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+/* EXPIRED SUBSCRIPTION BANNER */
+.dev-expired-sub-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(20, 20, 26, 0.95) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.expired-banner-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.expired-banner-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.expired-banner-heading {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.expired-banner-text {
+  margin: 0;
+  font-size: 0.83rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.dev-renew-sub-btn {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #fbbf24 0%, #d4af37 100%);
+  color: #0b0c10;
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.3);
+}
+
+.dev-renew-sub-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+  color: #000000;
 }
 
 /* BIO BOX */
@@ -394,6 +485,12 @@
   gap: 0.35rem;
 }
 
+.stat-star-svg {
+  display: inline-flex;
+  align-items: center;
+  color: #fbbf24;
+}
+
 .stat-star {
   color: #fbbf24;
   font-size: 1.4rem;
@@ -401,7 +498,12 @@
 
 .highlight-verified {
   color: #4ade80;
-  font-size: 1.45rem;
+  font-size: 1.35rem;
+}
+
+.highlight-inactive {
+  color: #f87171;
+  font-size: 1.25rem;
 }
 
 .stat-sub {
@@ -734,8 +836,103 @@
 
 .no-products-icon,
 .dev-error-icon {
-  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 1rem;
+}
+
+/* --------------------------------------------------------------------------
+   COMMUNITY MEMBER SECTION (Non-Developer Experience)
+   -------------------------------------------------------------------------- */
+.dev-community-section {
+  position: relative;
+  z-index: 2;
+  margin-top: 1rem;
+}
+
+.dev-community-card {
+  background: linear-gradient(135deg, rgba(20, 20, 28, 0.85) 0%, rgba(12, 12, 16, 0.95) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 20px;
+  padding: 3.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px);
+}
+
+.dev-community-icon-frame {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1.5px solid rgba(212, 175, 55, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.15);
+}
+
+.dev-community-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+.dev-community-desc {
+  color: #94a3b8;
+  font-size: 1rem;
+  max-width: 580px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+.dev-community-desc strong {
+  color: #fbbf24;
+}
+
+/* Owner Upgrade Card */
+.dev-owner-upgrade-box {
+  background: rgba(15, 16, 22, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 16px;
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 1.75rem;
+  text-align: left;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.upgrade-box-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-bottom: 0.6rem;
+}
+
+.upgrade-box-text {
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0 0 1.25rem;
+}
+
+.upgrade-box-actions {
+  display: flex;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.dev-community-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .dev-error-title {
@@ -867,6 +1064,18 @@
     font-size: 1.75rem;
   }
 
+  .dev-expired-sub-banner {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.25rem 1rem;
+    gap: 0.85rem;
+  }
+
+  .dev-renew-sub-btn {
+    width: 100%;
+    text-align: center;
+  }
+
   .dev-hero-actions {
     justify-content: center;
     width: 100%;
@@ -886,6 +1095,33 @@
 
   .stat-value {
     font-size: 1.5rem;
+  }
+
+  .dev-community-card {
+    padding: 2.5rem 1.25rem;
+  }
+
+  .dev-community-heading {
+    font-size: 1.55rem;
+  }
+
+  .dev-owner-upgrade-box {
+    padding: 1.25rem;
+    text-align: center;
+  }
+
+  .upgrade-box-header {
+    justify-content: center;
+  }
+
+  .upgrade-box-actions {
+    flex-direction: column;
+  }
+
+  .upgrade-box-actions .dev-btn,
+  .dev-community-actions .dev-btn {
+    width: 100%;
+    text-align: center;
   }
 
   .dev-catalog-header {
@@ -925,6 +1161,21 @@
   }
 
   .dev-display-name {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+  }
+
+  .dev-hero-vip-avatar .vip-avatar-inner-img {
+    width: 88px;
+    height: 88px;
+  }
+
+  .dev-handle-row {
+    gap: 0.5rem;
+  }
+
+  .dev-status-pill {
+    font-size: 0.68rem;
+    padding: 0.2rem 0.55rem;
   }
 }
+

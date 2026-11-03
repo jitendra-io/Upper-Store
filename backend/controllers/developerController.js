@@ -401,88 +401,132 @@ const getPublicDeveloperProfile = async (req, res) => {
       });
     }
 
-    // 1. Locate developer in 'developers' collection
+    // 1. Locate developer in 'developers' or 'users' collection
     let devDoc = null;
     let devData = null;
+    let userDoc = null;
+    let userData = null;
 
+    // Check 'developers' collection by username
     const devSnap = await db.collection('developers').where('username', '==', cleanUsername).limit(1).get();
     if (!devSnap.empty) {
       devDoc = devSnap.docs[0];
       devData = devDoc.data();
+      if (devData.userId) {
+        const uDoc = await db.collection('users').doc(devData.userId).get();
+        if (uDoc.exists) {
+          userDoc = uDoc;
+          userData = uDoc.data();
+        }
+      }
+      if (!userData && devData.email) {
+        const uSnap = await db.collection('users').where('email', '==', devData.email.toLowerCase()).limit(1).get();
+        if (!uSnap.empty) {
+          userDoc = uSnap.docs[0];
+          userData = uSnap.docs[0].data();
+        }
+      }
     } else {
-      // Check in 'users' collection
+      // Check in 'users' collection by username
       const userSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
       if (!userSnap.empty) {
-        const userDoc = userSnap.docs[0];
-        const uData = userDoc.data();
+        userDoc = userSnap.docs[0];
+        userData = userDoc.data();
+      } else {
+        // Fallback: check if username matches email handle prefix (e.g. handle before '@')
+        const emailSnap = await db.collection('users')
+          .where('email', '>=', cleanUsername + '@')
+          .where('email', '<=', cleanUsername + '@\uf8ff')
+          .limit(1)
+          .get();
+        if (!emailSnap.empty) {
+          userDoc = emailSnap.docs[0];
+          userData = userDoc.data();
+        }
+      }
 
+      if (userDoc && userData) {
         let dSnap = await db.collection('developers').where('userId', '==', userDoc.id).limit(1).get();
-        if (dSnap.empty && uData.email) {
-          dSnap = await db.collection('developers').where('email', '==', uData.email.toLowerCase()).limit(1).get();
+        if (dSnap.empty && userData.email) {
+          dSnap = await db.collection('developers').where('email', '==', userData.email.toLowerCase()).limit(1).get();
         }
 
         if (!dSnap.empty) {
           devDoc = dSnap.docs[0];
           devData = dSnap.docs[0].data();
-        } else {
-          // Construct developer from verified user record
-          devData = {
-            userId: userDoc.id,
-            email: uData.email,
-            username: uData.username || cleanUsername,
-            displayName: uData.displayName || uData.username || cleanUsername,
-            bio: uData.bio || '',
-            avatar: uData.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
-            vipPlan: uData.membership?.plan || 'pro',
-            isSuspended: Boolean(uData.isBanned),
-            createdAt: uData.createdAt,
-          };
         }
       }
     }
 
-    // 2. Query all products published by this developer
+    // 2. Query published products (if any)
     let matchedProducts = [];
     try {
       const prodSnap = await db.collection('products').get();
       const allProds = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-      if (devData) {
-        const devEmail = (devData.email || '').toLowerCase();
-        const devUid = devData.userId || '';
-        matchedProducts = allProds.filter(
-          (p) =>
-            (p.developerUsername && p.developerUsername.toLowerCase() === cleanUsername) ||
-            (devEmail && p.developerEmail && p.developerEmail.toLowerCase() === devEmail) ||
-            (devUid && p.developerId && p.developerId === devUid)
-        );
-      } else {
-        // Fallback: check if products exist attributed to this username
-        matchedProducts = allProds.filter(
-          (p) => p.developerUsername && p.developerUsername.toLowerCase() === cleanUsername
-        );
-        if (matchedProducts.length > 0) {
-          const sample = matchedProducts[0];
-          devData = {
-            username: cleanUsername,
-            displayName: sample.developerName || cleanUsername,
-            bio: '',
-            avatar: sample.developerAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
-            vipPlan: sample.developerTier || 'pro',
-            isSuspended: false,
-            createdAt: sample.createdAt || new Date().toISOString(),
-          };
-        }
+      const devEmail = (devData?.email || userData?.email || '').toLowerCase();
+      const devUid = devData?.userId || userDoc?.id || '';
+
+      matchedProducts = allProds.filter(
+        (p) =>
+          (p.developerUsername && p.developerUsername.toLowerCase() === cleanUsername) ||
+          (devEmail && p.developerEmail && p.developerEmail.toLowerCase() === devEmail) ||
+          (devUid && p.developerId && p.developerId === devUid)
+      );
+
+      // If neither devDoc nor userDoc found, but products exist with this developerUsername
+      if (!devData && !userData && matchedProducts.length > 0) {
+        const sample = matchedProducts[0];
+        devData = {
+          username: cleanUsername,
+          displayName: sample.developerName || cleanUsername,
+          bio: '',
+          avatar: sample.developerAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
+          vipPlan: sample.developerTier || 'pro',
+          isSuspended: false,
+          createdAt: sample.createdAt || new Date().toISOString(),
+        };
       }
     } catch (pErr) {
       console.warn('Error fetching products for public developer profile:', pErr.message);
     }
 
-    if (!devData) {
-      return res.status(404).json({ message: `Developer @${cleanUsername} was not found.` });
+    if (!devData && !userData) {
+      return res.status(404).json({ message: `User @${cleanUsername} was not found on Upper Store.` });
     }
 
-    // 3. Compute dynamic stats
+    // 3. Determine Developer Status & Subscription Expiration
+    const isDeveloper = Boolean(devDoc || (userData && userData.isDeveloper) || matchedProducts.length > 0);
+    const membership = userData?.membership || null;
+    const validUntil = membership?.validUntil || null;
+    const isExpiredByDate = Boolean(validUntil && new Date(validUntil) < new Date());
+
+    let isVipActive = false;
+    let subscriptionEnded = false;
+    let currentVipPlan = 'free';
+
+    if (membership && (membership.plan === 'pro' || membership.plan === 'elite')) {
+      if (isExpiredByDate) {
+        subscriptionEnded = true;
+        isVipActive = false;
+        currentVipPlan = 'free'; // Ring becomes inactive/standard
+      } else {
+        isVipActive = true;
+        subscriptionEnded = false;
+        currentVipPlan = membership.plan;
+      }
+    } else if (devData && devData.vipPlan && devData.vipPlan !== 'free') {
+      if (isExpiredByDate) {
+        subscriptionEnded = true;
+        isVipActive = false;
+        currentVipPlan = 'free';
+      } else {
+        currentVipPlan = devData.vipPlan;
+        isVipActive = true;
+      }
+    }
+
+    // 4. Compute dynamic stats
     const totalDownloads = matchedProducts.reduce(
       (sum, p) => sum + (Number(p.downloadsCount) || Number(p.downloads) || 0),
       0
@@ -494,19 +538,22 @@ const getPublicDeveloperProfile = async (req, res) => {
           ).toFixed(1)
         : '5.0';
 
-    // 4. Safe Public Profile (NEVER expose phone, aadhaar, or private IDs)
+    // 5. Safe Public Profile (Zero exposure of private Aadhaar, phone, or email)
     const publicProfile = {
-      id: devDoc ? devDoc.id : devData.userId || cleanUsername,
-      username: devData.username || cleanUsername,
-      displayName: devData.displayName || devData.username || cleanUsername,
-      bio: devData.bio && devData.bio.trim()
-        ? devData.bio.trim()
-        : 'Verified Upper Store Creator. Building high-performance software, mobile APKs, and digital developer utilities.',
-      avatar: devData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
-      vipPlan: devData.vipPlan || 'pro',
-      isVerified: !devData.isSuspended,
-      isSuspended: Boolean(devData.isSuspended),
-      joinedAt: devData.createdAt || null,
+      id: devDoc ? devDoc.id : userDoc ? userDoc.id : cleanUsername,
+      userId: devData?.userId || userDoc?.id || null,
+      username: devData?.username || userData?.username || cleanUsername,
+      displayName: devData?.displayName || userData?.displayName || userData?.username || cleanUsername,
+      bio: (devData?.bio && devData.bio.trim()) || (userData?.bio && userData.bio.trim()) || (isDeveloper ? 'Verified Upper Store Creator. Building high-performance software and developer tools.' : 'Upper Store Community Member.'),
+      avatar: devData?.avatar || userData?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
+      vipPlan: currentVipPlan, // Determines the avatar ring! 'elite', 'pro', or 'free'
+      previousVipPlan: membership?.plan || devData?.vipPlan || null,
+      isDeveloper: isDeveloper,
+      isVipActive: isVipActive,
+      subscriptionEnded: subscriptionEnded,
+      isVerified: isDeveloper && !devData?.isSuspended,
+      isSuspended: Boolean(devData?.isSuspended || userData?.isBanned),
+      joinedAt: devData?.createdAt || userData?.createdAt || null,
     };
 
     res.json({

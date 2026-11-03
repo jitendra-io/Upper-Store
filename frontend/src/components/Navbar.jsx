@@ -295,6 +295,22 @@ const Navbar = () => {
               </span>
             </button>
           )}
+          {isLoggedIn && (
+            <Link
+              to={`/developer/${user?.username || user?.email?.split('@')[0]}`}
+              onClick={closeMenu}
+              className="mobile-drawer-profile-btn"
+            >
+              <span className="mobile-drawer-profile-left">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>@{user?.username || user?.email?.split('@')[0]}</span>
+              </span>
+              <span className="mobile-drawer-profile-tag">Public Profile &rarr;</span>
+            </Link>
+          )}
           <Link to="/about" onClick={closeMenu} className={location.pathname === '/about' ? 'active-link' : ''}>About</Link>
           <Link to="/blog" onClick={closeMenu} className={location.pathname === '/blog' ? 'active-link' : ''}>Blog</Link>
           <Link to="/faq" onClick={closeMenu} className={location.pathname === '/faq' ? 'active-link' : ''}>FAQ</Link>
@@ -469,7 +485,14 @@ const Navbar = () => {
                         {isBanned && <span className="nav-banned-tag sm">BANNED</span>}
                       </p>
                       <div className="dropdown-handle-row">
-                        <p className="dropdown-user-handle">@{user?.username || user?.email?.split('@')[0]}</p>
+                        <Link
+                          to={`/developer/${user?.username || user?.email?.split('@')[0]}`}
+                          className="dropdown-user-handle-link"
+                          onClick={closeMenu}
+                          title="View your public profile"
+                        >
+                          @{user?.username || user?.email?.split('@')[0]}
+                        </Link>
                         <button
                           type="button"
                           className="nav-edit-username-btn"
@@ -550,6 +573,25 @@ const Navbar = () => {
                     </div>
 
                     <div className="dropdown-menu-list">
+                      {/* VIEW PUBLIC PROFILE LINK */}
+                      <Link
+                        to={`/developer/${user?.username || user?.email?.split('@')[0]}`}
+                        className="dropdown-item-btn public-profile-action-btn"
+                        onClick={closeMenu}
+                      >
+                        <div className="dropdown-item-left">
+                          <span className="dropdown-item-icon profile-icon-box">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                              <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                          </span>
+                          <span className="dropdown-item-label">View Public Profile</span>
+                        </div>
+                        <span className="dropdown-history-count-tag profile-tag-handle">
+                          @{user?.username || user?.email?.split('@')[0]}
+                        </span>
+                      </Link>
                       {/* DEVELOPER STUDIO BUTTON FOR ACTIVE VIPs */}
                       {isUserVipActive(user) && (
                         <button

@@ -51,7 +51,7 @@ const DeveloperProfile = () => {
     return false;
   }, [user, developer]);
 
-  // Fetch Public Developer Profile
+  // Fetch Public Developer / User Profile
   useEffect(() => {
     let isMounted = true;
 
@@ -70,12 +70,12 @@ const DeveloperProfile = () => {
           setProducts(Array.isArray(data.products) ? data.products : []);
           setBioInput(data.developer.bio || '');
         } else {
-          setError(data.message || `Developer @${cleanUsername} was not found.`);
+          setError(data.message || `User @${cleanUsername} was not found.`);
         }
       } catch (err) {
         if (!isMounted) return;
         console.error('Error fetching developer profile:', err);
-        setError('Network error: Unable to load developer profile. Please check your connection.');
+        setError('Network error: Unable to load profile. Please check your connection.');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -84,7 +84,7 @@ const DeveloperProfile = () => {
     if (cleanUsername) {
       fetchDeveloper();
     } else {
-      setError('Invalid developer username specified.');
+      setError('Invalid username specified.');
       setLoading(false);
     }
 
@@ -207,10 +207,14 @@ const DeveloperProfile = () => {
     return (
       <div className="dev-profile-container">
         <div className="dev-error-card">
-          <div className="dev-error-icon">🛡️</div>
-          <h2 className="dev-error-title">Developer Not Found</h2>
+          <div className="dev-error-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h2 className="dev-error-title">Profile Not Found</h2>
           <p className="dev-error-text">
-            {error || `The developer handle @${cleanUsername} does not exist or has been removed from Upper Store.`}
+            {error || `The handle @${cleanUsername} does not exist or has been removed from Upper Store.`}
           </p>
           <div className="dev-error-actions">
             <button className="dev-btn primary-gold" onClick={() => navigate('/products')}>
@@ -227,7 +231,8 @@ const DeveloperProfile = () => {
 
   const isElite = developer.vipPlan === 'elite';
   const isPro = developer.vipPlan === 'pro';
-  const tierTitle = isElite ? 'Royal Purple Elite VIP' : isPro ? 'Golden Crown Pro VIP' : 'Verified Creator';
+  const isDev = Boolean(developer.isDeveloper);
+  const isSubscriptionEnded = Boolean(developer.subscriptionEnded);
 
   return (
     <div className="dev-profile-container">
@@ -237,13 +242,13 @@ const DeveloperProfile = () => {
       <nav className="dev-breadcrumbs" aria-label="Breadcrumb">
         <Link to="/">Home</Link>
         <span className="crumb-sep">/</span>
-        <Link to="/products">Catalog</Link>
+        <Link to="/products">{isDev ? 'Creators' : 'Community'}</Link>
         <span className="crumb-sep">/</span>
         <span className="crumb-current">@{developer.username}</span>
       </nav>
 
       {/* ===============================================================
-          HERO PROFILE CARD (Obsidian & Conic Gold/Purple Halo)
+          HERO PROFILE CARD (Obsidian & Antique Gold / Purple Halo)
           =============================================================== */}
       <header className={`dev-profile-hero ${isElite ? 'tier-elite' : isPro ? 'tier-pro' : 'tier-standard'}`}>
         <div className="hero-mesh-background"></div>
@@ -254,12 +259,12 @@ const DeveloperProfile = () => {
             <VipAvatar
               src={developer.avatar}
               alt={developer.displayName}
-              plan={developer.vipPlan || 'pro'}
+              plan={developer.vipPlan || 'free'}
               size="xl"
               fallbackSeed={developer.username || developer.displayName}
               className="dev-hero-vip-avatar"
             />
-            {developer.isVerified && (
+            {developer.isVerified && isDev && (
               <span className="dev-verified-shield" title="Verified Authentic Developer">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
@@ -272,16 +277,60 @@ const DeveloperProfile = () => {
           <div className="dev-identity-block">
             <div className="dev-name-row">
               <h1 className="dev-display-name">{developer.displayName}</h1>
-              <VipFlairBadge plan={developer.vipPlan || 'pro'} />
+              {developer.vipPlan && developer.vipPlan !== 'free' && (
+                <VipFlairBadge plan={developer.vipPlan} />
+              )}
             </div>
 
             <div className="dev-handle-row">
               <span className="dev-username-handle">@{developer.username}</span>
-              <span className="dev-tier-pill">{tierTitle}</span>
-              {developer.isOfficial && <span className="dev-official-pill">Official Store Creator</span>}
+
+              {/* Status Badges - Zero Emojis */}
+              {isDev ? (
+                <>
+                  {developer.isOfficial ? (
+                    <span className="dev-status-pill official">Official Store Creator</span>
+                  ) : isSubscriptionEnded ? (
+                    <span className="dev-status-pill expired">Subscription Ended</span>
+                  ) : (
+                    <span className="dev-status-pill verified">Verified Creator</span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="dev-status-pill community">Community Member</span>
+                  <span className="dev-status-pill not-dev">Not a Developer</span>
+                </>
+              )}
             </div>
 
-            {/* DEVELOPER BIO */}
+            {/* EXPIRED SUBSCRIPTION NOTICE BANNER */}
+            {isSubscriptionEnded && (
+              <div className="dev-expired-sub-banner">
+                <div className="expired-banner-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                </div>
+                <div className="expired-banner-content">
+                  <h4 className="expired-banner-heading">VIP Creator Subscription Inactive</h4>
+                  <p className="expired-banner-text">
+                    {isOwner
+                      ? 'Your VIP membership has ended. Your catalog applications remain active and accessible to users, but glowing creator halos and VIP broadcasting perks are paused.'
+                      : 'This creator\'s VIP subscription has ended. Their verified applications remain accessible for community download.'}
+                  </p>
+                </div>
+                {isOwner && (
+                  <Link to="/vip" className="dev-renew-sub-btn">
+                    Renew VIP
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {/* BIO BOX */}
             {!isEditingBio ? (
               <div className="dev-bio-box">
                 <p className="dev-bio-text">{developer.bio}</p>
@@ -289,9 +338,13 @@ const DeveloperProfile = () => {
                   <button
                     className="dev-bio-edit-trigger"
                     onClick={() => setIsEditingBio(true)}
-                    title="Edit your public developer bio"
+                    title="Edit your public bio"
                   >
-                    ✏️ Edit Bio
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                    </svg>
+                    <span>Edit Bio</span>
                   </button>
                 )}
               </div>
@@ -328,21 +381,28 @@ const DeveloperProfile = () => {
               </form>
             )}
 
-            {bioSuccess && <div className="dev-toast-inline">✅ Developer bio updated successfully!</div>}
+            {bioSuccess && (
+              <div className="dev-toast-inline">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Bio updated successfully!</span>
+              </div>
+            )}
 
             {/* ACTION BUTTONS */}
             <div className="dev-hero-actions">
               <button
                 className={`dev-action-btn share-btn ${copied ? 'copied' : ''}`}
                 onClick={handleCopyLink}
-                title="Copy developer profile link"
+                title="Copy profile link"
               >
                 {copied ? (
                   <>
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    Link Copied!
+                    <span>Link Copied!</span>
                   </>
                 ) : (
                   <>
@@ -350,7 +410,7 @@ const DeveloperProfile = () => {
                       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
-                    Share Profile
+                    <span>Share Profile</span>
                   </>
                 )}
               </button>
@@ -361,203 +421,304 @@ const DeveloperProfile = () => {
                   <line x1="3" y1="6" x2="21" y2="6"></line>
                   <path d="M16 10a4 4 0 0 1-8 0"></path>
                 </svg>
-                Explore Full Store
+                <span>Explore Full Store</span>
               </Link>
             </div>
           </div>
         </div>
 
         {/* ===============================================================
-            FOUR-METRIC PERFORMANCE STATS STRIP
+            FOUR-METRIC PERFORMANCE STRIP (Tailored for Dev or Member)
             =============================================================== */}
         <div className="dev-stats-grid">
-          <div className="dev-stat-card">
-            <span className="stat-label">Published Software</span>
-            <span className="stat-value">{stats.productsCount}</span>
-            <span className="stat-sub">Active in Catalog</span>
-          </div>
+          {isDev ? (
+            <>
+              <div className="dev-stat-card">
+                <span className="stat-label">Published Software</span>
+                <span className="stat-value">{stats.productsCount}</span>
+                <span className="stat-sub">Active in Catalog</span>
+              </div>
 
-          <div className="dev-stat-card">
-            <span className="stat-label">Community Downloads</span>
-            <span className="stat-value">{formatDownloadCount(stats.totalDownloads)}</span>
-            <span className="stat-sub">Verified Installs</span>
-          </div>
+              <div className="dev-stat-card">
+                <span className="stat-label">Community Downloads</span>
+                <span className="stat-value">{formatDownloadCount(stats.totalDownloads)}</span>
+                <span className="stat-sub">Verified Installs</span>
+              </div>
 
-          <div className="dev-stat-card">
-            <span className="stat-label">Developer Rating</span>
-            <div className="stat-rating-value">
-              <span className="stat-value">{stats.averageRating}</span>
-              <span className="stat-star">★</span>
-            </div>
-            <span className="stat-sub">Across All Releases</span>
-          </div>
+              <div className="dev-stat-card">
+                <span className="stat-label">Developer Rating</span>
+                <div className="stat-rating-value">
+                  <span className="stat-value">{stats.averageRating}</span>
+                  <span className="stat-star-svg">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="#fbbf24">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                  </span>
+                </div>
+                <span className="stat-sub">Across All Releases</span>
+              </div>
 
-          <div className="dev-stat-card">
-            <span className="stat-label">Verification Status</span>
-            <span className="stat-value highlight-verified">
-              {developer.isSuspended ? 'Suspended' : 'Verified'}
-            </span>
-            <span className="stat-sub">Aadhaar & VIP Shield</span>
-          </div>
+              <div className="dev-stat-card">
+                <span className="stat-label">Verification Status</span>
+                <span className="stat-value highlight-verified">
+                  {developer.isSuspended
+                    ? 'Suspended'
+                    : isSubscriptionEnded
+                    ? 'VIP Expired'
+                    : 'Verified Creator'}
+                </span>
+                <span className="stat-sub">
+                  {isSubscriptionEnded ? 'Catalog Apps Active' : 'Aadhaar & VIP Shield'}
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="dev-stat-card">
+                <span className="stat-label">Account Type</span>
+                <span className="stat-value">Community</span>
+                <span className="stat-sub">Upper Store Member</span>
+              </div>
+
+              <div className="dev-stat-card">
+                <span className="stat-label">Creator Status</span>
+                <span className="stat-value highlight-inactive">Not a Developer</span>
+                <span className="stat-sub">No Releases Published</span>
+              </div>
+
+              <div className="dev-stat-card">
+                <span className="stat-label">Platform Role</span>
+                <span className="stat-value">Explorer</span>
+                <span className="stat-sub">Verified User</span>
+              </div>
+
+              <div className="dev-stat-card">
+                <span className="stat-label">Membership</span>
+                <span className="stat-value highlight-verified">
+                  {developer.vipPlan && developer.vipPlan !== 'free'
+                    ? `${developer.vipPlan.toUpperCase()} VIP`
+                    : 'Standard'}
+                </span>
+                <span className="stat-sub">Community Tier</span>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
       {/* ===============================================================
-          DEVELOPER RELEASES CATALOG
+          MAIN BODY: DEVELOPER RELEASES OR COMMUNITY MEMBER VIEW
           =============================================================== */}
-      <section className="dev-catalog-section">
-        <div className="dev-catalog-header">
-          <div className="dev-catalog-title-group">
-            <h2 className="dev-catalog-title">
-              Software Releases by <span className="dev-title-highlight">{developer.displayName}</span>
-            </h2>
-            <p className="dev-catalog-subtitle">
-              Browse, inspect, and download verified applications crafted by @{developer.username}.
-            </p>
+      {isDev ? (
+        <section className="dev-catalog-section">
+          <div className="dev-catalog-header">
+            <div className="dev-catalog-title-group">
+              <h2 className="dev-catalog-title">
+                Software Releases by <span className="dev-title-highlight">{developer.displayName}</span>
+              </h2>
+              <p className="dev-catalog-subtitle">
+                Browse, inspect, and download verified applications crafted by @{developer.username}.
+              </p>
+            </div>
+
+            {/* CATALOG TOOLBAR (Search & Sort) */}
+            <div className="dev-catalog-toolbar">
+              {/* Search Box */}
+              <div className="dev-search-input-wrap">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="dev-search-icon">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                  type="text"
+                  placeholder={`Search @${developer.username}'s products...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="dev-search-input"
+                />
+                {searchQuery && (
+                  <button className="dev-search-clear" onClick={() => setSearchQuery('')} aria-label="Clear search">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="dev-sort-wrap">
+                <label htmlFor="dev-sort" className="dev-sort-label">Sort:</label>
+                <select
+                  id="dev-sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="dev-sort-select"
+                >
+                  <option value="popular">Most Popular</option>
+                  <option value="rating">Highest Rated</option>
+                  <option value="newest">Newest Releases</option>
+                  <option value="title">Title (A-Z)</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          {/* CATALOG TOOLBAR (Search & Sort) */}
-          <div className="dev-catalog-toolbar">
-            {/* Search Box */}
-            <div className="dev-search-input-wrap">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="dev-search-icon">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input
-                type="text"
-                placeholder={`Search @${developer.username}'s products...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="dev-search-input"
-              />
-              {searchQuery && (
-                <button className="dev-search-clear" onClick={() => setSearchQuery('')} aria-label="Clear search">
-                  ✕
+          {/* CATEGORY PILL FILTER */}
+          {availableCategories.length > 2 && (
+            <div className="dev-category-pills-row">
+              {availableCategories.map((cat) => (
+                <button
+                  key={cat}
+                  className={`dev-cat-pill ${selectedCategory === cat ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* PRODUCTS GRID */}
+          {filteredProducts.length > 0 ? (
+            <div className="dev-products-grid">
+              {filteredProducts.map((product) => {
+                const displayImage = product.logo || product.image || product.imageUrl1 || '/logo.png';
+                const downloadCount = Number(product.downloadsCount) || Number(product.downloadCount) || Number(product.downloads) || 0;
+
+                return (
+                  <article
+                    key={product.id}
+                    className="dev-product-card"
+                    onClick={() => setSelectedProduct(product)}
+                  >
+                    <div className="card-top-row">
+                      <div className="card-icon-wrap">
+                        <img
+                          src={displayImage}
+                          alt={product.title}
+                          className="card-product-icon"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = '/logo.png';
+                          }}
+                        />
+                      </div>
+
+                      <div className="card-header-meta">
+                        <span className="card-category-tag">{product.category || 'Application'}</span>
+                        <h3 className="card-product-title">{product.title}</h3>
+                        <span className="card-version-tag">v{product.version || '1.0.0'}</span>
+                      </div>
+                    </div>
+
+                    <p className="card-description">
+                      {product.description || 'Verified release by developer.'}
+                    </p>
+
+                    <div className="card-footer-strip">
+                      <div className="card-rating-downloads">
+                        <StarRatingBadge rating={Number(product.rating || product.averageRating || 5)} count={Number(product.reviewsCount || 0)} />
+                        <span className="card-download-badge">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" style={{ marginRight: '3px' }}>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                          {formatDownloadCount(downloadCount)}
+                        </span>
+                      </div>
+
+                      <div className="card-action-wrap">
+                        <span className="card-price-pill">{product.price || 'Free'}</span>
+                        <button className="card-view-btn" onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProduct(product);
+                        }}>
+                          View Details &rarr;
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="dev-no-products-box">
+              <div className="no-products-icon">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="rgba(212, 175, 55, 0.45)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+              </div>
+              <h3>No Releases Found</h3>
+              <p>
+                {searchQuery || selectedCategory !== 'All'
+                  ? 'No software releases matched your active filter or search criteria.'
+                  : `@${developer.username} has not published any public applications yet.`}
+              </p>
+              {(searchQuery || selectedCategory !== 'All') && (
+                <button
+                  className="dev-btn sm-ghost"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All');
+                  }}
+                >
+                  Reset Filters
                 </button>
               )}
             </div>
-
-            {/* Sort Dropdown */}
-            <div className="dev-sort-wrap">
-              <label htmlFor="dev-sort" className="dev-sort-label">Sort:</label>
-              <select
-                id="dev-sort"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="dev-sort-select"
-              >
-                <option value="popular">Most Popular</option>
-                <option value="rating">Highest Rated</option>
-                <option value="newest">Newest Releases</option>
-                <option value="title">Title (A-Z)</option>
-              </select>
+          )}
+        </section>
+      ) : (
+        /* NON-DEVELOPER: COMMUNITY MEMBER SHOWCASE */
+        <section className="dev-community-section">
+          <div className="dev-community-card">
+            <div className="dev-community-icon-frame">
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
-          </div>
-        </div>
-
-        {/* CATEGORY PILL FILTER */}
-        {availableCategories.length > 2 && (
-          <div className="dev-category-pills-row">
-            {availableCategories.map((cat) => (
-              <button
-                key={cat}
-                className={`dev-cat-pill ${selectedCategory === cat ? 'active' : ''}`}
-                onClick={() => setSelectedCategory(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* PRODUCTS GRID */}
-        {filteredProducts.length > 0 ? (
-          <div className="dev-products-grid">
-            {filteredProducts.map((product) => {
-              const displayImage = product.logo || product.image || product.imageUrl1 || '/logo.png';
-              const downloadCount = Number(product.downloadsCount) || Number(product.downloadCount) || Number(product.downloads) || 0;
-
-              return (
-                <article
-                  key={product.id}
-                  className="dev-product-card"
-                  onClick={() => setSelectedProduct(product)}
-                >
-                  <div className="card-top-row">
-                    <div className="card-icon-wrap">
-                      <img
-                        src={displayImage}
-                        alt={product.title}
-                        className="card-product-icon"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = '/logo.png';
-                        }}
-                      />
-                    </div>
-
-                    <div className="card-header-meta">
-                      <span className="card-category-tag">{product.category || 'Application'}</span>
-                      <h3 className="card-product-title">{product.title}</h3>
-                      <span className="card-version-tag">v{product.version || '1.0.0'}</span>
-                    </div>
-                  </div>
-
-                  <p className="card-description">
-                    {product.description || 'Verified release by developer.'}
-                  </p>
-
-                  <div className="card-footer-strip">
-                    <div className="card-rating-downloads">
-                      <StarRatingBadge rating={Number(product.rating || product.averageRating || 5)} count={Number(product.reviewsCount || 0)} />
-                      <span className="card-download-badge">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" style={{ marginRight: '3px' }}>
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                        {formatDownloadCount(downloadCount)}
-                      </span>
-                    </div>
-
-                    <div className="card-action-wrap">
-                      <span className="card-price-pill">{product.price || 'Free'}</span>
-                      <button className="card-view-btn" onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedProduct(product);
-                      }}>
-                        View Details &rarr;
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="dev-no-products-box">
-            <div className="no-products-icon">📦</div>
-            <h3>No Releases Found</h3>
-            <p>
-              {searchQuery || selectedCategory !== 'All'
-                ? 'No software releases matched your active filter or search criteria.'
-                : `@${developer.username} has not published any public applications yet.`}
+            <h2 className="dev-community-heading">Community Member Profile</h2>
+            <p className="dev-community-desc">
+              <strong>@{developer.username}</strong> is a registered member of Upper Store.
+              This user has not applied for developer credentials or published software releases yet.
             </p>
-            {(searchQuery || selectedCategory !== 'All') && (
-              <button
-                className="dev-btn sm-ghost"
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                }}
-              >
-                Reset Filters
-              </button>
+
+            {isOwner ? (
+              <div className="dev-owner-upgrade-box">
+                <div className="upgrade-box-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffd700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                  <span>Want to Publish Your Own Software on Upper Store?</span>
+                </div>
+                <p className="upgrade-box-text">
+                  Unlock the full Developer Studio, get verified with Aadhaar KYC, and distribute your APKs, desktop applications, and developer utilities directly to the Upper Store community.
+                </p>
+                <div className="upgrade-box-actions">
+                  <Link to="/vip" className="dev-btn primary-gold">
+                    Join VIP &amp; Become Creator
+                  </Link>
+                  <Link to="/products" className="dev-btn secondary-ghost">
+                    Browse Store Catalog
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="dev-community-actions">
+                <Link to="/products" className="dev-btn primary-gold">
+                  Explore Upper Store Software
+                </Link>
+              </div>
             )}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* ===============================================================
           PRODUCT DETAIL MODAL (Opens seamlessly on click)
