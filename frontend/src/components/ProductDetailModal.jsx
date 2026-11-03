@@ -281,33 +281,33 @@ const ProductDetailModal = ({ product, onClose }) => {
                   </span>
                   <span className="pill-item price-pill">{product.price}</span>
                 </div>
-                {product.developerName && (
-                  <Link
-                    to={'/developer/' + (product.developerUsername || 'upperstore')}
-                    className="modal-developer-attribution clickable-dev-link"
-                    title={'View @' + (product.developerUsername || 'upperstore') + ' Developer Profile'}
-                    onClick={() => { if (onClose) onClose(); }}
-                  >
-                    <span className="modal-dev-label">Published by:</span>
-                    <VipAvatar
-                      src={product.developerAvatar}
-                      alt={product.developerName}
-                      plan={product.developerTier || 'pro'}
-                      size="sm"
-                      fallbackSeed={product.developerEmail || product.developerName}
-                    />
-                    <span className="modal-dev-name">
-                      {product.developerName}
-                      {product.developerUsername && (
-                        <span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.8rem', fontFamily: 'monospace' }}>
-                          @{product.developerUsername}
-                        </span>
-                      )}
+                <Link
+                  to={'/developer/' + (product.developerUsername || 'upperstore')}
+                  className="modal-developer-attribution clickable-dev-link"
+                  title={'View @' + (product.developerUsername || 'upperstore') + ' Profile'}
+                  onClick={() => { if (onClose) onClose(); }}
+                >
+                  <span className="modal-dev-label">Published by:</span>
+                  <VipAvatar
+                    src={product.developerAvatar || '/logo.png'}
+                    alt={product.developerName || 'Upper Store'}
+                    plan={product.developerTier || (product.developerUsername ? 'pro' : 'elite')}
+                    size="sm"
+                    fallbackSeed={product.developerUsername || product.developerEmail || product.developerName || 'upperstore'}
+                  />
+                  <span className="modal-dev-name">
+                    {product.developerName || 'Upper Store'}
+                    <span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.8rem', fontFamily: 'monospace' }}>
+                      @{product.developerUsername || 'upperstore'}
                     </span>
-                    <VipFlairBadge plan={product.developerTier || 'pro'} compact={true} />
-                    <span className="dev-redirect-arrow">↗</span>
-                  </Link>
-                )}
+                  </span>
+                  <VipFlairBadge plan={product.developerTier || (product.developerUsername ? 'pro' : 'elite')} compact={true} />
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="dev-redirect-icon" style={{ marginLeft: '4px', color: '#fbbf24' }}>
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <line x1="10" y1="14" x2="21" y2="3"></line>
+                  </svg>
+                </Link>
                 {Array.isArray(product.tags) && product.tags.filter(Boolean).length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.45rem' }}>
                     {product.tags.filter(Boolean).slice(0, 2).map((tag, idx) => (

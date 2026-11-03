@@ -526,6 +526,12 @@ const getPublicDeveloperProfile = async (req, res) => {
       }
     }
 
+    // Default active verified developers to 'pro' ring if not expired
+    if (!subscriptionEnded && isDeveloper && currentVipPlan === 'free') {
+      currentVipPlan = 'pro';
+      isVipActive = true;
+    }
+
     // 4. Compute dynamic stats
     const totalDownloads = matchedProducts.reduce(
       (sum, p) => sum + (Number(p.downloadsCount) || Number(p.downloads) || 0),

@@ -97,13 +97,38 @@
 .dev-avatar-wrapper {
   position: relative;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Premium Rotating Conic Ring on Hero Avatar */
+.vip-avatar-wrap.dev-hero-vip-avatar {
+  width: 114px !important;
+  height: 114px !important;
+  padding: 5px !important; /* Bold 5px thick rotating conic border */
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 0 25px rgba(212, 175, 55, 0.45), 0 0 50px rgba(212, 175, 55, 0.2);
+}
+
+.vip-avatar-wrap.dev-hero-vip-avatar.pro {
+  animation: vipBreathingGold 3.2s ease-in-out infinite;
+}
+
+.vip-avatar-wrap.dev-hero-vip-avatar.elite {
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.55), 0 0 60px rgba(168, 85, 247, 0.25);
+  animation: vipBreathingPurple 3.2s ease-in-out infinite;
 }
 
 .dev-hero-vip-avatar .vip-avatar-inner-img {
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  object-fit: cover;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 3px solid #0c0d14 !important; /* Dark gutter bevel separating photo from rotating halo */
 }
 
 .dev-verified-shield {
@@ -1178,9 +1203,14 @@
     font-size: 1.4rem;
   }
 
+  .vip-avatar-wrap.dev-hero-vip-avatar {
+    width: 96px !important;
+    height: 96px !important;
+    padding: 4px !important;
+  }
   .dev-hero-vip-avatar .vip-avatar-inner-img {
-    width: 88px;
-    height: 88px;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   .dev-handle-row {

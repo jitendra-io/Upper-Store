@@ -240,7 +240,7 @@ const Products = () => {
             />
             {searchQuery && (
               <button type="button" onClick={handleClearSearch} className="catalog-clear-btn" title="Clear Search">
-                ✕
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
               </button>
             )}
             <button type="submit" className="catalog-search-submit-btn">
@@ -337,32 +337,32 @@ const Products = () => {
                       ))}
                     </div>
                   )}
-                  {product.developerName && (
-                    <Link
-                      to={'/developer/' + (product.developerUsername || 'upperstore')}
-                      className="product-developer-attribution clickable-dev-link"
-                      onClick={(e) => e.stopPropagation()}
-                      title={'View @' + (product.developerUsername || 'upperstore') + ' Developer Profile'}
-                    >
-                      <VipAvatar
-                        src={product.developerAvatar}
-                        alt={product.developerName}
-                        plan={product.developerTier || 'pro'}
-                        size="sm"
-                        fallbackSeed={product.developerEmail || product.developerName}
-                      />
-                      <span className="product-developer-name">
-                        {product.developerName}
-                        {product.developerUsername && (
-                          <span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
-                            @{product.developerUsername}
-                          </span>
-                        )}
+                  <Link
+                    to={'/developer/' + (product.developerUsername || 'upperstore')}
+                    className="product-developer-attribution clickable-dev-link"
+                    onClick={(e) => e.stopPropagation()}
+                    title={'View @' + (product.developerUsername || 'upperstore') + ' Profile'}
+                  >
+                    <VipAvatar
+                      src={product.developerAvatar || '/logo.png'}
+                      alt={product.developerName || 'Upper Store'}
+                      plan={product.developerTier || (product.developerUsername ? 'pro' : 'elite')}
+                      size="sm"
+                      fallbackSeed={product.developerUsername || product.developerEmail || product.developerName || 'upperstore'}
+                    />
+                    <span className="product-developer-name">
+                      {product.developerName || 'Upper Store'}
+                      <span style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                        @{product.developerUsername || 'upperstore'}
                       </span>
-                      <VipFlairBadge plan={product.developerTier || 'pro'} compact={true} />
-                      <span className="dev-redirect-arrow">↗</span>
-                    </Link>
-                  )}
+                    </span>
+                    <VipFlairBadge plan={product.developerTier || (product.developerUsername ? 'pro' : 'elite')} compact={true} />
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="dev-redirect-icon" style={{ marginLeft: '4px', color: '#fbbf24' }}>
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                  </Link>
                   <p>{product.description}</p>
                   <div className="product-footer">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>

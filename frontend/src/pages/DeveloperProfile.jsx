@@ -195,6 +195,15 @@ const DeveloperProfile = () => {
   const isDev = Boolean(developer.isDeveloper);
   const isSubscriptionEnded = Boolean(developer.subscriptionEnded);
 
+  // Premium rotating conic ring for active creators / VIPs
+  const avatarRingPlan = isSubscriptionEnded
+    ? 'free'
+    : isElite
+    ? 'elite'
+    : isDev || isPro
+    ? 'pro'
+    : developer.vipPlan || 'free';
+
   return (
     <div className="dev-profile-container">
       {/* ===============================================================
@@ -220,7 +229,7 @@ const DeveloperProfile = () => {
             <VipAvatar
               src={developer.avatar}
               alt={developer.displayName}
-              plan={developer.vipPlan || 'free'}
+              plan={avatarRingPlan}
               size="xl"
               fallbackSeed={developer.username || developer.displayName}
               className="dev-hero-vip-avatar"

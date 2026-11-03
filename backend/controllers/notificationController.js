@@ -68,6 +68,9 @@ const createNotification = async (req, res) => {
     const authorName = req.developer
       ? (req.developer.displayName || req.user.displayName || req.user.email.split('@')[0])
       : 'Upper Store Official';
+    const authorUsername = req.developer
+      ? (req.developer.username || req.user.username || (req.user.email ? req.user.email.split('@')[0] : 'developer'))
+      : 'upperstore';
     const passedAvatar = req.body.authorAvatar && typeof req.body.authorAvatar === 'string' ? req.body.authorAvatar.trim() : null;
     const authorAvatar = req.developer
       ? (passedAvatar || req.developer.avatar || req.user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(req.user.email || 'dev')}`)
@@ -79,6 +82,7 @@ const createNotification = async (req, res) => {
       authorId,
       authorEmail,
       authorName,
+      authorUsername,
       authorAvatar,
       authorTier,
       title: title.trim(),

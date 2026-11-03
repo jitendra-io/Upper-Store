@@ -247,19 +247,27 @@ const Home = () => {
                         </div>
                       </div>
                     </div>
-                    {prod.developerName && (
-                      <div className="product-developer-attribution">
-                        <VipAvatar
-                          src={prod.developerAvatar}
-                          alt={prod.developerName}
-                          plan={prod.developerTier || 'pro'}
-                          size="sm"
-                          fallbackSeed={prod.developerEmail || prod.developerName}
-                        />
-                        <span className="product-developer-name">{prod.developerName}</span>
-                        <VipFlairBadge plan={prod.developerTier || 'pro'} compact={true} />
-                      </div>
-                    )}
+                    <Link
+                      to={'/developer/' + (prod.developerUsername || 'upperstore')}
+                      className="product-developer-attribution clickable-dev-link"
+                      onClick={(e) => e.stopPropagation()}
+                      title={'View @' + (prod.developerUsername || 'upperstore') + ' Profile'}
+                    >
+                      <VipAvatar
+                        src={prod.developerAvatar || '/logo.png'}
+                        alt={prod.developerName || 'Upper Store'}
+                        plan={prod.developerTier || (prod.developerUsername ? 'pro' : 'elite')}
+                        size="sm"
+                        fallbackSeed={prod.developerUsername || prod.developerEmail || prod.developerName || 'upperstore'}
+                      />
+                      <span className="product-developer-name">
+                        {prod.developerName || 'Upper Store'}
+                        <span className="product-dev-username-tag" style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                          @{prod.developerUsername || 'upperstore'}
+                        </span>
+                      </span>
+                      <VipFlairBadge plan={prod.developerTier || (prod.developerUsername ? 'pro' : 'elite')} compact={true} />
+                    </Link>
                     <p>{prod.description}</p>
                     <div className="product-footer">
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
