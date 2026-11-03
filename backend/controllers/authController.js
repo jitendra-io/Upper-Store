@@ -2,6 +2,9 @@ const { db, authAdmin } = require('../config/firebase');
 const { getJwtSecret } = require('../config/jwtConfig');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const path = require('path');
+const fs = require('fs');
+const { uploadFileToCloudOrLocal } = require('../services/imagekitService');
 const { sendWelcomeEmail, sendLoginAlertEmail } = require('../services/emailService');
 
 const generateToken = (uid, role = 'user', email = null) => {
@@ -28,7 +31,7 @@ const resolveUserMembership = async (userData, userDocRef = null) => {
           });
           console.log(`⭐ [VIP Expiry] Subscription expired for ${userData.email || 'user'}. Badge removed and reverted to free in Firestore.`);
         } catch (err) {
-          console.warn('⚠️ [VIP Expiry] Error removing expired badge in Firestore:', err.message);
+          console.warn('[VIP Expiry] Error removing expired badge in Firestore:', err.message);
         }
       }
       return defaultMembership; // Expired: badge removed!
@@ -1094,6 +1097,145 @@ const updateFullProfile = async (req, res) => {
   }
 };
 
+// @desc    Upload profile background/cover image to ImageKit CDN
+// @route   POST /api/auth/user/cover-image
+// @access  Private
+const uploadCoverImage = async (req, res) => {
+  try {
+    const authUser = req.user;
+    if (!authUser) {
+      return res.status(401).json({ message: 'Unauthorized. Please sign in to upload cover image.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided. Please select an image from your computer.' });
+    }
+
+    // Double check MIME type
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedMimes.includes(req.file.mimetype.toLowerCase())) {
+      if (req.file.path && fs.existsSync(req.file.path)) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+      return res.status(400).json({ message: 'Invalid file format. Only JPG, PNG, WEBP, and GIF images are allowed.' });
+    }
+
+    // Upload to ImageKit folder: 'banners'
+    const cdnUrl = await uploadFileToCloudOrLocal(req.file, 'banners', req);
+
+    if (!cdnUrl) {
+      return res.status(500).json({ message: 'Failed to upload background image to ImageKit.' });
+    }
+
+    const now = new Date().toISOString();
+    const cleanEmail = (authUser.email || '').trim().toLowerCase();
+
+    // 1. Locate user document
+    let userDocRef = null;
+    if (authUser.uid) {
+      const snap = await db.collection('users').doc(authUser.uid).get();
+      if (snap.exists) userDocRef = snap.ref;
+    }
+    if (!userDocRef && cleanEmail) {
+      const snap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!snap.empty) {
+        userDocRef = snap.docs[0].ref;
+      }
+    }
+
+    if (!userDocRef) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    // Update user document
+    await userDocRef.update({
+      coverImage: cdnUrl,
+      banner: cdnUrl,
+      updatedAt: now,
+    });
+
+    // 2. Sync to developers collection if this user has developer doc
+    let devSnap = await db.collection('developers').where('userId', '==', userDocRef.id).limit(1).get();
+    if (devSnap.empty && cleanEmail) {
+      devSnap = await db.collection('developers').where('email', '==', cleanEmail).limit(1).get();
+    }
+    if (!devSnap.empty) {
+      await devSnap.docs[0].ref.update({
+        coverImage: cdnUrl,
+        banner: cdnUrl,
+        updatedAt: now,
+      });
+    }
+
+    return res.json({
+      message: 'Background image uploaded successfully to ImageKit CDN.',
+      coverImage: cdnUrl,
+      banner: cdnUrl,
+    });
+  } catch (error) {
+    console.error('Upload cover image error:', error);
+    return res.status(500).json({ message: 'Server error while uploading background image.' });
+  }
+};
+
+// @desc    Remove profile background/cover image (reverts to default)
+// @route   DELETE /api/auth/user/cover-image
+// @access  Private
+const removeCoverImage = async (req, res) => {
+  try {
+    const authUser = req.user;
+    if (!authUser) {
+      return res.status(401).json({ message: 'Unauthorized.' });
+    }
+
+    const now = new Date().toISOString();
+    const cleanEmail = (authUser.email || '').trim().toLowerCase();
+
+    let userDocRef = null;
+    if (authUser.uid) {
+      const snap = await db.collection('users').doc(authUser.uid).get();
+      if (snap.exists) userDocRef = snap.ref;
+    }
+    if (!userDocRef && cleanEmail) {
+      const snap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!snap.empty) {
+        userDocRef = snap.docs[0].ref;
+      }
+    }
+
+    if (!userDocRef) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    await userDocRef.update({
+      coverImage: '',
+      banner: '',
+      updatedAt: now,
+    });
+
+    let devSnap = await db.collection('developers').where('userId', '==', userDocRef.id).limit(1).get();
+    if (devSnap.empty && cleanEmail) {
+      devSnap = await db.collection('developers').where('email', '==', cleanEmail).limit(1).get();
+    }
+    if (!devSnap.empty) {
+      await devSnap.docs[0].ref.update({
+        coverImage: '',
+        banner: '',
+        updatedAt: now,
+      });
+    }
+
+    return res.json({
+      message: 'Background image removed successfully.',
+      coverImage: '',
+      banner: '',
+    });
+  } catch (error) {
+    console.error('Remove cover image error:', error);
+    return res.status(500).json({ message: 'Server error while removing background image.' });
+  }
+};
+
 module.exports = {
   loginAdmin,
   setupAdmin,
@@ -1113,4 +1255,6 @@ module.exports = {
   getUsernameStatus,
   checkUsernameAvailability,
   updateFullProfile,
+  uploadCoverImage,
+  removeCoverImage,
 };

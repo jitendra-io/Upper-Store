@@ -1,73 +1,12 @@
 const { db } = require('../config/firebase');
-const ImageKit = require('@imagekit/nodejs');
 const path = require('path');
 const fs = require('fs');
-
-let imagekit = null;
-if (
-  process.env.IMAGEKIT_PUBLIC_KEY &&
-  process.env.IMAGEKIT_PUBLIC_KEY !== 'your_imagekit_public_key'
-) {
-  try {
-    imagekit = new ImageKit({
-      publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
-      privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
-      urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
-    });
-  } catch (err) {
-    console.warn('⚠️ ImageKit initialization skipped:', err.message);
-  }
-}
-
+const { uploadFileToCloudOrLocal } = require('../services/imagekitService');
 const { uploadToGitHubRelease } = require('../services/githubReleaseService');
 const { buildSecurityVerification } = require('../services/securityScanService');
 const { FieldValue } = require('../config/firebase');
 const cacheService = require('../services/cacheService');
 
-// Helper to resolve full file URL fallback
-const getFileUrl = (req, relativePath) => {
-  if (process.env.BACKEND_URL) {
-    const baseUrl = process.env.BACKEND_URL.replace(/\/$/, '');
-    return `${baseUrl}/${relativePath.replace(/\\/g, '/')}`;
-  }
-  const protocol = req.protocol || 'http';
-  const host = req.get('host') || 'localhost:5000';
-  return `${protocol}://${host}/${relativePath.replace(/\\/g, '/')}`;
-};
-
-// Helper to upload a file to ImageKit or fallback to server URL
-const uploadFileToCloudOrLocal = async (file, folder, req) => {
-  const relativePath = path.relative(path.join(__dirname, '..'), file.path);
-  let url = getFileUrl(req, relativePath);
-
-  if (imagekit) {
-    try {
-      const buffer = fs.readFileSync(file.path);
-      const uploadFn = (imagekit.files?.upload ? imagekit.files.upload.bind(imagekit.files) : imagekit.upload.bind(imagekit));
-      const uploaded = await uploadFn({
-        file: buffer.toString('base64'),
-        fileName: file.filename,
-        folder: `/upper-store/${folder}`,
-      });
-      if (uploaded?.url) {
-        url = uploaded.url;
-        console.log(`☁️ Uploaded to ImageKit (${folder}): ${url}`);
-
-        // Remove local temporary staging file so it is not stored locally
-        try {
-          if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
-        } catch (unlinkErr) {
-          console.warn(`Note: Could not delete local temp file ${file.path}`);
-        }
-      }
-    } catch (ikErr) {
-      console.warn(`⚠️ ImageKit upload failed for ${file.originalname}: ${ikErr.message}. Using fallback: ${url}`);
-    }
-  } else {
-    console.log(`📁 Saved locally (${folder}): ${url}`);
-  }
-  return url;
-};
 
 // Helper to process package file upload (prefers GitHub Release for large files)
 const handlePackageFileUpload = async (apkFile, title, version, description, req) => {

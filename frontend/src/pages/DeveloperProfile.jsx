@@ -574,8 +574,8 @@ const DeveloperProfile = () => {
             displayName,
             username: newUsername,
             bio,
-            coverImage: newCover || prev.coverImage,
-            banner: newCover || prev.banner,
+            coverImage: newCover !== undefined ? newCover : prev.coverImage,
+            banner: newCover !== undefined ? newCover : prev.banner,
             location: newLoc !== undefined ? newLoc : prev.location,
             locationLocked: locationLocked !== undefined ? locationLocked : prev.locationLocked,
           }));

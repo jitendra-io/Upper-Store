@@ -1,19 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './EditProfileModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-// Auto-converts Google Drive share/view links to direct embed CDN links
-export const convertGoogleDriveUrl = (url) => {
-  if (!url) return '';
-  const clean = url.trim();
-  const driveMatch = clean.match(/(?:file\/d\/|id=|open\?id=)([a-zA-Z0-9_-]+)/);
-  if (clean.includes('drive.google.com') && driveMatch && driveMatch[1]) {
-    return `https://lh3.googleusercontent.com/d/${driveMatch[1]}`;
-  }
-  return clean;
-};
 
 export const EditProfileModal = ({
   isOpen,
@@ -24,12 +13,16 @@ export const EditProfileModal = ({
   onProductDeleted,
 }) => {
   const { user, token, updateUserProfile } = useAuth();
+  const fileInputRef = useRef(null);
 
   const [activeTab, setActiveTab] = useState('details'); // 'details' | 'products'
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [coverImage, setCoverImage] = useState('');
+  const [coverPreview, setCoverPreview] = useState('');
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const [location, setLocation] = useState('None');
   const [isLocationLocked, setIsLocationLocked] = useState(false);
 
@@ -52,6 +45,9 @@ export const EditProfileModal = ({
 
       const existingBg = developer.coverImage || developer.banner || user?.coverImage || user?.banner || '';
       setCoverImage(existingBg);
+      setCoverPreview(existingBg);
+      setUploadingCover(false);
+      setDragActive(false);
 
       const existingLoc = (developer.location && developer.location.trim()) || (user?.location && user.location.trim()) || 'None';
       setLocation(existingLoc);
@@ -93,6 +89,117 @@ export const EditProfileModal = ({
 
   const isDev = Boolean(developer?.isDeveloper && products && products.length > 0);
 
+  // Direct ImageKit File Upload from local computer
+  const handleFileSelected = async (file) => {
+    if (!file) return;
+
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!validTypes.includes(file.type.toLowerCase())) {
+      setErrorMessage('Invalid file format. Please select an image file (JPG, PNG, WEBP, or GIF).');
+      return;
+    }
+
+    const maxBytes = 8 * 1024 * 1024; // 8MB limit
+    if (file.size > maxBytes) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      setErrorMessage(`Selected image is too large (${sizeMB}MB). Maximum allowed size is 8MB.`);
+      return;
+    }
+
+    // Instant local preview
+    const localUrl = URL.createObjectURL(file);
+    setCoverPreview(localUrl);
+    setUploadingCover(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('coverImage', file);
+
+      const res = await fetch(`${API_BASE}/api/auth/user/cover-image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to upload background image to ImageKit.');
+      }
+
+      const cdnUrl = data.coverImage || localUrl;
+      setCoverImage(cdnUrl);
+      setCoverPreview(cdnUrl);
+      setSuccessMessage('Background image uploaded to ImageKit CDN successfully!');
+
+      if (updateUserProfile) {
+        updateUserProfile({ coverImage: cdnUrl, banner: cdnUrl });
+      }
+
+      if (onProfileUpdated) {
+        onProfileUpdated({
+          displayName,
+          username,
+          bio,
+          coverImage: cdnUrl,
+          banner: cdnUrl,
+          location,
+          locationLocked: isLocationLocked,
+        });
+      }
+    } catch (err) {
+      console.error('ImageKit upload error:', err);
+      setErrorMessage(err.message || 'Error uploading background image.');
+      setCoverPreview(coverImage);
+    } finally {
+      setUploadingCover(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Remove Cover Image (reverts back to luxury dark mesh)
+  const handleRemoveCover = async () => {
+    setErrorMessage('');
+    setSuccessMessage('');
+    setCoverImage('');
+    setCoverPreview('');
+
+    try {
+      await fetch(`${API_BASE}/api/auth/user/cover-image`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (updateUserProfile) {
+        updateUserProfile({ coverImage: '', banner: '' });
+      }
+
+      if (onProfileUpdated) {
+        onProfileUpdated({
+          displayName,
+          username,
+          bio,
+          coverImage: '',
+          banner: '',
+          location,
+          locationLocked: isLocationLocked,
+        });
+      }
+
+      setSuccessMessage('Background image removed. Reverted to default cover.');
+    } catch (err) {
+      console.warn('Remove cover failed:', err);
+    }
+  };
+
   // Validate and submit unified profile changes
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -124,27 +231,13 @@ export const EditProfileModal = ({
     }
 
     const cleanBio = bio.trim().slice(0, 500);
-    const optimizedBg = convertGoogleDriveUrl(coverImage);
-
-    // Validate background URL if provided
-    if (optimizedBg) {
-      try {
-        const parsed = new URL(optimizedBg);
-        if (!['http:', 'https:'].includes(parsed.protocol)) {
-          setErrorMessage('Background image must be a valid HTTP or HTTPS link.');
-          return;
-        }
-      } catch {
-        setErrorMessage('Please provide a valid URL for the background image.');
-        return;
-      }
-    }
+    const resolvedCover = (coverImage || '').trim();
 
     const payload = {
       displayName: cleanName,
       username: cleanUser,
       bio: cleanBio,
-      coverImage: optimizedBg,
+      coverImage: resolvedCover,
     };
 
     if (!isLocationLocked) {
@@ -188,8 +281,8 @@ export const EditProfileModal = ({
           displayName: cleanName,
           username: cleanUser,
           bio: cleanBio,
-          coverImage: optimizedBg,
-          banner: optimizedBg,
+          coverImage: resolvedCover,
+          banner: resolvedCover,
           location: data.user?.location || (isLocationLocked ? location : (payload.location || 'None')),
           locationLocked: Boolean(data.user?.locationLocked || isLocationLocked || (payload.location && payload.location.toLowerCase() !== 'none')),
         });
@@ -353,41 +446,126 @@ export const EditProfileModal = ({
               </span>
             </div>
 
-            {/* Background / Cover Image URL */}
+            {/* Background / Cover Image (ImageKit Computer Upload) */}
             <div className="edit-form-group">
-              <label htmlFor="edit-profile-cover" className="edit-form-label">
-                Background / Cover Image
-              </label>
+              <div className="edit-form-label-row">
+                <label className="edit-form-label">
+                  Background / Cover Image
+                </label>
+                {coverImage && (
+                  <span className="edit-cdn-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    </svg>
+                    ImageKit CDN
+                  </span>
+                )}
+              </div>
+
+              {/* Hidden file input */}
               <input
-                id="edit-profile-cover"
-                type="text"
-                className="edit-form-input"
-                value={coverImage}
-                onChange={(e) => setCoverImage(e.target.value)}
-                placeholder="Google Drive link (drive.google.com/file/d/...) or direct image URL"
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="edit-file-hidden-input"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFileSelected(e.target.files[0]);
+                }}
+                disabled={uploadingCover}
               />
-              <span className="edit-form-hint">
-                Paste any Google Drive sharing link or direct photo link. Google Drive links are automatically optimized and embedded.
-              </span>
-              {coverImage && (
-                <div className="edit-cover-preview-wrapper">
+
+              {/* Uploading Progress Box */}
+              {uploadingCover ? (
+                <div className="edit-cover-uploading-card">
+                  <div className="edit-spinner-ring"></div>
+                  <div className="edit-uploading-info">
+                    <span className="edit-uploading-title">Uploading to ImageKit CDN</span>
+                    <span className="edit-uploading-sub">Optimizing resolution and streaming banner from computer...</span>
+                  </div>
+                </div>
+              ) : coverPreview ? (
+                /* Preview Card with Image and Replace / Remove actions */
+                <div className="edit-cover-preview-card">
                   <img
-                    src={convertGoogleDriveUrl(coverImage)}
-                    alt="Background preview"
-                    className="edit-cover-preview-img"
+                    src={coverPreview}
+                    alt="Cover preview"
+                    className="edit-cover-preview-banner"
                     onError={(e) => {
                       e.target.style.display = 'none';
                     }}
                   />
-                  <button
-                    type="button"
-                    className="edit-cover-clear-btn"
-                    onClick={() => setCoverImage('')}
-                  >
-                    Remove background
-                  </button>
+                  <div className="edit-cover-preview-overlay">
+                    <div className="edit-cover-preview-actions">
+                      <button
+                        type="button"
+                        className="edit-cover-action-btn replace"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="17 8 12 3 7 8"></polyline>
+                          <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>Replace from computer</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="edit-cover-action-btn remove"
+                        onClick={handleRemoveCover}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        <span>Remove</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Upload Dropzone (When no custom image is set) */
+                <div
+                  className={`edit-cover-dropzone ${dragActive ? 'drag-over' : ''}`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragActive(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setDragActive(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragActive(false);
+                    if (e.dataTransfer.files?.[0]) handleFileSelected(e.dataTransfer.files[0]);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      fileInputRef.current?.click();
+                    }
+                  }}
+                >
+                  <div className="edit-dropzone-icon">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                      <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                      <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                  </div>
+                  <div className="edit-dropzone-text">
+                    <span className="edit-dropzone-headline">Upload background image from computer</span>
+                    <span className="edit-dropzone-subline">Click to browse or drag and drop an image</span>
+                  </div>
+                  <span className="edit-dropzone-meta">JPG, PNG, WEBP, GIF · Up to 8MB</span>
                 </div>
               )}
+              <span className="edit-form-hint">
+                Personalize your profile header banner with an image from your computer. Uploads directly to ImageKit CDN with global delivery.
+              </span>
             </div>
 
             {/* Location (Default None, Can be updated only ONCE) */}
@@ -446,10 +624,10 @@ export const EditProfileModal = ({
 
             {/* ACTIONS */}
             <div className="edit-profile-footer">
-              <button type="button" className="edit-btn secondary" onClick={onClose} disabled={saving}>
+              <button type="button" className="edit-btn secondary" onClick={onClose} disabled={saving || uploadingCover}>
                 Cancel
               </button>
-              <button type="submit" className="edit-btn primary" disabled={saving}>
+              <button type="submit" className="edit-btn primary" disabled={saving || uploadingCover}>
                 {saving ? 'Saving Changes...' : 'Save Profile Changes'}
               </button>
             </div>
