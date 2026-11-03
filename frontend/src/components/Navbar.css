@@ -1363,7 +1363,7 @@
   gap: 0.55rem;
   margin-bottom: 0.45rem;
   padding-bottom: 0.35rem;
-  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.25);
 }
 
 .notif-official-avatar-frame {
@@ -1397,9 +1397,9 @@
 }
 
 .notif-official-badge {
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  color: #38bdf8;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.6px;
@@ -1564,7 +1564,7 @@
 }
 
 .notif-official-author-bar {
-  border-bottom-color: rgba(56, 189, 248, 0.25);
+  border-bottom-color: rgba(16, 185, 129, 0.25);
 }
 
 /* Left cluster holding avatar + text meta */
@@ -1619,9 +1619,9 @@
 }
 
 .notif-official-badge {
-  background: rgba(56, 189, 248, 0.15);
-  border: 1px solid rgba(56, 189, 248, 0.45);
-  color: #38bdf8;
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
   font-size: 0.58rem;
   font-weight: 800;
   letter-spacing: 0.6px;

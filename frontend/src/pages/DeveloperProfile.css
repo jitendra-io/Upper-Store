@@ -90,6 +90,12 @@
   animation: vipBreathingPurple 3.2s ease-in-out infinite;
 }
 
+.vip-avatar-wrap.dev-ref-vip-avatar.official,
+.vip-avatar-wrap.dev-ref-vip-avatar.green {
+  box-shadow: 0 0 32px rgba(16, 185, 129, 0.65), 0 0 64px rgba(16, 185, 129, 0.3);
+  animation: vipBreathingGreen 3.2s ease-in-out infinite;
+}
+
 .dev-ref-vip-avatar .vip-avatar-inner-img {
   width: 100% !important;
   height: 100% !important;
@@ -242,6 +248,22 @@
   padding: 0.2rem 0.65rem;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dev-ref-official-pill {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.7rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 /* Expired Subscription Banner */

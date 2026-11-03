@@ -404,7 +404,7 @@ const getPublicDeveloperProfile = async (req, res) => {
           coverImage: officialData.coverImage || officialData.banner || '',
           banner: officialData.coverImage || officialData.banner || '',
           location: officialData.location || 'None',
-          vipPlan: 'elite', // Conic Royal Purple Elite Ring
+          vipPlan: 'official', // Conic Emerald Green Official Ring
           isVerified: true,
           isOfficial: true,
           isDeveloper: true,
@@ -668,7 +668,7 @@ const getOfficialProfile = async (req, res) => {
         coverImage: officialData.coverImage || officialData.banner || '',
         banner: officialData.coverImage || officialData.banner || '',
         location: officialData.location || 'None',
-        vipPlan: 'elite',
+        vipPlan: 'official', // Conic Emerald Green Official Ring
         isVerified: true,
         isOfficial: true,
         isDeveloper: true,
@@ -712,6 +712,7 @@ const updateOfficialProfile = async (req, res) => {
       developer: {
         id: 'upper-store-official',
         username: 'upperstore',
+        vipPlan: 'official',
         ...snap.data(),
         isOfficial: true,
         isDeveloper: true,

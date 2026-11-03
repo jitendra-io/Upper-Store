@@ -711,7 +711,17 @@ const updateUsername = async (req, res) => {
       });
     }
 
-    // 2. Rate limit applies to all members (max 2 changes per rolling year)
+    // 2. VIP Membership Validation: Non-premium accounts cannot change their username handle under any circumstance
+    const membership = await resolveUserMembership(userData, userDocRef);
+    const isVip = Boolean(userData.role === 'admin' || (membership && (membership.plan === 'pro' || membership.plan === 'elite')));
+    if (!isVip) {
+      return res.status(403).json({
+        message: 'Username changes are strictly restricted to active VIP Club members (Pro and Elite). Non-premium accounts cannot change their username handle.',
+        isPremiumRequired: true,
+      });
+    }
+
+    // 3. Rate Limit Check: VIP allowed to change username twice per rolling year (365 days)
 
     // 3. Rate Limit Check: VIP allowed to change username twice per rolling year (365 days)
     const MAX_CHANGES_PER_YEAR = 2;
@@ -808,7 +818,7 @@ const getUsernameStatus = async (req, res) => {
 
     const userData = userDoc.data();
     const membership = await resolveUserMembership(userData, userDocRef);
-    const isVip = membership.plan === 'pro' || membership.plan === 'elite';
+    const isVip = Boolean(userData.role === 'admin' || (membership && (membership.plan === 'pro' || membership.plan === 'elite')));
 
     const MAX_CHANGES_PER_YEAR = 2;
     const ONE_YEAR_MS = 365 * 24 * 60 * 60 * 1000;
@@ -825,17 +835,18 @@ const getUsernameStatus = async (req, res) => {
       nextEligibleDate = new Date(oldestChangeTime + ONE_YEAR_MS).toISOString();
     }
 
-    const changesRemaining = Math.max(0, MAX_CHANGES_PER_YEAR - recentChanges.length);
+    const changesRemaining = isVip ? Math.max(0, MAX_CHANGES_PER_YEAR - recentChanges.length) : 0;
 
     res.json({
       username: userData.username || cleanEmail.split('@')[0],
       isVip,
-      vipPlan: membership.plan,
+      vipPlan: membership ? membership.plan : 'free',
       changesUsed: recentChanges.length,
       changesRemaining,
       maxChangesPerYear: MAX_CHANGES_PER_YEAR,
       canChange: isVip && changesRemaining > 0,
       nextEligibleDate,
+      restrictionMessage: !isVip ? 'Username changes are strictly restricted to active VIP Club members (Pro and Elite).' : null,
     });
   } catch (error) {
     console.error('Error fetching username status:', error);
@@ -910,6 +921,16 @@ const updateFullProfile = async (req, res) => {
     if (username !== undefined) {
       const rawUser = String(username).replace(/^@/, '').trim().toLowerCase();
       if (rawUser && rawUser !== (userData.username || '').toLowerCase()) {
+        // Enforce VIP Membership check: Non-premium accounts cannot change username even once
+        const membership = await resolveUserMembership(userData, userDocRef);
+        const isVip = Boolean(userData.role === 'admin' || (membership && (membership.plan === 'pro' || membership.plan === 'elite')));
+        if (!isVip) {
+          return res.status(403).json({
+            message: 'Username changes are strictly restricted to active VIP Club members (Pro and Elite). Non-premium accounts cannot change their username handle.',
+            isPremiumRequired: true,
+          });
+        }
+
         const uv = validateUsernameFormat(rawUser);
         if (!uv.valid) {
           return res.status(400).json({ message: uv.message });

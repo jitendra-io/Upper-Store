@@ -92,6 +92,15 @@ export const EditProfileModal = ({
     developer?.isOfficial ||
     ['upperstore', 'upper-store', 'upper_store'].includes((developer?.username || '').toLowerCase())
   );
+  const userPlan = user?.membership?.plan || user?.vipPlan || developer?.vipPlan || developer?.membership?.plan || 'free';
+  const isVipUser = Boolean(
+    user?.role === 'admin' ||
+    user?.isVip ||
+    developer?.isVip ||
+    userPlan === 'pro' ||
+    userPlan === 'elite'
+  );
+  const canEditUsername = !isOfficial && isVipUser;
   const activeAuthToken = token || localStorage.getItem('adminToken') || localStorage.getItem('upper_user_token');
 
   // Direct ImageKit File Upload from local computer
@@ -240,6 +249,12 @@ export const EditProfileModal = ({
     }
     if (!/^[a-z0-9_.-]+$/.test(cleanUser)) {
       setErrorMessage('Username can only contain lowercase letters, numbers, underscores, dots, or hyphens.');
+      return;
+    }
+
+    const currentHandle = (developer?.username || user?.username || '').replace(/^@/, '').trim().toLowerCase();
+    if (cleanUser !== currentHandle && !isVipUser) {
+      setErrorMessage('Username changes are strictly restricted to active VIP Club members (Pro and Elite). Non-premium accounts cannot change their username handle.');
       return;
     }
 
@@ -446,22 +461,33 @@ export const EditProfileModal = ({
 
             {/* Username Handle */}
             <div className="edit-form-group">
-              <label htmlFor="edit-profile-handle" className="edit-form-label">
-                Username Handle
-              </label>
+              <div className="edit-form-label-row">
+                <label htmlFor="edit-profile-handle" className="edit-form-label">
+                  Username Handle
+                </label>
+                {!canEditUsername && (
+                  <span className="edit-locked-vip-pill" title="Username changes are strictly reserved for VIP Club members">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    {isOfficial ? 'Permanent' : 'VIP Exclusive'}
+                  </span>
+                )}
+              </div>
               <div className="edit-handle-input-wrap">
                 <span className="edit-handle-prefix">@</span>
                 <input
                   id="edit-profile-handle"
                   type="text"
-                  className={`edit-form-input handle-input ${isOfficial ? 'locked-input' : ''}`}
+                  className={`edit-form-input handle-input ${!canEditUsername ? 'locked-input' : ''}`}
                   value={username}
                   onChange={(e) => {
-                    if (!isOfficial) {
+                    if (canEditUsername) {
                       setUsername(e.target.value.replace(/[^a-zA-Z0-9_.-]/g, '').toLowerCase());
                     }
                   }}
-                  disabled={isOfficial}
+                  disabled={!canEditUsername}
                   maxLength={30}
                   required
                   placeholder="username"
@@ -470,6 +496,8 @@ export const EditProfileModal = ({
               <span className="edit-form-hint">
                 {isOfficial
                   ? 'Official Upper Store system creator handle (Permanent).'
+                  : !isVipUser
+                  ? 'Notice: Non-premium accounts cannot change their username handle. Upgrade to VIP Club (Pro or Elite) to unlock custom handle changes.'
                   : 'Lowercase letters, numbers, underscores, dots, or hyphens (3 to 30 characters).'}
               </span>
             </div>

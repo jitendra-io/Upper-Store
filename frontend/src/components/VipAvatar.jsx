@@ -8,7 +8,7 @@ import './VipAvatar.css';
  *
  * @param {string} src - Avatar image URL
  * @param {string} alt - Alt text
- * @param {'elite'|'pro'|'free'} plan - Validated membership tier
+ * @param {'official'|'elite'|'pro'|'free'} plan - Validated membership tier
  * @param {'sm'|'md'|'lg'|'xl'} size - Avatar size (sm: 32px, md: 44px, lg: 64px, xl: 84px)
  * @param {string} className - Optional container class
  * @param {string} fallbackSeed - Optional seed for avatar fallback
@@ -21,16 +21,25 @@ export const VipAvatar = ({
   className = '',
   fallbackSeed = 'user',
 }) => {
+  const isOfficial = plan === 'official' || plan === 'green';
   const isElite = plan === 'elite';
   const isPro = plan === 'pro';
-  const tierClass = isElite ? 'elite' : isPro ? 'pro' : 'standard';
+  const tierClass = isOfficial ? 'official' : isElite ? 'elite' : isPro ? 'pro' : 'standard';
 
   const defaultAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
     fallbackSeed || 'user'
   )}&backgroundColor=d4af37&textColor=000000`;
 
+  const titleText = isOfficial
+    ? 'Upper Store Official'
+    : isElite
+    ? 'Elite VIP'
+    : isPro
+    ? 'Pro VIP'
+    : 'Member';
+
   return (
-    <div className={`vip-avatar-wrap ${tierClass} ${size} ${className}`} title={isElite ? 'Elite VIP' : isPro ? 'Pro VIP' : 'Member'}>
+    <div className={`vip-avatar-wrap ${tierClass} ${size} ${className}`} title={titleText}>
       <img
         src={src || defaultAvatar}
         alt={alt}
@@ -49,11 +58,29 @@ export const VipAvatar = ({
  * VipFlairBadge Component
  * Renders an iridescent animated status flair badge beside user names.
  *
- * @param {'elite'|'pro'|'free'} plan - Validated membership tier
+ * @param {'official'|'elite'|'pro'|'free'} plan - Validated membership tier
  * @param {boolean} compact - Compact padding for dense mobile toolbars
  * @param {string} className - Additional CSS class
  */
 export const VipFlairBadge = ({ plan = 'free', compact = false, className = '' }) => {
+  if (plan === 'official' || plan === 'green') {
+    return (
+      <span
+        className={`vip-flair-badge official ${compact ? 'compact' : ''} ${className}`}
+        title="Official Upper Store Verified House"
+      >
+        <span className="vip-flair-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </span>
+        <span>
+          Official <span className="flair-long-text">Store</span>
+        </span>
+      </span>
+    );
+  }
+
   if (plan !== 'elite' && plan !== 'pro') return null;
 
   const isElite = plan === 'elite';
@@ -75,4 +102,3 @@ export const VipFlairBadge = ({ plan = 'free', compact = false, className = '' }
 };
 
 export default VipAvatar;
-

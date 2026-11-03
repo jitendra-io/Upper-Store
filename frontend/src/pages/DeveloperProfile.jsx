@@ -204,13 +204,23 @@ const DeveloperProfile = () => {
     );
   }
 
+  const devHandle = (developer.username || '').toLowerCase();
+  const isOfficialDev = Boolean(
+    developer.isOfficial ||
+    developer.vipPlan === 'official' ||
+    ['upperstore', 'upper-store', 'upper_store'].includes(devHandle) ||
+    ['upperstore', 'upper-store', 'upper_store'].includes(cleanUsername)
+  );
+
   const isElite = developer.vipPlan === 'elite';
   const isPro = developer.vipPlan === 'pro';
   const isDev = Boolean(developer.isDeveloper);
   const isSubscriptionEnded = Boolean(developer.subscriptionEnded);
 
-  // Premium rotating conic ring for active creators / VIPs
-  const avatarRingPlan = isSubscriptionEnded
+  // Premium rotating conic ring for active creators / VIPs (Official gets emerald green ring)
+  const avatarRingPlan = isOfficialDev
+    ? 'official'
+    : isSubscriptionEnded
     ? 'free'
     : isElite
     ? 'elite'
@@ -256,11 +266,11 @@ const DeveloperProfile = () => {
             fallbackSeed={developer.username || developer.displayName}
             className="dev-ref-vip-avatar"
           />
-          {developer.isVerified && isDev && (
-            <span className="dev-ref-verified-badge" title="Verified Authentic Developer">
+          {(developer.isVerified || isOfficialDev) && (isDev || isOfficialDev) && (
+            <span className="dev-ref-verified-badge" title={isOfficialDev ? "Official Upper Store Verified House" : "Verified Authentic Developer"}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" fill="#f59e0b" />
-                <path d="M8.5 12.5L10.5 14.5L15.5 9.5" stroke="#000" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="12" cy="12" r="10" fill={isOfficialDev ? '#10b981' : '#f59e0b'} />
+                <path d="M8.5 12.5L10.5 14.5L15.5 9.5" stroke={isOfficialDev ? '#042f1a' : '#000'} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
           )}
@@ -310,10 +320,16 @@ const DeveloperProfile = () => {
         <div className="dev-ref-name-row">
           <h1 className="dev-ref-display-name">{developer.displayName || developer.username}</h1>
           <span className="dev-ref-username-tag">@{developer.username}</span>
-          {developer.vipPlan && developer.vipPlan !== 'free' && (
-            <VipFlairBadge plan={developer.vipPlan} compact={true} />
+          {isOfficialDev ? (
+            <span className="dev-ref-official-pill" title="Upper Store Official Publishing House">
+              OFFICIAL
+            </span>
+          ) : (
+            developer.vipPlan && developer.vipPlan !== 'free' && (
+              <VipFlairBadge plan={developer.vipPlan} compact={true} />
+            )
           )}
-          {!isDev && (
+          {!isDev && !isOfficialDev && (
             <span className="dev-ref-community-pill">Community Member</span>
           )}
         </div>

@@ -33,6 +33,16 @@
   }
 }
 
+/* 3b. Ambient Diffused Breathing Glow (Official Green) */
+@keyframes vipBreathingGreen {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35), 0 0 24px rgba(16, 185, 129, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(52, 211, 153, 0.65), 0 0 40px rgba(16, 185, 129, 0.3);
+  }
+}
+
 /* 4. Diagonal Shimmer Sweep across Badges */
 @keyframes vipShimmerSweep {
   0% {
@@ -103,7 +113,9 @@
 
 /* Rotating Conic Border Pseudo-Element */
 .vip-avatar-wrap.pro::before,
-.vip-avatar-wrap.elite::before {
+.vip-avatar-wrap.elite::before,
+.vip-avatar-wrap.official::before,
+.vip-avatar-wrap.green::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -142,6 +154,24 @@
     #7e22ce 50%,
     #e879f9 75%,
     #a855f7 100%
+  );
+}
+
+/* OFFICIAL TIER: Emerald Neon Green Rotating Ring */
+.vip-avatar-wrap.official,
+.vip-avatar-wrap.green {
+  animation: vipBreathingGreen 3.2s ease-in-out infinite;
+}
+
+.vip-avatar-wrap.official::before,
+.vip-avatar-wrap.green::before {
+  background: conic-gradient(
+    from 0deg,
+    #10b981 0%,
+    #d1fae5 25%,
+    #059669 50%,
+    #6ee7b7 75%,
+    #10b981 100%
   );
 }
 
@@ -228,6 +258,21 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
+/* OFFICIAL TIER FLAIR BADGE (Emerald Neon Shimmer) */
+.vip-flair-badge.official {
+  background-image: linear-gradient(
+    90deg,
+    #047857 0%,
+    #10b981 25%,
+    #ffffff 50%,
+    #34d399 75%,
+    #047857 100%
+  );
+  color: #022c22;
+  border: 1px solid rgba(52, 211, 153, 0.6);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.35);
+}
+
 /* Compact Flair Variant */
 .vip-flair-badge.compact {
   padding: 2px 7px;
@@ -265,7 +310,6 @@
   }
 
   .vip-flair-badge .flair-long-text {
-    display: none; /* Hide 'VIP' word on extremely narrow screens, show 'ELITE' or 'PRO' */
+    display: none; /* Hide 'VIP' or 'Store' word on extremely narrow screens */
   }
 }
-

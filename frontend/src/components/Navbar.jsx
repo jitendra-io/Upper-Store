@@ -410,9 +410,13 @@ const Navbar = () => {
                               title={`View @${authorHandle || 'upperstore'} Official Profile`}
                             >
                               <div className="notif-author-left-cluster">
-                                <div className="notif-official-avatar-frame">
-                                  <img src={logoImg} alt="Upper Store Official" className="notif-official-avatar-img" />
-                                </div>
+                                <VipAvatar
+                                  src={logoImg}
+                                  alt="Upper Store Official"
+                                  plan="official"
+                                  size="sm"
+                                  fallbackSeed="upperstore"
+                                />
                                 <div className="notif-author-meta-col">
                                   <div className="notif-author-row-top">
                                     <span className="notif-author-title">{n.authorName || 'Upper Store Official'}</span>

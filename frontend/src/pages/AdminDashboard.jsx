@@ -1811,14 +1811,14 @@ const AdminDashboard = () => {
                             <VipAvatar
                               src={dev.avatar}
                               alt={dev.displayName || dev.legalName}
-                              plan={dev.vipPlan || 'pro'}
+                              plan={dev.isOfficial || dev.username === 'upperstore' ? 'official' : (dev.vipPlan || 'pro')}
                               size="md"
                               fallbackSeed={dev.email || 'dev'}
                             />
                             <div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                 <strong>{dev.displayName || 'Developer'}</strong>
-                                <VipFlairBadge plan={dev.vipPlan || 'pro'} compact={true} />
+                                <VipFlairBadge plan={dev.isOfficial || dev.username === 'upperstore' ? 'official' : (dev.vipPlan || 'pro')} compact={true} />
                               </div>
                               <span className="sub-text">Legal: {dev.legalName}</span>
                               <span className="sub-text">Joined: {new Date(dev.createdAt || Date.now()).toLocaleDateString()}</span>
