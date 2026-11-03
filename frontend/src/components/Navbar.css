@@ -1535,6 +1535,7 @@
   display: flex !important;
   align-items: center;
   justify-content: space-between;
+  overflow: visible !important;
 }
 
 .notif-author-link:hover {
@@ -1553,6 +1554,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   width: 100%;
   box-sizing: border-box;
+  overflow: visible !important;
 }
 
 .notif-vip-author-bar.elite {
@@ -1574,7 +1576,12 @@
   gap: 0.55rem;
   flex: 1;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible !important;
+}
+
+/* 360-degree safe clearance for animated avatar ring inside notification card */
+.notif-item-card .vip-avatar-wrap {
+  margin: 2px 4px 2px 2px;
 }
 
 /* Two-row text meta: Name + Badge on top, @handle below */

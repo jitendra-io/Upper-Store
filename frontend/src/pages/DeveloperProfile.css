@@ -67,6 +67,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  overflow: visible;
 }
 
 /* VIP Avatar with rotating conic ring and breathing ambient glow */
@@ -78,7 +80,8 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4), 0 0 50px rgba(245, 158, 11, 0.15);
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.4), 0 0 32px rgba(245, 158, 11, 0.15);
+  overflow: visible;
 }
 
 .vip-avatar-wrap.dev-ref-vip-avatar.pro {
@@ -86,13 +89,13 @@
 }
 
 .vip-avatar-wrap.dev-ref-vip-avatar.elite {
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.55), 0 0 60px rgba(168, 85, 247, 0.25);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 36px rgba(168, 85, 247, 0.2);
   animation: vipBreathingPurple 3.2s ease-in-out infinite;
 }
 
 .vip-avatar-wrap.dev-ref-vip-avatar.official,
 .vip-avatar-wrap.dev-ref-vip-avatar.green {
-  box-shadow: 0 0 32px rgba(16, 185, 129, 0.65), 0 0 64px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.55), 0 0 36px rgba(16, 185, 129, 0.22);
   animation: vipBreathingGreen 3.2s ease-in-out infinite;
 }
 
