@@ -22,8 +22,16 @@
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, #18140e 0%, #0c0a08 100%);
+  background: radial-gradient(circle at 50% 30%, rgba(251, 191, 36, 0.08) 0%, transparent 65%), linear-gradient(145deg, #16171e 0%, #0c0d12 100%);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.dev-ref-banner-mesh-pattern {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
 }
 
 .dev-ref-banner-img {
@@ -37,7 +45,7 @@
 .dev-ref-banner-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.45) 100%);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.5) 100%);
   pointer-events: none;
 }
 

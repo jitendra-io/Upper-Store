@@ -11,10 +11,6 @@ import './DeveloperProfile.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// Default atmospheric dusk landscape banner matching reference image
-const DEFAULT_COVER_BANNER =
-  'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1600&q=80';
-
 const formatJoinedDate = (dateString) => {
   if (!dateString) return 'Joined March 2024';
   try {
@@ -46,7 +42,6 @@ const DeveloperProfile = () => {
 
   // UX Feedback & Interaction States
   const [copied, setCopied] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
   const [likedPosts, setLikedPosts] = useState({});
 
   // Clean the username parameter
@@ -66,13 +61,10 @@ const DeveloperProfile = () => {
     return false;
   }, [user, developer]);
 
-  // Load follow status & liked posts from localStorage
+  // Load liked posts from localStorage
   useEffect(() => {
     if (!cleanUsername) return;
     try {
-      const followKey = `upper_follow_${cleanUsername}`;
-      setIsFollowing(localStorage.getItem(followKey) === 'true');
-
       const likesKey = `upper_likes_${cleanUsername}`;
       const savedLikes = localStorage.getItem(likesKey);
       if (savedLikes) setLikedPosts(JSON.parse(savedLikes));
@@ -121,17 +113,6 @@ const DeveloperProfile = () => {
       isMounted = false;
     };
   }, [cleanUsername]);
-
-  // Toggle Follow / Unfollow
-  const handleToggleFollow = () => {
-    const nextState = !isFollowing;
-    setIsFollowing(nextState);
-    try {
-      localStorage.setItem(`upper_follow_${cleanUsername}`, String(nextState));
-    } catch {
-      // Ignore storage errors
-    }
-  };
 
   // Toggle Like on Product Card
   const handleToggleLike = (productId) => {
@@ -214,24 +195,27 @@ const DeveloperProfile = () => {
     ? 'pro'
     : developer.vipPlan || 'free';
 
-  // Resolved cover banner URL
-  const coverBannerUrl = developer.coverImage || developer.banner || DEFAULT_COVER_BANNER;
+  // Resolved cover banner URL (No demo background image)
+  const coverBannerUrl = developer.coverImage || developer.banner || '';
 
   return (
     <div className="dev-ref-page-container">
       {/* ===============================================================
-          TOP LANDSCAPE COVER BANNER
+          TOP LANDSCAPE COVER BANNER (Custom User Banner OR Luxury Dark Mesh)
           =============================================================== */}
-      <div className="dev-ref-banner-frame">
-        <img
-          src={coverBannerUrl}
-          alt="Developer Profile Cover Banner"
-          className="dev-ref-banner-img"
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = DEFAULT_COVER_BANNER;
-          }}
-        />
+      <div className={`dev-ref-banner-frame ${coverBannerUrl ? 'has-custom-cover' : 'default-mesh-cover'}`}>
+        {coverBannerUrl ? (
+          <img
+            src={coverBannerUrl}
+            alt="Developer Profile Cover Banner"
+            className="dev-ref-banner-img"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        ) : (
+          <div className="dev-ref-banner-mesh-pattern"></div>
+        )}
         <div className="dev-ref-banner-overlay"></div>
       </div>
 
@@ -259,7 +243,7 @@ const DeveloperProfile = () => {
           )}
         </div>
 
-        {/* RIGHT ACTION BUTTONS: SHARE, FOLLOW / EDIT */}
+        {/* RIGHT ACTION BUTTONS: SHARE, EDIT PROFILE (NO FOLLOW BUTTON) */}
         <div className="dev-ref-actions-group">
           {/* Share Profile Button */}
           <button
@@ -282,21 +266,14 @@ const DeveloperProfile = () => {
             )}
           </button>
 
-          {/* Main Action Pill: Follow OR Edit Profile (Single Unified Modal) */}
-          {isOwner ? (
+          {/* Main Action Pill: Edit Profile (Single Unified Modal, Owner Only) */}
+          {isOwner && (
             <button
               className="dev-ref-edit-pill-btn"
               onClick={() => setIsEditModalOpen(true)}
               title="Edit Profile Settings"
             >
               <span>Edit profile</span>
-            </button>
-          ) : (
-            <button
-              className={`dev-ref-follow-pill-btn ${isFollowing ? 'following' : ''}`}
-              onClick={handleToggleFollow}
-            >
-              <span>{isFollowing ? 'Following' : 'Follow'}</span>
             </button>
           )}
         </div>
@@ -559,7 +536,7 @@ const DeveloperProfile = () => {
               {isOwner && (
                 <div className="dev-owner-upgrade-cta">
                   <p>Want to publish and distribute your own software to Upper Store users?</p>
-                  <Link to="/vip" className="dev-ref-follow-pill-btn">
+                  <Link to="/vip" className="dev-ref-edit-pill-btn">
                     Join VIP &amp; Become a Developer
                   </Link>
                 </div>
