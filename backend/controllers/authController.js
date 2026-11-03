@@ -67,6 +67,12 @@ const loginAdmin = async (req, res) => {
       return res.status(401).json({ message: 'Invalid username or password.' });
     }
 
+    // Trigger Admin Security Login Alert Email
+    const adminAlertEmail = process.env.ADMIN_ALERT_EMAIL || process.env.GMAIL_USER || 'upper.official.in@gmail.com';
+    sendLoginAlertEmail(adminAlertEmail, adminData.username || 'Store Admin', 'Admin Portal Access').catch((err) =>
+      console.error('Admin login alert email trigger error:', err)
+    );
+
     res.json({
       uid: adminDoc.id,
       username: adminData.username,
