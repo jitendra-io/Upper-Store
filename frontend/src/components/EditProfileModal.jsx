@@ -88,6 +88,11 @@ export const EditProfileModal = ({
   if (!isOpen) return null;
 
   const isDev = Boolean(developer?.isDeveloper && products && products.length > 0);
+  const isOfficial = Boolean(
+    developer?.isOfficial ||
+    ['upperstore', 'upper-store', 'upper_store'].includes((developer?.username || '').toLowerCase())
+  );
+  const activeAuthToken = token || localStorage.getItem('adminToken') || localStorage.getItem('upper_user_token');
 
   // Direct ImageKit File Upload from local computer
   const handleFileSelected = async (file) => {
@@ -118,10 +123,14 @@ export const EditProfileModal = ({
       const formData = new FormData();
       formData.append('coverImage', file);
 
-      const res = await fetch(`${API_BASE}/api/auth/user/cover-image`, {
+      const uploadUrl = isOfficial
+        ? `${API_BASE}/api/developers/official/cover-image`
+        : `${API_BASE}/api/auth/user/cover-image`;
+
+      const res = await fetch(uploadUrl, {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${activeAuthToken}`,
         },
         body: formData,
       });
@@ -136,14 +145,14 @@ export const EditProfileModal = ({
       setCoverPreview(cdnUrl);
       setSuccessMessage('Background image uploaded to ImageKit CDN successfully!');
 
-      if (updateUserProfile) {
+      if (!isOfficial && updateUserProfile) {
         updateUserProfile({ coverImage: cdnUrl, banner: cdnUrl });
       }
 
       if (onProfileUpdated) {
         onProfileUpdated({
-          displayName,
-          username,
+          displayName: isOfficial ? (displayName || 'Upper Store Official') : displayName,
+          username: isOfficial ? 'upperstore' : username,
           bio,
           coverImage: cdnUrl,
           banner: cdnUrl,
@@ -171,21 +180,25 @@ export const EditProfileModal = ({
     setCoverPreview('');
 
     try {
-      await fetch(`${API_BASE}/api/auth/user/cover-image`, {
+      const deleteUrl = isOfficial
+        ? `${API_BASE}/api/developers/official/cover-image`
+        : `${API_BASE}/api/auth/user/cover-image`;
+
+      await fetch(deleteUrl, {
         method: 'DELETE',
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${activeAuthToken}`,
         },
       });
 
-      if (updateUserProfile) {
+      if (!isOfficial && updateUserProfile) {
         updateUserProfile({ coverImage: '', banner: '' });
       }
 
       if (onProfileUpdated) {
         onProfileUpdated({
-          displayName,
-          username,
+          displayName: isOfficial ? (displayName || 'Upper Store Official') : displayName,
+          username: isOfficial ? 'upperstore' : username,
           bio,
           coverImage: '',
           banner: '',
@@ -247,11 +260,15 @@ export const EditProfileModal = ({
 
     setSaving(true);
     try {
-      const res = await fetch(`${API_BASE}/api/auth/user/profile`, {
+      const saveUrl = isOfficial
+        ? `${API_BASE}/api/developers/official/profile`
+        : `${API_BASE}/api/auth/user/profile`;
+
+      const res = await fetch(saveUrl, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${activeAuthToken}`,
         },
         body: JSON.stringify(payload),
       });
@@ -261,8 +278,8 @@ export const EditProfileModal = ({
         throw new Error(data.message || 'Failed to update profile.');
       }
 
-      // Update AuthContext user so navbar and state stay in sync
-      if (updateUserProfile && data.user) {
+      // Update AuthContext user so navbar and state stay in sync (personal profiles only)
+      if (!isOfficial && updateUserProfile && data.user) {
         updateUserProfile({
           displayName: data.user.displayName,
           username: data.user.username,
@@ -274,17 +291,17 @@ export const EditProfileModal = ({
         });
       }
 
-      setSuccessMessage('Profile updated successfully!');
+      setSuccessMessage(isOfficial ? 'Upper Store Official profile updated successfully!' : 'Profile updated successfully!');
 
       if (onProfileUpdated) {
         onProfileUpdated({
-          displayName: cleanName,
-          username: cleanUser,
+          displayName: isOfficial ? (displayName || 'Upper Store Official') : cleanName,
+          username: isOfficial ? 'upperstore' : cleanUser,
           bio: cleanBio,
           coverImage: resolvedCover,
           banner: resolvedCover,
-          location: data.user?.location || (isLocationLocked ? location : (payload.location || 'None')),
-          locationLocked: Boolean(data.user?.locationLocked || isLocationLocked || (payload.location && payload.location.toLowerCase() !== 'none')),
+          location: isOfficial ? location : (data.user?.location || (isLocationLocked ? location : (payload.location || 'None'))),
+          locationLocked: isOfficial ? isLocationLocked : Boolean(data.user?.locationLocked || isLocationLocked || (payload.location && payload.location.toLowerCase() !== 'none')),
         });
       }
 
@@ -340,8 +357,12 @@ export const EditProfileModal = ({
               </svg>
             </div>
             <div>
-              <h3 className="edit-profile-title">Edit Profile</h3>
-              <p className="edit-profile-subtitle">Update your personal details, background image, location, and bio.</p>
+              <h3 className="edit-profile-title">{isOfficial ? 'Edit Official Store Profile' : 'Edit Profile'}</h3>
+              <p className="edit-profile-subtitle">
+                {isOfficial
+                  ? 'Update Upper Store Official page details, background banner, and bio.'
+                  : 'Update your personal details, background image, location, and bio.'}
+              </p>
             </div>
           </div>
           <button className="edit-profile-close-btn" onClick={onClose} aria-label="Close modal">
@@ -433,16 +454,23 @@ export const EditProfileModal = ({
                 <input
                   id="edit-profile-handle"
                   type="text"
-                  className="edit-form-input handle-input"
+                  className={`edit-form-input handle-input ${isOfficial ? 'locked-input' : ''}`}
                   value={username}
-                  onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_.-]/g, '').toLowerCase())}
+                  onChange={(e) => {
+                    if (!isOfficial) {
+                      setUsername(e.target.value.replace(/[^a-zA-Z0-9_.-]/g, '').toLowerCase());
+                    }
+                  }}
+                  disabled={isOfficial}
                   maxLength={30}
                   required
                   placeholder="username"
                 />
               </div>
               <span className="edit-form-hint">
-                Lowercase letters, numbers, underscores, dots, or hyphens (3 to 30 characters).
+                {isOfficial
+                  ? 'Official Upper Store system creator handle (Permanent).'
+                  : 'Lowercase letters, numbers, underscores, dots, or hyphens (3 to 30 characters).'}
               </span>
             </div>
 

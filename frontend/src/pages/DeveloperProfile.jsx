@@ -51,15 +51,38 @@ const DeveloperProfile = () => {
 
   // Determine if the current authenticated user owns this developer/user profile
   const isOwner = useMemo(() => {
-    if (!user || !developer) return false;
-    const userHandle = (user.username || '').toLowerCase();
+    if (!developer) return false;
+
+    // Check if viewing the official Upper Store profile
     const devHandle = (developer.username || '').toLowerCase();
+    const isOfficialDev = Boolean(
+      developer.isOfficial ||
+      ['upperstore', 'upper-store', 'upper_store'].includes(devHandle) ||
+      ['upperstore', 'upper-store', 'upper_store'].includes(cleanUsername)
+    );
+
+    if (isOfficialDev) {
+      const userRole = user?.role || '';
+      const userEmail = (user?.email || '').toLowerCase();
+      const hasAdminToken = Boolean(localStorage.getItem('adminToken'));
+      const isOfficialAdmin =
+        userRole === 'admin' ||
+        hasAdminToken ||
+        userEmail === 'upper.official.in@gmail.com' ||
+        userEmail === 'kumar.jkm.io@gmail.com' ||
+        (user?.username && ['upperstore', 'upperofficial'].includes(user.username.toLowerCase()));
+
+      if (isOfficialAdmin) return true;
+    }
+
+    if (!user) return false;
+    const userHandle = (user.username || '').toLowerCase();
     if (userHandle && devHandle && userHandle === devHandle) return true;
     if (user.uid && developer.userId && user.uid === developer.userId) return true;
     if (user.id && developer.id && user.id === developer.id) return true;
     if (user.email && developer.email && user.email.toLowerCase() === developer.email.toLowerCase()) return true;
     return false;
-  }, [user, developer]);
+  }, [user, developer, cleanUsername]);
 
   // Load liked posts from localStorage
   useEffect(() => {

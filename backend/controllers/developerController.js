@@ -1,4 +1,16 @@
 const { db } = require('../config/firebase');
+const path = require('path');
+const fs = require('fs');
+const { uploadFileToCloudOrLocal } = require('../services/imagekitService');
+
+const isOfficialAuthorized = (req) => {
+  if (!req.user) return false;
+  if (req.user.role === 'admin') return true;
+  const email = (req.user.email || '').toLowerCase();
+  const allowedEmails = ['upper.official.in@gmail.com', 'kumar.jkm.io@gmail.com'];
+  if (allowedEmails.includes(email)) return true;
+  return false;
+};
 
 // @desc    Get authenticated user's developer profile
 // @route   GET /api/developers/me
@@ -325,7 +337,7 @@ const toggleDeveloperSuspension = async (req, res) => {
     await docRef.update(updatePayload);
 
     console.log(
-      `🛡️ [Admin] Developer ${doc.data().email || id} ${
+      `[Admin] Developer ${doc.data().email || id} ${
         shouldSuspend ? 'SUSPENDED' : 'REINSTATED'
       }. Reason: ${updatePayload.suspensionReason || 'None'}`
     );
@@ -379,18 +391,25 @@ const getPublicDeveloperProfile = async (req, res) => {
             ).toFixed(1)
           : '5.0';
 
+      const officialDoc = await db.collection('system_settings').doc('official_profile').get();
+      const officialData = officialDoc.exists ? officialDoc.data() : {};
+
       return res.json({
         developer: {
           id: 'upper-store-official',
           username: 'upperstore',
-          displayName: 'Upper Store Official',
-          bio: 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.',
-          avatar: '/logo.png',
+          displayName: officialData.displayName || 'Upper Store Official',
+          bio: officialData.bio || 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.',
+          avatar: officialData.avatar || '/logo.png',
+          coverImage: officialData.coverImage || officialData.banner || '',
+          banner: officialData.coverImage || officialData.banner || '',
+          location: officialData.location || 'None',
           vipPlan: 'elite', // Conic Royal Purple Elite Ring
           isVerified: true,
           isOfficial: true,
+          isDeveloper: true,
           isSuspended: false,
-          joinedAt: '2026-01-01T00:00:00.000Z',
+          joinedAt: officialData.joinedAt || '2026-01-01T00:00:00.000Z',
         },
         stats: {
           productsCount: officialProducts.length,
@@ -630,6 +649,121 @@ const updateDeveloperBio = async (req, res) => {
   }
 };
 
+
+// @desc    Update Upper Store Official Profile details & cover
+// @route   PUT /api/developers/official/profile
+// @access  Private (Admin or Authorized Owner)
+const updateOfficialProfile = async (req, res) => {
+  try {
+    if (!isOfficialAuthorized(req)) {
+      return res.status(403).json({ message: 'Forbidden: Only Upper Store administrators can edit the official profile.' });
+    }
+
+    const { displayName, bio, coverImage, banner, location } = req.body;
+    const updates = {
+      updatedAt: new Date().toISOString(),
+    };
+    if (displayName) updates.displayName = String(displayName).slice(0, 60);
+    if (bio !== undefined) updates.bio = String(bio).slice(0, 500);
+    if (location !== undefined) updates.location = String(location).slice(0, 80);
+    const rawCover = coverImage !== undefined ? coverImage : banner;
+    if (rawCover !== undefined) {
+      updates.coverImage = String(rawCover).trim();
+      updates.banner = String(rawCover).trim();
+    }
+
+    const docRef = db.collection('system_settings').doc('official_profile');
+    await docRef.set(updates, { merge: true });
+
+    const snap = await docRef.get();
+    return res.json({
+      message: 'Upper Store Official profile updated successfully.',
+      developer: {
+        id: 'upper-store-official',
+        username: 'upperstore',
+        ...snap.data(),
+        isOfficial: true,
+        isDeveloper: true,
+      },
+    });
+  } catch (error) {
+    console.error('Update official profile error:', error);
+    return res.status(500).json({ message: 'Failed to update official profile.' });
+  }
+};
+
+// @desc    Upload Upper Store Official cover banner directly to ImageKit CDN
+// @route   POST /api/developers/official/cover-image
+// @access  Private (Admin or Authorized Owner)
+const uploadOfficialCoverImage = async (req, res) => {
+  try {
+    if (!isOfficialAuthorized(req)) {
+      return res.status(403).json({ message: 'Forbidden: Only Upper Store administrators can upload official banners.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided.' });
+    }
+
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (!allowedMimes.includes(req.file.mimetype.toLowerCase())) {
+      if (req.file.path && fs.existsSync(req.file.path)) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+      return res.status(400).json({ message: 'Invalid file format. Only JPG, PNG, WEBP, and GIF images are allowed.' });
+    }
+
+    const cdnUrl = await uploadFileToCloudOrLocal(req.file, 'banners', req);
+    if (!cdnUrl) {
+      return res.status(500).json({ message: 'Failed to upload background image to ImageKit.' });
+    }
+
+    const docRef = db.collection('system_settings').doc('official_profile');
+    await docRef.set({
+      coverImage: cdnUrl,
+      banner: cdnUrl,
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+
+    return res.json({
+      message: 'Official background image uploaded successfully to ImageKit CDN.',
+      coverImage: cdnUrl,
+      banner: cdnUrl,
+    });
+  } catch (error) {
+    console.error('Upload official cover image error:', error);
+    return res.status(500).json({ message: 'Server error while uploading official background image.' });
+  }
+};
+
+// @desc    Remove Upper Store Official cover banner
+// @route   DELETE /api/developers/official/cover-image
+// @access  Private (Admin or Authorized Owner)
+const removeOfficialCoverImage = async (req, res) => {
+  try {
+    if (!isOfficialAuthorized(req)) {
+      return res.status(403).json({ message: 'Forbidden: Only Upper Store administrators can edit official profile.' });
+    }
+
+    const docRef = db.collection('system_settings').doc('official_profile');
+    await docRef.set({
+      coverImage: '',
+      banner: '',
+      updatedAt: new Date().toISOString(),
+    }, { merge: true });
+
+    return res.json({
+      message: 'Official background image removed successfully.',
+      coverImage: '',
+      banner: '',
+    });
+  } catch (error) {
+    console.error('Remove official cover error:', error);
+    return res.status(500).json({ message: 'Server error while removing official background image.' });
+  }
+};
+
+
 module.exports = {
   getMyDeveloperProfile,
   registerDeveloperKyc,
@@ -637,5 +771,8 @@ module.exports = {
   toggleDeveloperSuspension,
   getPublicDeveloperProfile,
   updateDeveloperBio,
+  updateOfficialProfile,
+  uploadOfficialCoverImage,
+  removeOfficialCoverImage,
 };
 
