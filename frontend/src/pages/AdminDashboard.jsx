@@ -17,6 +17,7 @@ import {
   CloseIcon,
 } from '../components/Icons';
 import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
+import { MAJOR_50_COUNTRIES } from '../utils/countries';
 import './AdminDashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -3159,14 +3160,21 @@ const AdminDashboard = () => {
 
                 <div className="form-group">
                   <label className="form-label">Location / Origin</label>
-                  <input
-                    type="text"
+                  <select
                     className="form-input"
                     value={officialLocation}
                     onChange={(e) => setOfficialLocation(e.target.value)}
-                    maxLength={80}
-                    placeholder="e.g. India or Global Cloud (Default is None)"
-                  />
+                  >
+                    <option value="None">None (Default)</option>
+                    {officialLocation && officialLocation !== 'None' && !MAJOR_50_COUNTRIES.includes(officialLocation) && (
+                      <option value={officialLocation}>{officialLocation} (Custom)</option>
+                    )}
+                    {MAJOR_50_COUNTRIES.map((country) => (
+                      <option key={country} value={country}>
+                        {country}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="form-group">

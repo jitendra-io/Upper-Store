@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { MAJOR_50_COUNTRIES } from '../utils/countries';
 import './EditProfileModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -640,18 +641,27 @@ export const EditProfileModal = ({
                   </span>
                 )}
               </div>
-              <input
-                id="edit-profile-location"
-                type="text"
-                className={`edit-form-input ${isLocationLocked ? 'locked-input' : ''}`}
-                value={location}
-                onChange={(e) => {
-                  if (!isLocationLocked) setLocation(e.target.value);
-                }}
-                disabled={isLocationLocked}
-                maxLength={80}
-                placeholder="e.g. India or California, USA (Default is None)"
-              />
+              <div className="edit-select-wrap">
+                <select
+                  id="edit-profile-location"
+                  className={`edit-form-select ${isLocationLocked ? 'locked-select' : ''}`}
+                  value={location}
+                  onChange={(e) => {
+                    if (!isLocationLocked) setLocation(e.target.value);
+                  }}
+                  disabled={isLocationLocked}
+                >
+                  <option value="None">None (Default)</option>
+                  {location && location !== 'None' && !MAJOR_50_COUNTRIES.includes(location) && (
+                    <option value={location}>{location} (Custom)</option>
+                  )}
+                  {MAJOR_50_COUNTRIES.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <span className="edit-form-hint">
                 {isLocationLocked
                   ? 'Your account location has already been verified and locked. It cannot be altered.'
