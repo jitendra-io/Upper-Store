@@ -137,14 +137,14 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
   const handleItemSelect = useCallback(
     (item) => {
       if (!item) return;
-      onClose();
+      if (onClose) onClose(true);
       if (item.type === 'developer') {
-        navigate(`/developer/${item.data.username}`);
+        navigate(`/developer/${item.data.username}`, { replace: true });
       } else if (item.type === 'product') {
         if (onSelectProduct) {
           onSelectProduct(item.data);
         } else {
-          navigate(`/products?id=${item.data.id}`);
+          navigate(`/products/${item.data.id}`, { replace: true });
         }
       }
     },

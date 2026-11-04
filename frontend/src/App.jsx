@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import BackgroundAnimation from './BackgroundAnimation';
 import Navbar from './components/Navbar';
@@ -29,6 +29,10 @@ function AppContent() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedSearchProduct, setSelectedSearchProduct] = useState(null);
 
+  // History tracking refs for phone & browser Back button support
+  const searchHistoryPushedRef = useRef(false);
+  const isHandlingPopStateRef = useRef(false);
+
   // Auto scroll to top on every navigation route, hash, or search change
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -42,16 +46,64 @@ function AppContent() {
     return () => window.removeEventListener('modalToggle', handleModalToggle);
   }, []);
 
+  // Open search and push a history state so phone/browser Back button closes it
+  const openSearch = useCallback(() => {
+    setIsSearchOpen(true);
+    if (!searchHistoryPushedRef.current) {
+      window.history.pushState({ upperSearchModal: true }, '');
+      searchHistoryPushedRef.current = true;
+    }
+  }, []);
+
+  // Close search and clean up pushed history state if closed manually
+  const closeSearch = useCallback((navigatingOrPopped = false) => {
+    setIsSearchOpen(false);
+    if (!navigatingOrPopped && searchHistoryPushedRef.current) {
+      searchHistoryPushedRef.current = false;
+      isHandlingPopStateRef.current = true;
+      window.history.back();
+      setTimeout(() => {
+        isHandlingPopStateRef.current = false;
+      }, 120);
+    } else {
+      searchHistoryPushedRef.current = false;
+    }
+  }, []);
+
+  // Phone & Browser Back button listener (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isHandlingPopStateRef.current) {
+        isHandlingPopStateRef.current = false;
+        return;
+      }
+      if (selectedSearchProduct) {
+        setSelectedSearchProduct(null);
+        return;
+      }
+      if (isSearchOpen) {
+        closeSearch(true);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [isSearchOpen, selectedSearchProduct, closeSearch]);
+
   // Global Ctrl+K / Cmd+K listener to open global search from anywhere
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setIsSearchOpen((prev) => !prev);
+        if (isSearchOpen) {
+          closeSearch();
+        } else {
+          openSearch();
+        }
       }
     };
 
-    const handleOpenSearchEvent = () => setIsSearchOpen(true);
+    const handleOpenSearchEvent = () => openSearch();
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('openGlobalSearch', handleOpenSearchEvent);
@@ -59,7 +111,7 @@ function AppContent() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('openGlobalSearch', handleOpenSearchEvent);
     };
-  }, []);
+  }, [isSearchOpen, openSearch, closeSearch]);
 
   const isAdmin = location.pathname.startsWith('/admin');
   const showFullFooter = !isAdmin && !modalOpen;
@@ -67,7 +119,7 @@ function AppContent() {
   return (
     <div className="app-container">
       <BackgroundAnimation />
-      <Navbar onOpenSearch={() => setIsSearchOpen(true)} />
+      <Navbar onOpenSearch={openSearch} />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
@@ -90,7 +142,7 @@ function AppContent() {
       <AuthModal />
       <GlobalSearchModal
         isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
+        onClose={closeSearch}
         onSelectProduct={(product) => setSelectedSearchProduct(product)}
       />
       {selectedSearchProduct && (
