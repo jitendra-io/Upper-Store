@@ -650,6 +650,190 @@ The search interface is designed as an overlay spotlight modal matching Upper St
 
 ---
 
+# 8. Client-Side DevTools Inspection & Personal Data Leak Prevention Architecture
+
+## 8.1 The Core Reality: Can Anyone Get Personal Information from Browser Inspect Mode?
+
+### Direct Answer
+- **Remote Attackers Cannot Directly Open DevTools on Another Person's Screen:** Browser Developer Tools (Inspect Mode) is a local client-side tool embedded in each individual user's web browser. A stranger browsing the internet cannot remotely open DevTools on your computer to view your screen or active browser session.
+- **HOWEVER, Personal Information CAN Be Stolen or Leaked in Two High-Risk Scenarios:**
+  1. **Physical or Shared Device Access:** Anyone sitting at the same computer (such as at a library, cyber cafe, shared family PC, or via screen-sharing tools) can press F12 or right-click Inspect to view cached data, active session tokens, and personal profile details.
+  2. **Data Scraping via Backend "Over-Fetching" (The Most Critical Threat):** A malicious actor sitting at their own computer can open DevTools on their own browser to steal **other people's personal information** if the backend API sends private database fields in JSON payloads that the frontend hides from the UI.
+
+### The 4 Major Vectors of Data Exposure in Browser Inspect Mode
+
+```
++-------------------------------------------------------------------------+
+|                  BROWSER INSPECT MODE DATA EXPOSURE VECTORS             |
++------------------------------------+------------------------------------+
+| 1. Network Tab (Over-Fetching)     | 2. Application Storage             |
+|    - Unsanitized JSON responses    |    - LocalStorage tokens & PII     |
+|    - Leaked developer emails       |    - SessionStorage credentials    |
+|    - Private user UIDs & addresses |    - Plaintext identity records    |
++------------------------------------+------------------------------------+
+| 3. Sources & Bundle Inspection     | 4. Console Logs & Memory Heap      |
+|    - Unminified source maps        |    - console.log(userObject)       |
+|    - Exposed VITE_ environment vars|    - Verbose error stack traces    |
+|    - Internal API route paths      |    - Unsanitized exception dumps   |
++------------------------------------+------------------------------------+
+```
+
+#### Vector 1: The Network Tab (Over-Fetching Sensitive Fields)
+When a user visits a catalog or public profile, the browser makes an HTTP call (such as `GET /api/products` or `GET /api/search`).
+- **The Risk:** If the backend controller fetches documents with `db.collection('products').get()` and directly returns `{ ...doc.data() }` without stripping private fields, fields like `developerEmail` or `uploaderIp` are sent across the network wire.
+- **The Exposure:** Even though the React frontend only renders the developer's display name or avatar, anyone can open DevTools, click the **Network** tab, inspect the JSON response, and harvest every developer's personal email address in seconds.
+
+#### Vector 2: Application Storage (LocalStorage / SessionStorage)
+Currently, authentication tokens (`upper_user_token`, `adminToken`) and user profiles (`upper_user_data`) are stored in `localStorage`.
+- **The Risk:** `localStorage` is permanently accessible to all JavaScript running on that domain.
+- **The Exposure:** Anyone with physical access to the device can open DevTools, navigate to **Application -> Local Storage**, and view or copy the user's email, name, subscription history, and JWT authentication token. Furthermore, if the site is ever vulnerable to a Cross-Site Scripting (XSS) injection, malicious scripts can read `localStorage` automatically and transmit tokens to an attacker's server.
+
+#### Vector 3: Sources Tab (Client-Side Bundles and Source Maps)
+When a Vite application is built for production, all code in `frontend/src/` is bundled into JavaScript files.
+- **The Risk:** If source maps are enabled (`sourcemap: true`), anyone can open the **Sources** tab in DevTools to read the original, unminified source code, file structures, internal developer comments, and component logic.
+- **The Exposure:** Any credentials or keys with the `VITE_` prefix in `.env` files are inlined directly into the client bundle and can be read by searching the bundle text.
+
+#### Vector 4: Console Tab (Unstripped Logging & Error Messages)
+- **The Risk:** Leaving `console.log(userData)`, `console.error(err)`, or debug loggers active in production code.
+- **The Exposure:** DevTools displays raw objects containing user IDs, payment payloads, and database IDs in the **Console** tab.
+
+---
+
+## 8.2 Why Disabling Right-Click or F12 Is NOT a Complete Solution
+
+A common misconception is that adding JavaScript to block right-click (`contextmenu`) or keypresses (`F12`, `Ctrl+Shift+I`) stops users from inspecting data:
+- **Trivial Bypass:** Users can open DevTools from the browser menu (Three dots -> More Tools -> Developer Tools), press `Ctrl+Shift+C`, open the browser in read-only mode, or disable JavaScript entirely.
+- **Direct API Access:** Attackers do not even need a browser. They can call endpoints directly using `curl`, Python scripts, or Postman (`curl https://api.upperstore.bbroot.com/api/products`), completely bypassing client-side key blockers.
+- **Conclusion:** Blocking right-click is merely a superficial deterrent for non-technical users. **True data security must be enforced on the backend server and through architectural data minimization.**
+
+---
+
+## 8.3 Multi-Layer Prevention Architecture: The 5 Defense Pillars
+
+```
++-------------------------------------------------------------------------+
+|                  UPPER STORE 5-LAYER DATA PROTECTION SHIELD             |
++-------------------------------------------------------------------------+
+| Layer 1: Backend Zero-Leak Data Projection (Sanitized Responses)        |
+| Layer 2: HttpOnly Cookie Storage & Inactivity Auto-Logout               |
+| Layer 3: Production Build Hardening (No Source Maps, Drop Console)      |
+| Layer 4: Client-Side PII Masking in UI & DOM                            |
+| Layer 5: Client-Side Deterrents & Anti-Tamper Console Warnings          |
++-------------------------------------------------------------------------+
+```
+
+### Layer 1: Backend Zero-Leak Data Projection (Data Minimization)
+The primary rule of web security: **If the client does not need the data, the backend must never send it.**
+
+1. **Product Catalog Projection (`productController.js`)**:
+   - Explicitly project product objects so `developerEmail` is omitted from public responses:
+     ```javascript
+     // Safe projection for public catalog and search
+     const sanitizeProductForPublic = (p) => ({
+       id: p.id,
+       title: p.title,
+       category: p.category,
+       version: p.version,
+       price: p.price,
+       image: p.image,
+       logo: p.logo,
+       videoUrl: p.videoUrl,
+       videoPoster: p.videoPoster,
+       images: p.images || [],
+       description: p.description,
+       downloadCount: p.downloadCount || 0,
+       rating: p.rating || 5,
+       reviewsCount: p.reviewsCount || 0,
+       developerUsername: p.developerUsername,
+       developerName: p.developerName,
+       developerAvatar: p.developerAvatar,
+       developerTier: p.developerTier,
+       isStoreOfficial: p.isStoreOfficial,
+       isSecurityVerified: p.isSecurityVerified,
+       sha256Checksum: p.sha256Checksum,
+       securityStatus: p.securityStatus,
+       createdAt: p.createdAt
+       // developerEmail is strictly OMITTED from public serialization
+     });
+     ```
+2. **Search Service Projection (`searchService.js`)**:
+   - Ensure the search index never includes `aadhaarNumber`, `phone`, `email`, or private KYC links in developer or product search hits.
+3. **Public Developer Profile Projection (`developerController.js`)**:
+   - Maintain the existing strict whitelist in `getPublicDeveloperProfile` where only public display fields (`username`, `displayName`, `avatar`, `bio`, `vipPlan`, `joinedAt`) are returned.
+
+### Layer 2: Storage Hardening & Token Security
+1. **Transition to HttpOnly Cookies for Authentication Tokens**:
+   - Tokens stored in `localStorage` can be read via DevTools Console (`localStorage.getItem('upper_user_token')`).
+   - By setting auth tokens inside `HttpOnly; Secure; SameSite=Strict` cookies, JavaScript running in the browser cannot read the token, making it invisible to DevTools script extraction and immune to XSS token theft.
+2. **Inactivity Auto-Logout for Shared Devices**:
+   - Implement a 30-minute idle session timer in `frontend/src/context/AuthContext.jsx`.
+   - If no mouse movement, touch, or keystroke is detected for 30 minutes, automatically clear session data and redirect to the login screen to protect users on public computers.
+3. **Explicit "Clear Session on Logout"**:
+   - Ensure logging out completely purges `localStorage`, `sessionStorage`, and cached user objects so a subsequent user on that device cannot inspect previous session state.
+
+### Layer 3: Production Build Hardening (Vite & ESBuild)
+1. **Disable Production Source Maps in `vite.config.js`**:
+   - Prevent DevTools from reconstructing original source files:
+     ```javascript
+     // frontend/vite.config.js
+     export default defineConfig(({ mode }) => ({
+       build: {
+         sourcemap: false, // Disables .map files in production
+       },
+       esbuild: {
+         drop: mode === 'production' ? ['console', 'debugger'] : [],
+       }
+     }));
+     ```
+   - Setting `sourcemap: false` ensures external users only see minified bundle code rather than raw JSX and component source code.
+2. **Automatic Removal of `console.log`**:
+   - `esbuild.drop: ['console', 'debugger']` automatically removes all `console.log`, `console.info`, and `debugger` statements from production bundles, ensuring no sensitive data is printed to the DevTools Console.
+3. **Strict `.env` Auditing**:
+   - Verify that no secret backend credentials (such as `JWT_SECRET`, `ADMIN_SETUP_SECRET`, or payment private keys) are prefixed with `VITE_`. Only public identifiers (like Firebase app IDs and backend URLs) may reside in the frontend configuration.
+
+### Layer 4: Client-Side PII Masking in the DOM
+When displaying personal information on authenticated pages (e.g., Profile modal, Order receipts, Developer Studio):
+1. **Mask Sensitive Fields by Default**:
+   - Email: Display `j***@gmail.com` instead of full addresses in shared overview cards.
+   - Phone: Display `******9876`.
+   - Aadhaar: Display `XXXXXXXX1234` (already enforced in backend KYC storage).
+   - UTR / Payment Reference: Display `UPI-***-5678`.
+2. **Reveal Behind Explicit Verification**:
+   - Only reveal full account details if the user clicks a dedicated "Show" toggle, preventing casual over-the-shoulder inspection.
+
+### Layer 5: Client-Side Deterrents & Anti-Tamper Console Warnings
+While not a substitute for backend security, adding deterrents discourages casual users and warns against self-XSS attacks:
+1. **Self-XSS Warning in Browser Console**:
+   - Output a prominent security banner in `frontend/src/main.jsx`:
+     ```javascript
+     if (import.meta.env.PROD) {
+       console.log(
+         '%cStop!',
+         'color: red; font-size: 36px; font-weight: bold; -webkit-text-stroke: 1px black;'
+       );
+       console.log(
+         '%cThis browser feature is intended for developers. Pasting code here or attempting to inspect tokens will not grant administrative access and may compromise your account.',
+         'font-size: 14px; color: #d4af37;'
+       );
+     }
+     ```
+2. **Context Menu Deterrent on Sensitive Views**:
+   - Disable right-click inspection on protected modal dialogs (such as license key displays and KYC documents) using `onContextMenu={(e) => e.preventDefault()}` to deter casual inspection.
+
+---
+
+## 8.4 Concrete Implementation Roadmap for DevTools Protection
+
+| Task ID | Component / File | Action | Security Impact |
+| :--- | :--- | :--- | :--- |
+| **8.1** | `backend/controllers/productController.js` | Strip `developerEmail` from `getProducts` and `getProductById` | Eliminates public email harvesting via Network tab inspection |
+| **8.2** | `frontend/vite.config.js` | Set `sourcemap: false` and `esbuild.drop: ['console', 'debugger']` in production | Prevents source code reconstruction and eliminates console data leaks |
+| **8.3** | `frontend/src/context/AuthContext.jsx` | Implement 30-minute inactivity auto-logout and session purging | Protects user accounts on shared, public, or unattended devices |
+| **8.4** | `frontend/src/main.jsx` | Add Self-XSS console warning banner | Warns users against pasting malicious scripts into DevTools Console |
+| **8.5** | `frontend/src/components/DeveloperStudioModal.jsx` | Mask phone and email in developer dashboard view | Prevents visual and DOM snooping of personal contact information |
+
+---
+
 # Actionable Next Steps Roadmap
 
 | Phase | Milestone | Priority | Status | Focus Area |
@@ -660,6 +844,7 @@ The search interface is designed as an overlay spotlight modal matching Upper St
 | **Phase 4** | **Monetization Engine** | Medium | **COMPLETED (Real UPI QR Mode)** | Direct bank UPI QR payments (`xxxxxxxxxx@upi`), 12-digit UTR validation, sandbox bypass prevention, & Admin 1-Click Verification / Licensing Console |
 | **Phase 5** | **Growth Features** | Medium | **IN PROGRESS** | Persona-aligned categories, card trust micro-badges, & live VirusTotal badges implemented |
 | **Phase 6** | **Unified Multi-Entity Search Engine** | High | **READY FOR IMPLEMENTATION** | Omnisearch spotlight modal, in-memory inverted index, sub-50ms fuzzy matching for products & developer profiles |
+| **Phase 7** | **Client-Side DevTools & Data Leak Prevention** | High | **PLANNED** | Backend zero-leak projection, production sourcemap removal, console stripping, PII DOM masking, and session inactivity timeouts |
 
 ---
 *Report compiled autonomously for the Upper Store platform.*
