@@ -69,3 +69,48 @@ button {
   scrollbar-width: thin;
   scrollbar-color: #d4af37 rgba(12, 12, 14, 0.95);
 }
+
+/* ==========================================================================
+   PHONE / MOBILE SCROLLBAR: HIDDEN EVERYWHERE WHILE PRESERVING SCROLLING
+   Hides the visual scrollbar everywhere on phone/mobile screens while
+   retaining full touch, gesture, and programmatic scrolling capabilities.
+   ========================================================================== */
+@media (max-width: 768px), (pointer: coarse) and (max-width: 1024px) {
+  html,
+  body,
+  *,
+  *::before,
+  *::after {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  *::-webkit-scrollbar,
+  div::-webkit-scrollbar,
+  section::-webkit-scrollbar,
+  aside::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  nav::-webkit-scrollbar,
+  ul::-webkit-scrollbar,
+  textarea::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    max-width: 0 !important;
+    max-height: 0 !important;
+    background: transparent !important;
+    -webkit-appearance: none !important;
+  }
+
+  html::-webkit-scrollbar-track,
+  body::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-track,
+  html::-webkit-scrollbar-thumb,
+  body::-webkit-scrollbar-thumb,
+  *::-webkit-scrollbar-thumb {
+    display: none !important;
+    background: transparent !important;
+  }
+}
