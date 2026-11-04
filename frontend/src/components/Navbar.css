@@ -959,12 +959,21 @@
     display: flex;
   }
 
+  /* Phone/Mobile Top Header Spacing: increased distance between icons by 15px */
   .nav-actions {
-    gap: 0.65rem;
+    gap: 24px !important;
+    align-items: center;
   }
 
   .nav-search-trigger-btn {
     display: none !important;
+  }
+
+  /* Equal sizing for notification icon and profile icon (38px x 38px) */
+  .nav-notif-bell-btn {
+    width: 38px !important;
+    height: 38px !important;
+    flex-shrink: 0;
   }
 
   /* On phone/mobile: hide ELITE/PRO badge, name, and caret - only avatar and VIP ring remain */
@@ -976,12 +985,30 @@
   }
 
   .nav-user-pill {
-    padding: 2px !important;
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
     gap: 0 !important;
     background: transparent !important;
     border: none !important;
     border-radius: 50% !important;
     box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .nav-user-pill .vip-avatar-wrap.sm {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 2.5px !important;
+  }
+
+  .nav-user-pill .nav-user-avatar,
+  .nav-user-pill .nav-user-initial {
+    width: 38px !important;
+    height: 38px !important;
   }
 
   .nav-user-pill:hover,
@@ -1233,12 +1260,13 @@
   }
 
   .nav-actions {
-    gap: 0.45rem;
+    gap: 22px !important;
+    align-items: center;
   }
 
   .nav-notif-bell-btn {
-    width: 36px;
-    height: 36px;
+    width: 38px !important;
+    height: 38px !important;
     flex-shrink: 0;
   }
 
@@ -1250,18 +1278,30 @@
   }
 
   .nav-user-pill {
-    padding: 2px !important;
+    width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
     gap: 0 !important;
     background: transparent !important;
     border: none !important;
     border-radius: 50% !important;
     box-shadow: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .nav-user-pill .vip-avatar-wrap.sm {
+    width: 38px !important;
+    height: 38px !important;
+    padding: 2.5px !important;
   }
 
   .nav-user-avatar,
   .nav-user-initial {
-    width: 24px;
-    height: 24px;
+    width: 38px !important;
+    height: 38px !important;
   }
 
   .nav-signin-btn {
