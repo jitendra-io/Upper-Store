@@ -371,15 +371,251 @@ Operating an independent software distribution platform carries legal liability 
 
 ---
 
+# 7. Unified Multi-Entity Search Architecture: Products & Developer Accounts (Implementation Plan)
+
+## 7.1 Executive Overview & Industry Benchmarks
+
+Modern application ecosystems and developer platforms (such as GitHub, Steam, Vercel, Product Hunt, and Spotify) do not force users to search disparate sections of the site independently. Instead, they provide a single, omnipresent search gateway ("Omnisearch" or "Spotlight Command Palette") that simultaneously indexes, classifies, and surfaces multiple distinct entity types from a single unified input.
+
+### Benchmark Analysis of Tier-1 Platforms
+1. **GitHub Omnisearch (`/` or `Ctrl+K`)**:
+   - Evaluates a single search bar against repositories, users/organizations, and discussions.
+   - Categorizes results with clean visual separators and entity-specific metadata (e.g. user avatar and bio vs repository star counts and language badges).
+2. **Steam Catalog Search**:
+   - Simultaneously searches individual games, DLCs, and publisher/curator accounts.
+   - Allows users to jump directly to a verified publisher profile or directly into a game detail page.
+3. **Product Hunt**:
+   - Ranks launched software products alongside maker profiles with follower counts and badges.
+
+### Core Value Proposition for Upper Store
+Implementing a unified search experience connects visitors not only to software downloads but also to the creators and verified developers building those tools. This increases platform stickiness, developer brand equity, and software discoverability without cluttering the user interface.
+
+---
+
+## 7.2 The Database Constraint: Quota-Safe Firestore Search Strategy
+
+### The Problem with Naive Database Queries
+In Google Cloud Firestore, querying multiple fields with partial/substring matching (e.g., `WHERE title CONTAINS query OR developerUsername CONTAINS query`) is fundamentally unsupported:
+- Firestore queries can only filter on exact equality or range inequalities on a single field per query.
+- Sending two live Firestore collection scans (`products` and `developers`) on every user keystroke would exhaust Google Cloud Firestore free-tier quotas (50,000 reads/day) in minutes under active search usage.
+
+### The Quota-Safe In-Memory Inverted Index Solution
+To deliver instantaneous sub-50ms search responses while maintaining strict zero-cost Firestore sustainability:
+
+```
+[User Types in Global Search]
+             |
+             v
+   [Frontend Debounce: 250ms]
+             |
+             v
+   [GET /api/search?q=...]
+             |
+             v
+   +-------------------------------------------------------------+
+   | Backend Search Service (searchService.js)                   |
+   |                                                             |
+   | 1. Check In-Memory Search Index (TTL: 10 Minutes)           |
+   |    - If cache fresh: Query in-memory index (< 5ms)          |
+   |    - If cache expired: Single bulk load of products & devs, |
+   |      build tokenized inverted index, cache in RAM           |
+   |                                                             |
+   | 2. Event-Driven Cache Invalidation:                         |
+   |    - Product Created / Updated / Deleted -> Invalidate      |
+   |    - Developer KYC Approved / Bio Updated -> Invalidate     |
+   |                                                             |
+   | 3. Weighted Relevance Scoring & Fuzzy Match Engine          |
+   |                                                             |
+   | 4. Entity Segregation: Products vs Developer Profiles       |
+   +-------------------------------------------------------------+
+             |
+             v
+   [Structured JSON Payload: { products: [...], developers: [...] }]
+             |
+             v
+   [Spotlight Modal Renders Categorized Hit Cards]
+```
+
+### Key Performance Guarantees:
+- **Firestore Reads per Search Keystroke**: 0 (zero database reads; queries are served directly from server RAM).
+- **Latency Budget**: Under 25ms server execution time.
+- **Cache Freshness**: Event-driven cache invalidation ensures immediate updates when products or developer profiles change.
+
+---
+
+## 7.3 Backend API Specification
+
+### Endpoint Definition
+- **Route**: `GET /api/search`
+- **Access**: Public (No authentication required)
+- **Rate Limit**: 60 requests per minute per IP via express-rate-limit
+
+### Query Parameters
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `q` | `string` | Yes | - | Search query (minimum 2 chars, max 60 chars) |
+| `type` | `string` | No | `all` | Filter by entity: `all`, `products`, `developers` |
+| `limit` | `number` | No | `10` | Maximum results returned per category (max 20) |
+
+### Relevance Scoring Algorithm
+The in-memory engine assigns weighted relevance scores to each candidate entity:
+
+#### For Products:
+- Exact title match: `+100 points`
+- Title prefix match: `+70 points`
+- Word boundary match in title: `+50 points`
+- Category match: `+30 points`
+- Description substring match: `+20 points`
+- Tag match: `+25 points`
+- Popularity boost: `+Math.min(20, Math.log10(downloadCount + 1) * 5)`
+
+#### For Developer Profiles:
+- Exact username/handle match: `+120 points`
+- Exact display name match: `+100 points`
+- Prefix username match: `+80 points`
+- Display name word match: `+50 points`
+- Bio description match: `+20 points`
+- Verified status boost: `+25 points`
+- VIP Elite tier boost: `+15 points`, VIP Pro tier boost: `+10 points`
+- Official Store Creator boost: `+30 points`
+
+### Response Payload Schema
+```json
+{
+  "success": true,
+  "query": "gold",
+  "totalMatches": 2,
+  "results": {
+    "products": [
+      {
+        "id": "ARj3VcaHnleWtVDTt1DD",
+        "title": "Gold AI",
+        "category": "Mobile App",
+        "version": "1.0.0",
+        "price": "Free",
+        "image": "https://lh3.googleusercontent.com/...",
+        "logo": "https://lh3.googleusercontent.com/...",
+        "downloadCount": 13,
+        "developerUsername": "upperstore",
+        "rating": 3.3,
+        "score": 105.4
+      }
+    ],
+    "developers": [
+      {
+        "id": "upper-store-official",
+        "username": "upperstore",
+        "displayName": "Upper Store Official",
+        "avatar": "/logo.png",
+        "vipPlan": "official",
+        "isVerified": true,
+        "isOfficial": true,
+        "productsCount": 4,
+        "totalDownloads": 44,
+        "score": 30.0
+      }
+    ]
+  }
+}
+```
+
+### Privacy & Data Sanitization Rules:
+- Private developer fields (`aadhaarNumber`, `phone`, `email`, `aadhaarDriveLink`) are strictly omitted from the search index and response payload.
+
+---
+
+## 7.4 Frontend UI/UX Architecture: Spotlight Command Palette
+
+### Visual Entry Points
+1. **Desktop Navbar Integration (`Navbar.jsx`)**:
+   - A modern search input field in the main navigation bar.
+   - Features a magnifying glass icon, placeholder `"Search apps, creators, categories..."`, and a quick keyboard hint badge (`Ctrl + K` or `Cmd + K`).
+   - Clicking the input or pressing the keyboard shortcut opens the spotlight overlay.
+2. **Mobile Header Integration**:
+   - Compact search icon button positioned in the top bar.
+   - Tapping opens a full-screen mobile search interface with autofocus on input.
+
+### Modal Design: `GlobalSearchModal.jsx`
+The search interface is designed as an overlay spotlight modal matching Upper Store's dark gold aesthetic:
+
+```
++-------------------------------------------------------------------+
+|  [Search Icon]  Type to search software or creators...       [Esc]|
++-------------------------------------------------------------------+
+|  Filters:  [ All (5) ]  [ Products (4) ]  [ Developers (1) ]      |
++-------------------------------------------------------------------+
+|  DEVELOPERS (1)                                                   |
+|  +-------------------------------------------------------------+  |
+|  | [Avatar] Upper Store Official  @upperstore  [OFFICIAL CHECK]|  |
+|  |          Verified Publisher &middot; 4 Products &middot; 44 DLs|
+|  +-------------------------------------------------------------+  |
+|                                                                   |
+|  APPLICATIONS (4)                                                 |
+|  +-------------------------------------------------------------+  |
+|  | [Icon]   Gold AI                    v1.0.0 &middot; Free    |  |
+|  |          Mobile App &middot; 13 Downloads                   |  |
+|  +-------------------------------------------------------------+  |
+|  | [Icon]   Play Grab                  v1.3.0 &middot; Free    |  |
+|  |          Windows App &middot; 9 Downloads                   |  |
+|  +-------------------------------------------------------------+  |
++-------------------------------------------------------------------+
+|  Use [Up] [Down] to navigate  &middot;  [Enter] to select  &middot; [Esc] to exit |
++-------------------------------------------------------------------+
+```
+
+### Key UI Capabilities:
+1. **Recent Searches (`localStorage: upper_recent_searches`)**:
+   - Before typing, the modal displays the user's recent searches and trending tags for one-click access.
+2. **Entity Filter Tabs**:
+   - Users can toggle between `All`, `Products`, and `Developers` to filter high-volume results.
+3. **Keyboard Accessibility**:
+   - `ArrowDown` and `ArrowUp` move the active focus ring across result items.
+   - `Enter` immediately navigates to the selected product detail modal or developer profile page (`/developer/:username`).
+   - `Escape` dismisses the modal and restores background scroll.
+4. **Zero-Result State**:
+   - When no matches are found, the modal shows helpful suggestions, related categories, or popular apps to avoid dead ends.
+
+---
+
+## 7.5 Concrete Implementation Roadmap
+
+### Phase 6A: Backend Search Engine
+- **File**: `backend/services/searchService.js`
+  - In-memory cache initialization for products and developer profiles.
+  - Tokenization, substring matching, scoring, and cache invalidation hooks.
+- **File**: `backend/controllers/searchController.js`
+  - Input validation, entity filtering, and response formatting.
+- **File**: `backend/routes/searchRoutes.js`
+  - Register `GET /api/search` with rate limiting.
+- **File**: `backend/server.js`
+  - Mount `/api/search` route.
+
+### Phase 6B: Frontend Search Engine & Components
+- **File**: `frontend/src/components/GlobalSearchModal.jsx`
+  - Modal container, autofocus search bar, filter tabs, product/developer card rows, keyboard shortcut handler.
+- **File**: `frontend/src/components/GlobalSearchModal.css`
+  - Glassmorphic backdrop blur, glowing gold focus borders, responsive mobile full-screen styling.
+- **File**: `frontend/src/components/Navbar.jsx`
+  - Desktop search trigger button with `Ctrl+K` badge.
+  - Mobile search icon button.
+- **File**: `frontend/src/App.jsx`
+  - Global `Ctrl+K` / `Cmd+K` keydown listener to trigger modal from any route.
+
+### Phase 6C: Invalidation & Real-Time Sync
+- Connect product mutations (create, edit, delete in `productController.js`) and developer profile updates (KYC, bio in `developerController.js`) to invalidate the search cache immediately so new entries become searchable within milliseconds.
+
+---
+
 # Actionable Next Steps Roadmap
 
 | Phase | Milestone | Priority | Status | Focus Area |
 | :--- | :--- | :--- | :--- | :--- |
-| **Phase 1** | **Security Hardening** | 🔴 Critical | **COMPLETED (100%)** | All Critical & High Vulnerabilities (1.1.1 to 1.2.4) Locked, Fixed & Live-Verified |
-| **Phase 2** | **Infrastructure Sustainability** | 🟡 High | **IN PROGRESS (2.1 & 2.2 Resolved)** | Atomic increment counters, 60s memory caching, & zero-cost GitHub Releases strategy |
-| **Phase 3** | **Legal & Policy Updates** | 🟡 High | **COMPLETED (100%)** | UCC statutory AS-IS disclaimers, liability cap, DMCA procedure, GDPR/DPDP rights, & ban appeals in Policies.jsx |
-| **Phase 4** | **Monetization Engine** | 🟢 Medium | **COMPLETED (Real UPI QR Mode)** | Direct bank UPI QR payments (`xxxxxxxxxx@upi`), 12-digit UTR validation, sandbox bypass prevention, & Admin 1-Click Verification / Licensing Console |
-| **Phase 5** | **Growth Features** | 🟢 Medium | **IN PROGRESS** | Persona-aligned categories, card trust micro-badges, & live VirusTotal badges implemented |
+| **Phase 1** | **Security Hardening** | Critical | **COMPLETED (100%)** | All Critical & High Vulnerabilities (1.1.1 to 1.2.4) Locked, Fixed & Live-Verified |
+| **Phase 2** | **Infrastructure Sustainability** | High | **IN PROGRESS (2.1 & 2.2 Resolved)** | Atomic increment counters, 60s memory caching, & zero-cost GitHub Releases strategy |
+| **Phase 3** | **Legal & Policy Updates** | High | **COMPLETED (100%)** | UCC statutory AS-IS disclaimers, liability cap, DMCA procedure, GDPR/DPDP rights, & ban appeals in Policies.jsx |
+| **Phase 4** | **Monetization Engine** | Medium | **COMPLETED (Real UPI QR Mode)** | Direct bank UPI QR payments (`xxxxxxxxxx@upi`), 12-digit UTR validation, sandbox bypass prevention, & Admin 1-Click Verification / Licensing Console |
+| **Phase 5** | **Growth Features** | Medium | **IN PROGRESS** | Persona-aligned categories, card trust micro-badges, & live VirusTotal badges implemented |
+| **Phase 6** | **Unified Multi-Entity Search Engine** | High | **READY FOR IMPLEMENTATION** | Omnisearch spotlight modal, in-memory inverted index, sub-50ms fuzzy matching for products & developer profiles |
 
 ---
 *Report compiled autonomously for the Upper Store platform.*
