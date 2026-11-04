@@ -441,6 +441,50 @@ To deliver instantaneous sub-50ms search responses while maintaining strict zero
 - **Latency Budget**: Under 25ms server execution time.
 - **Cache Freshness**: Event-driven cache invalidation ensures immediate updates when products or developer profiles change.
 
+### 7.2.1 Anti-Freeze Architecture: Bloom Filter Gatekeeper + Inverted Index
+
+#### The Risk: Node.js Event-Loop Starvation & Server Freezing
+When a backend server attempts to process full-text searches by querying a database on every request and iterating over thousands of raw document records in JavaScript, two fatal bottlenecks occur:
+1. **Event-Loop Blocking**: JavaScript in Node.js is single-threaded. Running complex regular expressions or nested string iterations across thousands of documents blocks the event loop, causing all concurrent HTTP requests (such as product downloads and auth validations) to hang, freeze, or timeout.
+2. **Memory Ballooning**: Loading entire collections into memory repeatedly triggers frequent garbage collection (GC) pauses, freezing server execution.
+
+#### Role of the Bloom Filter as a High-Speed Gatekeeper
+A Bloom Filter is a space-efficient, probabilistic bit-array data structure used to test set membership in $O(1)$ constant time with zero disk or database access:
+- **If the Bloom Filter returns false**: The search token is **definitely NOT present** in the catalog or developer registry (0% false negatives).
+- **If the Bloom Filter returns true**: The search token **might be present** (with a tunable < 1% false-positive rate), permitting the request to proceed to the inverted index lookup.
+
+#### Hybrid 2-Tier Architecture: Bloom Filter + Inverted Index
+Because a Bloom filter only answers boolean membership (`true` or `false`) and cannot return objects, titles, or rankings, it is paired with an Inverted Index:
+
+```
+[Incoming Search Request: GET /api/search?q=xyz999]
+                    |
+                    v
+    [Tier 1: Bloom Filter Token Gatekeeper]
+    - Checks 2-gram and 3-gram prefixes against bit-array
+    - Memory footprint: ~128 KB for 50,000 indexed terms
+    - Execution time: < 0.05 milliseconds
+                    |
+          +---------+---------+
+          |                   |
+    [Returns FALSE]     [Returns TRUE]
+          |                   |
+          v                   v
+   [Instant Return:     [Tier 2: Inverted Index Lookup]
+   Empty Results {}]    - Hash Map lookup: token -> Set<DocumentID>
+   (Server skips index   - Complexity: O(k) where k = query length
+   completely in 0.05ms) - Never scans unrelated documents
+                        - Slices top 10 items only
+                              |
+                              v
+                        [Ranked Results Returned (< 5ms)]
+```
+
+#### Why This Prevents Server Freezing:
+1. **Immediate Discard of Garbage Queries**: Random keystrokes or non-existent keywords (e.g. `asdfghjk`) are terminated at the Bloom Filter in 0.05ms without touching the database or running string searches.
+2. **Zero Linear Scans**: The Inverted Index directly points to matching IDs via hash tables; it never loops through the database.
+3. **Decoupled Background Index Refresh**: The search index is compiled asynchronously in the background. Search API handlers strictly read from the pre-compiled, immutable snapshot, completely isolating search traffic from database I/O.
+
 ---
 
 ## 7.3 Backend API Specification
@@ -529,7 +573,7 @@ The in-memory engine assigns weighted relevance scores to each candidate entity:
 ### Visual Entry Points
 1. **Desktop Navbar Integration (`Navbar.jsx`)**:
    - A modern search input field in the main navigation bar.
-   - Features a magnifying glass icon, placeholder `"Search apps, creators, categories..."`, and a quick keyboard hint badge (`Ctrl + K` or `Cmd + K`).
+   - Features a magnifying glass icon, placeholder `"Search apps, creators, (initially the search bar is hidden , but when we click on the search icon it shows right below the nav bar)categories..."`, and a quick keyboard hint badge (`Ctrl + K` or `Cmd + K`).
    - Clicking the input or pressing the keyboard shortcut opens the spotlight overlay.
 2. **Mobile Header Integration**:
    - Compact search icon button positioned in the top bar.
