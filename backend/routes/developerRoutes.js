@@ -37,10 +37,12 @@ const uploadCover = multer({
   storage: coverStorage,
   limits: { fileSize: 8 * 1024 * 1024 }, // 8 MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const safeImageExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    if (file.mimetype.startsWith('image/') && file.mimetype !== 'image/svg+xml' && safeImageExts.includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files (JPEG, PNG, WEBP, GIF) are allowed for profile background.'), false);
+      cb(new Error('Only safe raster images (JPEG, PNG, WEBP, GIF) are allowed for profile background. SVG files are not permitted.'), false);
     }
   },
 });

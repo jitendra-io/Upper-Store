@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { db } = require('../config/firebase');
 const path = require('path');
 const fs = require('fs');
@@ -7,9 +8,10 @@ const isOfficialAuthorized = (req) => {
   if (!req.user) return false;
   if (req.user.role === 'admin') return true;
   const email = (req.user.email || '').toLowerCase();
-  const allowedEmails = ['upper.official.in@gmail.com', 'kumar.jkm.io@gmail.com'];
-  if (allowedEmails.includes(email)) return true;
-  return false;
+  const envEmails = process.env.OFFICIAL_EMAILS
+    ? process.env.OFFICIAL_EMAILS.split(',').map((e) => e.trim().toLowerCase())
+    : ['upper.official.in@gmail.com', 'kumar.jkm.io@gmail.com'];
+  return envEmails.includes(email);
 };
 
 /**
@@ -192,6 +194,10 @@ const registerDeveloperKyc = async (req, res) => {
       existingDevSnap = await db.collection('developers').where('email', '==', cleanEmail).limit(1).get();
     }
 
+    // Mask Aadhaar to last 4 digits for privacy & DPDP/UIDAI regulatory compliance
+    const maskedAadhaar = 'XXXXXXXX' + cleanAadhaar.slice(-4);
+    const aadhaarHash = crypto.createHash('sha256').update(cleanAadhaar).digest('hex');
+
     const devPayload = {
       userId,
       email: cleanEmail,
@@ -200,7 +206,8 @@ const registerDeveloperKyc = async (req, res) => {
       displayName: displayName.trim(),
       bio: (bio || userData.bio || '').trim().slice(0, 500),
       phone: cleanPhone,
-      aadhaarNumber: cleanAadhaar,
+      aadhaarNumber: maskedAadhaar,
+      aadhaarHash,
       aadhaarDriveLink: cleanDriveLink,
       vipPlan: membership?.plan || 'pro',
       avatar: userData.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanEmail)}`,

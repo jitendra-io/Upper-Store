@@ -200,7 +200,7 @@ const sendDispatchEmail = async ({ to, subject, html, emailType = 'Notification'
     }
   }
 
-  console.log(`ℹ [EmailService] Neither BREVO_API_KEY nor SMTP credentials configured. Skipping ${emailType} to ${to}.`);
+  console.log(` [EmailService] Neither BREVO_API_KEY nor SMTP credentials configured. Skipping ${emailType} to ${to}.`);
   return { success: false, skipped: true };
 };
 
@@ -210,11 +210,11 @@ const sendDispatchEmail = async ({ to, subject, html, emailType = 'Notification'
  */
 const sendWelcomeEmail = async (userEmail, displayName) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ [EmailService] No email provider configured. Skipping Welcome email to ${userEmail}.`);
+    console.log(` [EmailService] No email provider configured. Skipping Welcome email to ${userEmail}.`);
     return;
   }
 
-  const name = displayName || userEmail.split('@')[0];
+  const name = escapeHtml(displayName || userEmail.split('@')[0]);
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -269,11 +269,11 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
  */
 const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email & Password') => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ [EmailService] No email provider configured. Skipping Login alert to ${userEmail}.`);
+    console.log(` [EmailService] No email provider configured. Skipping Login alert to ${userEmail}.`);
     return;
   }
 
-  const name = displayName || userEmail.split('@')[0];
+  const name = escapeHtml(displayName || userEmail.split('@')[0]);
   const loginTime = new Date().toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -347,7 +347,7 @@ const sendLicenseDeliveryEmail = async ({
   currency = 'USD',
 }) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ [EmailService] No email provider configured. Skipping license email to ${userEmail}. Key: ${licenseKey}`);
+    console.log(` [EmailService] No email provider configured. Skipping license email to ${userEmail}. Key: ${licenseKey}`);
     return;
   }
 
@@ -393,7 +393,7 @@ const sendLicenseDeliveryEmail = async ({
           </div>
 
           <div class="order-meta">
-            <div class="order-row"><span><strong>Order Reference:</strong></span> <span>${orderId}</span></div>
+            <div class="order-row"><span><strong>Order Reference:</strong></span> <span>${safeOrderId}</span></div>
             <div class="order-row"><span><strong>Software / Asset:</strong></span> <span>${productTitle}</span></div>
             <div class="order-row"><span><strong>License Plan:</strong></span> <span style="text-transform: uppercase;">${plan}</span></div>
             <div class="order-row"><span><strong>Validity:</strong></span> <span>${expiryFormatted}</span></div>
@@ -444,7 +444,7 @@ const sendVipSubscriptionEmail = async ({
   currency = 'INR',
 }) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ [EmailService] No email provider configured. Skipping VIP email to ${userEmail}. Plan: ${plan}`);
+    console.log(` [EmailService] No email provider configured. Skipping VIP email to ${userEmail}. Plan: ${plan}`);
     return;
   }
 
@@ -691,11 +691,15 @@ const sendPaymentRejectionEmail = async ({
   rejectedAt,
 }) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ [EmailService] No email provider configured. Skipping payment rejection email to ${userEmail}. Reason: ${rejectReason}`);
+    console.log(` [EmailService] No email provider configured. Skipping payment rejection email to ${userEmail}. Reason: ${safeReason}`);
     return;
   }
 
-  const name = userName || userEmail.split('@')[0];
+  const name = escapeHtml(userName || userEmail.split('@')[0]);
+  const safeReason = escapeHtml(rejectReason || 'Payment could not be verified in bank records.');
+  const safePlan = escapeHtml(planOrItem || 'Upper VIP Membership');
+  const safeUtr = escapeHtml(utrNumber || 'N/A');
+  const safeOrderId = escapeHtml(orderId || 'N/A');
   const dateFormatted = new Date(rejectedAt || Date.now()).toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -743,7 +747,7 @@ const sendPaymentRejectionEmail = async ({
           <div class="alert-pill">Payment Verification Unsuccessful</div>
           <h2 style="color: #ffffff; margin-top: 0; font-size: 20px;">Payment Not Verified</h2>
           <p>Hello <strong>${name}</strong>,</p>
-          <p>We reviewed your recent payment submission for <strong>${planOrItem}</strong> on Upper Store (<strong>${userEmail}</strong>). Unfortunately, we were unable to confirm this transaction in our bank records at this time.</p>
+          <p>We reviewed your recent payment submission for <strong>${safePlan}</strong> on Upper Store (<strong>${userEmail}</strong>). Unfortunately, we were unable to confirm this transaction in our bank records at this time.</p>
 
           <div class="reason-box">
             <div class="reason-title">Reason for Rejection:</div>

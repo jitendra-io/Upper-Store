@@ -51,10 +51,14 @@ const buildSecurityVerification = async (apkFileOrUrl, version = '1.0.0', custom
 
   return {
     sha256Checksum: hash,
-    securityStatus: isVerified ? 'SHA-256 Verified' : 'Checksum Generated',
+    securityStatus: isPhysicalFile
+      ? 'SHA-256 Verified'
+      : customChecksum
+      ? 'Developer Checksum Verified'
+      : 'External Release Mirror',
     isSecurityVerified: isVerified,
     scannedAt: new Date().toISOString(),
-    virusTotalUrl: `https://www.virustotal.com/gui/search/${hash}`,
+    virusTotalUrl: isVerified ? `https://www.virustotal.com/gui/search/${hash}` : null,
   };
 };
 

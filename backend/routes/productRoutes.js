@@ -42,21 +42,22 @@ const upload = multer({
   storage,
   limits: { fileSize: 1500 * 1024 * 1024 }, // 1.5 GB limit (supports 210MB+ APKs & video files)
   fileFilter: (req, file, cb) => {
-    const isImage = file.mimetype.startsWith('image/');
-    const isVideo = file.mimetype.startsWith('video/');
     const orig = file.originalname.toLowerCase();
-    const isBinary = file.mimetype === 'application/vnd.android.package-archive' ||
-                     file.mimetype === 'application/octet-stream' ||
-                     file.mimetype === 'application/x-msdownload' ||
-                     file.mimetype === 'application/x-msdos-program' ||
-                     orig.endsWith('.apk') ||
-                     orig.endsWith('.exe') ||
-                     orig.endsWith('.msi') ||
-                     orig.endsWith('.zip');
-    const isVideoExt = orig.endsWith('.mp4') || orig.endsWith('.webm') || orig.endsWith('.mov') || orig.endsWith('.m4v') || orig.endsWith('.avi');
+    const ext = path.extname(orig);
+    const safeImageExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const safeVideoExts = ['.mp4', '.webm', '.mov', '.m4v', '.avi'];
+    const safePackageExts = ['.apk', '.exe', '.msi', '.zip', '.dmg'];
 
-    if (isImage || isVideo || isVideoExt || isBinary) cb(null, true);
-    else cb(new Error('Invalid file type. Only image, video, and software package files are allowed.'));
+    // Strict raster image check (reject SVG to prevent stored XSS via static upload serving)
+    const isSafeImage = file.mimetype.startsWith('image/') && file.mimetype !== 'image/svg+xml' && safeImageExts.includes(ext);
+    const isSafeVideo = (file.mimetype.startsWith('video/') || safeVideoExts.includes(ext)) && safeVideoExts.includes(ext);
+    const isSafePackage = safePackageExts.includes(ext);
+
+    if (isSafeImage || isSafeVideo || isSafePackage) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid or unsafe file type. Only raster images (JPEG, PNG, WEBP, GIF), video (MP4, WEBM), and software packages (APK, EXE, MSI, ZIP) are allowed.'));
+    }
   },
 });
 

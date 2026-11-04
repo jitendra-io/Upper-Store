@@ -10,6 +10,17 @@ const cacheService = require('../services/cacheService');
 
 // Helper to process package file upload (prefers GitHub Release for large files)
 const handlePackageFileUpload = async (apkFile, title, version, description, req) => {
+  // Supply-chain integrity safeguard:
+  // Only Platform Administrators can use the server's master GITHUB_TOKEN to publish to the official repo.
+  // Third-party developers must supply their own GitHub token and repo or use cloud storage.
+  const isAdmin = req.isAdmin === true || req.user?.role === 'admin';
+  const customToken = req.body?.githubToken ? req.body.githubToken.trim() : null;
+
+  if (!isAdmin && !customToken) {
+    console.log('[Supply Chain Guard] Third-party developer upload: skipping server master GITHUB_TOKEN. Uploading to cloud storage.');
+    return await uploadFileToCloudOrLocal(apkFile, 'apks', req);
+  }
+
   // 1. Try uploading to GitHub Release
   const ghUrl = await uploadToGitHubRelease({
     filePath: apkFile.path,
@@ -17,7 +28,7 @@ const handlePackageFileUpload = async (apkFile, title, version, description, req
     version,
     title,
     description,
-    customToken: req.body?.githubToken,
+    customToken,
     customOwner: req.body?.githubOwner,
     customRepo: req.body?.githubRepo,
   });
