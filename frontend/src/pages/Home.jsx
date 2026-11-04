@@ -323,7 +323,6 @@ const Home = () => {
                 title: p.title ? `${p.title} - Video Demo` : 'Product Video Demo',
                 category: p.category || 'Product Showcase',
                 badge: p.version ? `v${p.version}` : 'Official Demo',
-                duration: 'Demo Reel',
                 videoUrl: p.videoUrl,
                 hasCustomPoster: Boolean(posterUrl),
                 poster: posterUrl,
@@ -388,13 +387,6 @@ const Home = () => {
                       />
                     )}
                     <div className="video-badge-tag">{currentVideo.badge}</div>
-                    <div className="video-duration-tag">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                      </svg>
-                      {currentVideo.duration}
-                    </div>
                   </div>
 
                   <div className="video-details-panel">
