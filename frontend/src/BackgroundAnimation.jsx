@@ -31,11 +31,18 @@ const BackgroundAnimation = () => {
       }
     };
 
+    let isPaused = false;
+    const handleModalToggle = (e) => {
+      isPaused = Boolean(e.detail);
+    };
+    window.addEventListener('modalToggle', handleModalToggle);
+
     const draw = () => {
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = '#C9A84C'; // Antique Gold
-      
-      particles.forEach((p) => {
+      if (!isPaused) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#C9A84C'; // Antique Gold
+        
+        particles.forEach((p) => {
         // Move particle naturally
         p.x += p.vx;
         p.y += p.vy;
@@ -66,6 +73,7 @@ const BackgroundAnimation = () => {
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fill();
       });
+      }
       requestAnimationFrame(draw);
     };
 
@@ -90,6 +98,7 @@ const BackgroundAnimation = () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('modalToggle', handleModalToggle);
     };
   }, []);
 

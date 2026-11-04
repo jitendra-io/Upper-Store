@@ -50,14 +50,34 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
     } catch (_) {}
   };
 
-  // Lock body scroll while modal is active
+  // Lock body & document scroll while search modal is active (prevents background sliding)
   useEffect(() => {
     if (!isOpen) return;
 
-    const prevOverflow = document.body.style.overflow;
-    const prevTouch = document.body.style.touchAction;
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevDocOverflow = document.documentElement.style.overflow;
+    const prevBodyPosition = document.body.style.position;
+    const prevBodyTop = document.body.style.top;
+    const prevBodyWidth = document.body.style.width;
+    const prevTouchAction = document.body.style.touchAction;
+
+    document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
     document.body.style.touchAction = 'none';
+
+    // Prevent background touch dragging on touch devices
+    const handleTouchMove = (e) => {
+      if (!e.target.closest('.search-results-viewport')) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.dispatchEvent(new CustomEvent('modalToggle', { detail: true }));
 
     // Focus search input on open
     const focusTimer = setTimeout(() => {
@@ -67,8 +87,15 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
     }, 50);
 
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.touchAction = prevTouch;
+      document.documentElement.style.overflow = prevDocOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+      document.body.style.position = prevBodyPosition;
+      document.body.style.top = prevBodyTop;
+      document.body.style.width = prevBodyWidth;
+      document.body.style.touchAction = prevTouchAction;
+      window.scrollTo(0, scrollY);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.dispatchEvent(new CustomEvent('modalToggle', { detail: false }));
       clearTimeout(focusTimer);
     };
   }, [isOpen]);
