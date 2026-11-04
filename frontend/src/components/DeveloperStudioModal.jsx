@@ -460,7 +460,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                 <VipFlairBadge plan={vipTier} compact={true} />
               </div>
               <p className="dev-modal-sub">
-                Publish and manage catalog products, and broadcast community alerts
+                Publish and manage catalog products<br />and broadcast community alerts
               </p>
             </div>
           </div>
