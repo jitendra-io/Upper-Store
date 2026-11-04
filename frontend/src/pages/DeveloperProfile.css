@@ -13,6 +13,69 @@
 }
 
 /* --------------------------------------------------------------------------
+   TOP NAVIGATION BAR & BACK BUTTON
+   -------------------------------------------------------------------------- */
+.dev-ref-top-nav-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.85rem;
+  position: relative;
+  z-index: 10;
+}
+
+.dev-ref-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(18, 19, 26, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+  color: #f1f5f9;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dev-ref-back-btn svg {
+  color: #fbbf24;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dev-ref-back-text {
+  letter-spacing: 0.02em;
+}
+
+.dev-ref-back-btn:hover {
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.45);
+  color: #fbbf24;
+  transform: translateX(-3px);
+  box-shadow: 0 6px 18px rgba(251, 191, 36, 0.2);
+}
+
+.dev-ref-back-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+.dev-ref-back-btn:active {
+  transform: scale(0.96);
+}
+
+.dev-ref-back-btn:focus-visible {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.25);
+}
+
+/* --------------------------------------------------------------------------
    COVER BANNER
    -------------------------------------------------------------------------- */
 .dev-ref-banner-frame {
@@ -837,6 +900,10 @@
     padding: 75px 0.75rem 60px 0.75rem;
   }
 
+  .dev-ref-top-nav-bar {
+    margin-bottom: 0.75rem;
+  }
+
   .dev-ref-banner-frame {
     height: 180px;
     border-radius: 14px;
@@ -882,6 +949,16 @@
 }
 
 @media (max-width: 480px) {
+  .dev-ref-top-nav-bar {
+    margin-bottom: 0.65rem;
+  }
+
+  .dev-ref-back-btn {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.82rem;
+    min-height: 40px;
+  }
+
   .dev-ref-banner-frame {
     height: 150px;
   }

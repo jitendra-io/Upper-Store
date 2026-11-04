@@ -153,6 +153,15 @@ const DeveloperProfile = () => {
     }
   };
 
+  // Navigate back to previous page
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
+
   // Loading State
   if (loading) {
     return (
@@ -172,6 +181,21 @@ const DeveloperProfile = () => {
   if (error || !developer) {
     return (
       <div className="dev-ref-page-container">
+        <div className="dev-ref-top-nav-bar">
+          <button
+            type="button"
+            className="dev-ref-back-btn"
+            onClick={handleBack}
+            title="Back to previous page"
+            aria-label="Back to previous page"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span className="dev-ref-back-text">Back</span>
+          </button>
+        </div>
         <div className="dev-error-card">
           <div className="dev-error-icon">
             <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -224,6 +248,23 @@ const DeveloperProfile = () => {
 
   return (
     <div className="dev-ref-page-container">
+      {/* Top Back Navigation Bar */}
+      <div className="dev-ref-top-nav-bar">
+        <button
+          type="button"
+          className="dev-ref-back-btn"
+          onClick={handleBack}
+          title="Back to previous page"
+          aria-label="Back to previous page"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span className="dev-ref-back-text">Back</span>
+        </button>
+      </div>
+
       {/* ===============================================================
           TOP LANDSCAPE COVER BANNER (Custom User Banner OR Luxury Dark Mesh)
           =============================================================== */}
