@@ -13,11 +13,22 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
   },
-  // Ignore SSL certificate verification issues for testing if needed
+  // Enforce TLS certificate validation in production mode
   tls: {
-    rejectUnauthorized: false,
+    rejectUnauthorized: process.env.NODE_ENV === 'production',
   },
 });
+
+// HTML entity encoding to sanitize user input in email templates against injection
+const escapeHtml = (str) => {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
 
 const defaultFrom = process.env.EMAIL_FROM || '"Upper Store" <upper.official.in@gmail.com>';
 
@@ -131,10 +142,10 @@ const sendDispatchEmail = async ({ to, subject, html, emailType = 'Notification'
   if (process.env.GMAIL_CLIENT_ID && process.env.GMAIL_CLIENT_SECRET && process.env.GMAIL_REFRESH_TOKEN) {
     try {
       const result = await sendViaGmailApi({ to, subject, html, senderName, senderEmail });
-      console.log(`✅ [Gmail REST API] ${emailType} delivered to ${to} (MessageId: ${result.messageId})`);
+      console.log(` [Gmail REST API] ${emailType} delivered to ${to} (MessageId: ${result.messageId})`);
       return result;
     } catch (gmailErr) {
-      console.error(`⚠️ [Gmail API Error] Failed to send ${emailType} to ${to}:`, gmailErr.message);
+      console.error(` [Gmail API Error] Failed to send ${emailType} to ${to}:`, gmailErr.message);
       // Fall through to Brevo or SMTP
     }
   }
@@ -164,10 +175,10 @@ const sendDispatchEmail = async ({ to, subject, html, emailType = 'Notification'
       if (!res.ok) {
         throw new Error(data.message || JSON.stringify(data));
       }
-      console.log(`✅ [Brevo API] ${emailType} delivered to ${to} (MessageId: ${data.messageId})`);
+      console.log(` [Brevo API] ${emailType} delivered to ${to} (MessageId: ${data.messageId})`);
       return { success: true, messageId: data.messageId, provider: 'brevo' };
     } catch (brevoErr) {
-      console.error(`⚠️ [Brevo API Error] Failed to send ${emailType} to ${to}:`, brevoErr.message);
+      console.error(` [Brevo API Error] Failed to send ${emailType} to ${to}:`, brevoErr.message);
       // Fall through to SMTP if configured
     }
   }
@@ -181,15 +192,15 @@ const sendDispatchEmail = async ({ to, subject, html, emailType = 'Notification'
         subject,
         html,
       });
-      console.log(`✅ [Nodemailer] ${emailType} sent to ${to} (Msg ID: ${info.messageId})`);
+      console.log(` [Nodemailer] ${emailType} sent to ${to} (Msg ID: ${info.messageId})`);
       return { success: true, messageId: info.messageId, provider: 'nodemailer' };
     } catch (smtpErr) {
-      console.error(`❌ [Nodemailer Error] Failed to send ${emailType} to ${to}:`, smtpErr.message);
+      console.error(` [Nodemailer Error] Failed to send ${emailType} to ${to}:`, smtpErr.message);
       return { success: false, error: smtpErr.message };
     }
   }
 
-  console.log(`ℹ️ [EmailService] Neither BREVO_API_KEY nor SMTP credentials configured. Skipping ${emailType} to ${to}.`);
+  console.log(`ℹ [EmailService] Neither BREVO_API_KEY nor SMTP credentials configured. Skipping ${emailType} to ${to}.`);
   return { success: false, skipped: true };
 };
 
@@ -199,7 +210,7 @@ const sendDispatchEmail = async ({ to, subject, html, emailType = 'Notification'
  */
 const sendWelcomeEmail = async (userEmail, displayName) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ️ [EmailService] No email provider configured. Skipping Welcome email to ${userEmail}.`);
+    console.log(`ℹ [EmailService] No email provider configured. Skipping Welcome email to ${userEmail}.`);
     return;
   }
 
@@ -258,7 +269,7 @@ const sendWelcomeEmail = async (userEmail, displayName) => {
  */
 const sendLoginAlertEmail = async (userEmail, displayName, loginMethod = 'Email & Password') => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ️ [EmailService] No email provider configured. Skipping Login alert to ${userEmail}.`);
+    console.log(`ℹ [EmailService] No email provider configured. Skipping Login alert to ${userEmail}.`);
     return;
   }
 
@@ -336,7 +347,7 @@ const sendLicenseDeliveryEmail = async ({
   currency = 'USD',
 }) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ️ [EmailService] No email provider configured. Skipping license email to ${userEmail}. Key: ${licenseKey}`);
+    console.log(`ℹ [EmailService] No email provider configured. Skipping license email to ${userEmail}. Key: ${licenseKey}`);
     return;
   }
 
@@ -433,7 +444,7 @@ const sendVipSubscriptionEmail = async ({
   currency = 'INR',
 }) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ️ [EmailService] No email provider configured. Skipping VIP email to ${userEmail}. Plan: ${plan}`);
+    console.log(`ℹ [EmailService] No email provider configured. Skipping VIP email to ${userEmail}. Plan: ${plan}`);
     return;
   }
 
@@ -680,7 +691,7 @@ const sendPaymentRejectionEmail = async ({
   rejectedAt,
 }) => {
   if (!isEmailConfigured()) {
-    console.log(`ℹ️ [EmailService] No email provider configured. Skipping payment rejection email to ${userEmail}. Reason: ${rejectReason}`);
+    console.log(`ℹ [EmailService] No email provider configured. Skipping payment rejection email to ${userEmail}. Reason: ${rejectReason}`);
     return;
   }
 

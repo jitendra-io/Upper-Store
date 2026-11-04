@@ -11,12 +11,12 @@ let stripeClient = null;
 if (process.env.STRIPE_SECRET_KEY) {
   try {
     stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
-    console.log('💳 Stripe payment gateway initialized successfully');
+    console.log(' Stripe payment gateway initialized successfully');
   } catch (err) {
-    console.warn('⚠️ Stripe initialization failed:', err.message);
+    console.warn(' Stripe initialization failed:', err.message);
   }
 } else {
-  console.log('ℹ️ Stripe API key not configured. Mock sandbox mode active for Stripe checkout.');
+  console.log('ℹ Stripe API key not configured. Mock sandbox mode active for Stripe checkout.');
 }
 
 // Initialize Razorpay Client
@@ -27,12 +27,12 @@ if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
-    console.log('💳 Razorpay payment gateway initialized successfully');
+    console.log(' Razorpay payment gateway initialized successfully');
   } catch (err) {
-    console.warn('⚠️ Razorpay initialization failed:', err.message);
+    console.warn(' Razorpay initialization failed:', err.message);
   }
 } else {
-  console.log('ℹ️ Razorpay API credentials not configured. Mock sandbox mode active for Razorpay checkout.');
+  console.log('ℹ Razorpay API credentials not configured. Mock sandbox mode active for Razorpay checkout.');
 }
 
 const FRONTEND_URL = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
@@ -636,7 +636,7 @@ const fulfillOrderAndIssueLicense = async ({
     }).catch((err) => console.warn('Non-blocking license email error:', err.message));
   }
 
-  console.log(`✅ Order fulfilled: ${license.licenseKey} for ${cleanEmail} [${productTitle || plan}]`);
+  console.log(` Order fulfilled: ${license.licenseKey} for ${cleanEmail} [${productTitle || plan}]`);
   return license;
 };
 
@@ -650,7 +650,7 @@ const handleStripeWebhook = async (req, res) => {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!webhookSecret || !stripeClient) {
-    console.error('⚠️ [CRITICAL] Stripe webhook invoked but STRIPE_WEBHOOK_SECRET or stripeClient is unconfigured.');
+    console.error(' [CRITICAL] Stripe webhook invoked but STRIPE_WEBHOOK_SECRET or stripeClient is unconfigured.');
     return res.status(500).json({ error: 'Webhook processing is not configured on this server.' });
   }
 
@@ -665,7 +665,7 @@ const handleStripeWebhook = async (req, res) => {
     }
     event = stripeClient.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
   } catch (err) {
-    console.error(`⚠️ Stripe webhook signature verification failed: ${err.message}`);
+    console.error(` Stripe webhook signature verification failed: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -713,7 +713,7 @@ const handleRazorpayWebhook = async (req, res) => {
   const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    console.error('⚠️ [CRITICAL] Razorpay webhook invoked but RAZORPAY_WEBHOOK_SECRET is unconfigured.');
+    console.error(' [CRITICAL] Razorpay webhook invoked but RAZORPAY_WEBHOOK_SECRET is unconfigured.');
     return res.status(500).json({ error: 'Webhook processing is not configured on this server.' });
   }
 
@@ -730,7 +730,7 @@ const handleRazorpayWebhook = async (req, res) => {
   const expBuf = Buffer.from(expectedSignature, 'utf8');
 
   if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
-    console.warn('⚠️ Razorpay webhook signature mismatch.');
+    console.warn(' Razorpay webhook signature mismatch.');
     return res.status(400).json({ message: 'Invalid webhook signature.' });
   }
 
@@ -824,7 +824,7 @@ const verifyRazorpayPayment = async (req, res) => {
       const expBuf = Buffer.from(generatedSignature, 'utf8');
 
       if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
-        console.warn(`⚠️ Razorpay signature mismatch detected for order ${razorpay_order_id}`);
+        console.warn(` Razorpay signature mismatch detected for order ${razorpay_order_id}`);
         return res.status(400).json({ message: 'Security Alert: Cryptographic payment signature verification failed.' });
       }
     }
@@ -843,7 +843,7 @@ const verifyRazorpayPayment = async (req, res) => {
         }
         const expectedPaise = Math.round(planDetails.amountINR * 100);
         if (paymentEntity.amount !== expectedPaise) {
-          console.error(`⚠️ Price tamper attempt detected! Paid: ${paymentEntity.amount} paise, Expected: ${expectedPaise} paise`);
+          console.error(` Price tamper attempt detected! Paid: ${paymentEntity.amount} paise, Expected: ${expectedPaise} paise`);
           return res.status(400).json({ message: 'Security Violation: Payment amount does not match required plan price.' });
         }
       } catch (rzpFetchErr) {
@@ -1163,7 +1163,7 @@ const cancelSubscription = async (req, res) => {
           }
         }
       }
-      console.log(`🛑 [VIP Cancelled] Marked ${updatedLicenseCount} VIP subscription license(s) as CANCELLED for ${userEmail}`);
+      console.log(` [VIP Cancelled] Marked ${updatedLicenseCount} VIP subscription license(s) as CANCELLED for ${userEmail}`);
     } catch (licErr) {
       console.error('Error marking user licenses as cancelled in Firestore:', licErr);
     }

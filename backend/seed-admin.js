@@ -19,7 +19,7 @@ const seedAdmin = async () => {
     
     const snapshot = await db.collection('admins').where('username', '==', 'Upper-Admin').get();
     if (!snapshot.empty) {
-      console.log('⚠️  Admin already exists. Exiting.');
+      console.log('  Admin already exists. Exiting.');
       process.exit(0);
     }
 
@@ -32,13 +32,13 @@ const seedAdmin = async () => {
       createdAt: new Date().toISOString(),
     });
 
-    console.log('✅ Admin created successfully in Firestore!');
+    console.log(' Admin created successfully in Firestore!');
     console.log('   Username: Upper-Admin');
     console.log('   Password has been securely hashed.');
-    console.log('\n🔒 SECURITY: Delete this file now (seed-admin.js)!');
+    console.log('\n SECURITY: Delete this file now (seed-admin.js)!');
     process.exit(0);
   } catch (err) {
-    console.error('❌ Error:', err.message);
+    console.error(' Error:', err.message);
     process.exit(1);
   }
 };

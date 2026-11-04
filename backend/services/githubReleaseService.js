@@ -11,7 +11,7 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
   const repoName = customRepo || process.env.GITHUB_REPO_NAME || 'Upper-Store';
 
   if (!token || token.includes('your_github_token')) {
-    console.warn('⚠️ GITHUB_TOKEN is not configured in backend/.env or form request. Skipping GitHub Release upload.');
+    console.warn(' GITHUB_TOKEN is not configured in backend/.env or form request. Skipping GitHub Release upload.');
     return null;
   }
 
@@ -21,7 +21,7 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
     const releaseTitle = `${title || 'Release'} (v${version || '1.0.0'})`;
     const releaseNotes = `${description || 'Official release release build.'}\n\nAutomated upload via Upper Admin Control Center.`;
 
-    console.log(`🚀 Creating GitHub Release "${releaseTitle}" (Tag: ${tagName})...`);
+    console.log(` Creating GitHub Release "${releaseTitle}" (Tag: ${tagName})...`);
 
     // 1. Create Release Tag via GitHub REST API
     const createReleaseRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/releases`, {
@@ -50,7 +50,7 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
     const uploadUrlRaw = releaseData.upload_url; // e.g. "https://uploads.github.com/repos/.../assets{?name,label}"
     const uploadUrl = uploadUrlRaw.split('{')[0] + `?name=${encodeURIComponent(fileName || path.basename(filePath))}`;
 
-    console.log(`📦 Uploading asset "${fileName}" to GitHub Release...`);
+    console.log(` Uploading asset "${fileName}" to GitHub Release...`);
 
     // 2. Read File Stream/Buffer and Upload Asset
     const fileStats = fs.statSync(filePath);
@@ -83,10 +83,10 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
     }
 
     const downloadUrl = assetData.browser_download_url;
-    console.log(`✅ GitHub Release Asset Uploaded Successfully! CDN URL: ${downloadUrl}`);
+    console.log(` GitHub Release Asset Uploaded Successfully! CDN URL: ${downloadUrl}`);
     return downloadUrl;
   } catch (err) {
-    console.error('❌ GitHub Release Upload Error:', err.message);
+    console.error(' GitHub Release Upload Error:', err.message);
     return null;
   }
 };

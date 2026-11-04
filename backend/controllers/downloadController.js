@@ -232,6 +232,42 @@ const proxyDownload = async (req, res) => {
       return res.status(404).json({ message: 'Valid download target not found.' });
     }
 
+    // SSRF & Open Proxy Prevention: Strictly validate host and prevent internal loopback/metadata probing
+    try {
+      const parsedUrl = new URL(targetUrl);
+      if (parsedUrl.protocol !== 'https:' && parsedUrl.protocol !== 'http:') {
+        return res.status(400).json({ message: 'Invalid download protocol.' });
+      }
+
+      const host = parsedUrl.hostname.toLowerCase();
+      const isInternal =
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host === '::1' ||
+        host === '169.254.169.254' ||
+        host.startsWith('10.') ||
+        host.startsWith('192.168.') ||
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host);
+
+      if (isInternal) {
+        return res.status(403).json({ message: 'Access to internal network addresses is strictly forbidden.' });
+      }
+
+      const isAllowedHost =
+        host === 'github.com' ||
+        host.endsWith('.github.com') ||
+        host === 'githubusercontent.com' ||
+        host.endsWith('.githubusercontent.com') ||
+        host === 'ik.imagekit.io' ||
+        host.endsWith('.imagekit.io');
+
+      if (!isAllowedHost) {
+        return res.status(403).json({ message: 'Forbidden download host. Only verified release mirrors are permitted.' });
+      }
+    } catch {
+      return res.status(400).json({ message: 'Invalid target URL structure.' });
+    }
+
     const cleanTarget = targetUrl.split('?')[0].toLowerCase();
     const isWebPage = cleanTarget.includes('/releases/tag/') || 
                       cleanTarget.endsWith('/releases') || 

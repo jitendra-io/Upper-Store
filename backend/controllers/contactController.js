@@ -42,7 +42,7 @@ const createMessage = async (req, res) => {
     };
 
     const docRef = await db.collection('messages').add(messageData);
-    console.log(`📩 New Contact Message received from "${name}" (${cleanEmail})`);
+    console.log(` New Contact Message received from "${name}" (${cleanEmail})`);
 
     res.status(201).json({
       id: docRef.id,
@@ -161,7 +161,7 @@ const submitAppeal = async (req, res) => {
       });
     }
 
-    console.log(`⚖️ Ban Appeal received from "${name}" (${cleanEmail})`);
+    console.log(` Ban Appeal received from "${name}" (${cleanEmail})`);
 
     res.status(201).json({
       id: docRef.id,

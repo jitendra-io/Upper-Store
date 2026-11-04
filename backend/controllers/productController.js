@@ -75,7 +75,7 @@ const resolveDirectImageUrl = async (url) => {
           if (directVidUrl.includes('=w600-h315')) {
             directVidUrl = directVidUrl.replace(/=w600-h315.*$/, '=m22');
           }
-          console.log(`🎥 Resolved Google Photos video share link (${cleanUrl}) -> direct video MP4: ${directVidUrl}`);
+          console.log(` Resolved Google Photos video share link (${cleanUrl}) -> direct video MP4: ${directVidUrl}`);
           return directVidUrl;
         }
 
@@ -85,7 +85,7 @@ const resolveDirectImageUrl = async (url) => {
                                  html.match(/https:\/\/[^"'\s]+\.mp4[^\s"'\\]*/i);
         if (videoStreamMatch && videoStreamMatch[0]) {
           const streamUrl = videoStreamMatch[0].replace(/\\u003d/g, '=').replace(/\\u0026/g, '&');
-          console.log(`🎥 Resolved Google Photos stream link (${cleanUrl}) -> ${streamUrl}`);
+          console.log(` Resolved Google Photos stream link (${cleanUrl}) -> ${streamUrl}`);
           return streamUrl;
         }
 
@@ -93,7 +93,7 @@ const resolveDirectImageUrl = async (url) => {
         const ogMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
         if (ogMatch && ogMatch[1]) {
           const directImg = ogMatch[1].replace(/=w\d+-h\d+.*$/, '=s1200');
-          console.log(`📸 Resolved Google Photos share link (${cleanUrl}) -> direct image: ${directImg}`);
+          console.log(` Resolved Google Photos share link (${cleanUrl}) -> direct image: ${directImg}`);
           return directImg;
         }
       }
@@ -363,7 +363,7 @@ const createProduct = async (req, res) => {
 
     const docRef = await db.collection('products').add(productData);
     cacheService.invalidate('products_list');
-    console.log(`✅ Product published successfully via GitHub Release: "${title}" (ID: ${docRef.id})`);
+    console.log(` Product published successfully via GitHub Release: "${title}" (ID: ${docRef.id})`);
     res.status(201).json({ id: docRef.id, ...productData });
   } catch (error) {
     console.error('Create product error:', error);

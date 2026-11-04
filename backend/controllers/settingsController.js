@@ -48,7 +48,7 @@ const getPlatformFeeConfig = async () => {
       return cachedFeeConfig;
     }
   } catch (err) {
-    console.warn('⚠️ Warning: Error fetching platform fee from Firestore, using cached fallback:', err.message);
+    console.warn(' Warning: Error fetching platform fee from Firestore, using cached fallback:', err.message);
     return cachedFeeConfig;
   }
 };
@@ -163,7 +163,7 @@ const updatePlatformFee = async (req, res) => {
     cachedFeeConfig = updatedConfig;
     lastFetchTime = Date.now();
 
-    console.log(`⚙️ Admin updated Platform Fee: enabled=${parsedEnabled}, amount=₹${parsedAmount} INR by ${updatedConfig.updatedBy}`);
+    console.log(` Admin updated Platform Fee: enabled=${parsedEnabled}, amount=₹${parsedAmount} INR by ${updatedConfig.updatedBy}`);
 
     return res.status(200).json({
       success: true,
@@ -245,7 +245,7 @@ const getPaymentConfigHelper = async () => {
       return cachedPaymentConfig;
     }
   } catch (err) {
-    console.warn('⚠️ Warning: Error fetching payment config from Firestore, using cached fallback:', err.message);
+    console.warn(' Warning: Error fetching payment config from Firestore, using cached fallback:', err.message);
     return cachedPaymentConfig;
   }
 };
@@ -337,7 +337,7 @@ const updatePaymentSettings = async (req, res) => {
     cachedPaymentConfig = newConfig;
     lastPaymentFetchTime = Date.now();
 
-    console.log(`⚙️ Admin updated Payment Settings: mode=${updatedMode}, upiId=${updatedUpiId}, autoApprove=${updatedAutoApprove}`);
+    console.log(` Admin updated Payment Settings: mode=${updatedMode}, upiId=${updatedUpiId}, autoApprove=${updatedAutoApprove}`);
 
     return res.status(200).json({
       success: true,

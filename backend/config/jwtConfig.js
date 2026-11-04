@@ -22,7 +22,7 @@ function getJwtSecret() {
   }
 
   if (!ephemeralSecret) {
-    console.warn('⚠️ [SECURITY WARNING] JWT_SECRET is unset. Generating a secure ephemeral runtime key. Note that tokens will invalidate on server restart.');
+    console.warn(' [SECURITY WARNING] JWT_SECRET is unset. Generating a secure ephemeral runtime key. Note that tokens will invalidate on server restart.');
     ephemeralSecret = crypto.randomBytes(32).toString('hex');
   }
 

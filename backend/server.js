@@ -22,6 +22,18 @@ require('./config/firebase');
 
 const app = express();
 
+// Disable Express fingerprint header to prevent server profiling
+app.disable('x-powered-by');
+
+// Enforce standard baseline HTTP security headers
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-XSS-Protection', '0');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 // Middleware
 // Strict CORS configuration allowing designated origins and rejecting arbitrary domains
 const allowedOrigins = [
