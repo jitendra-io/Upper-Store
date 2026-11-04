@@ -204,21 +204,22 @@
 /* ==========================================================================
    USER PROFILE DROPDOWN (PREMIUM ENTERPRISE GLASS)
    ========================================================================== */
-/* Transparent click/tap backdrop that intercepts outside clicks & gestures */
+/* Transparent click/tap backdrop on phone/mobile to dismiss & prevent gestures */
 .nav-profile-dropdown-backdrop {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1001;
-  background: transparent;
-  pointer-events: auto;
-  touch-action: none;
+  display: none;
 }
 
 @media (max-width: 768px) {
   .nav-profile-dropdown-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
     z-index: 10004;
+    background: transparent;
+    pointer-events: auto;
+    touch-action: none;
   }
 }
 

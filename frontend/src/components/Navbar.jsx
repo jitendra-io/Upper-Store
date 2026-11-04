@@ -120,45 +120,75 @@ const Navbar = () => {
     setNotifDropdownOpen(false);
   }, [location.pathname]);
 
-  // Disable background scrolling while the user profile dropdown is open
+  // Keep background scrollable on PC/desktop, disable background scroll on phone/mobile
   useEffect(() => {
-    if (userDropdownOpen) {
-      const prevBodyOverflow = document.body.style.overflow;
-      const prevDocOverflow = document.documentElement.style.overflow;
+    if (!userDropdownOpen) return;
+
+    let isMobileLocked = false;
+    let prevBodyOverflow = '';
+    let prevDocOverflow = '';
+    let prevBodyTouchAction = '';
+
+    const isPhoneDevice = () => {
+      return (
+        window.innerWidth <= 768 ||
+        window.matchMedia('(max-width: 768px)').matches ||
+        ('ontouchstart' in window && window.innerWidth <= 1024)
+      );
+    };
+
+    const lockPhoneScroll = () => {
+      if (isMobileLocked) return;
+      isMobileLocked = true;
+      prevBodyOverflow = document.body.style.overflow;
+      prevDocOverflow = document.documentElement.style.overflow;
+      prevBodyTouchAction = document.body.style.touchAction;
 
       document.body.style.overflow = 'hidden';
       document.documentElement.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    };
 
-      const handleWheel = (e) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-          e.preventDefault();
-        }
-      };
+    const unlockPhoneScroll = () => {
+      if (!isMobileLocked) return;
+      isMobileLocked = false;
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevDocOverflow;
+      document.body.style.touchAction = prevBodyTouchAction;
+    };
 
-      const handleTouchMove = (e) => {
-        if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-          e.preventDefault();
-        }
-      };
+    const syncScrollLock = () => {
+      if (isPhoneDevice()) {
+        lockPhoneScroll();
+      } else {
+        unlockPhoneScroll();
+      }
+    };
 
-      const handleKeyDown = (e) => {
-        if (e.key === 'Escape') {
-          setUserDropdownOpen(false);
-        }
-      };
+    syncScrollLock();
 
-      window.addEventListener('wheel', handleWheel, { passive: false });
-      window.addEventListener('touchmove', handleTouchMove, { passive: false });
-      window.addEventListener('keydown', handleKeyDown);
+    const handleTouchMove = (e) => {
+      if (isPhoneDevice() && dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        e.preventDefault();
+      }
+    };
 
-      return () => {
-        document.body.style.overflow = prevBodyOverflow;
-        document.documentElement.style.overflow = prevDocOverflow;
-        window.removeEventListener('wheel', handleWheel);
-        window.removeEventListener('touchmove', handleTouchMove);
-        window.removeEventListener('keydown', handleKeyDown);
-      };
-    }
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setUserDropdownOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', syncScrollLock);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      unlockPhoneScroll();
+      window.removeEventListener('resize', syncScrollLock);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [userDropdownOpen]);
 
   // Close dropdown on click outside
