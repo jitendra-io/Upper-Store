@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { formatDownloadCount } from '../utils/downloadTracker';
+import { formatDownloadCount, getProductDownloadCount } from '../utils/downloadTracker';
 import './DeveloperDownloadsModal.css';
 
 export const DeveloperDownloadsModal = ({
@@ -104,7 +104,10 @@ export const DeveloperDownloadsModal = ({
           {products.length > 0 ? (
             <div className="downloads-products-grid">
               {products.map((product) => {
-                const count = Number(product.downloadsCount) || Number(product.downloads) || 0;
+                const count = getProductDownloadCount(
+                  product.id,
+                  product.downloadCount ?? product.downloadsCount ?? product.downloads ?? 0
+                );
                 const iconSrc = product.logo || product.image || product.imageUrl1 || '/logo.png';
 
                 return (

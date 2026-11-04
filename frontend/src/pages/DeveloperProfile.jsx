@@ -6,7 +6,7 @@ import StarRatingBadge from '../components/StarRatingBadge';
 import ProductDetailModal from '../components/ProductDetailModal';
 import EditProfileModal from '../components/EditProfileModal';
 import DeveloperDownloadsModal from '../components/DeveloperDownloadsModal';
-import { formatDownloadCount } from '../utils/downloadTracker';
+import { formatDownloadCount, getProductDownloadCount } from '../utils/downloadTracker';
 import './DeveloperProfile.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -53,6 +53,29 @@ const DeveloperProfile = () => {
 
   // Private Downloads Telemetry Modal State (Visible only to the developer himself)
   const [isDownloadsModalOpen, setIsDownloadsModalOpen] = useState(false);
+
+  // Real-time product download tracker refresh ticker
+  const [refreshDownloads, setRefreshDownloads] = useState(0);
+
+  // Listen to real-time download increments across the platform
+  useEffect(() => {
+    const handleDownloadsUpdated = (e) => {
+      const { productId, newCount } = e.detail || {};
+      if (productId && newCount !== undefined) {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === productId ? { ...p, downloadCount: Number(newCount) } : p
+          )
+        );
+      }
+      setRefreshDownloads((prev) => prev + 1);
+    };
+
+    window.addEventListener('productDownloadsUpdated', handleDownloadsUpdated);
+    return () => {
+      window.removeEventListener('productDownloadsUpdated', handleDownloadsUpdated);
+    };
+  }, []);
 
   // UX Feedback & Interaction States
   const [copied, setCopied] = useState(false);
@@ -248,6 +271,16 @@ const DeveloperProfile = () => {
   // Resolved cover banner URL (No demo background image)
   const coverBannerUrl = developer.coverImage || developer.banner || '';
 
+  // Dynamic Real-time Total Downloads
+  const totalDownloads = useMemo(() => {
+    if (!products || products.length === 0) return Number(stats.totalDownloads) || 0;
+    const computedSum = products.reduce((acc, p) => {
+      const base = Number(p.downloadCount ?? p.downloadsCount ?? p.downloads ?? 0);
+      return acc + getProductDownloadCount(p.id, base);
+    }, 0);
+    return Math.max(computedSum, Number(stats.totalDownloads) || 0);
+  }, [products, stats.totalDownloads, refreshDownloads]);
+
   return (
     <div className="dev-ref-page-container">
       {/* Top Back Navigation Bar */}
@@ -441,7 +474,7 @@ const DeveloperProfile = () => {
               onClick={() => setIsDownloadsModalOpen(true)}
               title="Click to view detailed per-app downloads telemetry"
             >
-              <span className="stat-bold-val highlight-gold">{formatDownloadCount(stats.totalDownloads)}</span>
+              <span className="stat-bold-val highlight-gold">{formatDownloadCount(totalDownloads)}</span>
               <span className="stat-muted-lbl">Downloads</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.5" className="downloads-stat-icon">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -474,7 +507,10 @@ const DeveloperProfile = () => {
           <div className="dev-products-grid">
             {products.map((product) => {
               const displayImage = product.image || product.logo || product.imageUrl1 || '/logo.png';
-              const downloadsCount = Number(product.downloadsCount) || Number(product.downloads) || 0;
+              const downloadsCount = getProductDownloadCount(
+                product.id,
+                product.downloadCount ?? product.downloadsCount ?? product.downloads ?? 0
+              );
 
               return (
                 <div
@@ -627,7 +663,7 @@ const DeveloperProfile = () => {
           onClose={() => setIsDownloadsModalOpen(false)}
           developer={developer}
           products={products}
-          totalDownloads={stats.totalDownloads}
+          totalDownloads={totalDownloads}
           onSelectProduct={(product) => setSelectedProduct(product)}
         />
       )}

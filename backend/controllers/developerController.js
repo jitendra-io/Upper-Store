@@ -402,11 +402,15 @@ const getPublicDeveloperProfile = async (req, res) => {
     if (['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'].includes(cleanUsername)) {
       const prodSnap = await db.collection('products').get();
       const officialProducts = prodSnap.docs
-        .map((doc) => ({ id: doc.id, ...doc.data() }))
+        .map((doc) => {
+          const data = doc.data();
+          const downloadCount = Number(data.downloadCount ?? data.downloadsCount ?? data.downloads ?? 0);
+          return { id: doc.id, ...data, downloadCount };
+        })
         .filter((p) => p.isStoreOfficial || !p.developerId || !p.isDeveloperProduct);
 
       const totalDownloads = officialProducts.reduce(
-        (sum, p) => sum + (Number(p.downloadsCount) || Number(p.downloads) || 0),
+        (sum, p) => sum + (Number(p.downloadCount) || 0),
         0
       );
       const avgRating =
@@ -506,7 +510,11 @@ const getPublicDeveloperProfile = async (req, res) => {
     let matchedProducts = [];
     try {
       const prodSnap = await db.collection('products').get();
-      const allProds = prodSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const allProds = prodSnap.docs.map((d) => {
+        const data = d.data();
+        const downloadCount = Number(data.downloadCount ?? data.downloadsCount ?? data.downloads ?? 0);
+        return { id: d.id, ...data, downloadCount };
+      });
 
       const devEmail = (devData?.email || userData?.email || '').toLowerCase();
       const devUid = devData?.userId || userDoc?.id || '';
@@ -578,7 +586,7 @@ const getPublicDeveloperProfile = async (req, res) => {
 
     // 4. Compute dynamic stats
     const totalDownloads = matchedProducts.reduce(
-      (sum, p) => sum + (Number(p.downloadsCount) || Number(p.downloads) || 0),
+      (sum, p) => sum + (Number(p.downloadCount) || 0),
       0
     );
     const avgRating =
