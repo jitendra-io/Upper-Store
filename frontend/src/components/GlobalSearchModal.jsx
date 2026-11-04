@@ -6,7 +6,6 @@ import './GlobalSearchModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const RECENT_SEARCHES_KEY = 'upper_recent_searches';
-const POPULAR_TAGS = ['Gold AI', 'Play Grab', 'Upper Player', 'AI-Prompts', 'upperstore'];
 
 const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
   const navigate = useNavigate();
@@ -271,9 +270,18 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
               </svg>
             </button>
           ) : (
-            <span className="search-esc-badge" onClick={onClose} title="Close search">
-              ESC
-            </span>
+            <button
+              type="button"
+              className="search-close-btn"
+              onClick={onClose}
+              title="Close search"
+              aria-label="Close search"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
           )}
         </div>
 
@@ -339,25 +347,15 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
                 </div>
               )}
 
-              <div className="search-group-block">
-                <div className="search-group-title-row">
-                  <span className="group-title-label">Popular Searches</span>
+              <div className="search-intro-banner">
+                <div className="intro-icon-circle">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
                 </div>
-                <div className="recent-tags-wrapper">
-                  {POPULAR_TAGS.map((tag, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      className="popular-query-chip"
-                      onClick={() => setQuery(tag)}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                      </svg>
-                      <span>{tag}</span>
-                    </button>
-                  ))}
-                </div>
+                <h4 className="intro-heading">Search Upper Store</h4>
+                <p className="intro-subtext">Find applications, developer tools, verified software packages, and creator accounts.</p>
               </div>
             </div>
           ) : totalMatches === 0 && !loading ? (
