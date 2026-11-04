@@ -658,46 +658,6 @@
   color: #fbbf24;
 }
 
-/* SEARCH BUTTON IN MOBILE DRAWER */
-.mobile-drawer-search-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(251, 191, 36, 0.08);
-  border: 1px solid rgba(251, 191, 36, 0.25);
-  border-radius: 12px;
-  color: #fbbf24;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 0.5rem;
-  transition: all 0.18s ease;
-  font-family: inherit;
-}
-
-.mobile-drawer-search-btn:active {
-  background: rgba(251, 191, 36, 0.18);
-  transform: scale(0.98);
-}
-
-.mobile-drawer-search-btn-left {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.mobile-drawer-search-kbd {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  color: #fbbf24;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
-}
-
 /* Blue Notification Bell Component */
 .nav-notif-wrapper {
   position: relative;
