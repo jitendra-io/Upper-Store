@@ -15,6 +15,7 @@ export const EditProfileModal = ({
 }) => {
   const { user, token, updateUserProfile } = useAuth();
   const fileInputRef = useRef(null);
+  const wasOpenRef = useRef(false);
 
   const [activeTab, setActiveTab] = useState('details'); // 'details' | 'products'
   const [displayName, setDisplayName] = useState('');
@@ -37,12 +38,26 @@ export const EditProfileModal = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
 
-  // Sync initial values when modal opens
+  // Sync initial values only once when modal opens (guarded against background overwrites while editing)
   useEffect(() => {
-    if (isOpen && developer) {
+    if (isOpen && !wasOpenRef.current && developer) {
+      wasOpenRef.current = true;
+
       setDisplayName(developer.displayName || '');
       setUsername(developer.username || '');
-      setBio(developer.bio || '');
+
+      // Resolve bio: replace legacy default placeholder text or empty with 'None'
+      const rawBio = (developer.bio || user?.bio || '').trim();
+      const isLegacyDefaultBio =
+        rawBio === 'Verified Upper Store Creator. Building high-performance software and developer tools.' ||
+        rawBio === 'Upper Store Community Member.' ||
+        rawBio === 'Verified Upper Store creator crafting high-performance tools and applications.' ||
+        rawBio === 'Upper Store Community Member exploring verified developer releases and utilities.' ||
+        rawBio === 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.' ||
+        rawBio === 'No bio';
+
+      const initialBio = isLegacyDefaultBio || !rawBio ? 'None' : rawBio;
+      setBio(initialBio);
 
       const existingBg = developer.coverImage || developer.banner || user?.coverImage || user?.banner || '';
       setCoverImage(existingBg);
@@ -65,8 +80,10 @@ export const EditProfileModal = ({
       setDeleteConfirmId(null);
       setDeleteError('');
       setActiveTab('details');
+    } else if (!isOpen) {
+      wasOpenRef.current = false;
     }
-  }, [isOpen, developer, user]);
+  }, [isOpen, developer]);
 
   // Lock background scroll when open
   useEffect(() => {
@@ -259,7 +276,7 @@ export const EditProfileModal = ({
       return;
     }
 
-    const cleanBio = bio.trim().slice(0, 500);
+    const cleanBio = bio.trim().slice(0, 500) || 'None';
     const resolvedCover = (coverImage || '').trim();
 
     const payload = {

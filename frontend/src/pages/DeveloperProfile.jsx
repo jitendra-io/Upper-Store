@@ -348,9 +348,18 @@ const DeveloperProfile = () => {
 
         {/* BIO DESCRIPTION */}
         <p className="dev-ref-bio-text">
-          {developer.bio || (isDev
-            ? 'Verified Upper Store creator crafting high-performance tools and applications.'
-            : 'Upper Store Community Member exploring verified developer releases and utilities.')}
+          {(() => {
+            const b = (developer.bio || '').trim();
+            const isLegacy =
+              b === 'Verified Upper Store Creator. Building high-performance software and developer tools.' ||
+              b === 'Upper Store Community Member.' ||
+              b === 'Verified Upper Store creator crafting high-performance tools and applications.' ||
+              b === 'Upper Store Community Member exploring verified developer releases and utilities.' ||
+              b === 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.' ||
+              b === 'No bio';
+            if (!b || isLegacy) return 'None';
+            return b;
+          })()}
         </p>
 
         {/* METADATA ROW (Location default 'None', Joined Date) */}

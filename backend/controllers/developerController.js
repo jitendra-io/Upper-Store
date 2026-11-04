@@ -429,7 +429,7 @@ const getPublicDeveloperProfile = async (req, res) => {
           id: 'upper-store-official',
           username: 'upperstore',
           displayName: officialData.displayName || 'Upper Store Official',
-          bio: officialData.bio || 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.',
+          bio: (officialData.bio && officialData.bio.trim()) ? officialData.bio : 'None',
           avatar: officialData.avatar || '/logo.png',
           coverImage: officialData.coverImage || officialData.banner || '',
           banner: officialData.coverImage || officialData.banner || '',
@@ -599,7 +599,16 @@ const getPublicDeveloperProfile = async (req, res) => {
       userId: devData?.userId || userDoc?.id || null,
       username: devData?.username || userData?.username || cleanUsername,
       displayName: devData?.displayName || userData?.displayName || userData?.username || cleanUsername,
-      bio: (devData?.bio && devData.bio.trim()) || (userData?.bio && userData.bio.trim()) || (isDeveloper ? 'Verified Upper Store Creator. Building high-performance software and developer tools.' : 'Upper Store Community Member.'),
+      bio: (() => {
+        const raw = (devData?.bio && devData.bio.trim()) || (userData?.bio && userData.bio.trim()) || '';
+        const isLegacy =
+          raw === 'Verified Upper Store Creator. Building high-performance software and developer tools.' ||
+          raw === 'Upper Store Community Member.' ||
+          raw === 'Verified Upper Store creator crafting high-performance tools and applications.' ||
+          raw === 'Upper Store Community Member exploring verified developer releases and utilities.' ||
+          raw === 'No bio';
+        return !raw || isLegacy ? 'None' : raw;
+      })(),
       avatar: devData?.avatar || userData?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanUsername)}`,
       vipPlan: currentVipPlan, // Determines the avatar ring! 'elite', 'pro', or 'free'
       previousVipPlan: membership?.plan || devData?.vipPlan || null,
@@ -654,7 +663,7 @@ const updateDeveloperBio = async (req, res) => {
     const userId = req.user.uid;
     const cleanEmail = (req.user.email || '').trim().toLowerCase();
 
-    const cleanBio = (bio || '').trim().slice(0, 500);
+    const cleanBio = (bio || '').trim().slice(0, 500) || 'None';
 
     // Update in developers collection
     let devSnap = await db.collection('developers').where('userId', '==', userId).limit(1).get();
@@ -703,7 +712,7 @@ const getOfficialProfile = async (req, res) => {
         id: 'upper-store-official',
         username: 'upperstore',
         displayName: officialData.displayName || 'Upper Store Official',
-        bio: officialData.bio || 'Official Upper Store verified publishing house. Curating elite software, cybersecurity tools, utilities, and developer frameworks for the community.',
+        bio: (officialData.bio && officialData.bio.trim()) ? officialData.bio : 'None',
         avatar: officialData.avatar || '/logo.png',
         coverImage: officialData.coverImage || officialData.banner || '',
         banner: officialData.coverImage || officialData.banner || '',

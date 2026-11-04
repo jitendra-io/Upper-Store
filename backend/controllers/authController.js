@@ -957,7 +957,8 @@ const updateFullProfile = async (req, res) => {
 
     // 2. Validate & Update Bio
     if (bio !== undefined) {
-      userUpdates.bio = String(bio).trim().slice(0, 500);
+      const b = String(bio).trim().slice(0, 500);
+      userUpdates.bio = b || 'None';
     }
 
     // 3. Validate & Update Username (if provided and different)

@@ -210,7 +210,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
           legalName: kycForm.legalName,
           displayName: kycForm.displayName || user?.displayName || user?.email?.split('@')[0],
           username: cleanUsername,
-          bio: (kycForm.bio || '').trim(),
+          bio: (kycForm.bio || '').trim() || 'None',
           phone: cleanPhone,
           aadhaarNumber: cleanAadhaar,
           aadhaarDriveLink: kycForm.aadhaarDriveLink,
