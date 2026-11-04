@@ -64,11 +64,11 @@ const handleCoverUpload = (req, res, next) => {
 // Public Developer Profile & Published Products (No Auth required)
 router.get('/profile/:username', getPublicDeveloperProfile);
 
-// Upper Store Official Profile Management (Admin / Owner)
+// Upper Store Official Profile Management (Strict Admin Access)
 router.get('/official/profile', getOfficialProfile);
-router.put('/official/profile', protect, updateOfficialProfile);
-router.post('/official/cover-image', protect, handleCoverUpload, uploadOfficialCoverImage);
-router.delete('/official/cover-image', protect, removeOfficialCoverImage);
+router.put('/official/profile', protectAdmin, updateOfficialProfile);
+router.post('/official/cover-image', protectAdmin, handleCoverUpload, uploadOfficialCoverImage);
+router.delete('/official/cover-image', protectAdmin, removeOfficialCoverImage);
 
 // User Developer Profile & KYC Registration
 router.get('/me', protect, getMyDeveloperProfile);

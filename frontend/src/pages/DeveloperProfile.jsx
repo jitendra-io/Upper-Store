@@ -64,9 +64,10 @@ const DeveloperProfile = () => {
 
   // Determine if the current authenticated user owns this developer/user profile
   const isOwner = useMemo(() => {
-    if (!developer) return false;
+    // 1. Unauthenticated or logged-out visitors can NEVER edit any profile
+    if (!developer || !user) return false;
 
-    // Check if viewing the official Upper Store profile
+    // 2. Check if viewing the official Upper Store profile
     const devHandle = (developer.username || '').toLowerCase();
     const isOfficialDev = Boolean(
       developer.isOfficial ||
@@ -75,20 +76,21 @@ const DeveloperProfile = () => {
     );
 
     if (isOfficialDev) {
-      const userRole = user?.role || '';
-      const userEmail = (user?.email || '').toLowerCase();
-      const hasAdminToken = Boolean(localStorage.getItem('adminToken'));
-      const isOfficialAdmin =
-        userRole === 'admin' ||
-        hasAdminToken ||
-        userEmail === 'upper.official.in@gmail.com' ||
-        userEmail === 'kumar.jkm.io@gmail.com' ||
-        (user?.username && ['upperstore', 'upperofficial'].includes(user.username.toLowerCase()));
+      // Official Upper Store profile can strictly ONLY be edited by an authenticated administrator
+      if (user.role !== 'admin') return false;
 
-      if (isOfficialAdmin) return true;
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) return false;
+
+      try {
+        const payload = JSON.parse(atob(adminToken.split('.')[1]));
+        return Boolean(payload && payload.role === 'admin' && payload.exp && payload.exp * 1000 > Date.now());
+      } catch (_) {
+        return false;
+      }
     }
 
-    if (!user) return false;
+    // 3. Normal developer/creator profile ownership checks
     const userHandle = (user.username || '').toLowerCase();
     if (userHandle && devHandle && userHandle === devHandle) return true;
     if (user.uid && developer.userId && user.uid === developer.userId) return true;

@@ -6,12 +6,7 @@ const { uploadFileToCloudOrLocal } = require('../services/imagekitService');
 
 const isOfficialAuthorized = (req) => {
   if (!req.user) return false;
-  if (req.user.role === 'admin') return true;
-  const email = (req.user.email || '').toLowerCase();
-  const envEmails = process.env.OFFICIAL_EMAILS
-    ? process.env.OFFICIAL_EMAILS.split(',').map((e) => e.trim().toLowerCase())
-    : ['upper.official.in@gmail.com', 'kumar.jkm.io@gmail.com'];
-  return envEmails.includes(email);
+  return req.user.role === 'admin';
 };
 
 /**

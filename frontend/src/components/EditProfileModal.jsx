@@ -105,11 +105,17 @@ export const EditProfileModal = ({
 
   if (!isOpen) return null;
 
-  const isDev = Boolean(developer?.isDeveloper && products && products.length > 0);
   const isOfficial = Boolean(
     developer?.isOfficial ||
     ['upperstore', 'upper-store', 'upper_store'].includes((developer?.username || '').toLowerCase())
   );
+
+  // If viewing official store profile, non-admins or logged-out users are strictly forbidden from editing
+  if (isOfficial && (!user || user.role !== 'admin')) {
+    return null;
+  }
+
+  const isDev = Boolean(developer?.isDeveloper && products && products.length > 0);
   const userPlan = user?.membership?.plan || user?.vipPlan || developer?.vipPlan || developer?.membership?.plan || 'free';
   const isVipUser = Boolean(
     user?.role === 'admin' ||
@@ -119,7 +125,9 @@ export const EditProfileModal = ({
     userPlan === 'elite'
   );
   const canEditUsername = !isOfficial && isVipUser;
-  const activeAuthToken = token || localStorage.getItem('adminToken') || localStorage.getItem('upper_user_token');
+  const activeAuthToken = isOfficial
+    ? localStorage.getItem('adminToken')
+    : (token || localStorage.getItem('upper_user_token'));
 
   // Direct ImageKit File Upload from local computer
   const handleFileSelected = async (file) => {
