@@ -1,12 +1,20 @@
 const { db } = require('../config/firebase');
 const jwt = require('jsonwebtoken');
 const { getJwtSecret } = require('../config/jwtConfig');
+const {
+  cleanExpiredNotifications,
+  maybeTriggerPassiveCleanup,
+  getLastCleanupStatus,
+} = require('../services/notificationCleanupService');
 
 // @desc    Get broadcast and user notifications (privacy-scoped)
 // @route   GET /api/notifications
 // @access  Public / Authenticated
 const getNotifications = async (req, res) => {
   try {
+    // Non-blocking passive cleanup check (triggers if >6h since last cleanup)
+    maybeTriggerPassiveCleanup({ retentionDays: 15 });
+
     let currentUser = null;
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -53,7 +61,7 @@ const getNotifications = async (req, res) => {
 
 // @desc    Create a new broadcast notification
 // @route   POST /api/notifications
-// @access  Private (Admin)
+// @access  Private (Admin / Publisher)
 const createNotification = async (req, res) => {
   const { title, message, category, link } = req.body;
 
@@ -109,7 +117,7 @@ const createNotification = async (req, res) => {
 
 // @desc    Delete a broadcast notification
 // @route   DELETE /api/notifications/:id
-// @access  Private (Admin)
+// @access  Private (Admin / Publisher)
 const deleteNotification = async (req, res) => {
   const { id } = req.params;
 
@@ -143,8 +151,44 @@ const deleteNotification = async (req, res) => {
   }
 };
 
+// @desc    Clean up notifications older than retention days (default 15 days)
+// @route   POST /api/notifications/cleanup or DELETE /api/notifications/cleanup
+// @access  Private (Admin)
+const cleanupNotifications = async (req, res) => {
+  try {
+    const retentionDays = Number(req.body?.days || req.query?.days) || 15;
+    const dryRun = req.body?.dryRun === true || req.query?.dryRun === 'true';
+
+    const result = await cleanExpiredNotifications({ retentionDays, dryRun });
+
+    res.json({
+      message: dryRun
+        ? `Identified ${result.expiredCount} notification(s) older than ${retentionDays} days.`
+        : `Cleaned up ${result.deletedCount} notification(s) older than ${retentionDays} days.`,
+      ...result,
+    });
+  } catch (error) {
+    console.error('Error cleaning notifications:', error);
+    res.status(500).json({ message: 'Failed to clean up expired notifications.', error: error.message });
+  }
+};
+
+// @desc    Get status of notification cleanup job
+// @route   GET /api/notifications/cleanup-status
+// @access  Private (Admin)
+const getCleanupStatus = async (req, res) => {
+  try {
+    const status = getLastCleanupStatus();
+    res.json(status);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to get cleanup status.' });
+  }
+};
+
 module.exports = {
   getNotifications,
   createNotification,
   deleteNotification,
+  cleanupNotifications,
+  getCleanupStatus,
 };

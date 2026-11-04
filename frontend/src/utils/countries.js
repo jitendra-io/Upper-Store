@@ -54,3 +54,4 @@ export const MAJOR_50_COUNTRIES = [
   'United Kingdom',
   'United States',
 ];
+

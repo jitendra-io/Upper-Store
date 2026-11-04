@@ -6,12 +6,19 @@ const {
   getNotifications,
   createNotification,
   deleteNotification,
+  cleanupNotifications,
+  getCleanupStatus,
 } = require('../controllers/notificationController');
 
 // Public route to fetch broadcasts
 router.get('/', getNotifications);
 
-// Admin routes to send and delete broadcasts
+// Admin routes for notification retention cleanup
+router.post('/cleanup', protectAdmin, cleanupNotifications);
+router.delete('/cleanup', protectAdmin, cleanupNotifications);
+router.get('/cleanup-status', protectAdmin, getCleanupStatus);
+
+// Publisher / Admin routes to send and delete broadcasts
 router.post('/', protectPublisher, createNotification);
 router.delete('/:id', protectPublisher, deleteNotification);
 

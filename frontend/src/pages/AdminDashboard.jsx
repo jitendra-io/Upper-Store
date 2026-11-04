@@ -101,6 +101,7 @@ const AdminDashboard = () => {
   const [notifCategory, setNotifCategory] = useState('Update');
   const [notifLink, setNotifLink] = useState('');
   const [sendingNotif, setSendingNotif] = useState(false);
+  const [cleaningNotifications, setCleaningNotifications] = useState(false);
 
   // Download Analytics State
   const [allDownloads, setAllDownloads] = useState([]);
@@ -607,6 +608,35 @@ const AdminDashboard = () => {
       }
     } catch (err) {
       setMessage({ type: 'error', text: 'Failed to delete notification.' });
+    }
+  };
+
+  const handleCleanExpiredNotifications = async () => {
+    if (!window.confirm('Run cleanup job to delete all notifications older than 15 days?')) return;
+    setCleaningNotifications(true);
+    setMessage({ type: '', text: '' });
+    try {
+      const activeToken = token || localStorage.getItem('adminToken');
+      const res = await fetch(`${API_BASE}/api/notifications/cleanup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${activeToken}`,
+        },
+        body: JSON.stringify({ days: 15 }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Cleanup job failed.');
+      setMessage({
+        type: 'success',
+        text: data.message || `Cleanup completed: ${data.deletedCount || 0} expired notification(s) removed.`,
+      });
+      fetchBroadcastNotifications();
+    } catch (err) {
+      console.warn('Failed to clean expired notifications:', err);
+      setMessage({ type: 'error', text: err.message || 'Failed to execute notification cleanup.' });
+    } finally {
+      setCleaningNotifications(false);
     }
   };
 
@@ -2261,7 +2291,26 @@ const AdminDashboard = () => {
 
           {/* ACTIVE BROADCASTS LIST */}
           <div className="admin-list-card">
-            <h3>Active Broadcasts ({broadcastNotifications.length})</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div>
+                <h3 style={{ margin: 0 }}>Active Broadcasts ({broadcastNotifications.length})</h3>
+                <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>Auto-cleaned older than 15 days</span>
+              </div>
+              <button
+                type="button"
+                className="admin-btn secondary-sm"
+                onClick={handleCleanExpiredNotifications}
+                disabled={cleaningNotifications}
+                title="Prune notifications older than 15 days"
+                style={{ fontSize: '0.78rem', padding: '0.4rem 0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>{cleaningNotifications ? 'Cleaning...' : 'Clean Expired (>15d)'}</span>
+              </button>
+            </div>
 
             {loadingNotifications ? (
               <div className="admin-loading">Loading broadcasts...</div>

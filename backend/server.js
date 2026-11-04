@@ -94,6 +94,9 @@ app.use(
 // Static directory for uploaded files (APKs and Images)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Background jobs & services
+const { startNotificationCleanupJob, stopNotificationCleanupJob } = require('./services/notificationCleanupService');
+
 // Rate Limiting (Protects against scraping and DoS)
 const { apiLimiter } = require('./middleware/rateLimiter');
 app.use('/api', apiLimiter);
@@ -171,6 +174,7 @@ const startServer = () => {
   server = app.listen(PORT, () => {
     console.log(`[INFO] Server running on http://localhost:${PORT}`);
     retryCount = 0; // Reset retries on successful bind
+    startNotificationCleanupJob();
   });
 
   // 1. Enforce strict HTTP socket timeouts to prevent Slowloris & hung sockets
@@ -215,6 +219,8 @@ startServer();
 
 // Forceful Cleanup and Zero-Orphan Shutdown
 const closeConnectionsAndServer = () => {
+  stopNotificationCleanupJob();
+
   // Immediately destroy all open keep-alive and active TCP sockets
   for (const socket of connections) {
     try {
