@@ -122,6 +122,16 @@ const DeveloperProfile = () => {
     return false;
   }, [user, developer, cleanUsername]);
 
+  // Dynamic Real-time Total Downloads (Declared at top level before conditional returns)
+  const totalDownloads = useMemo(() => {
+    if (!products || products.length === 0) return Number(stats.totalDownloads) || 0;
+    const computedSum = products.reduce((acc, p) => {
+      const base = Number(p.downloadCount ?? p.downloadsCount ?? p.downloads ?? 0);
+      return acc + getProductDownloadCount(p.id, base);
+    }, 0);
+    return Math.max(computedSum, Number(stats.totalDownloads) || 0);
+  }, [products, stats.totalDownloads, refreshDownloads]);
+
 
 
   // Fetch Public Profile
@@ -270,16 +280,6 @@ const DeveloperProfile = () => {
 
   // Resolved cover banner URL (No demo background image)
   const coverBannerUrl = developer.coverImage || developer.banner || '';
-
-  // Dynamic Real-time Total Downloads
-  const totalDownloads = useMemo(() => {
-    if (!products || products.length === 0) return Number(stats.totalDownloads) || 0;
-    const computedSum = products.reduce((acc, p) => {
-      const base = Number(p.downloadCount ?? p.downloadsCount ?? p.downloads ?? 0);
-      return acc + getProductDownloadCount(p.id, base);
-    }, 0);
-    return Math.max(computedSum, Number(stats.totalDownloads) || 0);
-  }, [products, stats.totalDownloads, refreshDownloads]);
 
   return (
     <div className="dev-ref-page-container">
