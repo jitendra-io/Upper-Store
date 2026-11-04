@@ -6,6 +6,7 @@ const { uploadToGitHubRelease } = require('../services/githubReleaseService');
 const { buildSecurityVerification } = require('../services/securityScanService');
 const { FieldValue } = require('../config/firebase');
 const cacheService = require('../services/cacheService');
+const { invalidateSearchCache } = require('../services/searchService');
 
 
 // Helper to process package file upload (prefers GitHub Release for large files)
@@ -374,6 +375,7 @@ const createProduct = async (req, res) => {
 
     const docRef = await db.collection('products').add(productData);
     cacheService.invalidate('products_list');
+    invalidateSearchCache();
     console.log(` Product published successfully via GitHub Release: "${title}" (ID: ${docRef.id})`);
     res.status(201).json({ id: docRef.id, ...productData });
   } catch (error) {
@@ -503,6 +505,7 @@ const updateProduct = async (req, res) => {
 
     await docRef.update(updatedData);
     cacheService.invalidate('products_list');
+    invalidateSearchCache();
     const updatedDoc = await docRef.get();
     res.json({ id: updatedDoc.id, ...updatedDoc.data() });
   } catch (error) {
@@ -565,6 +568,7 @@ const deleteProduct = async (req, res) => {
 
     await docRef.delete();
     cacheService.invalidate('products_list');
+    invalidateSearchCache();
     res.json({ message: 'Product deleted successfully.' });
   } catch (error) {
     res.status(500).json({ message: 'Error deleting product.' });

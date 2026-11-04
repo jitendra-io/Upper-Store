@@ -14,7 +14,7 @@ import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import './Navbar.css';
 
-const Navbar = () => {
+const Navbar = ({ onOpenSearch }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
@@ -327,6 +327,26 @@ const Navbar = () => {
               <CloseIcon size={16} />
             </button>
           </div>
+
+          {/* SEARCH TRIGGER IN MOBILE DRAWER */}
+          <button
+            type="button"
+            className="mobile-drawer-search-btn"
+            onClick={() => {
+              closeMenu();
+              if (onOpenSearch) onOpenSearch();
+              else window.dispatchEvent(new CustomEvent('openGlobalSearch'));
+            }}
+          >
+            <span className="mobile-drawer-search-btn-left">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <span>Search Store</span>
+            </span>
+            <span className="mobile-drawer-search-kbd">Ctrl K</span>
+          </button>
           <Link to="/" onClick={closeMenu} className={location.pathname === '/' ? 'active-link' : ''}>Home</Link>
           <Link to="/products" onClick={closeMenu} className={location.pathname.startsWith('/products') ? 'active-link' : ''}>Products</Link>
           <Link to="/vip-club" onClick={closeMenu} className={`vip-nav-link ${location.pathname === '/vip-club' || location.pathname === '/vip' ? 'active-link' : ''}`}>
@@ -367,6 +387,25 @@ const Navbar = () => {
 
         {/* ALWAYS-VISIBLE TOP HEADER ACTIONS (Notification, User Profile / Sign In, Mobile Toggle) */}
         <div className="nav-actions">
+          {/* GLOBAL SEARCH TRIGGER (OMNISEARCH SPOTLIGHT) */}
+          <button
+            type="button"
+            className="nav-search-trigger-btn"
+            onClick={() => {
+              if (onOpenSearch) onOpenSearch();
+              else window.dispatchEvent(new CustomEvent('openGlobalSearch'));
+            }}
+            title="Search products and developers (Ctrl+K)"
+            aria-label="Search products and developers"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="nav-search-btn-icon">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span className="nav-search-btn-label">Search...</span>
+            <span className="nav-search-btn-kbd">Ctrl K</span>
+          </button>
+
           {/* BLUE NOTIFICATION BELL */}
           <div className="nav-notif-wrapper" ref={notifDropdownRef}>
             <button

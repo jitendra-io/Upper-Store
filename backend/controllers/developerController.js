@@ -3,6 +3,7 @@ const { db } = require('../config/firebase');
 const path = require('path');
 const fs = require('fs');
 const { uploadFileToCloudOrLocal } = require('../services/imagekitService');
+const { invalidateSearchCache } = require('../services/searchService');
 
 const isOfficialAuthorized = (req) => {
   if (!req.user) return false;
@@ -260,6 +261,9 @@ const registerDeveloperKyc = async (req, res) => {
         // Non-critical
       }
     }
+
+    // Invalidate search index cache so updated developer profile appears immediately
+    invalidateSearchCache();
 
     res.json({
       message: 'Developer Aadhaar verification registered successfully! You can now publish products and broadcast notifications.',
@@ -691,6 +695,8 @@ const updateDeveloperBio = async (req, res) => {
       // Non-critical
     }
 
+    invalidateSearchCache();
+
     res.json({
       message: 'Developer bio updated successfully.',
       bio: cleanBio,
@@ -759,6 +765,7 @@ const updateOfficialProfile = async (req, res) => {
     await docRef.set(updates, { merge: true });
 
     const snap = await docRef.get();
+    invalidateSearchCache();
     return res.json({
       message: 'Upper Store Official profile updated successfully.',
       developer: {

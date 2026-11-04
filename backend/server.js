@@ -124,6 +124,7 @@ app.get('/api/download', require('./controllers/downloadController').proxyDownlo
 app.use('/api/downloads', require('./routes/downloadRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/developers', require('./routes/developerRoutes'));
+app.use('/api/search', require('./routes/searchRoutes'));
 
 // High-Performance Telemetry & Health Endpoint
 const cacheService = require('./services/cacheService');
