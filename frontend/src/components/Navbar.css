@@ -204,12 +204,35 @@
 /* ==========================================================================
    USER PROFILE DROPDOWN (PREMIUM ENTERPRISE GLASS)
    ========================================================================== */
+/* Transparent click/tap backdrop that intercepts outside clicks & gestures */
+.nav-profile-dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1001;
+  background: transparent;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+@media (max-width: 768px) {
+  .nav-profile-dropdown-backdrop {
+    z-index: 10004;
+  }
+}
+
 .nav-user-dropdown {
   position: absolute;
   top: calc(100% + 0.75rem);
   right: 0;
   width: 320px;
   max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
   background: rgba(14, 15, 21, 0.96);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);

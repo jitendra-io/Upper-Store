@@ -120,6 +120,47 @@ const Navbar = () => {
     setNotifDropdownOpen(false);
   }, [location.pathname]);
 
+  // Disable background scrolling while the user profile dropdown is open
+  useEffect(() => {
+    if (userDropdownOpen) {
+      const prevBodyOverflow = document.body.style.overflow;
+      const prevDocOverflow = document.documentElement.style.overflow;
+
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+
+      const handleWheel = (e) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+          e.preventDefault();
+        }
+      };
+
+      const handleTouchMove = (e) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+          e.preventDefault();
+        }
+      };
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+          setUserDropdownOpen(false);
+        }
+      };
+
+      window.addEventListener('wheel', handleWheel, { passive: false });
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = prevBodyOverflow;
+        document.documentElement.style.overflow = prevDocOverflow;
+        window.removeEventListener('wheel', handleWheel);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [userDropdownOpen]);
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -128,7 +169,11 @@ const Navbar = () => {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -467,6 +512,15 @@ const Navbar = () => {
                 {isBanned && <span className="nav-banned-tag">BANNED</span>}
                 <span className="dropdown-caret">▾</span>
               </button>
+
+              {/* BACKDROP TO DISMISS AND PREVENT BACKGROUND INTERACTION */}
+              {userDropdownOpen && (
+                <div
+                  className="nav-profile-dropdown-backdrop"
+                  onClick={() => setUserDropdownOpen(false)}
+                  aria-hidden="true"
+                />
+              )}
 
               {/* DROPDOWN MENU */}
               {userDropdownOpen && (() => {
