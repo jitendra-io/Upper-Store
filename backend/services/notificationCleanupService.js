@@ -49,6 +49,14 @@ const cleanExpiredNotifications = async ({ retentionDays = 15, dryRun = false } 
     return { skipped: true, reason: 'in_progress' };
   }
 
+  // Throttle: Never execute notification cleanup more than once every 6 hours
+  if (lastCleanupRun && lastCleanupRun.timestamp) {
+    const elapsed = Date.now() - new Date(lastCleanupRun.timestamp).getTime();
+    if (!isNaN(elapsed) && elapsed < 6 * 60 * 60 * 1000) {
+      return { skipped: true, reason: 'throttled' };
+    }
+  }
+
   isCleanupInProgress = true;
   const startTime = Date.now();
   const retentionMs = Math.max(1, retentionDays) * 24 * 60 * 60 * 1000;
@@ -150,22 +158,13 @@ const maybeTriggerPassiveCleanup = ({ retentionDays = 15, minIntervalMs = 6 * 60
 const startNotificationCleanupJob = ({
   intervalMs = 12 * 60 * 60 * 1000, // 12 hours
   retentionDays = 15,
-  initialDelayMs = 5000,
 } = {}) => {
   if (cleanupTimer) {
     clearInterval(cleanupTimer);
     cleanupTimer = null;
   }
 
-  // Initial run after short delay to let server boot cleanly
-  const initialTimeout = setTimeout(() => {
-    cleanExpiredNotifications({ retentionDays }).catch((err) => {
-      console.warn('[WARN] [Notification Cleanup] Initial startup run failed:', err.message);
-    });
-  }, initialDelayMs);
-  initialTimeout.unref();
-
-  // Scheduled recurring run
+  // Scheduled recurring run only (Runs every 12h, never spamming Firestore on server boot/reload)
   cleanupTimer = setInterval(() => {
     cleanExpiredNotifications({ retentionDays }).catch((err) => {
       console.warn('[WARN] [Notification Cleanup] Scheduled run failed:', err.message);

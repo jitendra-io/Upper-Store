@@ -178,15 +178,29 @@ const PORT = process.env.PORT || 5000;
 let server;
 let retryCount = 0;
 const MAX_PORT_RETRIES = 3;
+let cleanupJobStarted = false;
+let stableTimer = null;
 
 // Active connection tracking for instantaneous zero-latency socket destruction on shutdown
 const connections = new Set();
 
 const startServer = () => {
-  server = app.listen(PORT, () => {
+  server = app.listen(PORT);
+
+  server.once('listening', () => {
     console.log(`[INFO] Server running on http://localhost:${PORT}`);
-    retryCount = 0; // Reset retries on successful bind
-    startNotificationCleanupJob();
+
+    // Only reset retryCount once the server has been running stably without error
+    if (stableTimer) clearTimeout(stableTimer);
+    stableTimer = setTimeout(() => {
+      retryCount = 0;
+    }, 4000);
+    stableTimer.unref();
+
+    if (!cleanupJobStarted) {
+      cleanupJobStarted = true;
+      startNotificationCleanupJob();
+    }
   });
 
   // 1. Enforce strict HTTP socket timeouts to prevent Slowloris & hung sockets
@@ -201,7 +215,9 @@ const startServer = () => {
   });
 
   // 3. Robust Error Handling (Guarded against infinite EADDRINUSE freeze loops)
-  server.on('error', (err) => {
+  server.once('error', (err) => {
+    if (stableTimer) clearTimeout(stableTimer);
+
     if (err.code === 'EADDRINUSE') {
       retryCount++;
       if (retryCount <= MAX_PORT_RETRIES) {
