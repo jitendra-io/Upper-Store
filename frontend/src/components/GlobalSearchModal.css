@@ -502,40 +502,6 @@
   color: #fbbf24;
 }
 
-/* MODAL FOOTER */
-.search-modal-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 1.25rem;
-  padding: 0.65rem 1.25rem;
-  background: #0d0d12;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.footer-shortcut-hint {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.kbd-pill {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #e5e7eb;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.1rem 0.38rem;
-  border-radius: 4px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-}
-
-.hint-label {
-  color: #6b7280;
-  font-size: 0.72rem;
-  font-weight: 500;
-}
-
 /* =========================================================
    MOBILE & PHONE OPTIMIZATION (< 768px)
    Full-screen native app style feel with large touch targets
@@ -572,10 +538,6 @@
     padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   }
 
-  .search-modal-footer {
-    display: none; /* Mobile users touch directly, keyboard hints unneeded */
-  }
-
   .hit-title-name {
     font-size: 0.88rem;
   }
@@ -589,3 +551,4 @@
     padding: 0.6rem 0.75rem;
   }
 }
+

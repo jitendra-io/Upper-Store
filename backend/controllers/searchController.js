@@ -54,3 +54,4 @@ const searchGlobal = async (req, res) => {
 module.exports = {
   searchGlobal,
 };
+

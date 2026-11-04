@@ -18,3 +18,4 @@ const searchLimiter = rateLimit({
 router.get('/', searchLimiter, searchGlobal);
 
 module.exports = router;
+

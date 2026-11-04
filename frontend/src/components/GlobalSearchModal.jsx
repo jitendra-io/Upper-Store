@@ -482,26 +482,10 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
             </div>
           )}
         </div>
-
-        {/* BOTTOM SHORTCUTS FOOTER (Hidden on mobile phones) */}
-        <div className="search-modal-footer">
-          <div className="footer-shortcut-hint">
-            <span className="kbd-pill">&uarr;</span>
-            <span className="kbd-pill">&darr;</span>
-            <span className="hint-label">Navigate</span>
-          </div>
-          <div className="footer-shortcut-hint">
-            <span className="kbd-pill">Enter</span>
-            <span className="hint-label">Select</span>
-          </div>
-          <div className="footer-shortcut-hint">
-            <span className="kbd-pill">Esc</span>
-            <span className="hint-label">Close</span>
-          </div>
-        </div>
       </div>
     </div>
   );
 };
 
 export default GlobalSearchModal;
+
