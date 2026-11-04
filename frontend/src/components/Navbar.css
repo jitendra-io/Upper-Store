@@ -625,6 +625,10 @@
   display: none;
 }
 
+.mobile-drawer-search-btn {
+  display: none;
+}
+
 .nav-drawer-backdrop {
   display: none;
 }
@@ -960,8 +964,32 @@
   }
 
   .nav-search-trigger-btn {
-    width: 38px;
-    height: 38px;
+    display: none !important;
+  }
+
+  .mobile-drawer-search-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.25);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    text-align: left;
+    box-sizing: border-box;
+    font-family: inherit;
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-drawer-search-btn:active {
+    background: rgba(251, 191, 36, 0.18);
+    transform: scale(0.98);
   }
 
   /* Backdrop: Sits between the page and the sliding drawer */

@@ -234,7 +234,7 @@ const Products = () => {
             </svg>
             <input
               type="text"
-              placeholder="Search by keywords (e.g. mobile, dark mode, particle, gold)..."
+              placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

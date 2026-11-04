@@ -328,6 +328,23 @@ const Navbar = ({ onOpenSearch }) => {
             </button>
           </div>
 
+          {/* SEARCH ITEM FOR MOBILE PHONE HAMBURGER DRAWER */}
+          <button
+            type="button"
+            className="mobile-drawer-search-btn"
+            onClick={() => {
+              closeMenu();
+              if (onOpenSearch) onOpenSearch();
+              else window.dispatchEvent(new CustomEvent('openGlobalSearch'));
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Search</span>
+          </button>
+
           <Link to="/" onClick={closeMenu} className={location.pathname === '/' ? 'active-link' : ''}>Home</Link>
           <Link to="/products" onClick={closeMenu} className={location.pathname.startsWith('/products') ? 'active-link' : ''}>Products</Link>
           <Link to="/vip-club" onClick={closeMenu} className={`vip-nav-link ${location.pathname === '/vip-club' || location.pathname === '/vip' ? 'active-link' : ''}`}>

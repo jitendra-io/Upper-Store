@@ -71,10 +71,18 @@
   margin: 0 auto 2rem;
 }
 
-/* Search Box */
+/* Search Box: Hidden on PC, displayed on phone */
 .catalog-search-form {
   max-width: 580px;
   margin: 0 auto;
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .catalog-search-form {
+    display: block;
+    margin: 1.25rem auto 1rem;
+  }
 }
 
 .catalog-search-box {
