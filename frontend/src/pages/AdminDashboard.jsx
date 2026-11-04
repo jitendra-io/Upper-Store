@@ -1821,7 +1821,7 @@ const AdminDashboard = () => {
                                 <VipFlairBadge plan={dev.isOfficial || dev.username === 'upperstore' ? 'official' : (dev.vipPlan || 'pro')} compact={true} />
                               </div>
                               <span className="sub-text">Legal: {dev.legalName}</span>
-                              <span className="sub-text">Joined: {new Date(dev.createdAt || Date.now()).toLocaleDateString()}</span>
+                              <span className="sub-text">Joined: {dev.joinedAt || (dev.createdAt ? new Date(dev.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Unknown')}</span>
                             </div>
                           </td>
 
@@ -1955,7 +1955,7 @@ const AdminDashboard = () => {
                           />
                           <div>
                             <strong>{u.displayName || u.email.split('@')[0]}</strong>
-                            <span className="sub-text">Registered: {new Date(u.createdAt || Date.now()).toLocaleDateString()}</span>
+                            <span className="sub-text">Registered: {u.joinedAt || (u.createdAt ? new Date(u.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Unknown')}</span>
                           </div>
                         </td>
                         <td>{u.email}</td>

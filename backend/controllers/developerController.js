@@ -12,6 +12,18 @@ const isOfficialAuthorized = (req) => {
   return false;
 };
 
+/**
+ * Format date to exact Month and Year with no day/date (e.g., "November 2026")
+ */
+const formatExactMonthYear = (dateInput = new Date()) => {
+  if (typeof dateInput === 'string' && /^[A-Z][a-z]+ \d{4}$/.test(dateInput.trim())) {
+    return dateInput.trim();
+  }
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  const valid = isNaN(d.getTime()) ? new Date() : d;
+  return valid.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+};
+
 // @desc    Get authenticated user's developer profile
 // @route   GET /api/developers/me
 // @access  Private (Authenticated User)
@@ -52,11 +64,14 @@ const getMyDeveloperProfile = async (req, res) => {
       // Ignore count error
     }
 
+    const joinedAt = devData.joinedAt || formatExactMonthYear(devData.createdAt || devDoc.createTime?.toDate() || new Date());
+
     res.json({
       isRegistered: true,
       developer: {
         id: devDoc.id,
         ...devData,
+        joinedAt,
         productsCount,
       },
     });
@@ -193,6 +208,7 @@ const registerDeveloperKyc = async (req, res) => {
     };
 
     let devId;
+    let devJoinedAt;
     if (!existingDevSnap.empty) {
       // Update existing
       const existingDoc = existingDevSnap.docs[0];
@@ -203,15 +219,20 @@ const registerDeveloperKyc = async (req, res) => {
       devPayload.isSuspended = Boolean(existingData.isSuspended);
       devPayload.suspendedAt = existingData.suspendedAt || null;
       devPayload.suspensionReason = existingData.suspensionReason || null;
-      devPayload.createdAt = existingData.createdAt || new Date().toISOString();
+      devPayload.createdAt = existingData.createdAt || existingDoc.createTime?.toDate()?.toISOString() || new Date().toISOString();
+      devJoinedAt = existingData.joinedAt || formatExactMonthYear(devPayload.createdAt);
+      devPayload.joinedAt = devJoinedAt;
 
       await existingDoc.ref.update(devPayload);
     } else {
       // Create new
+      const now = new Date();
+      devJoinedAt = formatExactMonthYear(now);
       devPayload.isSuspended = false;
       devPayload.suspendedAt = null;
       devPayload.suspensionReason = null;
-      devPayload.createdAt = new Date().toISOString();
+      devPayload.joinedAt = devJoinedAt;
+      devPayload.createdAt = now.toISOString();
 
       const newDoc = await db.collection('developers').add(devPayload);
       devId = newDoc.id;
@@ -223,6 +244,7 @@ const registerDeveloperKyc = async (req, res) => {
         const uUpdate = {
           isDeveloper: true,
           developerDisplayName: displayName.trim(),
+          developerJoinedAt: devJoinedAt,
           developerUpdatedAt: new Date().toISOString(),
         };
         if (cleanDevUsername) {
@@ -294,6 +316,7 @@ const getAllDevelopers = async (req, res) => {
         suspendedAt: d.suspendedAt || null,
         suspensionReason: d.suspensionReason || null,
         productsCount: prodCount,
+        joinedAt: d.joinedAt || formatExactMonthYear(d.createdAt || doc.createTime?.toDate() || new Date()),
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
       });
@@ -409,7 +432,7 @@ const getPublicDeveloperProfile = async (req, res) => {
           isOfficial: true,
           isDeveloper: true,
           isSuspended: false,
-          joinedAt: officialData.joinedAt || '2026-01-01T00:00:00.000Z',
+          joinedAt: officialData.joinedAt || 'January 2026',
         },
         stats: {
           productsCount: officialProducts.length,
@@ -587,7 +610,17 @@ const getPublicDeveloperProfile = async (req, res) => {
         userData?.locationLocked ||
         devData?.locationLocked
       ),
-      joinedAt: devData?.createdAt || userData?.createdAt || null,
+      joinedAt: formatExactMonthYear(
+        devData?.joinedAt ||
+        userData?.developerJoinedAt ||
+        devData?.createdAt ||
+        devDoc?.createTime?.toDate() ||
+        userData?.joinedAt ||
+        userData?.createdAt ||
+        userDoc?.createTime?.toDate() ||
+        new Date()
+      ),
+      createdAt: devData?.createdAt || userData?.createdAt || null,
     };
 
     res.json({

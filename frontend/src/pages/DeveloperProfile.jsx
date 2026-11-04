@@ -12,13 +12,27 @@ import './DeveloperProfile.css';
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const formatJoinedDate = (dateString) => {
-  if (!dateString) return 'Joined March 2024';
+  if (!dateString) {
+    const now = new Date();
+    return `Joined ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+  }
+  const trimmed = String(dateString).trim();
+  if (/^joined\s+/i.test(trimmed)) {
+    return trimmed;
+  }
+  if (/^[A-Za-z]+\s+\d{4}$/.test(trimmed)) {
+    return `Joined ${trimmed}`;
+  }
   try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return 'Joined March 2024';
+    const d = new Date(trimmed);
+    if (isNaN(d.getTime())) {
+      const now = new Date();
+      return `Joined ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+    }
     return `Joined ${d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
   } catch {
-    return 'Joined March 2024';
+    const now = new Date();
+    return `Joined ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
   }
 };
 

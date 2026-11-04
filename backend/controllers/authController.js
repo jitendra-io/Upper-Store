@@ -202,6 +202,18 @@ const generateUniqueUsername = async (identifier, excludeUserId = null) => {
   }
 };
 
+/**
+ * Format date to exact Month and Year with no day/date (e.g., "November 2026")
+ */
+const formatExactMonthYear = (dateInput = new Date()) => {
+  if (typeof dateInput === 'string' && /^[A-Z][a-z]+ \d{4}$/.test(dateInput.trim())) {
+    return dateInput.trim();
+  }
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  const valid = isNaN(d.getTime()) ? new Date() : d;
+  return valid.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+};
+
 // @desc    Register new end-user
 // @route   POST /api/auth/user/register
 // @access  Public
@@ -244,6 +256,10 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
     const photoURL = `https://unavatar.io/${encodeURIComponent(cleanEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanEmail)}`;
 
+    const now = new Date();
+    const joinedAt = formatExactMonthYear(now);
+    const createdAt = now.toISOString();
+
     const newUserRef = await db.collection('users').add({
       email: cleanEmail,
       username: cleanUsername,
@@ -256,7 +272,8 @@ const registerUser = async (req, res) => {
       totalVipDays: 0,
       totalAmountSpent: 0,
       lastSubscribedAt: null,
-      createdAt: new Date().toISOString(),
+      joinedAt,
+      createdAt,
     });
 
     const userProfile = {
@@ -271,6 +288,8 @@ const registerUser = async (req, res) => {
       totalVipDays: 0,
       totalAmountSpent: 0,
       lastSubscribedAt: null,
+      joinedAt,
+      createdAt,
       role: 'user',
     };
 
@@ -331,6 +350,11 @@ const loginUser = async (req, res) => {
 
     const membership = await resolveUserMembership(userData, userDoc.ref);
 
+    const joinedAt = userData.joinedAt || formatExactMonthYear(userData.createdAt || userDoc.createTime?.toDate() || new Date());
+    if (!userData.joinedAt) {
+      userDoc.ref.update({ joinedAt }).catch(() => {});
+    }
+
     const userProfile = {
       uid: userDoc.id,
       email: userData.email,
@@ -347,6 +371,8 @@ const loginUser = async (req, res) => {
       totalAmountSpent: Number(userData.totalAmountSpent) || 0,
       lastSubscribedAt: userData.lastSubscribedAt || null,
       lastSubscriptionPlan: userData.lastSubscriptionPlan || null,
+      joinedAt,
+      createdAt: userData.createdAt || userDoc.createTime?.toDate()?.toISOString() || new Date().toISOString(),
       role: 'user',
     };
 
@@ -438,6 +464,10 @@ const googleOAuthLogin = async (req, res) => {
     if (snapshot.empty) {
       // Create new user account via Google with unique username
       const generatedUsername = await generateUniqueUsername(cleanEmail);
+      const now = new Date();
+      const joinedAt = formatExactMonthYear(now);
+      const createdAt = now.toISOString();
+
       const newUserRef = await db.collection('users').add({
         email: cleanEmail,
         username: generatedUsername,
@@ -451,7 +481,8 @@ const googleOAuthLogin = async (req, res) => {
         totalVipDays: 0,
         totalAmountSpent: 0,
         lastSubscribedAt: null,
-        createdAt: new Date().toISOString(),
+        joinedAt,
+        createdAt,
       });
       uid = newUserRef.id;
       finalProfile = {
@@ -467,6 +498,8 @@ const googleOAuthLogin = async (req, res) => {
         totalVipDays: 0,
         totalAmountSpent: 0,
         lastSubscribedAt: null,
+        joinedAt,
+        createdAt,
         role: 'user',
       };
 
@@ -496,6 +529,11 @@ const googleOAuthLogin = async (req, res) => {
 
       const membership = await resolveUserMembership(existingData, userDoc.ref);
 
+      const joinedAt = existingData.joinedAt || formatExactMonthYear(existingData.createdAt || userDoc.createTime?.toDate() || new Date());
+      if (!existingData.joinedAt) {
+        userDoc.ref.update({ joinedAt }).catch(() => {});
+      }
+
       finalProfile = {
         uid,
         email: cleanEmail,
@@ -512,6 +550,8 @@ const googleOAuthLogin = async (req, res) => {
         totalAmountSpent: Number(existingData.totalAmountSpent) || 0,
         lastSubscribedAt: existingData.lastSubscribedAt || null,
         lastSubscriptionPlan: existingData.lastSubscriptionPlan || null,
+        joinedAt,
+        createdAt: existingData.createdAt || userDoc.createTime?.toDate()?.toISOString() || new Date().toISOString(),
         role: 'user',
       };
 
@@ -551,6 +591,8 @@ const getAllUsers = async (req, res) => {
           totalVipDays: Number(data.totalVipDays) || 0,
           totalAmountSpent: Number(data.totalAmountSpent) || 0,
           lastSubscribedAt: data.lastSubscribedAt || null,
+          joinedAt: data.joinedAt || formatExactMonthYear(data.createdAt || doc.createTime?.toDate() || new Date()),
+          createdAt: data.createdAt || doc.createTime?.toDate()?.toISOString(),
         };
       })
     );
@@ -658,6 +700,8 @@ const getUserStatus = async (req, res) => {
       totalAmountSpent: Number(userData.totalAmountSpent) || 0,
       lastSubscribedAt: userData.lastSubscribedAt || null,
       lastSubscriptionPlan: userData.lastSubscriptionPlan || null,
+      joinedAt: userData.joinedAt || formatExactMonthYear(userData.createdAt || userDoc.createTime?.toDate() || new Date()),
+      createdAt: userData.createdAt || userDoc.createTime?.toDate()?.toISOString() || new Date().toISOString(),
       subscriptionData: {
         subscriptionCount: Number(userData.subscriptionCount) || 0,
         totalVipDays: Number(userData.totalVipDays) || 0,
