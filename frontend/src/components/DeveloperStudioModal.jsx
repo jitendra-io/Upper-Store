@@ -119,10 +119,12 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
         const allProds = await prodRes.json();
         const userEmail = (user?.email || '').toLowerCase();
         const userId = user?.uid;
+        const userHandle = (user?.username || '').toLowerCase();
         const owned = allProds.filter(
           (p) =>
-            (p.developerEmail && p.developerEmail.toLowerCase() === userEmail) ||
-            (p.developerId && p.developerId === userId)
+            (p.developerId && p.developerId === userId) ||
+            (p.developerUsername && p.developerUsername.toLowerCase() === userHandle) ||
+            (p.developerEmail && p.developerEmail.toLowerCase() === userEmail)
         );
         setMyProducts(owned);
       }

@@ -10,6 +10,13 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react()],
     base,
+    build: {
+      sourcemap: false,
+    },
+    oxc: {
+      drop: mode === 'production' ? ['debugger'] : [],
+      pure: mode === 'production' ? ['console.log', 'console.debug'] : [],
+    },
     server: {
       proxy: {
         '/api/download': {

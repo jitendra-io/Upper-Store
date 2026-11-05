@@ -140,6 +140,8 @@ const getProducts = async (req, res) => {
           p.securityStatus = 'Clean / 0 Threats Detected';
           p.isSecurityVerified = true;
         }
+        // Zero-Leak Projection: Omit private developer email from public catalog responses
+        delete p.developerEmail;
         return p;
       });
     }, 60);
@@ -184,18 +186,6 @@ const getProductById = async (req, res) => {
     if (!doc.exists) return res.status(404).json({ message: 'Product not found.' });
     const data = doc.data();
 
-    // Developer Permission Guard: If not admin, only the creator can delete
-    if (!req.isAdmin) {
-      const currentEmail = (req.user?.email || '').toLowerCase();
-      const currentUid = req.user?.uid;
-      const isOwner =
-        (data.developerEmail && data.developerEmail.toLowerCase() === currentEmail) ||
-        (data.developerId && data.developerId === currentUid);
-
-      if (!isOwner) {
-        return res.status(403).json({ message: 'Forbidden: You can only delete products you published.' });
-      }
-    }
     if (!data.sha256Checksum) {
       const sec = await buildSecurityVerification(data.apkFile || doc.id, data.version || '1.0.0');
       data.sha256Checksum = sec.sha256Checksum;
@@ -203,7 +193,10 @@ const getProductById = async (req, res) => {
       data.virusTotalUrl = sec.virusTotalUrl;
       data.isSecurityVerified = true;
     }
-    res.json({ id: doc.id, ...data });
+    const safeProduct = { id: doc.id, ...data };
+    // Zero-Leak Projection: Omit private developer email from public product response
+    delete safeProduct.developerEmail;
+    res.json(safeProduct);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching product.' });
   }

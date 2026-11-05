@@ -101,6 +101,35 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user?.email]);
 
+  // Auto-logout after 30 minutes of inactivity to protect shared/public devices from token theft
+  useEffect(() => {
+    if (!token) return;
+
+    const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+    let timerId = null;
+
+    const resetTimer = () => {
+      if (timerId) clearTimeout(timerId);
+      timerId = setTimeout(() => {
+        logout();
+        window.dispatchEvent(
+          new CustomEvent('sessionExpired', {
+            detail: { message: 'Your session has ended due to 30 minutes of inactivity.' },
+          })
+        );
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const activityEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    activityEvents.forEach((evt) => window.addEventListener(evt, resetTimer, { passive: true }));
+    resetTimer();
+
+    return () => {
+      if (timerId) clearTimeout(timerId);
+      activityEvents.forEach((evt) => window.removeEventListener(evt, resetTimer));
+    };
+  }, [token]);
+
   const openAuthModal = (prompt = '', defaultTab = 'login') => {
     setAuthModalPrompt(prompt);
     setAuthModalTab(defaultTab);

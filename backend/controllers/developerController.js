@@ -653,7 +653,11 @@ const getPublicDeveloperProfile = async (req, res) => {
         totalDownloads,
         averageRating: Number(avgRating),
       },
-      products: matchedProducts,
+      products: matchedProducts.map((p) => {
+        const safe = { ...p };
+        delete safe.developerEmail;
+        return safe;
+      }),
     });
   } catch (error) {
     console.error('Error fetching public developer profile:', error);
