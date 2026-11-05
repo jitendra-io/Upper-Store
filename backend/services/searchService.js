@@ -119,7 +119,7 @@ const refreshIndex = async () => {
         displayName: data.displayName || username,
         avatar: data.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`,
         bio: data.bio && data.bio.trim() ? data.bio : 'Upper Store Verified Developer',
-        vipPlan: data.vipPlan || 'free',
+        vipPlan: (data.subscriptionEnded || data.vipPlan === 'free') ? 'free' : (data.vipPlan || 'free'),
         isVerified: Boolean(data.isVerified !== false && !data.isSuspended),
         isOfficial: false,
         isDeveloper: true,

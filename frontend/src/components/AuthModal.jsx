@@ -24,6 +24,9 @@ const AuthModal = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isAdultConfirmed, setIsAdultConfirmed] = useState(false);
+  const [isDpdpConsentGiven, setIsDpdpConsentGiven] = useState(false);
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
 
   // Lock background scroll & reset fields
   useEffect(() => {
@@ -37,6 +40,9 @@ const AuthModal = () => {
       setDisplayName('');
       setUsername('');
       setUsernameError('');
+      setIsAdultConfirmed(false);
+      setIsDpdpConsentGiven(false);
+      setShowPrivacyNotice(false);
     } else {
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
@@ -89,6 +95,9 @@ const AuthModal = () => {
       setUsernameError('Only small letters, numbers, _ and . allowed.');
     } else {
       setUsernameError('');
+      setIsAdultConfirmed(false);
+      setIsDpdpConsentGiven(false);
+      setShowPrivacyNotice(false);
     }
   };
 
@@ -101,6 +110,16 @@ const AuthModal = () => {
       if (authModalTab === 'login') {
         await login(email, password);
       } else {
+        if (!isAdultConfirmed) {
+          setErrorMsg('Under Section 9 of the DPDP Act 2023, you must confirm that you are at least 18 years of age.');
+          setLoading(false);
+          return;
+        }
+        if (!isDpdpConsentGiven) {
+          setErrorMsg('Under Section 6 of the DPDP Act 2023, affirmative consent to data processing under our Privacy Policy is required to create an account.');
+          setLoading(false);
+          return;
+        }
         const cleanUser = username.trim().toLowerCase();
         if (!cleanUser || cleanUser.length < 3) {
           setErrorMsg('Username must be at least 3 characters long.');
@@ -119,6 +138,9 @@ const AuthModal = () => {
       setDisplayName('');
       setUsername('');
       setUsernameError('');
+      setIsAdultConfirmed(false);
+      setIsDpdpConsentGiven(false);
+      setShowPrivacyNotice(false);
     } catch (err) {
       setErrorMsg(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
@@ -334,6 +356,57 @@ const AuthModal = () => {
               </button>
             </div>
           </div>
+
+          {authModalTab === 'register' && (
+            <div className="dpdp-consent-box" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '0.85rem', marginBottom: '1.25rem', fontSize: '0.82rem', color: '#cbd5e1' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '0.65rem' }}>
+                <input
+                  type="checkbox"
+                  id="auth-adult-check"
+                  checked={isAdultConfirmed}
+                  onChange={(e) => setIsAdultConfirmed(e.target.checked)}
+                  style={{ marginTop: '3px', cursor: 'pointer', accentColor: '#ffd700' }}
+                  required
+                />
+                <label htmlFor="auth-adult-check" style={{ cursor: 'pointer', lineHeight: 1.4 }}>
+                  I confirm that I am <strong>18 years of age or older</strong> (DPDP Act 2023 Age Requirement).
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  id="auth-dpdp-check"
+                  checked={isDpdpConsentGiven}
+                  onChange={(e) => setIsDpdpConsentGiven(e.target.checked)}
+                  style={{ marginTop: '3px', cursor: 'pointer', accentColor: '#ffd700' }}
+                  required
+                />
+                <label htmlFor="auth-dpdp-check" style={{ cursor: 'pointer', lineHeight: 1.4 }}>
+                  I give affirmative consent to the collection and processing of my personal data under the{' '}
+                  <a href="/policies#privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#ffd700', textDecoration: 'underline' }}>Privacy Policy</a> and agree to the{' '}
+                  <a href="/policies#terms" target="_blank" rel="noopener noreferrer" style={{ color: '#ffd700', textDecoration: 'underline' }}>Terms of Service</a>.
+                </label>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowPrivacyNotice(!showPrivacyNotice)}
+                style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.78rem', padding: '0', cursor: 'pointer', textDecoration: 'underline', marginTop: '4px' }}
+              >
+                {showPrivacyNotice ? 'Hide Statutory Privacy Notice' : 'View Statutory Personal Data Notice (DPDP Act Section 5) ▾'}
+              </button>
+
+              {showPrivacyNotice && (
+                <div style={{ marginTop: '0.6rem', padding: '0.6rem', background: 'rgba(0,0,0,0.4)', borderRadius: '6px', fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.5 }}>
+                  <p style={{ margin: '0 0 4px 0' }}><strong>Personal Data Collected:</strong> Email, username, profile name, IP address, download logs.</p>
+                  <p style={{ margin: '0 0 4px 0' }}><strong>Processing Purpose:</strong> Authentication, software licensing, anti-abuse security.</p>
+                  <p style={{ margin: '0 0 4px 0' }}><strong>Your Rights:</strong> Right to access, correct, erase (Section 12), and withdraw consent at any time.</p>
+                  <p style={{ margin: 0 }}><strong>Grievance Officer:</strong> grievance@upperstore.in | SLA: 24–48h response, 15 days resolution.</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* SUBMIT BUTTON */}
           <button type="submit" className="auth-submit-btn" disabled={loading}>

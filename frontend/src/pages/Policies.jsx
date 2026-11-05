@@ -108,14 +108,14 @@ const POLICIES_DATA = {
 • Contact Information: Email address and name provided when submitting support inquiries, feedback, or ban appeals.
 • System & Diagnostic Data: IP address, browser type, device information, and download timestamps collected automatically for rate-limiting, security monitoring, and anti-abuse safeguards.
 • Account Credentials: Cryptographically hashed passwords (via bcrypt) for administrative or registered user sessions.
-• Developer Identity & Aadhaar KYC: When registering as a creator in Developer Studio, we collect developer legal name, 12-digit Aadhaar identification number, and official identity document links strictly to satisfy statutory anti-fraud verification and creator authenticity.`
+• Developer Registration & Consent: When registering as a creator in Developer Studio, we collect developer legal name, public developer name, mobile phone number, and developer username strictly to establish creator authenticity and software accountability under the Information Technology Act, 2000 and the Digital Personal Data Protection (DPDP) Act, 2023. We do not require, request, or store any government identity documents, identity numbers, or verification URLs. In accordance with Section 6(4) of the DPDP Act 2023, developers may review the statutory consent notice and withdraw their consent at any time directly within Developer Studio.`
       },
       {
         title: '2. How We Store & Secure Data',
         content: `Your data is processed and secured using modern cloud infrastructure:
 • Real-time Databases: Encrypted at rest and in transit via Firebase Firestore (TLS 1.3).
 • Media & CDN Storage: Visual branding, logos, and screenshots are served securely via ImageKit CDN.
-• Developer KYC Vault: Developer identity records and Aadhaar numbers are stored in encrypted, access-restricted collections accessible only by authenticated platform administrators. KYC details are never indexed by search engines, exposed in client API responses, or shared with third parties.
+• Developer Profile Vault: Developer registration details (legal name, developer name, phone, handle) are stored in encrypted, access-restricted database collections accessible strictly by platform administrators. Private phone numbers and legal names are never exposed in public client API responses or indexed by search engines.
 • Binary Package Integrity: Application installers (.apk / .exe) are delivered through SSL-encrypted GitHub Release repositories.
 • Zero Unencrypted Relays: Inbound support inquiries and ban appeals are stored in encrypted database collections with restricted admin-only access.`
       },
@@ -139,9 +139,38 @@ We do not sell user data to advertising networks, profile users across external 
 • Account Data: Maintained as long as your account remains active.`
       },
       {
-        title: '6. User Data Rights (GDPR & DPDP Act Compliance)',
-        content: `Under global privacy frameworks, including India's Digital Personal Data Protection (DPDP) Act and the General Data Protection Regulation (GDPR), you have the right to access, rectify, or request complete erasure of your personal data.
-To request account deletion or data extraction, submit a request via our Contact page or email upper.official.in@gmail.com. Verified deletion requests are executed within 14 calendar days.`
+        title: '6. User Data Rights (DPDP Act 2023 & GDPR Compliance)',
+        content: `Under India's Digital Personal Data Protection (DPDP) Act, 2023 and the General Data Protection Regulation (GDPR), Data Principals are vested with enforceable statutory rights:
+• Right to Access Information (Section 11): Right to obtain a summary of personal data held and the identities of data fiduciaries with whom data has been shared.
+• Right to Correction and Erasure (Section 12): Right to correct inaccurate information, update profile records, or request complete erasure of personal data. Authenticated users can execute one-click account and data erasure directly via the Profile Menu, or by submitting a verified request to our Grievance Officer.
+• Right of Grievance Redressal (Section 13): Right to readily available grievance redressal mechanisms with guaranteed response within statutory timelines before approaching the regulatory authority.
+• Right to Nominate (Section 14): Right to designate a nominee to exercise rights in the event of death or incapacity.
+• Right to Withdraw Consent (Section 6(4)): Users may withdraw consent at any time with the same ease with which it was provided.`
+      },
+      {
+        title: '7. Statutory Grievance Redressal Mechanism & Officer (DPDP Act, 2023 & IT Rules, 2021)',
+        content: `In accordance with Rule 5(9) of the IT (SPDI) Rules 2011, Rule 3(2) of the Information Technology (Intermediary Guidelines) Rules 2021, and Section 13 of the Digital Personal Data Protection Act 2023, Upper Store has designated a Resident Grievance Redressal Officer & Data Protection Officer:
+
+• Officer Name: Jitendra Sahu
+• Official Designation: Resident Grievance Redressal Officer & Data Protection Officer
+• Entity: Upper Store Digital Asset & Software Platform
+• Registered Physical Address: Plot No. 104, Infocity Avenue, Bhubaneswar, Odisha - 751024, India
+• Direct Grievance Email: grievance@upperstore.in (CC: upper.official.in@gmail.com)
+• Acknowledgment Window: Written acknowledgment and ticket generation within 24 to 48 hours.
+• Final Disposal Timeline: Complete investigation, remedy, and disposal within 15 calendar days.
+
+Escalation to Data Protection Board of India:
+Under Section 13(3) of the DPDP Act, 2023, if your grievance remains unresolved after the expiration of the statutory period or you are unsatisfied with the resolution, you have the statutory right to file a complaint directly with the Data Protection Board of India.`
+      },
+      {
+        title: '8. Consumer Protection & E-Commerce Disclosures (Rules, 2020)',
+        content: `In compliance with Rule 4 of the Consumer Protection (E-Commerce) Rules, 2020:
+• Operating Legal Entity: Upper Store (Software & Digital Asset Platform).
+• Headquarters & Principal Place of Business: Bhubaneswar, Odisha - 751024, India.
+• Customer Support & Inquiries: support@upperstore.in / upper.official.in@gmail.com.
+• Nature of Commercial Offerings: Digital Software Applications, Desktop Utilities, Developer Assets, and VIP Memberships.
+• Country of Origin: India.
+• Pricing & Invoicing Transparency: All prices are displayed in Indian Rupees (INR) and USD as single-figure totals with zero hidden fees. Cryptographic license deliveries are fulfilled instantly upon payment confirmation.`
       }
     ]
   },

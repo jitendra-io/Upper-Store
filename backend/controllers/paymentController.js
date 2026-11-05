@@ -590,7 +590,38 @@ const fulfillOrderAndIssueLicense = async ({
         // Also update orderRecord with membership for easy reference
         await db.collection('orders').doc(orderId).update({ membership: membershipData });
 
-        console.log(`⭐ User ${cleanEmail} VIP activated (${membershipPlan}) with ${badge} badge using FieldValue.increment`);
+        // Restore developer VIP tier and product tags upon new subscription
+        try {
+          const targetUid = userRef.id;
+          const devSnap = targetUid
+            ? await db.collection('developers').where('userId', '==', targetUid).get()
+            : await db.collection('developers').where('email', '==', cleanEmail).get();
+          for (const d of devSnap.docs) {
+            await d.ref.update({
+              vipPlan: membershipPlan,
+              isVipActive: true,
+              subscriptionEnded: false,
+              updatedAt: startDate,
+            });
+          }
+          const prodSnap = targetUid
+            ? await db.collection('products').where('developerId', '==', targetUid).get()
+            : await db.collection('products').where('developerEmail', '==', cleanEmail).get();
+          for (const p of prodSnap.docs) {
+            await p.ref.update({
+              developerTier: membershipPlan,
+              updatedAt: startDate,
+            });
+          }
+          const cacheService = require('../services/cacheService');
+          cacheService.invalidate('products_list');
+          const { invalidateSearchCache } = require('../services/searchService');
+          invalidateSearchCache();
+        } catch (syncErr) {
+          console.warn('[VIP Activation] Error syncing developer profile/products:', syncErr.message);
+        }
+
+        console.log(`[VIP Activation] User ${cleanEmail} VIP activated (${membershipPlan}) with ${badge} badge.`);
 
         // Send VIP Membership Confirmation Email with Plan, Badge, Start Date, and End Date
         sendVipSubscriptionEmail({
@@ -1111,6 +1142,7 @@ const cancelSubscription = async (req, res) => {
       plan: 'free',
       badge: null,
       validUntil: null,
+      isCancelled: true,
       cancelledAt: cancellationTimestamp,
       previousPlan: cancelledPlan,
       previousExpiry,
@@ -1123,6 +1155,40 @@ const cancelSubscription = async (req, res) => {
       vipCancelledAt: cancellationTimestamp,
       updatedAt: cancellationTimestamp,
     });
+
+    // Invalidate developer profile and remove premium rings and tags from products
+    try {
+      const targetUid = userDoc.id;
+      const devSnap = targetUid
+        ? await db.collection('developers').where('userId', '==', targetUid).get()
+        : await db.collection('developers').where('email', '==', userEmail).get();
+      for (const d of devSnap.docs) {
+        await d.ref.update({
+          vipPlan: 'free',
+          isVipActive: false,
+          subscriptionEnded: true,
+          cancelledAt: cancellationTimestamp,
+          updatedAt: cancellationTimestamp,
+        });
+      }
+
+      const prodSnap = targetUid
+        ? await db.collection('products').where('developerId', '==', targetUid).get()
+        : await db.collection('products').where('developerEmail', '==', userEmail).get();
+      for (const p of prodSnap.docs) {
+        await p.ref.update({
+          developerTier: 'free',
+          updatedAt: cancellationTimestamp,
+        });
+      }
+
+      const cacheService = require('../services/cacheService');
+      cacheService.invalidate('products_list');
+      const { invalidateSearchCache } = require('../services/searchService');
+      invalidateSearchCache();
+    } catch (devErr) {
+      console.warn('[cancelSubscription] Error reverting developer tier and products:', devErr.message);
+    }
 
     // Mark user's active VIP subscription licenses as 'cancelled' in Firestore
     let updatedLicenseCount = 0;

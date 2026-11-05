@@ -140,6 +140,8 @@ const getProducts = async (req, res) => {
           p.securityStatus = 'Clean / 0 Threats Detected';
           p.isSecurityVerified = true;
         }
+        // Ensure developer tier is strictly 'elite' or 'pro' if active, otherwise 'free' (no rings or tags)
+        p.developerTier = (p.developerTier === 'elite' || p.developerTier === 'pro') ? p.developerTier : 'free';
         // Zero-Leak Projection: Omit private developer email from public catalog responses
         delete p.developerEmail;
         return p;
@@ -194,6 +196,7 @@ const getProductById = async (req, res) => {
       data.isSecurityVerified = true;
     }
     const safeProduct = { id: doc.id, ...data };
+    safeProduct.developerTier = (safeProduct.developerTier === 'elite' || safeProduct.developerTier === 'pro') ? safeProduct.developerTier : 'free';
     // Zero-Leak Projection: Omit private developer email from public product response
     delete safeProduct.developerEmail;
     res.json(safeProduct);

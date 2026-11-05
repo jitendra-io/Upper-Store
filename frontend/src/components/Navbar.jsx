@@ -494,7 +494,7 @@ const Navbar = ({ onOpenSearch }) => {
                                 {n.category || 'Release'}
                               </span>
                             </Link>
-                          ) : (
+                          ) : (n.authorType === 'admin' || n.isStoreOfficial || !authorHandle || authorHandle === 'upperstore') ? (
                             <Link
                               to={`/developer/${authorHandle || 'upperstore'}`}
                               className="notif-official-author-bar notif-author-link"
@@ -518,6 +518,35 @@ const Navbar = ({ onOpenSearch }) => {
                                     <span className="notif-official-badge">OFFICIAL</span>
                                   </div>
                                   <span className="notif-author-handle">@{authorHandle || 'upperstore'}</span>
+                                </div>
+                              </div>
+                              <span className={`notif-cat-tag ${(n.category || 'Update').toLowerCase()}`}>
+                                {n.category || 'Update'}
+                              </span>
+                            </Link>
+                          ) : (
+                            <Link
+                              to={`/developer/${authorHandle}`}
+                              className="notif-author-link"
+                              onClick={() => {
+                                setNotifDropdownOpen(false);
+                                closeMenu();
+                              }}
+                              title={`View @${authorHandle}'s profile`}
+                            >
+                              <div className="notif-author-left-cluster">
+                                <VipAvatar
+                                  src={n.authorAvatar || logoImg}
+                                  alt={n.authorName || authorHandle}
+                                  plan="free"
+                                  size="sm"
+                                  fallbackSeed={authorHandle}
+                                />
+                                <div className="notif-author-meta-col">
+                                  <div className="notif-author-row-top">
+                                    <span className="notif-author-title">{n.authorName || authorHandle}</span>
+                                  </div>
+                                  <span className="notif-author-handle">@{authorHandle}</span>
                                 </div>
                               </div>
                               <span className={`notif-cat-tag ${(n.category || 'Update').toLowerCase()}`}>
@@ -766,6 +795,39 @@ const Navbar = ({ onOpenSearch }) => {
                         <span className="dropdown-history-count-tag license-count-badge">{licenseCount}</span>
                       </button>
                     </div>
+
+                    <button
+                      type="button"
+                      className="dropdown-item-btn"
+                      style={{ color: '#f87171', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '0.6rem 0.85rem', width: '100%', textAlign: 'left', background: 'transparent' }}
+                      onClick={async () => {
+                        if (window.confirm('Statutory Erasure (DPDP Act 2023): Are you sure you want to permanently delete your account and erase all associated personal data from Upper Store? This action is irreversible.')) {
+                          try {
+                            const activeToken = token || localStorage.getItem('upper_user_token');
+                            const res = await fetch(`${API_BASE}/api/auth/user/delete-account`, {
+                              method: 'DELETE',
+                              headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
+                            });
+                            const data = await res.json();
+                            alert(data.message || 'Your account and data have been erased successfully.');
+                            logout();
+                            closeMenu();
+                          } catch (err) {
+                            alert('Failed to erase account data. Please contact the Grievance Officer at grievance@upperstore.in.');
+                          }
+                        }
+                      }}
+                    >
+                      <div className="dropdown-item-left">
+                        <span className="dropdown-item-icon" style={{ color: '#f87171' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                        </span>
+                        <span className="dropdown-item-label" style={{ color: '#f87171', fontSize: '0.78rem' }}>Erase Account &amp; Data (DPDP Act)</span>
+                      </div>
+                    </button>
 
                     <hr className="dropdown-divider" />
                     

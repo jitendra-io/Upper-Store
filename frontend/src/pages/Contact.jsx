@@ -6,7 +6,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const Contact = () => {
   const { user } = useAuth();
-  const [formType, setFormType] = useState('message'); // 'message' or 'appeal'
+  const [formType, setFormType] = useState('message'); // 'message' | 'appeal' | 'grievance'
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -38,6 +38,7 @@ const Contact = () => {
     setSuccessResponse('');
 
     const isAppeal = formType === 'appeal';
+    const isGrievance = formType === 'grievance';
     const endpoint = isAppeal ? `${API_BASE}/api/contact/appeal` : `${API_BASE}/api/contact`;
     const payload = isAppeal
       ? {
@@ -45,6 +46,12 @@ const Contact = () => {
           email: form.email,
           subject: form.subject || 'Account Ban Appeal',
           commitment: form.commitment || form.message,
+        }
+      : isGrievance
+      ? {
+          name: form.name,
+          email: form.email,
+          message: `[STATUTORY GRIEVANCE / DPDP ACT 2023]\nSubject: ${form.subject || 'Data Protection & Grievance'}\nDetails:\n${form.message}`,
         }
       : {
           name: form.name,
@@ -123,6 +130,19 @@ const Contact = () => {
               </svg>
               <span>Appeals</span>
             </button>
+            <button
+              type="button"
+              className={`contact-type-tab ${formType === 'grievance' ? 'active' : ''}`}
+              onClick={() => { setFormType('grievance'); setSent(false); setErrorMsg(''); setForm(prev => ({ ...prev, subject: 'DPDP Act / Grievance Redressal Notice' })); }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              <span>Grievance Officer</span>
+            </button>
           </div>
           <button 
             type="button" 
@@ -160,6 +180,26 @@ const Contact = () => {
         ) : (
           <form className="contact-form" onSubmit={handleSubmit}>
             {errorMsg && <div className="contact-error-banner">{errorMsg}</div>}
+
+            {formType === 'grievance' && (
+              <div style={{ background: 'rgba(212, 175, 55, 0.08)', border: '1px solid rgba(212, 175, 55, 0.3)', borderRadius: '12px', padding: '1.1rem', marginBottom: '1.25rem', fontSize: '0.86rem', color: '#e2e8f0' }}>
+                <h4 style={{ margin: '0 0 0.4rem 0', color: '#ffd700', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                  Statutory Grievance Redressal Officer (IT Rules & DPDP Act 2023)
+                </h4>
+                <p style={{ margin: '0.25rem 0', lineHeight: 1.5, color: '#cbd5e1' }}>
+                  <strong>Officer:</strong> Jitendra Sahu &bull; <strong>Designation:</strong> Resident Grievance Redressal &amp; Data Protection Officer
+                </p>
+                <p style={{ margin: '0.25rem 0', lineHeight: 1.5, color: '#cbd5e1' }}>
+                  <strong>Address:</strong> Plot No. 104, Infocity Avenue, Bhubaneswar, Odisha - 751024, India
+                </p>
+                <p style={{ margin: '0.25rem 0', lineHeight: 1.5, color: '#ffd700' }}>
+                  <strong>Email:</strong> grievance@upperstore.in &bull; <strong>Statutory SLA:</strong> Acknowledgment within 24–48h | Final disposal within 15 days
+                </p>
+              </div>
+            )}
             
             <div className="form-group">
               <label htmlFor="name">Full Name</label>
@@ -187,9 +227,9 @@ const Contact = () => {
               />
             </div>
 
-            {formType === 'appeal' && (
+            {(formType === 'appeal' || formType === 'grievance') && (
               <div className="form-group">
-                <label htmlFor="subject">Subject</label>
+                <label htmlFor="subject">{formType === 'grievance' ? 'Grievance / Legal Subject *' : 'Subject *'}</label>
                 <input
                   id="subject"
                   type="text"
@@ -218,7 +258,7 @@ const Contact = () => {
             </div>
 
             <button type="submit" className="submit-btn" disabled={submitting}>
-              {submitting ? 'Submitting...' : formType === 'appeal' ? 'Submit Appeal' : 'Send Message'}
+              {submitting ? 'Submitting...' : formType === 'appeal' ? 'Submit Appeal' : formType === 'grievance' ? 'Submit Statutory Grievance' : 'Send Message'}
             </button>
           </form>
         )}

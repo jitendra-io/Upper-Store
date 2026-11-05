@@ -7,6 +7,7 @@ const { protect, protectAdmin } = require('../middleware/authMiddleware');
 const {
   getMyDeveloperProfile,
   registerDeveloperKyc,
+  withdrawDeveloperConsent,
   getAllDevelopers,
   toggleDeveloperSuspension,
   getPublicDeveloperProfile,
@@ -73,6 +74,7 @@ router.delete('/official/cover-image', protectAdmin, removeOfficialCoverImage);
 // User Developer Profile & KYC Registration
 router.get('/me', protect, getMyDeveloperProfile);
 router.post('/register', protect, registerDeveloperKyc);
+router.post('/withdraw-consent', protect, withdrawDeveloperConsent);
 router.put('/bio', protect, updateDeveloperBio);
 
 // Admin Developer Oversight Routes

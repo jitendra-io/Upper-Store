@@ -9,9 +9,11 @@
  */
 export const isUserVipActive = (user) => {
   if (!user || typeof user !== 'object') return false;
+  if (user.isBanned) return false;
+  if (user.vipCancelledAt) return false;
   const membership = user.membership;
   if (!membership || typeof membership !== 'object') return false;
-  if (membership.isCancelled) return false;
+  if (membership.isCancelled || membership.cancelledAt) return false;
   if (membership.plan !== 'pro' && membership.plan !== 'elite') return false;
   if (!membership.validUntil) return false;
   const expiry = new Date(membership.validUntil).getTime();

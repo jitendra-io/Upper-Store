@@ -40,10 +40,10 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
     username: '',
     bio: '',
     phone: '',
-    aadhaarNumber: '',
-    aadhaarDriveLink: '',
     agreed: false,
   });
+  const [showConsentNoticeModal, setShowConsentNoticeModal] = useState(false);
+  const [withdrawingConsent, setWithdrawingConsent] = useState(false);
 
   // Product Form State
   const [productForm, setProductForm] = useState({
@@ -99,8 +99,6 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
             username: dData.developer.username || user?.username || '',
             bio: dData.developer.bio || '',
             phone: dData.developer.phone || '',
-            aadhaarNumber: dData.developer.aadhaarNumber || '',
-            aadhaarDriveLink: dData.developer.aadhaarDriveLink || '',
             agreed: true,
           });
         } else {
@@ -160,25 +158,24 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
 
   if (!isOpen) return null;
 
-  // 1. Aadhaar KYC Submission Handler
+  // 1. Developer Onboarding & Consent Submission Handler (DPDP Act 2023 Compliant)
   const handleKycSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
 
-    const cleanAadhaar = kycForm.aadhaarNumber.replace(/[\s-]/g, '');
-    if (!/^\d{12}$/.test(cleanAadhaar)) {
-      setFeedback({ type: 'error', message: 'Please enter a valid 12-digit Indian Aadhaar number.' });
+    if (!kycForm.legalName.trim()) {
+      setFeedback({ type: 'error', message: 'Full Legal Name is required.' });
+      return;
+    }
+
+    if (!kycForm.displayName.trim()) {
+      setFeedback({ type: 'error', message: 'Public Developer / Studio Name is required.' });
       return;
     }
 
     const cleanPhone = kycForm.phone.replace(/[\s-+()]/g, '');
     if (!/^\d{10}$/.test(cleanPhone)) {
       setFeedback({ type: 'error', message: 'Please enter a valid 10-digit mobile phone number.' });
-      return;
-    }
-
-    if (!kycForm.aadhaarDriveLink.includes('http')) {
-      setFeedback({ type: 'error', message: 'Please provide a valid Google Drive sharing URL.' });
       return;
     }
 
@@ -196,7 +193,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
     }
 
     if (!kycForm.agreed) {
-      setFeedback({ type: 'error', message: 'You must agree to the developer publishing terms.' });
+      setFeedback({ type: 'error', message: 'Please review and accept the statutory consent notice before registering.' });
       return;
     }
 
@@ -209,31 +206,73 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          legalName: kycForm.legalName,
-          displayName: kycForm.displayName || user?.displayName || user?.email?.split('@')[0],
+          legalName: kycForm.legalName.trim(),
+          displayName: kycForm.displayName.trim(),
           username: cleanUsername,
-          bio: (kycForm.bio || '').trim() || 'None',
+          bio: (kycForm.bio || '').trim(),
           phone: cleanPhone,
-          aadhaarNumber: cleanAadhaar,
-          aadhaarDriveLink: kycForm.aadhaarDriveLink,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.message || 'Verification submission failed.');
+        throw new Error(data.message || 'Developer registration failed.');
       }
 
       setDevProfile(data.developer);
       setFeedback({
         type: 'success',
-        message: 'Aadhaar verification submitted successfully! Publishing privileges are now unlocked.',
+        message: 'Developer profile registered successfully with statutory consent! Publishing privileges are now unlocked.',
       });
-      setActiveTab('upload');
+      fetchDevData();
     } catch (err) {
       setFeedback({ type: 'error', message: err.message });
     } finally {
       setSubmittingKyc(false);
+    }
+  };
+
+  // 1b. Withdraw Consent Handler (DPDP Act 2023 Section 6(4))
+  const handleWithdrawConsent = async () => {
+    const confirmWithdraw = window.confirm(
+      'Withdraw Developer Consent (DPDP Act 2023 Section 6(4)):\n\nAre you sure you want to withdraw your consent? Withdrawing consent will deregister your developer profile and revoke direct software publishing privileges.\n\nDo you wish to proceed?'
+    );
+    if (!confirmWithdraw) return;
+
+    setWithdrawingConsent(true);
+    setFeedback(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/developers/withdraw-consent`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to withdraw developer consent.');
+      }
+
+      setDevProfile(null);
+      setKycForm({
+        legalName: '',
+        displayName: user?.displayName || '',
+        username: user?.username || '',
+        bio: '',
+        phone: '',
+        agreed: false,
+      });
+
+      setFeedback({
+        type: 'success',
+        message: 'Consent successfully withdrawn and developer profile deregistered in compliance with Section 6(4) of the DPDP Act 2023.',
+      });
+      fetchDevData();
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message });
+    } finally {
+      setWithdrawingConsent(false);
     }
   };
 
@@ -391,7 +430,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       setActiveTab('kyc');
       setFeedback({
         type: 'error',
-        message: 'Aadhaar identity verification required before sending community broadcasts.',
+        message: 'Government identity verification required before sending community broadcasts.',
       });
       return;
     }
@@ -568,7 +607,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   <line x1="7" y1="16" x2="17" y2="16"/>
                 </svg>
               </span>
-              <span>Aadhaar KYC</span>
+              <span>Developer Profile &amp; Consent</span>
               {devProfile && <CheckIcon size={12} style={{ color: '#10b981', marginLeft: '5px' }} />}
             </button>
           </div>
@@ -616,9 +655,9 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     </svg>
                   </div>
                   <div className="gate-text">
-                    <h4>Aadhaar Identity Verification Required</h4>
+                    <h4>Developer Registration &amp; Consent Required</h4>
                     <p>
-                      To ensure security and authenticity across Upper Store, VIP developers must verify their Aadhaar card photo via Google Drive before uploading releases.
+                      To ensure creator transparency and software accountability across Upper Store, VIP developers complete developer registration and consent before publishing software releases.
                     </p>
                   </div>
                   <button
@@ -626,7 +665,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     className="gate-action-btn"
                     onClick={() => setActiveTab('kyc')}
                   >
-                    Complete Aadhaar KYC (2 mins) →
+                    Register Developer Profile & Consent →
                   </button>
                 </div>
               )}
@@ -970,7 +1009,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     </svg>
                   </div>
                   <div className="gate-text">
-                    <h4>Aadhaar Identity Verification Required</h4>
+                    <h4>Developer Registration &amp; Consent Required</h4>
                     <p>
                       To prevent spam and protect users, community notification broadcasts require verified Aadhaar identification.
                     </p>
@@ -1079,45 +1118,82 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
             </div>
           ) : (
             /* ===============================================================
-               TAB 4: AADHAAR VERIFICATION (KYC)
+               TAB 4: DEVELOPER PROFILE & STATUTORY CONSENT (DPDP ACT 2023)
                =============================================================== */
             <div className="dev-pane-content">
               {devProfile ? (
-                <div className="dev-verified-status-banner">
-                  <div className="status-badge-circle">
-                    <CheckIcon size={16} />
+                <div className="dev-verified-status-banner" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(20, 16, 32, 0.5) 100%)', border: '1px solid rgba(16, 185, 129, 0.35)', borderRadius: '16px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div className="status-badge-circle" style={{ background: '#10b981', color: '#fff', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CheckIcon size={18} />
+                      </div>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff' }}>Developer Registration: Active &amp; Verified</h4>
+                        <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#a7f3d0' }}>
+                          Statutory consent accepted under Section 6 of the Digital Personal Data Protection Act, 2023.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowConsentNoticeModal(true)}
+                        className="admin-btn outline-sm"
+                        style={{ background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', padding: '0.45rem 0.85rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                      >
+                        Read Consent Notice
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleWithdrawConsent}
+                        disabled={withdrawingConsent}
+                        style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.45)', color: '#fca5a5', padding: '0.45rem 0.85rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                        title="Withdraw consent and deregister developer profile under DPDP Act Section 6(4)"
+                      >
+                        {withdrawingConsent ? 'Withdrawing...' : 'Withdraw Consent & Deregister'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="status-text">
-                    <h4>Aadhaar Identity Verified</h4>
-                    <p>
-                      Legal Name: <strong>{devProfile.legalName}</strong> &bull; Aadhaar: <strong>XXXX-XXXX-{devProfile.aadhaarNumber?.slice(-4)}</strong>
-                    </p>
-                    <a
-                      href={devProfile.aadhaarDriveLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="status-proof-link"
-                    >
-                      View Submitted Google Drive Document ↗
-                    </a>
+
+                  <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem', fontSize: '0.85rem' }}>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Full Legal Name</span>
+                      <strong style={{ color: '#ffffff' }}>{devProfile.legalName}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Developer / Studio Name</span>
+                      <strong style={{ color: '#ffffff' }}>{devProfile.displayName}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Public Username</span>
+                      <strong style={{ color: '#ffd700' }}>@{devProfile.username || user?.username}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Contact Phone</span>
+                      <strong style={{ color: '#ffffff' }}>{devProfile.phone}</strong>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="dev-kyc-intro-card">
-                  <div className="intro-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="16" rx="3"/>
-                      <circle cx="9" cy="10" r="2"/>
-                      <line x1="15" y1="8" x2="17" y2="8"/>
-                      <line x1="15" y1="12" x2="17" y2="12"/>
-                      <line x1="7" y1="16" x2="17" y2="16"/>
-                    </svg>
-                  </div>
-                  <div className="intro-text">
-                    <h4>Government Identity Linkage (Aadhaar Card)</h4>
-                    <p>
-                      To ensure trust across the Upper Store ecosystem, VIP publishers submit a clear photo of their Aadhaar card via Google Drive. Your details are securely accessible only by platform administrators.
-                    </p>
+                <div className="dev-kyc-intro-card" style={{ background: 'rgba(212, 175, 55, 0.08)', border: '1px solid rgba(212, 175, 55, 0.25)', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="intro-icon" style={{ background: 'rgba(212, 175, 55, 0.15)', color: '#ffd700', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', shrink: 0 }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 style={{ margin: 0, color: '#ffd700', fontSize: '1rem' }}>Developer Registration &amp; DPDP Consent</h4>
+                      <p style={{ margin: '0.2rem 0 0 0', color: '#cbd5e1', fontSize: '0.82rem', lineHeight: 1.45 }}>
+                        To maintain transparent creator accountability across Upper Store, please provide your legal name, public developer name, phone number, and username. <strong>No identity documents, government numbers, or verification URLs are collected.</strong>
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1125,7 +1201,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
               <form id="dev-kyc-form" onSubmit={handleKycSubmit} className="dev-form-grid">
                 <div className="form-fields-grid grid-3">
                   <div className="dev-field-group">
-                    <label>Full Legal Name (on Aadhaar) <span className="req-star">*</span></label>
+                    <label>Full Legal Name <span className="req-star">*</span></label>
                     <input
                       type="text"
                       placeholder="e.g. Jitendra Kumar"
@@ -1168,32 +1244,6 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   </div>
                 </div>
 
-                <div className="dev-field-group">
-                  <label>Developer Bio & Overview</label>
-                  <textarea
-                    placeholder="Tell the community about yourself, your software engineering experience, and what you build..."
-                    value={kycForm.bio || ''}
-                    onChange={(e) => setKycForm({ ...kycForm, bio: e.target.value })}
-                    maxLength={350}
-                    rows={2}
-                    style={{
-                      width: '100%',
-                      background: 'rgba(0,0,0,0.4)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      borderRadius: '8px',
-                      padding: '0.65rem 0.85rem',
-                      color: '#ffffff',
-                      fontSize: '0.88rem',
-                      fontFamily: 'inherit',
-                      resize: 'vertical',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                  <small className="field-hint">
-                    This bio will appear on your public profile page (<code>/developer/@{kycForm.username || 'username'}</code>).
-                  </small>
-                </div>
-
                 <div className="form-fields-grid grid-2">
                   <div className="dev-field-group">
                     <label>Mobile Contact Number <span className="req-star">*</span></label>
@@ -1208,45 +1258,114 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   </div>
 
                   <div className="dev-field-group">
-                    <label>12-Digit Aadhaar Card Number <span className="req-star">*</span></label>
+                    <label>Developer Bio &amp; Overview (Optional)</label>
                     <input
                       type="text"
-                      placeholder="XXXX XXXX XXXX"
-                      value={kycForm.aadhaarNumber}
-                      onChange={(e) => setKycForm({ ...kycForm, aadhaarNumber: e.target.value })}
-                      maxLength={14}
-                      required
+                      placeholder="e.g. Building lightweight tools and creative suites..."
+                      value={kycForm.bio || ''}
+                      onChange={(e) => setKycForm({ ...kycForm, bio: e.target.value })}
+                      maxLength={300}
                     />
                   </div>
                 </div>
 
-                <div className="dev-field-group">
-                  <label>Clear Aadhaar Card Photo (Google Drive Link) <span className="req-star">*</span></label>
-                  <input
-                    type="url"
-                    placeholder="https://drive.google.com/file/d/.../view?usp=sharing"
-                    value={kycForm.aadhaarDriveLink}
-                    onChange={(e) => setKycForm({ ...kycForm, aadhaarDriveLink: e.target.value })}
-                    required
-                  />
-                  <small className="field-hint">
-                    Upload a clear photo or scan of your Aadhaar card to Google Drive, set access to <strong>"Anyone with the link can view"</strong>, and paste the link here.
-                  </small>
+                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', padding: '1rem', marginTop: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1 }}>
+                      <input
+                        type="checkbox"
+                        id="dev-kyc-agree"
+                        checked={kycForm.agreed}
+                        onChange={(e) => setKycForm({ ...kycForm, agreed: e.target.checked })}
+                        style={{ marginTop: '3px', cursor: 'pointer', accentColor: '#ffd700' }}
+                        required
+                      />
+                      <label htmlFor="dev-kyc-agree" style={{ fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5, cursor: 'pointer' }}>
+                        I have read the Developer Consent Notice and give affirmative consent to process my legal name, developer name, and contact phone number for developer publishing and platform accountability under the DPDP Act 2023. I understand that I may withdraw this consent at any time.
+                      </label>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowConsentNoticeModal(true)}
+                      style={{ background: 'rgba(212, 175, 55, 0.15)', border: '1px solid rgba(212, 175, 55, 0.4)', color: '#ffd700', borderRadius: '8px', padding: '0.45rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      Read Consent Notice
+                    </button>
+                  </div>
                 </div>
 
-                <div className="dev-terms-agreement">
-                  <input
-                    type="checkbox"
-                    id="dev-kyc-agree"
-                    checked={kycForm.agreed}
-                    onChange={(e) => setKycForm({ ...kycForm, agreed: e.target.checked })}
-                    required
-                  />
-                  <label htmlFor="dev-kyc-agree">
-                    I certify under penalty of account termination that the submitted Aadhaar identity and software releases are authentic, lawful, and free of malicious code.
-                  </label>
+                <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                  {devProfile && (
+                    <button
+                      type="button"
+                      onClick={handleWithdrawConsent}
+                      disabled={withdrawingConsent}
+                      style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.45)', color: '#fca5a5', padding: '0.65rem 1.25rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600 }}
+                    >
+                      {withdrawingConsent ? 'Withdrawing...' : 'Withdraw Consent'}
+                    </button>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="dev-primary-btn"
+                    disabled={submittingKyc}
+                  >
+                    {submittingKyc ? 'Saving...' : devProfile ? 'Update Developer Profile' : 'Accept Consent & Register'}
+                  </button>
                 </div>
               </form>
+
+              {/* STATUTORY CONSENT NOTICE MODAL POPUP */}
+              {showConsentNoticeModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(6px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                  <div style={{ background: '#18181b', border: '1px solid rgba(212, 175, 55, 0.4)', borderRadius: '16px', maxWidth: '580px', width: '100%', padding: '1.75rem', maxHeight: '90vh', overflowY: 'auto', color: '#e2e8f0', boxShadow: '0 20px 40px rgba(0,0,0,0.6)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                      <h3 style={{ margin: 0, color: '#ffd700', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        Developer Statutory Consent Notice (DPDP Act 2023)
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowConsentNoticeModal(false)}
+                        style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '1.25rem', cursor: 'pointer', padding: '0 4px' }}
+                      ><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                    </div>
+
+                    <div style={{ fontSize: '0.85rem', lineHeight: 1.6, color: '#cbd5e1', spaceY: '0.75rem' }}>
+                      <p style={{ margin: '0 0 0.6rem 0' }}>
+                        <strong>1. Personal Data Collected:</strong> Full Legal Name, Public Developer Name, Mobile Phone Number, Developer Username, and Account Email.
+                      </p>
+                      <p style={{ margin: '0 0 0.6rem 0' }}>
+                        <strong>2. Zero Identity Document Policy:</strong> Upper Store does not collect, demand, or store government identity cards, Aadhaar numbers, or verification documents.
+                      </p>
+                      <p style={{ margin: '0 0 0.6rem 0' }}>
+                        <strong>3. Purpose of Processing (Section 5):</strong> Your details are processed strictly to associate uploaded software releases with an authentic creator, provide public attribution on product pages, and ensure platform security against deceptive binaries.
+                      </p>
+                      <p style={{ margin: '0 0 0.6rem 0' }}>
+                        <strong>4. Statutory Right to Withdraw Consent (Section 6(4)):</strong> Under the Digital Personal Data Protection Act, 2023, you have the absolute legal right to withdraw your consent at any time. When you click the &quot;Withdraw Consent&quot; button in your Developer Studio, your developer profile and associated data will be immediately removed.
+                      </p>
+                      <p style={{ margin: '0 0 0.6rem 0' }}>
+                        <strong>5. Grievance Redressal:</strong> Grievance Officer: Jitendra Sahu (grievance@upperstore.in | Bhubaneswar, Odisha).
+                      </p>
+                    </div>
+
+                    <div style={{ marginTop: '1.25rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowConsentNoticeModal(false)}
+                        style={{ background: '#ffd700', color: '#111827', border: 'none', borderRadius: '8px', padding: '0.5rem 1.25rem', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}
+                      >
+                        I Understand &amp; Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

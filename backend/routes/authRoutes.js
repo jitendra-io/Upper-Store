@@ -21,6 +21,7 @@ const {
   updateFullProfile,
   uploadCoverImage,
   removeCoverImage,
+  deleteUserAccount,
 } = require('../controllers/authController');
 
 // Multer storage for profile background / cover images
@@ -87,5 +88,6 @@ router.put('/user/username', protect, updateUsername);
 router.put('/user/profile', protect, updateFullProfile);
 router.post('/user/cover-image', protect, handleCoverUpload, uploadCoverImage);
 router.delete('/user/cover-image', protect, removeCoverImage);
+router.delete('/user/delete-account', protect, deleteUserAccount);
 
 module.exports = router;

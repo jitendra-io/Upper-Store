@@ -114,7 +114,7 @@ const About = () => {
             </div>
 
             <p className="vip-publish-desc">
-              If you want to publish your product in the store instantly, take a VIP plan! Complete your quick one-time Aadhaar verification to unlock immediate direct publishing privileges via the VIP Developer Studio:
+              If you want to publish your product in the store instantly, take a VIP plan! Complete your quick one-time Developer Profile Registration to unlock immediate direct publishing privileges via the VIP Developer Studio:
             </p>
 
             <div className="vip-tier-perks-grid">
@@ -143,7 +143,7 @@ const About = () => {
             <ul className="about-req-list">
               <li><strong>Complete Product Specifications:</strong> Title, Category, Version, Description, Key Features, &amp; YouTube Demo Video URL.</li>
               <li><strong>GitHub Developer Account:</strong> Direct link to your active, verified GitHub repository or release binary.</li>
-              <li><strong>Identity Verification:</strong> Clear digital image copy of your official Aadhaar Card / Government Identity Proof.</li>
+              <li><strong>Creator Contact &amp; Attribution:</strong> Full legal name, developer studio handle, and contact phone number. No government identity documents are required.</li>
             </ul>
           </div>
           <p className="about-audit-disclaimer">

@@ -262,21 +262,20 @@ const DeveloperProfile = () => {
     ['upperstore', 'upper-store', 'upper_store'].includes(cleanUsername)
   );
 
-  const isElite = developer.vipPlan === 'elite';
-  const isPro = developer.vipPlan === 'pro';
+  const isVipActive = Boolean(developer.isVipActive && (developer.vipPlan === 'elite' || developer.vipPlan === 'pro') && !developer.subscriptionEnded);
+  const isElite = isVipActive && developer.vipPlan === 'elite';
+  const isPro = isVipActive && developer.vipPlan === 'pro';
   const isDev = Boolean(developer.isDeveloper);
-  const isSubscriptionEnded = Boolean(developer.subscriptionEnded);
+  const isSubscriptionEnded = Boolean(developer.subscriptionEnded || (!isOfficialDev && !isVipActive));
 
   // Premium rotating conic ring for active creators / VIPs (Official gets emerald green ring)
   const avatarRingPlan = isOfficialDev
     ? 'official'
-    : isSubscriptionEnded
-    ? 'free'
     : isElite
     ? 'elite'
-    : isDev || isPro
+    : isPro
     ? 'pro'
-    : developer.vipPlan || 'free';
+    : 'free';
 
   // Resolved cover banner URL (No demo background image)
   const coverBannerUrl = developer.coverImage || developer.banner || '';
@@ -392,35 +391,14 @@ const DeveloperProfile = () => {
               OFFICIAL
             </span>
           ) : (
-            developer.vipPlan && developer.vipPlan !== 'free' && (
-              <VipFlairBadge plan={developer.vipPlan} compact={true} />
+            isVipActive && (
+              <VipFlairBadge plan={isElite ? 'elite' : 'pro'} compact={true} />
             )
           )}
           {!isDev && !isOfficialDev && (
             <span className="dev-ref-community-pill">Community Member</span>
           )}
         </div>
-
-        {/* EXPIRED SUBSCRIPTION NOTICE BANNER */}
-        {isSubscriptionEnded && (
-          <div className="dev-ref-expired-banner">
-            <div className="expired-banner-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-              </svg>
-            </div>
-            <div className="expired-banner-text">
-              <span>VIP Creator Subscription Inactive &middot; Published applications remain active in the store catalog.</span>
-            </div>
-            {isOwner && (
-              <Link to="/vip" className="dev-ref-renew-link">
-                Renew VIP
-              </Link>
-            )}
-          </div>
-        )}
 
         {/* BIO DESCRIPTION */}
         <p className="dev-ref-bio-text">

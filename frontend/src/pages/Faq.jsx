@@ -43,7 +43,7 @@ const FAQ_DATA = [
     id: '7',
     category: 'Developer & Support',
     question: 'How do I list or publish my software product on Upper Store?',
-    answer: 'Developers and digital creators wishing to feature their applications on Upper Store can submit a listing request to upper.official.in@gmail.com. Submissions must include: (1) Product Details (Title, Category, Version, Features, Description & YouTube Demo Video URL), (2) Official GitHub Profile Link, and (3) Aadhaar Card Image / Identity Verification Document. All submissions undergo security audit prior to approval.'
+    answer: 'Developers and digital creators wishing to feature their applications on Upper Store can submit a listing request to upper.official.in@gmail.com. Submissions must include: (1) Product Details (Title, Category, Version, Features, Description & YouTube Demo Video URL), (2) Official GitHub Profile Link, and (3) Creator Contact & Attribution (Legal Name, Developer Name, and Phone Number). No identity documents or government numbers are required. All submissions undergo security audit prior to approval.'
   }
 ];
 

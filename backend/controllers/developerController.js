@@ -64,11 +64,45 @@ const getMyDeveloperProfile = async (req, res) => {
 
     const joinedAt = devData.joinedAt || formatExactMonthYear(devData.createdAt || devDoc.createTime?.toDate() || new Date());
 
+    // Real-time membership check to keep developer VIP ring and status in sync
+    let effectiveVipPlan = 'free';
+    let isVipActive = false;
+    let subscriptionEnded = false;
+    try {
+      const uDoc = userId ? await db.collection('users').doc(userId).get() : null;
+      const uData = uDoc && uDoc.exists ? uDoc.data() : null;
+      const m = uData?.membership;
+      const vUntil = m?.validUntil;
+      const isExp = Boolean(vUntil && new Date(vUntil) < new Date());
+      const isCanc = Boolean(m?.isCancelled || uData?.vipCancelledAt || m?.cancelledAt);
+      if (m && (m.plan === 'pro' || m.plan === 'elite') && !isExp && !isCanc) {
+        effectiveVipPlan = m.plan;
+        isVipActive = true;
+      } else {
+        subscriptionEnded = Boolean(isExp || isCanc || m?.plan === 'free' || devData.subscriptionEnded);
+        effectiveVipPlan = 'free';
+        isVipActive = false;
+        if (devData.vipPlan && devData.vipPlan !== 'free') {
+          await devDoc.ref.update({
+            vipPlan: 'free',
+            isVipActive: false,
+            subscriptionEnded: true,
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (uErr) {
+      effectiveVipPlan = devData.vipPlan || 'free';
+    }
+
     res.json({
       isRegistered: true,
       developer: {
         id: devDoc.id,
         ...devData,
+        vipPlan: effectiveVipPlan,
+        isVipActive,
+        subscriptionEnded,
         joinedAt,
         productsCount,
       },
@@ -79,51 +113,37 @@ const getMyDeveloperProfile = async (req, res) => {
   }
 };
 
-// @desc    Register or Update Developer Aadhaar KYC
+// @desc    Register or Update Developer Profile with Consent (DPDP Act 2023 Compliant)
 // @route   POST /api/developers/register
 // @access  Private (Active VIP Member)
 const registerDeveloperKyc = async (req, res) => {
-  const { legalName, displayName, username, bio, phone, aadhaarNumber, aadhaarDriveLink } = req.body;
+  const {
+    legalName,
+    displayName,
+    username,
+    bio,
+    phone,
+  } = req.body;
+
   const userId = req.user.uid;
   const cleanEmail = (req.user.email || '').trim().toLowerCase();
 
-  // 1. Validation of required fields
-  if (!legalName || !displayName || !phone || !aadhaarNumber || !aadhaarDriveLink) {
+  // 1. Validation of required fields: ONLY legal name, developer name, and phone
+  if (!legalName || !displayName || !phone) {
     return res.status(400).json({
-      message: 'All fields are required: Full Legal Name, Developer Name, Phone Number, Aadhaar Number, and Aadhaar Drive Link.',
+      message: 'All required fields must be provided: Full Legal Name, Public Developer Name, and Mobile Number.',
     });
   }
 
-  // 2. Validate Aadhaar Number format (12 digits, optional spaces/hyphens)
-  const cleanAadhaar = aadhaarNumber.toString().replace(/[\s-]/g, '');
-  if (!/^\d{12}$/.test(cleanAadhaar)) {
-    return res.status(400).json({
-      message: 'Invalid Aadhaar number. Must be a valid 12-digit Indian Aadhaar number.',
-    });
-  }
-
-  // 3. Validate Phone Number (10 digits)
+  // 2. Validate Phone Number (10 digits)
   const cleanPhone = phone.toString().replace(/[\s-+()]/g, '');
   if (!/^\d{10}$/.test(cleanPhone)) {
     return res.status(400).json({
-      message: 'Invalid phone number. Must be a 10-digit mobile number.',
+      message: 'Invalid phone number. Must be a valid 10-digit mobile number.',
     });
   }
 
-  // 4. Validate Google Drive Link URL
-  const cleanDriveLink = aadhaarDriveLink.trim();
-  try {
-    const parsed = new URL(cleanDriveLink);
-    if (!['http:', 'https:'].includes(parsed.protocol)) {
-      throw new Error();
-    }
-  } catch {
-    return res.status(400).json({
-      message: 'Invalid URL. Please provide a valid Google Drive link to the clear Aadhaar card photo.',
-    });
-  }
-
-  // Validate Developer Username: lowercase letters, numbers, _, and . only
+  // 3. Validate Developer Username: lowercase letters, numbers, _, and . only
   let cleanDevUsername = null;
   if (username) {
     const cand = username.trim().toLowerCase();
@@ -148,7 +168,7 @@ const registerDeveloperKyc = async (req, res) => {
   }
 
   try {
-    // 5. Verify User exists and has active VIP membership
+    // 4. Verify User exists and has active VIP membership
     let userDocRef = null;
     let userData = null;
 
@@ -184,16 +204,13 @@ const registerDeveloperKyc = async (req, res) => {
       });
     }
 
-    // 6. Check for existing developer document
+    // 5. Check for existing developer document
     let existingDevSnap = await db.collection('developers').where('userId', '==', userId).limit(1).get();
     if (existingDevSnap.empty && cleanEmail) {
       existingDevSnap = await db.collection('developers').where('email', '==', cleanEmail).limit(1).get();
     }
 
-    // Mask Aadhaar to last 4 digits for privacy & DPDP/UIDAI regulatory compliance
-    const maskedAadhaar = 'XXXXXXXX' + cleanAadhaar.slice(-4);
-    const aadhaarHash = crypto.createHash('sha256').update(cleanAadhaar).digest('hex');
-
+    const now = new Date();
     const devPayload = {
       userId,
       email: cleanEmail,
@@ -202,12 +219,11 @@ const registerDeveloperKyc = async (req, res) => {
       displayName: displayName.trim(),
       bio: (bio || userData.bio || '').trim().slice(0, 500),
       phone: cleanPhone,
-      aadhaarNumber: maskedAadhaar,
-      aadhaarHash,
-      aadhaarDriveLink: cleanDriveLink,
       vipPlan: membership?.plan || 'pro',
       avatar: userData.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanEmail)}`,
-      updatedAt: new Date().toISOString(),
+      consentStatus: 'active',
+      consentAcceptedAt: now.toISOString(),
+      updatedAt: now.toISOString(),
     };
 
     let devId;
@@ -222,14 +238,13 @@ const registerDeveloperKyc = async (req, res) => {
       devPayload.isSuspended = Boolean(existingData.isSuspended);
       devPayload.suspendedAt = existingData.suspendedAt || null;
       devPayload.suspensionReason = existingData.suspensionReason || null;
-      devPayload.createdAt = existingData.createdAt || existingDoc.createTime?.toDate()?.toISOString() || new Date().toISOString();
+      devPayload.createdAt = existingData.createdAt || existingDoc.createTime?.toDate()?.toISOString() || now.toISOString();
       devJoinedAt = existingData.joinedAt || formatExactMonthYear(devPayload.createdAt);
       devPayload.joinedAt = devJoinedAt;
 
       await existingDoc.ref.update(devPayload);
     } else {
       // Create new
-      const now = new Date();
       devJoinedAt = formatExactMonthYear(now);
       devPayload.isSuspended = false;
       devPayload.suspendedAt = null;
@@ -248,7 +263,7 @@ const registerDeveloperKyc = async (req, res) => {
           isDeveloper: true,
           developerDisplayName: displayName.trim(),
           developerJoinedAt: devJoinedAt,
-          developerUpdatedAt: new Date().toISOString(),
+          developerUpdatedAt: now.toISOString(),
         };
         if (cleanDevUsername) {
           uUpdate.username = cleanDevUsername;
@@ -258,23 +273,108 @@ const registerDeveloperKyc = async (req, res) => {
         }
         await userDocRef.update(uUpdate);
       } catch (uErr) {
-        // Non-critical
+        console.warn('Error updating user record developer flag:', uErr.message);
       }
     }
 
-    // Invalidate search index cache so updated developer profile appears immediately
-    invalidateSearchCache();
+    // Invalidate search cache
+    try {
+      invalidateSearchCache();
+    } catch (e) {
+      // ignore
+    }
 
     res.json({
-      message: 'Developer Aadhaar verification registered successfully! You can now publish products and broadcast notifications.',
+      message: 'Developer profile registered successfully with statutory consent. You can now publish software releases and send notifications.',
       developer: {
         id: devId,
         ...devPayload,
       },
     });
   } catch (error) {
-    console.error('Developer registration error:', error);
-    res.status(500).json({ message: 'Failed to register developer verification.' });
+    console.error('Error registering developer profile:', error);
+    res.status(500).json({ message: 'Server error while registering developer profile.' });
+  }
+};
+
+// @desc    Withdraw developer consent & deregister developer profile (DPDP Act 2023 Section 6(4))
+// @route   POST /api/developers/withdraw-consent
+// @access  Private (Authenticated User)
+const withdrawDeveloperConsent = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const cleanEmail = (req.user.email || '').trim().toLowerCase();
+
+    // 1. Delete developer record from Firestore
+    let devSnap = await db.collection('developers').where('userId', '==', userId).get();
+    if (devSnap.empty && cleanEmail) {
+      devSnap = await db.collection('developers').where('email', '==', cleanEmail).get();
+    }
+
+    for (const doc of devSnap.docs) {
+      await doc.ref.delete();
+    }
+
+    // 2. Update user doc to revoke developer status
+    if (userId) {
+      const uDoc = await db.collection('users').doc(userId).get();
+      if (uDoc.exists) {
+        await uDoc.ref.update({
+          isDeveloper: false,
+          developerWithdrawnAt: new Date().toISOString(),
+        });
+      }
+    } else if (cleanEmail) {
+      const uSnap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!uSnap.empty) {
+        await uSnap.docs[0].ref.update({
+          isDeveloper: false,
+          developerWithdrawnAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    // 3. Reset products published by this developer so premium rings and tags are removed
+    try {
+      const nowIso = new Date().toISOString();
+      const pSnap = userId ? await db.collection('products').where('developerId', '==', userId).get() : { docs: [] };
+      for (const p of pSnap.docs) {
+        await p.ref.update({
+          developerTier: 'free',
+          isDeveloperProduct: false,
+          updatedAt: nowIso,
+        });
+      }
+      if (cleanEmail) {
+        const pByEmail = await db.collection('products').where('developerEmail', '==', cleanEmail).get();
+        for (const p of pByEmail.docs) {
+          await p.ref.update({
+            developerTier: 'free',
+            isDeveloperProduct: false,
+            updatedAt: nowIso,
+          });
+        }
+      }
+      const cacheService = require('../services/cacheService');
+      cacheService.invalidate('products_list');
+    } catch (pErr) {
+      // ignore
+    }
+
+    // 4. Invalidate search cache
+    try {
+      invalidateSearchCache();
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({
+      success: true,
+      message: 'Developer consent successfully withdrawn and profile deregistered in compliance with Section 6(4) of the DPDP Act 2023.',
+    });
+  } catch (error) {
+    console.error('Error withdrawing developer consent:', error);
+    res.status(500).json({ message: 'Failed to withdraw developer consent. Please contact support.' });
   }
 };
 
@@ -316,7 +416,7 @@ const getAllDevelopers = async (req, res) => {
         phone: d.phone,
         aadhaarNumber: d.aadhaarNumber,
         aadhaarDriveLink: d.aadhaarDriveLink,
-        vipPlan: d.vipPlan || 'pro',
+        vipPlan: (d.subscriptionEnded || d.vipPlan === 'free') ? 'free' : (d.vipPlan || 'free'),
         avatar: d.avatar,
         isSuspended: Boolean(d.isSuspended),
         suspendedAt: d.suspendedAt || null,
@@ -556,36 +656,42 @@ const getPublicDeveloperProfile = async (req, res) => {
     const membership = userData?.membership || null;
     const validUntil = membership?.validUntil || null;
     const isExpiredByDate = Boolean(validUntil && new Date(validUntil) < new Date());
+    const isCancelled = Boolean(membership?.isCancelled || userData?.vipCancelledAt || membership?.cancelledAt);
 
     let isVipActive = false;
     let subscriptionEnded = false;
     let currentVipPlan = 'free';
 
+    // A creator only gets premium rings and tags if their VIP subscription is valid, active, non-expired, and non-cancelled
     if (membership && (membership.plan === 'pro' || membership.plan === 'elite')) {
-      if (isExpiredByDate) {
+      if (isExpiredByDate || isCancelled) {
         subscriptionEnded = true;
         isVipActive = false;
-        currentVipPlan = 'free'; // Ring becomes inactive/standard
+        currentVipPlan = 'free';
       } else {
         isVipActive = true;
         subscriptionEnded = false;
         currentVipPlan = membership.plan;
       }
-    } else if (devData && devData.vipPlan && devData.vipPlan !== 'free') {
-      if (isExpiredByDate) {
-        subscriptionEnded = true;
-        isVipActive = false;
-        currentVipPlan = 'free';
-      } else {
-        currentVipPlan = devData.vipPlan;
-        isVipActive = true;
-      }
+    } else {
+      // Free tier, expired, cancelled, or deleted
+      subscriptionEnded = Boolean(isExpiredByDate || isCancelled || membership?.plan === 'free' || devData?.subscriptionEnded);
+      isVipActive = false;
+      currentVipPlan = 'free';
     }
 
-    // Default active verified developers to 'pro' ring if not expired
-    if (!subscriptionEnded && isDeveloper && currentVipPlan === 'free') {
-      currentVipPlan = 'pro';
-      isVipActive = true;
+    // Sync stale Firestore developer document if subscription has ended or was cancelled
+    if (devDoc && !isVipActive && devData?.vipPlan && devData.vipPlan !== 'free') {
+      try {
+        await devDoc.ref.update({
+          vipPlan: 'free',
+          isVipActive: false,
+          subscriptionEnded: true,
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (syncErr) {
+        // ignore
+      }
     }
 
     // 4. Compute dynamic stats
@@ -862,6 +968,7 @@ const removeOfficialCoverImage = async (req, res) => {
 module.exports = {
   getMyDeveloperProfile,
   registerDeveloperKyc,
+  withdrawDeveloperConsent,
   getAllDevelopers,
   toggleDeveloperSuspension,
   getPublicDeveloperProfile,

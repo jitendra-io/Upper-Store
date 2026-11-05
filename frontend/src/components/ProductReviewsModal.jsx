@@ -544,7 +544,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                 {reviews.map((rev) => {
                   const isUserCard = cleanUserEmail && rev.userEmail === cleanUserEmail;
                   const m = rev.userMembership || rev.membership;
-                  const isVipValid = m && m.plan && m.plan !== 'free' && (!m.validUntil || new Date(m.validUntil) > new Date());
+                  const isVipValid = m && (m.plan === 'elite' || m.plan === 'pro') && !m.isCancelled && !m.cancelledAt && m.validUntil && new Date(m.validUntil) > new Date();
                   const isElite = isVipValid && (m.plan === 'elite' || m.badge === 'purple');
                   const isPro = isVipValid && (m.plan === 'pro' || m.badge === 'gold');
 

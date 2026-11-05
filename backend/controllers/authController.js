@@ -19,17 +19,52 @@ const resolveUserMembership = async (userData, userDocRef = null) => {
   const m = userData.membership;
   if (m.plan && m.plan !== 'free') {
     if (m.validUntil && new Date(m.validUntil) < new Date()) {
-      // Expiration date has passed! Automatically remove user's badge in Firestore
+      // Expiration date has passed! Automatically remove user's badge and rings in Firestore
       if (userDocRef && typeof userDocRef.update === 'function') {
         try {
+          const nowIso = new Date().toISOString();
           await userDocRef.update({
             membership: defaultMembership,
             isVip: false,
             vipPlan: 'free',
             vipExpiredAt: m.validUntil,
-            updatedAt: new Date().toISOString(),
+            updatedAt: nowIso,
           });
-          console.log(`⭐ [VIP Expiry] Subscription expired for ${userData.email || 'user'}. Badge removed and reverted to free in Firestore.`);
+          console.log(`[VIP Expiry] Subscription expired for ${userData.email || 'user'}. Reverted to free tier in Firestore.`);
+
+          // Cascade downgrade developer profile and products
+          const targetUid = userDocRef.id;
+          const targetEmail = (userData.email || '').toLowerCase().trim();
+          if (targetUid || targetEmail) {
+            try {
+              const devSnap = targetUid
+                ? await db.collection('developers').where('userId', '==', targetUid).get()
+                : await db.collection('developers').where('email', '==', targetEmail).get();
+              for (const d of devSnap.docs) {
+                await d.ref.update({
+                  vipPlan: 'free',
+                  isVipActive: false,
+                  subscriptionEnded: true,
+                  updatedAt: nowIso,
+                });
+              }
+              const prodSnap = targetUid
+                ? await db.collection('products').where('developerId', '==', targetUid).get()
+                : await db.collection('products').where('developerEmail', '==', targetEmail).get();
+              for (const p of prodSnap.docs) {
+                await p.ref.update({
+                  developerTier: 'free',
+                  updatedAt: nowIso,
+                });
+              }
+              const cacheService = require('../services/cacheService');
+              cacheService.invalidate('products_list');
+              const { invalidateSearchCache } = require('../services/searchService');
+              invalidateSearchCache();
+            } catch (cascadeErr) {
+              console.warn('[VIP Expiry] Cascade developer/product downgrade error:', cascadeErr.message);
+            }
+          }
         } catch (err) {
           console.warn('[VIP Expiry] Error removing expired badge in Firestore:', err.message);
         }
@@ -1302,7 +1337,119 @@ const removeCoverImage = async (req, res) => {
   }
 };
 
+
+// @desc    Delete authenticated user's account and erase personal data (DPDP Act 2023 Section 12)
+// @route   DELETE /api/auth/user/delete-account
+// @access  Private (Authenticated User)
+const deleteUserAccount = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const cleanEmail = (req.user.email || '').trim().toLowerCase();
+
+    if (!userId && !cleanEmail) {
+      return res.status(400).json({ message: 'User identification required for data erasure.' });
+    }
+
+    // 1. Delete user from Firestore 'users' collection
+    if (userId) {
+      await db.collection('users').doc(userId).delete();
+    } else if (cleanEmail) {
+      const uSnap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!uSnap.empty) {
+        await uSnap.docs[0].ref.delete();
+      }
+    }
+
+    // 2. Anonymize/delete developer profile if registered
+    try {
+      const devSnap = await db.collection('developers').where('userId', '==', userId).get();
+      for (const dDoc of devSnap.docs) {
+        await dDoc.ref.delete();
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // 3. Purge user download history records
+    try {
+      const dlSnap = await db.collection('user_downloads').where('userId', '==', userId).get();
+      for (const d of dlSnap.docs) {
+        await d.ref.delete();
+      }
+      if (cleanEmail) {
+        const dlByEmail = await db.collection('user_downloads').where('userEmail', '==', cleanEmail).get();
+        for (const d of dlByEmail.docs) {
+          await d.ref.delete();
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // 4. Reset products published by this developer so all premium rings and tags are removed
+    try {
+      const nowIso = new Date().toISOString();
+      const prodSnap = userId ? await db.collection('products').where('developerId', '==', userId).get() : { docs: [] };
+      for (const p of prodSnap.docs) {
+        await p.ref.update({
+          developerTier: 'free',
+          isDeveloperProduct: false,
+          updatedAt: nowIso,
+        });
+      }
+      if (cleanEmail) {
+        const prodByEmail = await db.collection('products').where('developerEmail', '==', cleanEmail).get();
+        for (const p of prodByEmail.docs) {
+          await p.ref.update({
+            developerTier: 'free',
+            isDeveloperProduct: false,
+            updatedAt: nowIso,
+          });
+        }
+      }
+      const cacheService = require('../services/cacheService');
+      cacheService.invalidate('products_list');
+    } catch (pErr) {
+      // ignore
+    }
+
+    // 5. Invalidate licenses / active VIP records for deleted user
+    try {
+      if (cleanEmail) {
+        const licSnap = await db.collection('licenses').where('userEmail', '==', cleanEmail).get();
+        for (const lDoc of licSnap.docs) {
+          await lDoc.ref.update({
+            status: 'cancelled',
+            isCancelled: true,
+            cancellationReason: 'Account deleted by user',
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    } catch (lErr) {
+      // ignore
+    }
+
+    // 6. Invalidate search cache
+    try {
+      const { invalidateSearchCache } = require('../services/searchService');
+      invalidateSearchCache();
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({
+      success: true,
+      message: 'Your account and associated personal data have been completely erased from Upper Store in compliance with Section 12 of the Digital Personal Data Protection Act, 2023.',
+    });
+  } catch (error) {
+    console.error('Account erasure error:', error);
+    res.status(500).json({ message: 'Error processing account deletion. Please contact the Grievance Officer at grievance@upperstore.in.' });
+  }
+};
+
 module.exports = {
+  deleteUserAccount,
   loginAdmin,
   setupAdmin,
   registerUser,

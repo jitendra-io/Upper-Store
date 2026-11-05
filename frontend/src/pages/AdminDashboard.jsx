@@ -1755,9 +1755,9 @@ const AdminDashboard = () => {
         <div className="admin-section-block">
           <div className="admin-section-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
             <div>
-              <h3 style={{ margin: 0 }}>VIP Developers &amp; Aadhaar Verification ({developers.length})</h3>
+              <h3 style={{ margin: 0 }}>VIP Developers &amp; Identity Verification (KYC) ({developers.length})</h3>
               <p className="admin-section-desc" style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-                Review submitted Aadhaar proofs via Google Drive, inspect developer contact details, and suspend or reinstate publishing access.
+                Review submitted identity proofs, inspect developer contact details, and suspend or reinstate publishing access in compliance with DPDP Act 2023.
               </p>
             </div>
             <button className="admin-btn outline-sm" onClick={() => fetchDevelopers()} disabled={loadingDevelopers}>
@@ -1787,7 +1787,7 @@ const AdminDashboard = () => {
           <div className="admin-search-bar" style={{ margin: '1rem 0' }}>
             <input
               type="text"
-              placeholder="Search developers by public name, legal name, email, phone, or Aadhaar number..."
+              placeholder="Search developers by public name, legal name, email, phone, or ID reference..."
               value={developerSearch}
               onChange={(e) => setDeveloperSearch(e.target.value)}
               className="admin-search-input"
@@ -1815,8 +1815,7 @@ const AdminDashboard = () => {
                   <tr>
                     <th>Developer Profile</th>
                     <th>Contact &amp; VIP Tier</th>
-                    <th>12-Digit Aadhaar</th>
-                    <th>Aadhaar Proof (Drive)</th>
+                    <th>DPDP Consent</th>
                     <th>Published Products</th>
                     <th>Status</th>
                     <th>Account Moderation</th>
@@ -1832,7 +1831,7 @@ const AdminDashboard = () => {
                         (d.legalName && d.legalName.toLowerCase().includes(q)) ||
                         (d.email && d.email.toLowerCase().includes(q)) ||
                         (d.phone && d.phone.includes(q)) ||
-                        (d.aadhaarNumber && d.aadhaarNumber.includes(q))
+                        (d.idNumber && d.idNumber.toLowerCase().includes(q)) || (d.aadhaarNumber && d.aadhaarNumber.toLowerCase().includes(q))
                       );
                     })
                     .map((dev) => {
@@ -1867,28 +1866,10 @@ const AdminDashboard = () => {
                           </td>
 
                           <td>
-                            <span style={{ letterSpacing: '1px', fontFamily: 'monospace', fontWeight: 700, color: '#ffd700' }}>
-                              {dev.aadhaarNumber
-                                ? `${dev.aadhaarNumber.slice(0, 4)} ${dev.aadhaarNumber.slice(4, 8)} ${dev.aadhaarNumber.slice(8, 12)}`
-                                : 'N/A'}
+                            <span className="provider-pill" style={{ background: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', color: '#10b981' }}>
+                              Consent Active
                             </span>
-                          </td>
-
-                          <td>
-                            {dev.aadhaarDriveLink ? (
-                              <a
-                                href={dev.aadhaarDriveLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="admin-btn outline-sm drive-link-btn"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', background: 'rgba(212, 175, 55, 0.1)', borderColor: '#d4af37', color: '#ffd700' }}
-                                title="Open Google Drive document in new tab"
-                              >
-                                View Aadhaar Proof ↗
-                              </a>
-                            ) : (
-                              <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>No link</span>
-                            )}
+                            <div className="sub-text">DPDP Act 2023</div>
                           </td>
 
                           <td>

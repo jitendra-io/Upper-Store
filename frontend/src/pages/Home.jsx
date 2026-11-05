@@ -256,7 +256,7 @@ const Home = () => {
                       <VipAvatar
                         src={prod.developerAvatar || '/logo.png'}
                         alt={prod.developerName || 'Upper Store'}
-                        plan={(!prod.developerUsername || prod.developerUsername === 'upperstore' || prod.isStoreOfficial) ? 'official' : (prod.developerTier || 'pro')}
+                        plan={(!prod.developerUsername || prod.developerUsername === 'upperstore' || prod.isStoreOfficial) ? 'official' : (prod.developerTier === 'elite' ? 'elite' : prod.developerTier === 'pro' ? 'pro' : 'free')}
                         size="sm"
                         fallbackSeed={prod.developerUsername || prod.developerEmail || prod.developerName || 'upperstore'}
                       />
@@ -266,7 +266,7 @@ const Home = () => {
                           @{prod.developerUsername || 'upperstore'}
                         </span>
                       </span>
-                      <VipFlairBadge plan={(!prod.developerUsername || prod.developerUsername === 'upperstore' || prod.isStoreOfficial) ? 'official' : (prod.developerTier || 'pro')} compact={true} />
+                      <VipFlairBadge plan={(!prod.developerUsername || prod.developerUsername === 'upperstore' || prod.isStoreOfficial) ? 'official' : (prod.developerTier === 'elite' ? 'elite' : prod.developerTier === 'pro' ? 'pro' : 'free')} compact={true} />
                     </Link>
                     <p>{prod.description}</p>
                     <div className="product-footer">
