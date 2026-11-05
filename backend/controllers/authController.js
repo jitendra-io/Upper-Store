@@ -691,6 +691,182 @@ const unbanUser = async (req, res) => {
   }
 };
 
+// @desc    Admin: Completely remove user from database (purge account, developer profile, downloads, reviews, licenses, and auth identity)
+// @route   DELETE /api/auth/users/:userId
+// @access  Private (Admin)
+const deleteUserByAdmin = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    let userDoc = await db.collection('users').doc(userId).get();
+    let userData = userDoc.exists ? userDoc.data() : null;
+    let targetUid = userDoc.exists ? userDoc.id : userId;
+    let cleanEmail = (userData?.email || '').trim().toLowerCase();
+
+    // Fallback: If not found by doc id, search by email or uid field
+    if (!userDoc.exists) {
+      const byEmailSnap = await db.collection('users').where('email', '==', userId.toLowerCase().trim()).limit(1).get();
+      if (!byEmailSnap.empty) {
+        userDoc = byEmailSnap.docs[0];
+        userData = userDoc.data();
+        targetUid = userDoc.id;
+        cleanEmail = (userData?.email || '').trim().toLowerCase();
+      }
+    }
+
+    if (!userDoc.exists && !userData) {
+      return res.status(404).json({ message: 'User account not found in database.' });
+    }
+
+    const nowIso = new Date().toISOString();
+
+    // 1. Delete user from Firestore 'users' collection
+    if (userDoc.exists) {
+      await userDoc.ref.delete();
+    }
+
+    // 2. Delete developer profile if registered
+    try {
+      const devSnap = targetUid ? await db.collection('developers').where('userId', '==', targetUid).get() : { docs: [] };
+      for (const d of devSnap.docs) {
+        await d.ref.delete();
+      }
+      if (cleanEmail) {
+        const devByEmail = await db.collection('developers').where('email', '==', cleanEmail).get();
+        for (const d of devByEmail.docs) {
+          await d.ref.delete();
+        }
+      }
+    } catch (dErr) {
+      console.warn('[deleteUserByAdmin] Error deleting developer profile:', dErr.message);
+    }
+
+    // 3. Purge user download history records
+    try {
+      const dlSnap = targetUid ? await db.collection('user_downloads').where('userId', '==', targetUid).get() : { docs: [] };
+      for (const d of dlSnap.docs) {
+        await d.ref.delete();
+      }
+      if (cleanEmail) {
+        const dlByEmail = await db.collection('user_downloads').where('userEmail', '==', cleanEmail).get();
+        for (const d of dlByEmail.docs) {
+          await d.ref.delete();
+        }
+      }
+    } catch (dlErr) {
+      console.warn('[deleteUserByAdmin] Error purging download records:', dlErr.message);
+    }
+
+    // 4. Delete user reviews from 'reviews' collection
+    try {
+      if (cleanEmail) {
+        const revSnap = await db.collection('reviews').where('userEmail', '==', cleanEmail).get();
+        for (const r of revSnap.docs) {
+          await r.ref.delete();
+        }
+      }
+      if (targetUid) {
+        const revByUid = await db.collection('reviews').where('userId', '==', targetUid).get();
+        for (const r of revByUid.docs) {
+          await r.ref.delete();
+        }
+      }
+    } catch (revErr) {
+      console.warn('[deleteUserByAdmin] Error purging user reviews:', revErr.message);
+    }
+
+    // 5. Delete licenses from 'licenses' collection
+    try {
+      if (cleanEmail) {
+        const licSnap = await db.collection('licenses').where('userEmail', '==', cleanEmail).get();
+        for (const lDoc of licSnap.docs) {
+          await lDoc.ref.delete();
+        }
+      }
+    } catch (licErr) {
+      console.warn('[deleteUserByAdmin] Error purging licenses:', licErr.message);
+    }
+
+    // 6. Delete user ban appeals if any
+    try {
+      if (cleanEmail) {
+        const appSnap = await db.collection('appeals').where('email', '==', cleanEmail).get();
+        for (const a of appSnap.docs) {
+          await a.ref.delete();
+        }
+      }
+    } catch (appErr) {
+      console.warn('[deleteUserByAdmin] Error deleting appeals:', appErr.message);
+    }
+
+    // 7. Delete UPI payment requests from this user if any
+    try {
+      if (cleanEmail) {
+        const upiSnap = await db.collection('upi_payments').where('userEmail', '==', cleanEmail).get();
+        for (const u of upiSnap.docs) {
+          await u.ref.delete();
+        }
+      }
+    } catch (upiErr) {
+      console.warn('[deleteUserByAdmin] Error deleting upi payments:', upiErr.message);
+    }
+
+    // 8. Reset any products published by this user to free tier without developer attribution
+    try {
+      const prodSnap = targetUid ? await db.collection('products').where('developerId', '==', targetUid).get() : { docs: [] };
+      for (const p of prodSnap.docs) {
+        await p.ref.update({
+          developerTier: 'free',
+          isDeveloperProduct: false,
+          isStoreOfficial: false,
+          updatedAt: nowIso,
+        });
+      }
+      if (cleanEmail) {
+        const prodByEmail = await db.collection('products').where('developerEmail', '==', cleanEmail).get();
+        for (const p of prodByEmail.docs) {
+          await p.ref.update({
+            developerTier: 'free',
+            isDeveloperProduct: false,
+            isStoreOfficial: false,
+            updatedAt: nowIso,
+          });
+        }
+      }
+      const cacheService = require('../services/cacheService');
+      cacheService.invalidate('products_list');
+    } catch (prodErr) {
+      console.warn('[deleteUserByAdmin] Error resetting products:', prodErr.message);
+    }
+
+    // 9. Delete user from Firebase Auth identity store if initialized
+    try {
+      const { authAdmin } = require('../config/firebase');
+      const auth = typeof authAdmin === 'function' ? authAdmin() : authAdmin;
+      if (auth && targetUid) {
+        await auth.deleteUser(targetUid).catch((e) => console.warn('[deleteUserByAdmin] Firebase Auth deleteUser notice:', e.message));
+      }
+    } catch (authErr) {
+      console.warn('[deleteUserByAdmin] Firebase Auth cleanup notice:', authErr.message);
+    }
+
+    // 10. Invalidate search cache
+    try {
+      const { invalidateSearchCache } = require('../services/searchService');
+      invalidateSearchCache();
+    } catch (searchErr) {
+      // ignore
+    }
+
+    res.json({
+      success: true,
+      message: `User account (${cleanEmail || targetUid}) and all associated records have been completely removed from the database.`,
+    });
+  } catch (error) {
+    console.error('Admin delete user error:', error);
+    res.status(500).json({ message: 'Failed to completely remove user from database.' });
+  }
+};
+
 // @desc    Get real-time user status (check if banned & membership)
 // @route   GET /api/auth/user/status/:email
 // @access  Public
@@ -1450,6 +1626,7 @@ const deleteUserAccount = async (req, res) => {
 
 module.exports = {
   deleteUserAccount,
+  deleteUserByAdmin,
   loginAdmin,
   setupAdmin,
   registerUser,

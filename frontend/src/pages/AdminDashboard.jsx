@@ -817,6 +817,42 @@ const AdminDashboard = () => {
     }
   };
 
+  // COMPLETE USER REMOVAL FROM DATABASE (ADMIN)
+  const handleDeleteUser = async (userObj) => {
+    const userLabel = userObj.email || userObj.displayName || userObj.uid;
+    const confirmDelete = window.confirm(
+      `PERMANENT USER REMOVAL WARNING\n\nAre you sure you want to completely remove "${userLabel}" from the database?\n\nThis will permanently purge:\n- User account document\n- Developer profile and consent records\n- All download history\n- All product review comments\n- Any active licenses\n- Authentication identity\n\nThis action CANNOT be undone.`
+    );
+    if (!confirmDelete) return;
+
+    setActionId(userObj.uid);
+    try {
+      const res = await fetch(`${API_BASE}/api/auth/users/${userObj.uid}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token || localStorage.getItem('adminToken')}` },
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMessage({
+          type: 'success',
+          text: data.message || `User ${userLabel} has been completely removed from the database.`,
+        });
+        if (selectedUserDetail && (selectedUserDetail.uid === userObj.uid || selectedUserDetail.email === userObj.email)) {
+          setSelectedUserDetail(null);
+        }
+        fetchUsers();
+        fetchDevelopers();
+        fetchAllDownloads();
+      } else {
+        throw new Error(data.message || 'Failed to remove user from database.');
+      }
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setActionId(null);
+    }
+  };
+
   // RESOLVE / REJECT APPEALS HANDLERS
   const handleResolveAppeal = async (appealId) => {
     if (!window.confirm('Mark this appeal as resolved?')) return;
@@ -1996,26 +2032,44 @@ const AdminDashboard = () => {
                           </button>
                         </td>
                         <td>
-                          <button
-                            className={`ban-action-btn ${u.isBanned ? 'unban' : 'ban'}`}
-                            disabled={actionId === u.uid}
-                            onClick={() => handleToggleBan(u)}
-                          >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              {u.isBanned ? (
-                                <>
-                                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                </>
-                              ) : (
-                                <>
-                                  <circle cx="12" cy="12" r="10"></circle>
-                                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                                </>
-                              )}
-                            </svg>
-                            <span>{actionId === u.uid ? 'Updating...' : u.isBanned ? 'UNBAN USER' : 'BAN USER'}</span>
-                          </button>
+                          <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button
+                              type="button"
+                              className={`ban-action-btn ${u.isBanned ? 'unban' : 'ban'}`}
+                              disabled={actionId === u.uid}
+                              onClick={() => handleToggleBan(u)}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                {u.isBanned ? (
+                                  <>
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                  </>
+                                ) : (
+                                  <>
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                                  </>
+                                )}
+                              </svg>
+                              <span>{actionId === u.uid ? 'Updating...' : u.isBanned ? 'UNBAN USER' : 'BAN USER'}</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="admin-remove-user-btn"
+                              disabled={actionId === u.uid}
+                              onClick={() => handleDeleteUser(u)}
+                              title={`Permanently delete ${u.email} from database`}
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                              </svg>
+                              <span>{actionId === u.uid ? 'Deleting...' : 'REMOVE'}</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -2071,6 +2125,24 @@ const AdminDashboard = () => {
                       ))}
                     </div>
                   )}
+
+                  <div className="modal-user-danger-zone">
+                    <span className="danger-hint">Danger Zone: Irreversibly delete this user account, their developer profile, and all associated records from the database.</span>
+                    <button
+                      type="button"
+                      className="admin-remove-user-btn modal-danger-btn"
+                      disabled={actionId === selectedUserDetail.uid}
+                      onClick={() => handleDeleteUser(selectedUserDetail)}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                      </svg>
+                      <span>{actionId === selectedUserDetail.uid ? 'Removing...' : 'REMOVE USER FROM DATABASE'}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

@@ -419,6 +419,58 @@
   color: #0d0d0f;
 }
 
+/* ADMIN REMOVE USER PERMANENTLY BUTTON */
+.admin-remove-user-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 16px;
+  cursor: pointer;
+  background: rgba(220, 38, 38, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(220, 38, 38, 0.4);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.admin-remove-user-btn:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #dc2626;
+  box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+}
+
+.admin-remove-user-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modal-user-danger-zone {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-user-danger-zone .danger-hint {
+  font-size: 0.76rem;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+
+.admin-remove-user-btn.modal-danger-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  font-size: 0.8rem;
+  border-radius: 12px;
+}
+
 .table-actions {
   display: flex;
   gap: 0.4rem;

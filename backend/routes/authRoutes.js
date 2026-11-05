@@ -14,6 +14,7 @@ const {
   getAllUsers,
   banUser,
   unbanUser,
+  deleteUserByAdmin,
   getUserStatus,
   updateUsername,
   getUsernameStatus,
@@ -76,6 +77,7 @@ router.post('/setup', authLimiter, setupAdmin);
 router.get('/users', protectAdmin, getAllUsers);
 router.post('/users/:userId/ban', protectAdmin, banUser);
 router.post('/users/:userId/unban', protectAdmin, unbanUser);
+router.delete('/users/:userId', protectAdmin, deleteUserByAdmin);
 
 // User Auth Routes & Real-time Status Check (Protected against credential stuffing & spam)
 router.post('/user/register', authLimiter, registerUser);
