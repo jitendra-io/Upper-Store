@@ -113,8 +113,8 @@ const AdminDashboard = () => {
   const [upiStats, setUpiStats] = useState({ total: 0, pending: 0, approved: 0, totalRevenueINR: 0 });
   const [paymentSettings, setPaymentSettings] = useState({
     paymentMode: 'upi_qr',
-    upiId: '9692093386@naviaxis',
-    payeeName: 'JITENDRA KUMAR MISHRA',
+    upiId: '',
+    payeeName: '',
     autoApproveUpi: false,
     qrImageUrl: '/src/assets/upper-upi-qr.png',
   });
@@ -177,8 +177,8 @@ const AdminDashboard = () => {
         const data = await res.json();
         setPaymentSettings({
           paymentMode: data.paymentMode || 'upi_qr',
-          upiId: data.upiId || '9692093386@naviaxis',
-          payeeName: data.payeeName || 'JITENDRA KUMAR MISHRA',
+          upiId: data.upiId || '',
+          payeeName: data.payeeName || '',
           autoApproveUpi: Boolean(data.autoApproveUpi),
           qrImageUrl: data.qrImageUrl || '/src/assets/upper-upi-qr.png',
         });

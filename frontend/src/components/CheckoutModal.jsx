@@ -19,8 +19,8 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
   const [pendingSubmission, setPendingSubmission] = useState(null);
   const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState({
-    upiId: '9692093386@naviaxis',
-    payeeName: 'JITENDRA KUMAR MISHRA',
+    upiId: '',
+    payeeName: 'Upper Store Official',
   });
 
   useEffect(() => {
@@ -34,8 +34,8 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
         if (res.ok) {
           const data = await res.json();
           setPaymentConfig({
-            upiId: data.upiId || '9692093386@naviaxis',
-            payeeName: data.payeeName || 'JITENDRA KUMAR MISHRA',
+            upiId: data.upiId || '',
+            payeeName: data.payeeName || 'Upper Store Official',
           });
         }
       } catch (err) {
@@ -60,12 +60,15 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
   const priceINR = isFeeOnly ? feeINR : Math.round(priceUSD * 85);
 
   const handleCopyUpiId = () => {
+    if (!paymentConfig.upiId) return;
     navigator.clipboard.writeText(paymentConfig.upiId);
     setCopiedUpi(true);
     setTimeout(() => setCopiedUpi(false), 2200);
   };
 
-  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent(paymentConfig.payeeName)}&am=${priceINR}&cu=INR&tn=${encodeURIComponent(`${product.title} ${isFeeOnly ? 'Fee' : 'Pro'}`)}`;
+  const upiDeepLink = paymentConfig.upiId
+    ? `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent(paymentConfig.payeeName || 'Upper Store')}&am=${priceINR}&cu=INR&tn=${encodeURIComponent(`${product.title} ${isFeeOnly ? 'Fee' : 'Pro'}`)}`
+    : '#';
 
   const handleCheckout = async () => {
     if (!isLoggedIn) {
@@ -393,7 +396,7 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                         Payee: <strong>{paymentConfig.payeeName}</strong>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: '6px' }}>
-                        <code style={{ color: '#ffd700', fontSize: '12px', fontWeight: 700, flex: 1, wordBreak: 'break-all' }}>{paymentConfig.upiId}</code>
+                        <code style={{ color: '#ffd700', fontSize: '12px', fontWeight: 700, flex: 1, wordBreak: 'break-all' }}>{paymentConfig.upiId || 'Loading UPI ID...'}</code>
                         <button type="button" onClick={handleCopyUpiId} style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.4)', color: '#ffd700', fontSize: '11px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}>
                           {copiedUpi ? 'Copied!' : 'Copy'}
                         </button>

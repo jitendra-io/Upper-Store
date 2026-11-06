@@ -171,7 +171,7 @@ const AuthModal = () => {
     } catch (err) {
       console.error('Firebase Google Auth error:', err);
       if (err.code === 'auth/unauthorized-domain') {
-        setErrorMsg('Domain not authorized in Firebase Console. Add jitendra-io.github.io to Firebase Auth Authorized Domains.');
+        setErrorMsg('Authentication domain not authorized in Firebase Console. Please contact platform support.');
       } else if (err.code === 'auth/popup-closed-by-user') {
         setErrorMsg('Google Sign-In popup was closed before completing.');
       } else if (err.code === 'auth/popup-blocked') {

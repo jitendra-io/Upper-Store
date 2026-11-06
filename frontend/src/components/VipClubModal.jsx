@@ -39,8 +39,8 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
   const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState({
     paymentMode: 'upi_qr',
-    upiId: '9692093386@naviaxis',
-    payeeName: 'JITENDRA KUMAR MISHRA',
+    upiId: '',
+    payeeName: 'Upper Store Official',
     autoApproveUpi: false,
   });
 
@@ -80,8 +80,8 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
           const data = await res.json();
           setPaymentConfig({
             paymentMode: data.paymentMode || 'upi_qr',
-            upiId: data.upiId || '9692093386@naviaxis',
-            payeeName: data.payeeName || 'JITENDRA KUMAR MISHRA',
+            upiId: data.upiId || '',
+            payeeName: data.payeeName || 'Upper Store Official',
             autoApproveUpi: Boolean(data.autoApproveUpi),
           });
         }
@@ -137,13 +137,16 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
 
   // Copy UPI ID to clipboard
   const handleCopyUpiId = () => {
+    if (!paymentConfig.upiId) return;
     navigator.clipboard.writeText(paymentConfig.upiId);
     setCopiedUpi(true);
     setTimeout(() => setCopiedUpi(false), 2200);
   };
 
   // UPI Deep link for Mobile Devices
-  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent(paymentConfig.payeeName)}&am=${activePlan.priceINR}&cu=INR&tn=${encodeURIComponent(`Upper VIP ${activePlan.name}`)}`;
+  const upiDeepLink = paymentConfig.upiId
+    ? `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent(paymentConfig.payeeName || 'Upper Store')}&am=${activePlan.priceINR}&cu=INR&tn=${encodeURIComponent(`Upper VIP ${activePlan.name}`)}`
+    : '#';
 
   // Handle Subscription Submission with Strict Validation
   const handleSubscribe = async () => {
@@ -692,7 +695,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                       <div className="upi-field-group">
                         <span className="upi-field-label">Official UPI ID (VPA):</span>
                         <div className="upi-vpa-copy-wrap">
-                          <code className="upi-vpa-code">{paymentConfig.upiId}</code>
+                          <code className="upi-vpa-code">{paymentConfig.upiId || 'Loading UPI ID...'}</code>
                           <button
                             type="button"
                             className="upi-copy-btn"

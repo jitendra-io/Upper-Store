@@ -1314,7 +1314,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     <label>Full Legal Name <span className="req-star">*</span></label>
                     <input
                       type="text"
-                      placeholder="e.g. Jitendra Kumar"
+                      placeholder="e.g. Alex Morgan"
                       value={kycForm.legalName}
                       onChange={(e) => setKycForm({ ...kycForm, legalName: e.target.value })}
                       required
@@ -1460,7 +1460,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         <strong>4. Right to Withdraw Consent:</strong> You have the right to withdraw your consent at any time. When you click the &quot;Withdraw Consent&quot; button in your Developer Studio, your developer profile and associated data will be immediately removed.
                       </p>
                       <p style={{ margin: '0 0 0.6rem 0' }}>
-                        <strong>5. Grievance Redressal:</strong> Grievance Officer: Jitendra Sahu (upper.official.in@gmail.com | Bhubaneswar, Odisha).
+                        <strong>5. Grievance Redressal:</strong> Grievance Officer: Upper Store Compliance Team (upper.official.in@gmail.com).
                       </p>
                     </div>
 

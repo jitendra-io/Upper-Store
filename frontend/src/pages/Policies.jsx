@@ -148,29 +148,22 @@ We do not sell user data to advertising networks, profile users across external 
 • Right to Withdraw Consent (Section 6(4)): Users may withdraw consent at any time with the same ease with which it was provided.`
       },
       {
-        title: '7. Statutory Grievance Redressal Mechanism & Officer (DPDP Act, 2023 & IT Rules, 2021)',
-        content: `In accordance with Rule 5(9) of the IT (SPDI) Rules 2011, Rule 3(2) of the Information Technology (Intermediary Guidelines) Rules 2021, and Section 13 of the Digital Personal Data Protection Act 2023, Upper Store has designated a Resident Grievance Redressal Officer & Data Protection Officer:
+        title: '7. Grievance Redressal & Support',
+        content: `Upper Store maintains a dedicated Grievance Redressal team to handle user inquiries, data concerns, and platform feedback:
 
-• Officer Name: Jitendra Sahu
-• Official Designation: Resident Grievance Redressal Officer & Data Protection Officer
-• Entity: Upper Store Digital Asset & Software Platform
-• Registered Physical Address: Plot No. 104, Infocity Avenue, Bhubaneswar, Odisha - 751024, India
-• Direct Grievance Email: upper.official.in@gmail.com (CC: upper.official.in@gmail.com)
-• Acknowledgment Window: Written acknowledgment and ticket generation within 24 to 48 hours.
-• Final Disposal Timeline: Complete investigation, remedy, and disposal within 15 calendar days.
-
-Escalation to Data Protection Board of India:
-Under Section 13(3) of the DPDP Act, 2023, if your grievance remains unresolved after the expiration of the statutory period or you are unsatisfied with the resolution, you have the statutory right to file a complaint directly with the Data Protection Board of India.`
+• Department: Upper Store Compliance & Support Cell
+• Email: upper.official.in@gmail.com
+• Support Channel: support@upperstore.in
+• Acknowledgment: Ticket acknowledgment within 24 to 48 hours.
+• Resolution: Complete investigation and response within 15 business days.`
       },
       {
-        title: '8. Consumer Protection & E-Commerce Disclosures (Rules, 2020)',
-        content: `In compliance with Rule 4 of the Consumer Protection (E-Commerce) Rules, 2020:
-• Operating Legal Entity: Upper Store (Software & Digital Asset Platform).
-• Headquarters & Principal Place of Business: Bhubaneswar, Odisha - 751024, India.
-• Customer Support & Inquiries: support@upperstore.in / upper.official.in@gmail.com.
-• Nature of Commercial Offerings: Digital Software Applications, Desktop Utilities, Developer Assets, and VIP Memberships.
+        title: '8. Consumer & Platform Disclosures',
+        content: `• Operating Entity: Upper Store Digital Software Platform.
+• Customer Support: support@upperstore.in / upper.official.in@gmail.com.
+• Nature of Offerings: Digital Software Applications, Developer Utilities, and VIP Memberships.
 • Country of Origin: India.
-• Pricing & Invoicing Transparency: All prices are displayed in Indian Rupees (INR) and USD as single-figure totals with zero hidden fees. Cryptographic license deliveries are fulfilled instantly upon payment confirmation.`
+• Pricing Transparency: All prices are displayed with zero hidden fees. Digital deliveries and licenses are fulfilled promptly upon payment confirmation.`
       }
     ]
   },
