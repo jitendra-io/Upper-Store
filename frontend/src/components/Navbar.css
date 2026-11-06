@@ -1317,8 +1317,7 @@
   }
 
   /* Fixed Centered Dropdowns on Small Viewports */
-  .nav-notif-dropdown,
-  .nav-user-dropdown {
+  .nav-notif-dropdown {
     position: fixed !important;
     top: 56px !important;
     left: 8px !important;
@@ -1327,6 +1326,114 @@
     max-width: calc(100vw - 16px) !important;
     border-radius: 14px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.95), 0 0 20px rgba(56, 189, 248, 0.15);
+  }
+
+  /* Profile Dropdown: 10% Size Reduction for Phone */
+  .nav-user-dropdown {
+    position: fixed !important;
+    top: 56px !important;
+    right: 10px !important;
+    left: auto !important;
+    width: min(288px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: calc(100vh - 72px) !important;
+    padding: 0.85rem !important;
+    border-radius: 15px !important;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.95), 0 0 20px rgba(212, 175, 55, 0.12) !important;
+  }
+
+  .nav-user-dropdown .dropdown-user-header {
+    padding: 0.8rem 0.65rem !important;
+    border-radius: 12px !important;
+  }
+
+  .nav-user-dropdown .dropdown-avatar-wrapper {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-user-title {
+    font-size: 0.88rem !important;
+    margin-bottom: 0.15rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-user-handle-link {
+    font-size: 0.72rem !important;
+    padding: 0.12rem 0.4rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-user-email {
+    font-size: 0.7rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-provider-tag {
+    font-size: 0.6rem !important;
+    padding: 0.18rem 0.45rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-vip-status-badge {
+    font-size: 0.62rem !important;
+    padding: 0.18rem 0.5rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-vip-expiry-well {
+    padding: 0.45rem 0.65rem !important;
+    margin-top: 0.55rem !important;
+    border-radius: 8px !important;
+  }
+
+  .nav-user-dropdown .dropdown-vip-expiry-label {
+    font-size: 0.56rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-vip-expiry-date {
+    font-size: 0.72rem !important;
+  }
+
+  .nav-user-dropdown .nav-cancel-sub-link {
+    font-size: 0.62rem !important;
+    padding: 0.2rem 0.45rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-subs-stat {
+    font-size: 0.65rem !important;
+    margin-top: 0.4rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-menu-list {
+    gap: 0.38rem !important;
+    margin: 0.55rem 0 0.5rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-item-btn {
+    padding: 0.52rem 0.65rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 10px !important;
+  }
+
+  .nav-user-dropdown .dropdown-item-icon {
+    width: 25px !important;
+    height: 25px !important;
+    border-radius: 7px !important;
+  }
+
+  .nav-user-dropdown .dropdown-item-label {
+    font-size: 0.75rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-history-count-tag {
+    font-size: 0.65rem !important;
+    padding: 0.12rem 0.45rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-divider {
+    margin: 0.35rem 0 0.5rem !important;
+  }
+
+  .nav-user-dropdown .dropdown-logout-btn {
+    padding: 0.52rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    border-radius: 10px !important;
   }
 
   .notif-list-body {
