@@ -8,6 +8,42 @@ const { FieldValue } = require('../config/firebase');
 const cacheService = require('../services/cacheService');
 const { invalidateSearchCache } = require('../services/searchService');
 
+const VALID_CATEGORIES = [
+  'Mobile App',
+  'Windows App',
+  'Mac App',
+  'AI Tool',
+  'Game',
+  'Developer Library',
+  'Web Tool',
+  'Software Tool',
+  'Design Asset',
+  'Tools',
+  'Productivity',
+  'Entertainment',
+  'Security',
+  'Utilities',
+  'Design',
+  'Education',
+  'Others',
+];
+
+const isValidVideoUrl = (url) => {
+  if (!url || typeof url !== 'string') return true;
+  const clean = url.trim();
+  if (!clean) return true;
+  if (clean.length > 500) return false;
+  if (/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}/i.test(clean)) {
+    return true;
+  }
+  if (/^https:\/\/(photos\.app\.goo\.gl|photos\.google\.com)\/[^\s]+/i.test(clean)) {
+    return true;
+  }
+  if (/^https?:\/\/[^\s]+\.(mp4|webm|ogg)(\?[^\s]*)?$/i.test(clean)) {
+    return true;
+  }
+  return false;
+};
 
 // Helper to process package file upload (prefers GitHub Release for large files)
 const handlePackageFileUpload = async (apkFile, title, version, description, req) => {
@@ -235,6 +271,47 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'Title, category, and description are required.' });
     }
 
+    const cleanTitle = String(title).trim();
+    if (cleanTitle.length < 2 || cleanTitle.length > 80) {
+      return res.status(400).json({ message: 'Product title must be between 2 and 80 characters.' });
+    }
+
+    const cleanCategory = String(category).trim();
+    if (cleanCategory.length < 2 || cleanCategory.length > 50) {
+      return res.status(400).json({ message: 'Category must be between 2 and 50 characters.' });
+    }
+
+    const cleanDescription = String(description).trim();
+    if (cleanDescription.length < 10 || cleanDescription.length > 5000) {
+      return res.status(400).json({ message: 'Product description must be between 10 and 5000 characters.' });
+    }
+
+    const cleanVersion = version ? String(version).trim() : '1.0.0';
+    if (cleanVersion.length > 20) {
+      return res.status(400).json({ message: 'Version cannot exceed 20 characters.' });
+    }
+
+    const cleanReleaseNotes = releaseNotes ? String(releaseNotes).trim() : '';
+    if (cleanReleaseNotes.length > 2000) {
+      return res.status(400).json({ message: 'Release notes cannot exceed 2000 characters.' });
+    }
+
+    const cleanPrice = price ? String(price).trim() : 'Free';
+    if (cleanPrice.length > 20) {
+      return res.status(400).json({ message: 'Price string cannot exceed 20 characters.' });
+    }
+
+    const cleanLicensePrice = req.body.licensePrice ? String(req.body.licensePrice).trim() : '';
+    if (cleanLicensePrice.length > 20) {
+      return res.status(400).json({ message: 'License price cannot exceed 20 characters.' });
+    }
+
+    if (videoUrl && !isValidVideoUrl(videoUrl)) {
+      return res.status(400).json({
+        message: 'Invalid video showcase link. Must be a valid YouTube (watch, embed, or shorts) URL, Google Photos link, or direct MP4 video URL.',
+      });
+    }
+
     // Enforce VIP tier upload limits: Pro VIP = max 3 products, Elite VIP = unlimited products (Admin = unlimited)
     if (!req.isAdmin && req.developer) {
       const plan = (req.developer.vipPlan || req.membership?.plan || 'pro').toLowerCase();
@@ -356,15 +433,15 @@ const createProduct = async (req, res) => {
       developerAvatar: req.developer ? (req.developer.avatar || req.user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(req.user.email)}`) : null,
       developerTier: req.developer ? effectiveTier : null,
       isStoreOfficial: !req.developer,
-      title: title.trim(),
-      category: category.trim(),
-      description: description.trim(),
-      price: price ? price.trim() : 'Free',
-      version: version ? version.trim() : '1.0.0',
-      releaseNotes: releaseNotes ? releaseNotes.trim() : '',
+      title: cleanTitle,
+      category: cleanCategory,
+      description: cleanDescription,
+      price: cleanPrice,
+      version: cleanVersion,
+      releaseNotes: cleanReleaseNotes,
       tags: finalTags,
       hasLicenseKey: Boolean(hasLicenseKey),
-      licensePrice: licensePrice || '',
+      licensePrice: cleanLicensePrice,
       isPlatformFeeWaived: Boolean(isPlatformFeeWaived),
       image: mainImageUrl,
       images: finalImageUrls.length > 0 ? finalImageUrls : [mainImageUrl],
@@ -431,18 +508,63 @@ const updateProduct = async (req, res) => {
     } = req.body;
 
     const updatedData = {};
-    if (title !== undefined) updatedData.title = title.trim();
-    if (category !== undefined) updatedData.category = category.trim();
-    if (description !== undefined) updatedData.description = description.trim();
-    if (price !== undefined) updatedData.price = price.trim();
-    if (version !== undefined) updatedData.version = version.trim();
-    if (releaseNotes !== undefined) updatedData.releaseNotes = releaseNotes.trim();
+    if (title !== undefined) {
+      const cleanTitle = String(title).trim();
+      if (cleanTitle.length < 2 || cleanTitle.length > 80) {
+        return res.status(400).json({ message: 'Product title must be between 2 and 80 characters.' });
+      }
+      updatedData.title = cleanTitle;
+    }
+
+    if (category !== undefined) {
+      const cleanCategory = String(category).trim();
+      if (cleanCategory.length < 2 || cleanCategory.length > 50) {
+        return res.status(400).json({ message: 'Category must be between 2 and 50 characters.' });
+      }
+      updatedData.category = cleanCategory;
+    }
+
+    if (description !== undefined) {
+      const cleanDesc = String(description).trim();
+      if (cleanDesc.length < 10 || cleanDesc.length > 5000) {
+        return res.status(400).json({ message: 'Product description must be between 10 and 5000 characters.' });
+      }
+      updatedData.description = cleanDesc;
+    }
+
+    if (price !== undefined) {
+      const cleanPrice = String(price).trim();
+      if (cleanPrice.length > 20) {
+        return res.status(400).json({ message: 'Price string cannot exceed 20 characters.' });
+      }
+      updatedData.price = cleanPrice;
+    }
+
+    if (version !== undefined) {
+      const cleanVer = String(version).trim();
+      if (cleanVer.length > 20) {
+        return res.status(400).json({ message: 'Version cannot exceed 20 characters.' });
+      }
+      updatedData.version = cleanVer;
+    }
+
+    if (releaseNotes !== undefined) {
+      const cleanNotes = String(releaseNotes).trim();
+      if (cleanNotes.length > 2000) {
+        return res.status(400).json({ message: 'Release notes cannot exceed 2000 characters.' });
+      }
+      updatedData.releaseNotes = cleanNotes;
+    }
 
     if (req.body.hasLicenseKey !== undefined) {
       updatedData.hasLicenseKey = Boolean(req.body.hasLicenseKey === true || req.body.hasLicenseKey === 'true');
     }
     if (req.body.licensePrice !== undefined) {
-      updatedData.licensePrice = String(req.body.licensePrice).trim();
+      const cleanLic = String(req.body.licensePrice).trim();
+      if (cleanLic.length > 20) {
+        return res.status(400).json({ message: 'License price cannot exceed 20 characters.' });
+      }
+      updatedData.licensePrice = cleanLic;
     }
     if (req.body.isPlatformFeeWaived !== undefined) {
       updatedData.isPlatformFeeWaived = Boolean(req.body.isPlatformFeeWaived === true || req.body.isPlatformFeeWaived === 'true');
@@ -479,7 +601,13 @@ const updateProduct = async (req, res) => {
     }
 
     if (videoUrl !== undefined) {
-      updatedData.videoUrl = videoUrl.trim() ? await resolveDirectImageUrl(videoUrl.trim()) : '';
+      const cleanVid = videoUrl.trim();
+      if (cleanVid && !isValidVideoUrl(cleanVid)) {
+        return res.status(400).json({
+          message: 'Invalid video showcase link. Must be a valid YouTube (watch, embed, or shorts) URL, Google Photos link, or direct MP4 video URL.',
+        });
+      }
+      updatedData.videoUrl = cleanVid ? await resolveDirectImageUrl(cleanVid) : '';
     } else if (req.files?.video) {
       const videoFile = req.files.video[0];
       updatedData.videoUrl = await uploadFileToCloudOrLocal(videoFile, 'videos', req);

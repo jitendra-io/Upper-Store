@@ -259,8 +259,24 @@ const registerUser = async (req, res) => {
     return res.status(400).json({ message: 'Email and password are required.' });
   }
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const cleanEmail = String(email).trim().toLowerCase();
+  if (cleanEmail.length > 120) {
+    return res.status(400).json({ message: 'Email address cannot exceed 120 characters.' });
+  }
+  if (!EMAIL_REGEX.test(cleanEmail)) {
+    return res.status(400).json({ message: 'Please provide a valid email address.' });
+  }
+
   if (password.length < 6) {
     return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
+  }
+  if (password.length > 100) {
+    return res.status(400).json({ message: 'Password cannot exceed 100 characters.' });
+  }
+
+  if (displayName && String(displayName).trim().length > 50) {
+    return res.status(400).json({ message: 'Display name cannot exceed 50 characters.' });
   }
 
   // Validate Username: must be unique, lowercase letters, numbers, _, and . only
@@ -271,7 +287,6 @@ const registerUser = async (req, res) => {
   const cleanUsername = uv.clean;
 
   try {
-    const cleanEmail = email.trim().toLowerCase();
     
     // Check if user already exists
     const usersRef = db.collection('users').where('email', '==', cleanEmail);
@@ -1211,17 +1226,23 @@ const updateFullProfile = async (req, res) => {
 
     // 1. Validate & Update Display Name
     if (displayName !== undefined) {
-      const cleanDisplayName = String(displayName).trim().slice(0, 50);
+      const cleanDisplayName = String(displayName).trim();
       if (!cleanDisplayName) {
         return res.status(400).json({ message: 'Display name cannot be empty.' });
+      }
+      if (cleanDisplayName.length > 50) {
+        return res.status(400).json({ message: 'Display name cannot exceed 50 characters.' });
       }
       userUpdates.displayName = cleanDisplayName;
     }
 
     // 2. Validate & Update Bio
     if (bio !== undefined) {
-      const b = String(bio).trim().slice(0, 500);
-      userUpdates.bio = b || 'None';
+      const cleanBio = String(bio).trim();
+      if (cleanBio.length > 500) {
+        return res.status(400).json({ message: 'Bio cannot exceed 500 characters.' });
+      }
+      userUpdates.bio = cleanBio || 'None';
     }
 
     // 3. Validate & Update Username (if provided and different)

@@ -177,8 +177,13 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
       return;
     }
 
-    if (!userComment.trim()) {
-      setFormMsg({ type: 'error', text: 'Please write a review comment.' });
+    const cleanComment = (userComment || '').trim();
+    if (!cleanComment || cleanComment.length < 3) {
+      setFormMsg({ type: 'error', text: 'Please write a review comment (minimum 3 characters).' });
+      return;
+    }
+    if (cleanComment.length > 1000) {
+      setFormMsg({ type: 'error', text: 'Review comment cannot exceed 1000 characters.' });
       return;
     }
 
@@ -546,7 +551,8 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                   className="reviews-textarea"
                   rows={3}
                   required
-                  placeholder="Write your honest review or feedback regarding this product..."
+                  maxLength={1000}
+                  placeholder="Write your honest review or feedback regarding this product (3 to 1000 characters)..."
                   value={userComment}
                   onChange={(e) => setUserComment(e.target.value)}
                 />

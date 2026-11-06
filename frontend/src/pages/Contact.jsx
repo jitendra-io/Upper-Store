@@ -33,22 +33,59 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitting(true);
     setErrorMsg('');
     setSuccessResponse('');
 
+    const cleanName = (form.name || '').trim();
+    if (cleanName.length < 2 || cleanName.length > 100) {
+      setErrorMsg('Name must be between 2 and 100 characters.');
+      return;
+    }
+
+    const cleanEmail = (form.email || '').trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!cleanEmail || !emailRegex.test(cleanEmail)) {
+      setErrorMsg('Please enter a valid email address.');
+      return;
+    }
+    if (cleanEmail.length > 120) {
+      setErrorMsg('Email address cannot exceed 120 characters.');
+      return;
+    }
+
     const isAppeal = formType === 'appeal';
+    if (isAppeal) {
+      const cleanSubject = (form.subject || '').trim();
+      if (cleanSubject.length > 150) {
+        setErrorMsg('Subject cannot exceed 150 characters.');
+        return;
+      }
+      const cleanCommitment = (form.commitment || form.message || '').trim();
+      if (cleanCommitment.length < 10 || cleanCommitment.length > 3000) {
+        setErrorMsg('Commitment message must be between 10 and 3000 characters.');
+        return;
+      }
+    } else {
+      const cleanMessage = (form.message || '').trim();
+      if (cleanMessage.length < 10 || cleanMessage.length > 3000) {
+        setErrorMsg('Message must be between 10 and 3000 characters.');
+        return;
+      }
+    }
+
+    setSubmitting(true);
+
     const endpoint = isAppeal ? `${API_BASE}/api/contact/appeal` : `${API_BASE}/api/contact`;
     const payload = isAppeal
       ? {
-          name: form.name,
-          email: form.email,
+          name: cleanName,
+          email: cleanEmail,
           subject: form.subject || 'Account Ban Appeal',
           commitment: form.commitment || form.message,
         }
       : {
-          name: form.name,
-          email: form.email,
+          name: cleanName,
+          email: cleanEmail,
           message: form.message,
         };
 
@@ -170,6 +207,7 @@ const Contact = () => {
                 value={form.name}
                 onChange={handleChange}
                 placeholder="John Doe"
+                maxLength={100}
                 required
               />
             </div>
@@ -183,6 +221,7 @@ const Contact = () => {
                 value={form.email}
                 onChange={handleChange}
                 placeholder="john@example.com"
+                maxLength={120}
                 required
               />
             </div>
@@ -197,6 +236,7 @@ const Contact = () => {
                   value={form.subject}
                   onChange={handleChange}
                   placeholder="Subject (e.g. Account Ban Appeal)"
+                  maxLength={150}
                   required
                 />
               </div>
@@ -213,6 +253,7 @@ const Contact = () => {
                 value={formType === 'appeal' ? form.commitment : form.message}
                 onChange={handleChange}
                 placeholder={formType === 'appeal' ? 'State your case, reason for appeal, and commitment to adhere to site policies...' : 'Write your message here...'}
+                maxLength={3000}
                 required
               />
             </div>

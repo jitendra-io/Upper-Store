@@ -142,12 +142,17 @@ const addOrUpdateReview = async (req, res) => {
     });
   }
 
-  if (!rating || rating < 1 || rating > 5) {
-    return res.status(400).json({ message: 'Rating must be between 1 and 5 stars.' });
+  const numericRating = Number(rating);
+  if (!numericRating || isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+    return res.status(400).json({ message: 'Rating must be a number between 1 and 5 stars.' });
   }
 
-  if (!comment || comment.trim().length < 3) {
+  const cleanComment = typeof comment === 'string' ? comment.trim() : '';
+  if (!cleanComment || cleanComment.length < 3) {
     return res.status(400).json({ message: 'Please write a review comment (minimum 3 characters).' });
+  }
+  if (cleanComment.length > 1000) {
+    return res.status(400).json({ message: 'Review comment cannot exceed 1000 characters.' });
   }
 
   try {
@@ -182,8 +187,8 @@ const addOrUpdateReview = async (req, res) => {
       userEmail: cleanEmail,
       userName: userName ? userName.trim() : cleanEmail.split('@')[0],
       userAvatar: userAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanEmail)}&backgroundColor=d4af37&textColor=000000`,
-      rating: Number(rating),
-      comment: comment.trim(),
+      rating: numericRating,
+      comment: cleanComment,
       userMembership,
       updatedAt: new Date().toISOString(),
       createdAt: new Date().toISOString(),

@@ -81,7 +81,7 @@ const protectPublisher = async (req, res, next) => {
 
     if (devSnap.empty) {
       return res.status(403).json({
-        message: 'Developer Aadhaar verification required before uploading products or broadcasts.',
+        message: 'Developer registration required before uploading products or broadcasts.',
         code: 'KYC_REQUIRED',
       });
     }

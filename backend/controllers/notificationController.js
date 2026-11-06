@@ -65,8 +65,29 @@ const getNotifications = async (req, res) => {
 const createNotification = async (req, res) => {
   const { title, message, category, link } = req.body;
 
-  if (!title || !message) {
-    return res.status(400).json({ message: 'Title and message are required.' });
+  const cleanTitle = typeof title === 'string' ? title.trim() : '';
+  if (!cleanTitle || cleanTitle.length < 3 || cleanTitle.length > 120) {
+    return res.status(400).json({ message: 'Title must be between 3 and 120 characters.' });
+  }
+
+  const cleanMessage = typeof message === 'string' ? message.trim() : '';
+  if (!cleanMessage || cleanMessage.length < 5 || cleanMessage.length > 1000) {
+    return res.status(400).json({ message: 'Message must be between 5 and 1000 characters.' });
+  }
+
+  const validCategories = ['Update', 'Release', 'Notice', 'Announcement', 'Security'];
+  const cleanCategory = validCategories.find(c => c.toLowerCase() === String(category || '').trim().toLowerCase()) || 'Update';
+
+  let cleanLink = '';
+  if (link && typeof link === 'string' && link.trim()) {
+    const rawLink = link.trim();
+    if (rawLink.length > 500) {
+      return res.status(400).json({ message: 'Link URL cannot exceed 500 characters.' });
+    }
+    if (!/^https?:\/\//i.test(rawLink)) {
+      return res.status(400).json({ message: 'Link must be a valid HTTP or HTTPS URL.' });
+    }
+    cleanLink = rawLink;
   }
 
   try {
@@ -93,10 +114,10 @@ const createNotification = async (req, res) => {
       authorUsername,
       authorAvatar,
       authorTier,
-      title: title.trim(),
-      message: message.trim(),
-      category: category || 'Update', // 'Update' | 'Release' | 'Notice' | 'Announcement'
-      link: link ? link.trim() : '',
+      title: cleanTitle,
+      message: cleanMessage,
+      category: cleanCategory,
+      link: cleanLink,
       createdAt: new Date().toISOString(),
     };
 

@@ -1,5 +1,7 @@
 const { db } = require('../config/firebase');
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // @desc    Submit a contact message (Public)
 // @route   POST /api/contact
 // @access  Public
@@ -11,7 +13,23 @@ const createMessage = async (req, res) => {
       return res.status(400).json({ message: 'Name, email, and message are required fields.' });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = String(name).trim();
+    if (cleanName.length < 2 || cleanName.length > 100) {
+      return res.status(400).json({ message: 'Name must be between 2 and 100 characters.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    if (cleanEmail.length > 120) {
+      return res.status(400).json({ message: 'Email address cannot exceed 120 characters.' });
+    }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Please provide a valid email address.' });
+    }
+
+    const cleanMessage = String(message).trim();
+    if (cleanMessage.length < 10 || cleanMessage.length > 3000) {
+      return res.status(400).json({ message: 'Message must be between 10 and 3000 characters.' });
+    }
 
     // Check 2-minute rate limit for sending contact messages (120,000 ms)
     const existingMessages = await db.collection('messages').where('email', '==', cleanEmail).get();
@@ -34,9 +52,9 @@ const createMessage = async (req, res) => {
     }
 
     const messageData = {
-      name: name.trim(),
+      name: cleanName,
       email: cleanEmail,
-      message: message.trim(),
+      message: cleanMessage,
       read: false,
       createdAt: new Date().toISOString(),
     };
@@ -120,7 +138,25 @@ const submitAppeal = async (req, res) => {
       return res.status(400).json({ message: 'Name, email, and commitment message are required.' });
     }
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanName = String(name).trim();
+    if (cleanName.length < 2 || cleanName.length > 100) {
+      return res.status(400).json({ message: 'Name must be between 2 and 100 characters.' });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    if (cleanEmail.length > 120) {
+      return res.status(400).json({ message: 'Email address cannot exceed 120 characters.' });
+    }
+    if (!EMAIL_REGEX.test(cleanEmail)) {
+      return res.status(400).json({ message: 'Please provide a valid email address.' });
+    }
+
+    const cleanSubject = subject ? String(subject).trim().slice(0, 150) : 'Account Ban Appeal';
+
+    const cleanCommitment = String(commitment).trim();
+    if (cleanCommitment.length < 10 || cleanCommitment.length > 3000) {
+      return res.status(400).json({ message: 'Commitment statement must be between 10 and 3000 characters.' });
+    }
 
     // Check 7-day rate limit for this email in appeals
     const existingAppeals = await db.collection('appeals').where('email', '==', cleanEmail).get();
@@ -143,10 +179,10 @@ const submitAppeal = async (req, res) => {
     }
 
     const appealData = {
-      name: name.trim(),
+      name: cleanName,
       email: cleanEmail,
-      subject: subject ? subject.trim() : 'Account Ban Appeal',
-      commitment: commitment.trim(),
+      subject: cleanSubject,
+      commitment: cleanCommitment,
       status: 'pending',
       createdAt: new Date().toISOString(),
     };

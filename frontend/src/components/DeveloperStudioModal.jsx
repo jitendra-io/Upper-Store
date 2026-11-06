@@ -344,7 +344,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       setActiveTab('kyc');
       setFeedback({
         type: 'error',
-        message: 'Please complete your Aadhaar identity verification first to unlock software publishing.',
+        message: 'Please complete your developer registration first to unlock software publishing.',
       });
       return;
     }
@@ -370,6 +370,28 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       return;
     }
 
+    const cleanTitle = productForm.title.trim();
+    if (cleanTitle.length < 2 || cleanTitle.length > 80) {
+      setFeedback({ type: 'error', message: 'Product title must be between 2 and 80 characters.' });
+      return;
+    }
+
+    const cleanDesc = productForm.description.trim();
+    if (cleanDesc.length < 10 || cleanDesc.length > 5000) {
+      setFeedback({ type: 'error', message: 'Product description must be between 10 and 5000 characters.' });
+      return;
+    }
+
+    if (productForm.version && productForm.version.trim().length > 20) {
+      setFeedback({ type: 'error', message: 'Version cannot exceed 20 characters.' });
+      return;
+    }
+
+    if (productForm.releaseNotes && productForm.releaseNotes.trim().length > 2000) {
+      setFeedback({ type: 'error', message: 'Release notes cannot exceed 2000 characters.' });
+      return;
+    }
+
     const apk = productForm.directApkUrl.trim();
     if (!apk || (!apk.toLowerCase().includes('github.com') && !apk.toLowerCase().includes('githubusercontent.com'))) {
       setFeedback({
@@ -377,6 +399,20 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
         message: 'A valid GitHub Release download URL is required (e.g. https://github.com/user/repo/releases/download/v1.0/app.apk).',
       });
       return;
+    }
+
+    if (productForm.videoUrl && productForm.videoUrl.trim()) {
+      const vUrl = productForm.videoUrl.trim();
+      const isYt = parseYouTubeVideoId(vUrl);
+      const isGPhotos = /^https:\/\/(photos\.app\.goo\.gl|photos\.google\.com)\/[^\s]+/i.test(vUrl);
+      const isDirectVid = /^https?:\/\/[^\s]+\.(mp4|webm|ogg)(\?[^\s]*)?$/i.test(vUrl);
+      if (!isYt && !isGPhotos && !isDirectVid) {
+        setFeedback({
+          type: 'error',
+          message: 'Invalid video link. Please provide a valid YouTube watch/embed/shorts URL, Google Photos link, or direct MP4 link.',
+        });
+        return;
+      }
     }
 
     setSubmittingProduct(true);
@@ -445,7 +481,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       setActiveTab('kyc');
       setFeedback({
         type: 'error',
-        message: 'Government identity verification required before sending community broadcasts.',
+        message: 'Developer registration required before sending community broadcasts.',
       });
       return;
     }
@@ -458,9 +494,28 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       return;
     }
 
-    if (!broadcastForm.title.trim() || !broadcastForm.message.trim()) {
-      setFeedback({ type: 'error', message: 'Notification Title and Message are required.' });
+    const cleanBroadTitle = broadcastForm.title.trim();
+    if (!cleanBroadTitle || cleanBroadTitle.length < 3 || cleanBroadTitle.length > 120) {
+      setFeedback({ type: 'error', message: 'Notification title must be between 3 and 120 characters.' });
       return;
+    }
+
+    const cleanBroadMsg = broadcastForm.message.trim();
+    if (!cleanBroadMsg || cleanBroadMsg.length < 5 || cleanBroadMsg.length > 1000) {
+      setFeedback({ type: 'error', message: 'Notification message must be between 5 and 1000 characters.' });
+      return;
+    }
+
+    if (broadcastForm.link && broadcastForm.link.trim()) {
+      const bLink = broadcastForm.link.trim();
+      if (bLink.length > 500) {
+        setFeedback({ type: 'error', message: 'Link URL cannot exceed 500 characters.' });
+        return;
+      }
+      if (!/^https?:\/\//i.test(bLink)) {
+        setFeedback({ type: 'error', message: 'Link must be a valid web URL starting with http:// or https://.' });
+        return;
+      }
     }
 
     setSubmittingBroadcast(true);
@@ -721,6 +776,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         placeholder="e.g. AI Prompt Engine"
                         value={productForm.title}
                         onChange={(e) => setProductForm({ ...productForm, title: e.target.value })}
+                        maxLength={80}
                         required
                       />
                     </div>
@@ -747,6 +803,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         placeholder="1.0.0"
                         value={productForm.version}
                         onChange={(e) => setProductForm({ ...productForm, version: e.target.value })}
+                        maxLength={20}
                         required
                       />
                     </div>
@@ -756,9 +813,10 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     <label>Short Description <span className="req-star">*</span></label>
                     <textarea
                       rows={2}
-                      placeholder="Briefly describe what your app or tool does..."
+                      placeholder="Briefly describe what your app or tool does (10 to 5000 characters)..."
                       value={productForm.description}
                       onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                      maxLength={5000}
                       required
                     />
                   </div>
@@ -770,6 +828,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       placeholder="Highlight changes, improvements, or new features in this version..."
                       value={productForm.releaseNotes}
                       onChange={(e) => setProductForm({ ...productForm, releaseNotes: e.target.value })}
+                      maxLength={2000}
                     />
                   </div>
                 </div>
@@ -855,6 +914,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
                       value={productForm.videoUrl}
                       onChange={(e) => setProductForm({ ...productForm, videoUrl: e.target.value })}
+                      maxLength={500}
                     />
                     <small className="field-hint">
                       Paste YouTube video link (watch, shorts, or share URL) for interactive showcase playback in the Video Demos section.
@@ -1083,7 +1143,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   <div className="gate-text">
                     <h4>Developer Registration &amp; Consent Required</h4>
                     <p>
-                      To prevent spam and protect users, community notification broadcasts require verified Aadhaar identification.
+                      To prevent spam and protect users, community notification broadcasts require an active developer registration.
                     </p>
                   </div>
                   <button
@@ -1091,7 +1151,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     className="gate-action-btn"
                     onClick={() => setActiveTab('kyc')}
                   >
-                    Verify Aadhaar Now →
+                    Register as Developer Now →
                   </button>
                 </div>
               )}
@@ -1105,6 +1165,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       placeholder="e.g. Major v2.0 Release Out Now!"
                       value={broadcastForm.title}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, title: e.target.value })}
+                      maxLength={120}
                       required
                     />
                   </div>
@@ -1133,6 +1194,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         placeholder="https://..."
                         value={broadcastForm.link}
                         onChange={(e) => setBroadcastForm({ ...broadcastForm, link: e.target.value })}
+                        maxLength={500}
                       />
                     </div>
                   </div>
@@ -1141,9 +1203,10 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     <label>Announcement Message <span className="req-star">*</span></label>
                     <textarea
                       rows={3}
-                      placeholder="Enter announcement details for the Upper Store community..."
+                      placeholder="Enter announcement details for the Upper Store community (5 to 1000 characters)..."
                       value={broadcastForm.message}
                       onChange={(e) => setBroadcastForm({ ...broadcastForm, message: e.target.value })}
+                      maxLength={1000}
                       required
                     />
                   </div>
