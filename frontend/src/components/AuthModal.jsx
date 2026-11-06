@@ -111,12 +111,12 @@ const AuthModal = () => {
         await login(email, password);
       } else {
         if (!isAdultConfirmed) {
-          setErrorMsg('Under Section 9 of the DPDP Act 2023, you must confirm that you are at least 18 years of age.');
+          setErrorMsg('You must confirm that you are at least 18 years of age.');
           setLoading(false);
           return;
         }
         if (!isDpdpConsentGiven) {
-          setErrorMsg('Under Section 6 of the DPDP Act 2023, affirmative consent to data processing under our Privacy Policy is required to create an account.');
+          setErrorMsg('Consent to data processing under our Privacy Policy is required to create an account.');
           setLoading(false);
           return;
         }
@@ -369,7 +369,7 @@ const AuthModal = () => {
                   required
                 />
                 <label htmlFor="auth-adult-check" style={{ cursor: 'pointer', lineHeight: 1.4 }}>
-                  I confirm that I am <strong>18 years of age or older</strong> (DPDP Act 2023 Age Requirement).
+                  I confirm that I am <strong>18 years of age or older</strong>.
                 </label>
               </div>
 
@@ -383,7 +383,7 @@ const AuthModal = () => {
                   required
                 />
                 <label htmlFor="auth-dpdp-check" style={{ cursor: 'pointer', lineHeight: 1.4 }}>
-                  I give affirmative consent to the collection and processing of my personal data under the{' '}
+                  I agree to the collection and processing of my personal data under the{' '}
                   <a href="/policies#privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#ffd700', textDecoration: 'underline' }}>Privacy Policy</a> and agree to the{' '}
                   <a href="/policies#terms" target="_blank" rel="noopener noreferrer" style={{ color: '#ffd700', textDecoration: 'underline' }}>Terms of Service</a>.
                 </label>
@@ -394,14 +394,14 @@ const AuthModal = () => {
                 onClick={() => setShowPrivacyNotice(!showPrivacyNotice)}
                 style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.78rem', padding: '0', cursor: 'pointer', textDecoration: 'underline', marginTop: '4px' }}
               >
-                {showPrivacyNotice ? 'Hide Statutory Privacy Notice' : 'View Statutory Personal Data Notice (DPDP Act Section 5) ▾'}
+                {showPrivacyNotice ? 'Hide Privacy Notice' : 'View Data Privacy Notice ▾'}
               </button>
 
               {showPrivacyNotice && (
                 <div style={{ marginTop: '0.6rem', padding: '0.6rem', background: 'rgba(0,0,0,0.4)', borderRadius: '6px', fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.5 }}>
                   <p style={{ margin: '0 0 4px 0' }}><strong>Personal Data Collected:</strong> Email, username, profile name, IP address, download logs.</p>
                   <p style={{ margin: '0 0 4px 0' }}><strong>Processing Purpose:</strong> Authentication, software licensing, anti-abuse security.</p>
-                  <p style={{ margin: '0 0 4px 0' }}><strong>Your Rights:</strong> Right to access, correct, erase (Section 12), and withdraw consent at any time.</p>
+                  <p style={{ margin: '0 0 4px 0' }}><strong>Your Rights:</strong> Right to access, correct, erase data, and withdraw consent at any time.</p>
                   <p style={{ margin: 0 }}><strong>Grievance Officer:</strong> grievance@upperstore.in | SLA: 24–48h response, 15 days resolution.</p>
                 </div>
               )}

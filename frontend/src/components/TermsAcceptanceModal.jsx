@@ -2,19 +2,27 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import './TermsAcceptanceModal.css';
 
-const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel }) => {
+const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
   const [agreed, setAgreed] = useState(false);
+  const [isAdult, setIsAdult] = useState(false);
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    setAgreed(false);
+    setIsAdult(false);
+    if (onCancel) onCancel();
+    if (onClose) onClose();
+  };
+
   const handleAccept = () => {
-    if (agreed) {
+    if (agreed && isAdult) {
       onAccept();
     }
   };
 
   return createPortal(
-    <div className="terms-modal-backdrop" onClick={onCancel}>
+    <div className="terms-modal-backdrop" onClick={handleClose}>
       <div className="terms-modal-card" onClick={(e) => e.stopPropagation()}>
         
         {/* HEADER */}
@@ -29,7 +37,7 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel }) => {
               <p className="terms-modal-sub">Please review and accept our store governance terms before downloading software or digital assets.</p>
             </div>
           </div>
-          <button className="terms-close-btn" onClick={onCancel} title="Close Modal">
+          <button className="terms-close-btn" onClick={handleClose} title="Close Modal">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -83,26 +91,39 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel }) => {
           </div>
         </div>
 
-        {/* CHECKBOX & ACTIONS FOOTER */}
+        {/* CHECKBOXES & ACTIONS FOOTER */}
         <div className="terms-modal-footer">
-          <label className="terms-checkbox-label">
-            <input
-              type="checkbox"
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-            />
-            <span className="checkbox-text">
-              I have read, understood, and agree to Upper Store's Terms & Conditions and Misuse Policy.
-            </span>
-          </label>
+          <div className="terms-checkboxes-group">
+            <label className="terms-checkbox-label">
+              <input
+                type="checkbox"
+                checked={isAdult}
+                onChange={(e) => setIsAdult(e.target.checked)}
+              />
+              <span className="checkbox-text">
+                I confirm that I am <strong>18 years of age or older</strong>.
+              </span>
+            </label>
+
+            <label className="terms-checkbox-label">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+              />
+              <span className="checkbox-text">
+                I have read, understood, and agree to Upper Store's Terms & Conditions and Misuse Policy.
+              </span>
+            </label>
+          </div>
 
           <div className="terms-footer-buttons">
-            <button className="terms-cancel-btn" onClick={onCancel}>
+            <button className="terms-cancel-btn" onClick={handleClose}>
               Cancel
             </button>
             <button
               className="terms-accept-btn"
-              disabled={!agreed}
+              disabled={!agreed || !isAdult}
               onClick={handleAccept}
             >
               Accept Terms & Continue Download

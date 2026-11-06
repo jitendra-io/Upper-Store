@@ -26,7 +26,7 @@ const Navbar = ({ onOpenSearch }) => {
   const [downloadCount, setDownloadCount] = useState(0);
   const [licenseCount, setLicenseCount] = useState(0);
   const location = useLocation();
-  const { user, token, isLoggedIn, openAuthModal, logout } = useAuth();
+  const { user, token, isLoggedIn, openAuthModal, logout, withdrawConsent } = useAuth();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -799,9 +799,42 @@ const Navbar = ({ onOpenSearch }) => {
                     <button
                       type="button"
                       className="dropdown-item-btn"
+                      style={{ color: user?.consentStatus === 'withdrawn' ? '#f59e0b' : '#f87171', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '0.6rem 0.85rem', width: '100%', textAlign: 'left', background: 'transparent' }}
+                      onClick={async () => {
+                        if (user?.consentStatus === 'withdrawn') {
+                          alert('Your consent is currently withdrawn. You may re-grant consent at any time from your profile settings.');
+                          return;
+                        }
+                        if (window.confirm('Withdraw Consent:\n\nAre you sure you want to withdraw your consent? Withdrawing consent will pause non-essential personal data processing and deactivate developer publishing privileges (if registered).\n\nYou may re-grant consent at any time in your profile settings.\n\nDo you wish to proceed?')) {
+                          try {
+                            const res = await withdrawConsent();
+                            alert(res.message || 'Consent successfully withdrawn.');
+                            closeMenu();
+                          } catch (err) {
+                            alert(err.message || 'Failed to withdraw consent. Please contact support.');
+                          }
+                        }
+                      }}
+                    >
+                      <div className="dropdown-item-left">
+                        <span className="dropdown-item-icon" style={{ color: user?.consentStatus === 'withdrawn' ? '#f59e0b' : '#f87171' }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                          </svg>
+                        </span>
+                        <span className="dropdown-item-label" style={{ color: user?.consentStatus === 'withdrawn' ? '#f59e0b' : '#f87171', fontSize: '0.78rem' }}>
+                          {user?.consentStatus === 'withdrawn' ? 'Consent Withdrawn' : 'Withdraw Consent'}
+                        </span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="dropdown-item-btn"
                       style={{ color: '#f87171', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '0.6rem 0.85rem', width: '100%', textAlign: 'left', background: 'transparent' }}
                       onClick={async () => {
-                        if (window.confirm('Statutory Erasure (DPDP Act 2023): Are you sure you want to permanently delete your account and erase all associated personal data from Upper Store? This action is irreversible.')) {
+                        if (window.confirm('Delete Account & Erase Data: Are you sure you want to permanently delete your account and erase all associated personal data from Upper Store? This action is irreversible.')) {
                           try {
                             const activeToken = token || localStorage.getItem('upper_user_token');
                             const res = await fetch(`${API_BASE}/api/auth/user/delete-account`, {
@@ -813,7 +846,7 @@ const Navbar = ({ onOpenSearch }) => {
                             logout();
                             closeMenu();
                           } catch (err) {
-                            alert('Failed to erase account data. Please contact the Grievance Officer at grievance@upperstore.in.');
+                            alert('Failed to erase account data. Please contact support.');
                           }
                         }
                       }}
@@ -825,7 +858,7 @@ const Navbar = ({ onOpenSearch }) => {
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                           </svg>
                         </span>
-                        <span className="dropdown-item-label" style={{ color: '#f87171', fontSize: '0.78rem' }}>Erase Account &amp; Data (DPDP Act)</span>
+                        <span className="dropdown-item-label" style={{ color: '#f87171', fontSize: '0.78rem' }}>Erase Account &amp; Data</span>
                       </div>
                     </button>
 

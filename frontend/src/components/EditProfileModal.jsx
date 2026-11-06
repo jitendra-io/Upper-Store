@@ -13,11 +13,11 @@ export const EditProfileModal = ({
   onProfileUpdated,
   onProductDeleted,
 }) => {
-  const { user, token, updateUserProfile } = useAuth();
+  const { user, token, updateUserProfile, withdrawConsent, regrantConsent } = useAuth();
   const fileInputRef = useRef(null);
   const wasOpenRef = useRef(false);
 
-  const [activeTab, setActiveTab] = useState('details'); // 'details' | 'products'
+  const [activeTab, setActiveTab] = useState('details'); // 'details' | 'products' | 'consent'
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
@@ -37,6 +37,10 @@ export const EditProfileModal = ({
   const [deletingProductId, setDeletingProductId] = useState(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [deleteError, setDeleteError] = useState('');
+
+  // Consent State
+  const [consentProcessing, setConsentProcessing] = useState(false);
+  const [consentMsg, setConsentMsg] = useState(null);
 
   // Sync initial values only once when modal opens (guarded against background overwrites while editing)
   useEffect(() => {
@@ -385,6 +389,45 @@ export const EditProfileModal = ({
     }
   };
 
+  // Consent Withdrawal Handler
+  const handleWithdrawConsentClick = async () => {
+    const confirmWithdraw = window.confirm(
+      'Withdraw Consent:\n\nAre you sure you want to withdraw your consent? Withdrawing consent will pause non-essential personal data processing and deactivate developer publishing privileges (if registered).\n\nYou may re-grant consent at any time from this modal.\n\nDo you wish to proceed?'
+    );
+    if (!confirmWithdraw) return;
+
+    setConsentProcessing(true);
+    setConsentMsg(null);
+    try {
+      const data = await withdrawConsent();
+      setConsentMsg({
+        type: 'success',
+        text: data.message || 'Consent has been successfully withdrawn.',
+      });
+    } catch (err) {
+      setConsentMsg({ type: 'error', text: err.message || 'Failed to withdraw consent.' });
+    } finally {
+      setConsentProcessing(false);
+    }
+  };
+
+  // Consent Re-grant Handler
+  const handleRegrantConsentClick = async () => {
+    setConsentProcessing(true);
+    setConsentMsg(null);
+    try {
+      const data = await regrantConsent();
+      setConsentMsg({
+        type: 'success',
+        text: data.message || 'Consent has been successfully re-granted.',
+      });
+    } catch (err) {
+      setConsentMsg({ type: 'error', text: err.message || 'Failed to re-grant consent.' });
+    } finally {
+      setConsentProcessing(false);
+    }
+  };
+
   return (
     <div className="edit-profile-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="edit-profile-modal-box" onClick={(e) => e.stopPropagation()}>
@@ -414,8 +457,8 @@ export const EditProfileModal = ({
           </button>
         </div>
 
-        {/* TABS (If Developer has published products) */}
-        {isDev && (
+        {/* TABS (Profile Details, Manage Software, and Consent) */}
+        {!isOfficial && (
           <div className="edit-profile-tabs">
             <button
               type="button"
@@ -428,18 +471,36 @@ export const EditProfileModal = ({
               </svg>
               <span>Profile Details</span>
             </button>
+            {isDev && (
+              <button
+                type="button"
+                className={`edit-profile-tab ${activeTab === 'products' ? 'active' : ''}`}
+                onClick={() => setActiveTab('products')}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                  <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                  <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+                <span>Manage Software ({products.length})</span>
+              </button>
+            )}
             <button
               type="button"
-              className={`edit-profile-tab ${activeTab === 'products' ? 'active' : ''}`}
-              onClick={() => setActiveTab('products')}
+              className={`edit-profile-tab ${activeTab === 'consent' ? 'active' : ''}`}
+              onClick={() => setActiveTab('consent')}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <polyline points="9 12 11 14 15 10"></polyline>
               </svg>
-              <span>Manage Software ({products.length})</span>
+              <span>Consent &amp; Privacy</span>
+              {user?.consentStatus === 'withdrawn' ? (
+                <span style={{ fontSize: '0.68rem', color: '#f87171', background: 'rgba(239, 68, 68, 0.2)', padding: '1px 6px', borderRadius: '10px', marginLeft: '4px' }}>Withdrawn</span>
+              ) : (
+                <span style={{ fontSize: '0.68rem', color: '#4ade80', background: 'rgba(74, 222, 128, 0.2)', padding: '1px 6px', borderRadius: '10px', marginLeft: '4px' }}>Active</span>
+              )}
             </button>
           </div>
         )}
@@ -824,6 +885,138 @@ export const EditProfileModal = ({
             )}
 
             <div className="edit-profile-footer">
+              <button type="button" className="edit-btn secondary" onClick={onClose}>
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: CONSENT & PRIVACY RIGHTS */}
+        {activeTab === 'consent' && (
+          <div className="edit-profile-body">
+            {consentMsg && (
+              <div className={`edit-profile-alert ${consentMsg.type}`}>
+                {consentMsg.type === 'success' ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f87171" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                )}
+                <span>{consentMsg.text}</span>
+              </div>
+            )}
+
+            <div style={{ background: user?.consentStatus === 'withdrawn' ? 'rgba(239, 68, 68, 0.08)' : 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(20, 16, 32, 0.4) 100%)', border: user?.consentStatus === 'withdrawn' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ background: user?.consentStatus === 'withdrawn' ? '#ef4444' : '#10b981', color: '#fff', width: '34px', height: '34px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {user?.consentStatus === 'withdrawn' ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1.05rem', color: '#ffffff' }}>
+                      {user?.consentStatus === 'withdrawn' ? 'Data Processing Consent: Withdrawn' : 'Data Processing Consent: Active'}
+                    </h4>
+                    <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: user?.consentStatus === 'withdrawn' ? '#fca5a5' : '#a7f3d0' }}>
+                      Personal Data Protection &amp; Privacy Rights
+                    </p>
+                  </div>
+                </div>
+
+                {user?.consentStatus === 'withdrawn' ? (
+                  <button
+                    type="button"
+                    onClick={handleRegrantConsentClick}
+                    disabled={consentProcessing}
+                    className="edit-btn primary"
+                    style={{ padding: '0.45rem 1rem', fontSize: '0.82rem' }}
+                  >
+                    {consentProcessing ? 'Re-granting...' : 'Re-grant Consent'}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleWithdrawConsentClick}
+                    disabled={consentProcessing}
+                    style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.45)', color: '#fca5a5', padding: '0.45rem 1rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                    title="Withdraw consent"
+                  >
+                    {consentProcessing ? 'Withdrawing...' : 'Withdraw Consent'}
+                  </button>
+                )}
+              </div>
+
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem', fontSize: '0.82rem' }}>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Consent Status</span>
+                  <strong style={{ color: user?.consentStatus === 'withdrawn' ? '#ef4444' : '#10b981' }}>
+                    {user?.consentStatus === 'withdrawn' ? 'Withdrawn' : 'Active'}
+                  </strong>
+                </div>
+                <div>
+                  <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Consent Accepted On</span>
+                  <strong style={{ color: '#ffffff' }}>
+                    {user?.consentAcceptedAt || user?.createdAt
+                      ? new Date(user?.consentAcceptedAt || user?.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                      : 'Recorded upon registration'}
+                  </strong>
+                </div>
+                {user?.consentWithdrawnAt && (
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Consent Withdrawn On</span>
+                    <strong style={{ color: '#fca5a5' }}>
+                      {new Date(user.consentWithdrawnAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                    </strong>
+                  </div>
+                )}
+                {user?.developerConsentAcceptedAt && (
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Developer Consent Accepted</span>
+                    <strong style={{ color: '#ffffff' }}>
+                      {new Date(user.developerConsentAcceptedAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </strong>
+                  </div>
+                )}
+                {user?.developerConsentWithdrawnAt && (
+                  <div>
+                    <span style={{ color: '#94a3b8', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Developer Consent Withdrawn</span>
+                    <strong style={{ color: '#fca5a5' }}>
+                      {new Date(user.developerConsentWithdrawnAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </strong>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '14px', padding: '1rem', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+              <h5 style={{ margin: '0 0 0.4rem 0', color: '#ffd700', fontSize: '0.88rem' }}>Your Privacy &amp; Data Rights</h5>
+              <p style={{ margin: '0 0 0.5rem 0' }}>
+                • <strong>Right to Withdraw Consent:</strong> You may withdraw your consent at any time using the withdrawal button above with the exact same ease as granting it.
+              </p>
+              <p style={{ margin: '0 0 0.5rem 0' }}>
+                • <strong>Right to Erasure:</strong> You can permanently erase your entire account and all associated personal data from Upper Store at any time.
+              </p>
+              <p style={{ margin: 0 }}>
+                • <strong>Grievance Redressal:</strong> For any data protection inquiries, reach our designated Grievance Officer at <a href="mailto:grievance@upperstore.in" style={{ color: '#ffd700', textDecoration: 'underline' }}>grievance@upperstore.in</a>.
+              </p>
+            </div>
+
+            <div className="edit-profile-footer" style={{ marginTop: '1.25rem' }}>
               <button type="button" className="edit-btn secondary" onClick={onClose}>
                 Close
               </button>

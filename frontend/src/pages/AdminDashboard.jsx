@@ -1793,7 +1793,7 @@ const AdminDashboard = () => {
             <div>
               <h3 style={{ margin: 0 }}>VIP Developers &amp; Identity Verification (KYC) ({developers.length})</h3>
               <p className="admin-section-desc" style={{ margin: '0.25rem 0 0', color: '#94a3b8', fontSize: '0.85rem' }}>
-                Review submitted identity proofs, inspect developer contact details, and suspend or reinstate publishing access in compliance with DPDP Act 2023.
+                Review developer details, inspect developer contact info, and manage publishing access in compliance with platform policies.
               </p>
             </div>
             <button className="admin-btn outline-sm" onClick={() => fetchDevelopers()} disabled={loadingDevelopers}>
@@ -1851,7 +1851,7 @@ const AdminDashboard = () => {
                   <tr>
                     <th>Developer Profile</th>
                     <th>Contact &amp; VIP Tier</th>
-                    <th>DPDP Consent</th>
+                    <th>Consent</th>
                     <th>Published Products</th>
                     <th>Status</th>
                     <th>Account Moderation</th>
@@ -1902,10 +1902,23 @@ const AdminDashboard = () => {
                           </td>
 
                           <td>
-                            <span className="provider-pill" style={{ background: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', color: '#10b981' }}>
-                              Consent Active
-                            </span>
-                            <div className="sub-text">DPDP Act 2023</div>
+                            {dev.consentStatus === 'withdrawn' ? (
+                              <div>
+                                <span className="provider-pill" style={{ background: 'rgba(239, 68, 68, 0.15)', borderColor: '#ef4444', color: '#f87171' }}>
+                                  Withdrawn
+                                </span>
+                                <div className="sub-text">Withdrawn: {dev.consentWithdrawnAt ? new Date(dev.consentWithdrawnAt).toLocaleDateString() : 'Yes'}</div>
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="provider-pill" style={{ background: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', color: '#10b981' }}>
+                                  Consent Active
+                                </span>
+                                <div className="sub-text">
+                                  Accepted: {dev.consentAcceptedAt || dev.createdAt ? new Date(dev.consentAcceptedAt || dev.createdAt).toLocaleDateString() : 'Active'}
+                                </div>
+                              </div>
+                            )}
                           </td>
 
                           <td>
@@ -1978,6 +1991,7 @@ const AdminDashboard = () => {
                     <th>User Profile</th>
                     <th>Email</th>
                     <th>Provider</th>
+                    <th>Consent</th>
                     <th>Status</th>
                     <th>Details</th>
                     <th>Moderation</th>
@@ -2008,6 +2022,27 @@ const AdminDashboard = () => {
                         </td>
                         <td>{u.email}</td>
                         <td><span className="provider-pill">{u.provider || 'email'}</span></td>
+                        <td>
+                          {u.consentStatus === 'withdrawn' ? (
+                            <div>
+                              <span className="provider-pill" style={{ background: 'rgba(239, 68, 68, 0.15)', borderColor: '#ef4444', color: '#f87171' }}>
+                                Withdrawn
+                              </span>
+                              <div className="sub-text">
+                                Withdrawn: {u.consentWithdrawnAt ? new Date(u.consentWithdrawnAt).toLocaleDateString() : 'Yes'}
+                              </div>
+                            </div>
+                          ) : (
+                            <div>
+                              <span className="provider-pill" style={{ background: 'rgba(16, 185, 129, 0.15)', borderColor: '#10b981', color: '#10b981' }}>
+                                Consent Active
+                              </span>
+                              <div className="sub-text">
+                                Accepted: {u.consentAcceptedAt || u.createdAt ? new Date(u.consentAcceptedAt || u.createdAt).toLocaleDateString() : 'Active'}
+                              </div>
+                            </div>
+                          )}
+                        </td>
                         <td>
                           {u.isBanned ? (
                             <span className="status-badge banned">
@@ -2088,6 +2123,38 @@ const AdminDashboard = () => {
                   <button className="modal-close-icon" onClick={() => setSelectedUserDetail(null)}>✕</button>
                 </div>
                 <div className="admin-modal-body">
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: '12px', padding: '0.85rem', marginBottom: '1.2rem', fontSize: '0.82rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', flexWrap: 'wrap', gap: '6px' }}>
+                      <strong style={{ color: '#ffd700' }}>Consent &amp; Privacy Audit</strong>
+                      <span className="provider-pill" style={{ background: selectedUserDetail.consentStatus === 'withdrawn' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)', color: selectedUserDetail.consentStatus === 'withdrawn' ? '#f87171' : '#10b981', borderColor: selectedUserDetail.consentStatus === 'withdrawn' ? '#ef4444' : '#10b981' }}>
+                        {selectedUserDetail.consentStatus === 'withdrawn' ? 'Consent Withdrawn' : 'Consent Active'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.5rem', color: '#cbd5e1' }}>
+                      <div>
+                        <span style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'block' }}>USER CONSENT ACCEPTED:</span>
+                        <strong>{selectedUserDetail.consentAcceptedAt || selectedUserDetail.createdAt ? new Date(selectedUserDetail.consentAcceptedAt || selectedUserDetail.createdAt).toLocaleString() : 'Active upon registration'}</strong>
+                      </div>
+                      {selectedUserDetail.consentWithdrawnAt && (
+                        <div>
+                          <span style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'block' }}>USER CONSENT WITHDRAWN:</span>
+                          <strong style={{ color: '#f87171' }}>{new Date(selectedUserDetail.consentWithdrawnAt).toLocaleString()}</strong>
+                        </div>
+                      )}
+                      {selectedUserDetail.developerConsentAcceptedAt && (
+                        <div>
+                          <span style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'block' }}>DEV CONSENT ACCEPTED:</span>
+                          <strong>{new Date(selectedUserDetail.developerConsentAcceptedAt).toLocaleString()}</strong>
+                        </div>
+                      )}
+                      {selectedUserDetail.developerConsentWithdrawnAt && (
+                        <div>
+                          <span style={{ color: '#94a3b8', fontSize: '0.72rem', display: 'block' }}>DEV CONSENT WITHDRAWN:</span>
+                          <strong style={{ color: '#f87171' }}>{new Date(selectedUserDetail.developerConsentWithdrawnAt).toLocaleString()}</strong>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                   {(() => {
                     const clean = (selectedUserDetail.email || '').trim().toLowerCase();
                     const dlList = userDownloadsMap[clean] || getUserDownloadHistory(clean);

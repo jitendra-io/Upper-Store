@@ -44,6 +44,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
   });
   const [showConsentNoticeModal, setShowConsentNoticeModal] = useState(false);
   const [withdrawingConsent, setWithdrawingConsent] = useState(false);
+  const [previousDevConsent, setPreviousDevConsent] = useState(null);
 
   // Product Form State
   const [productForm, setProductForm] = useState({
@@ -93,6 +94,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
         const dData = await devRes.json();
         if (dData.isRegistered && dData.developer) {
           setDevProfile(dData.developer);
+          setPreviousDevConsent(null);
           setKycForm({
             legalName: dData.developer.legalName || '',
             displayName: dData.developer.displayName || user?.displayName || '',
@@ -103,6 +105,9 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
           });
         } else {
           setDevProfile(null);
+          if (dData.previousConsent) {
+            setPreviousDevConsent(dData.previousConsent);
+          }
           setKycForm((prev) => ({
             ...prev,
             displayName: user?.displayName || prev.displayName || '',
@@ -158,7 +163,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
 
   if (!isOpen) return null;
 
-  // 1. Developer Onboarding & Consent Submission Handler (DPDP Act 2023 Compliant)
+  // 1. Developer Onboarding & Consent Submission Handler
   const handleKycSubmit = async (e) => {
     e.preventDefault();
     setFeedback(null);
@@ -193,7 +198,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
     }
 
     if (!kycForm.agreed) {
-      setFeedback({ type: 'error', message: 'Please review and accept the statutory consent notice before registering.' });
+      setFeedback({ type: 'error', message: 'Please review and accept the consent notice before registering.' });
       return;
     }
 
@@ -222,7 +227,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       setDevProfile(data.developer);
       setFeedback({
         type: 'success',
-        message: 'Developer profile registered successfully with statutory consent! Publishing privileges are now unlocked.',
+        message: 'Developer profile registered successfully! Publishing privileges are now unlocked.',
       });
       fetchDevData();
     } catch (err) {
@@ -232,10 +237,10 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
     }
   };
 
-  // 1b. Withdraw Consent Handler (DPDP Act 2023 Section 6(4))
+  // 1b. Withdraw Consent Handler
   const handleWithdrawConsent = async () => {
     const confirmWithdraw = window.confirm(
-      'Withdraw Developer Consent (DPDP Act 2023 Section 6(4)):\n\nAre you sure you want to withdraw your consent? Withdrawing consent will deregister your developer profile and revoke direct software publishing privileges.\n\nDo you wish to proceed?'
+      'Withdraw Developer Consent:\n\nAre you sure you want to withdraw your consent? Withdrawing consent will deregister your developer profile and revoke direct software publishing privileges.\n\nDo you wish to proceed?'
     );
     if (!confirmWithdraw) return;
 
@@ -266,7 +271,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
 
       setFeedback({
         type: 'success',
-        message: 'Consent successfully withdrawn and developer profile deregistered in compliance with Section 6(4) of the DPDP Act 2023.',
+        message: 'Consent successfully withdrawn and developer profile deregistered.',
       });
       fetchDevData();
     } catch (err) {
@@ -1118,7 +1123,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
             </div>
           ) : (
             /* ===============================================================
-               TAB 4: DEVELOPER PROFILE & STATUTORY CONSENT (DPDP ACT 2023)
+               TAB 4: DEVELOPER PROFILE & CONSENT
                =============================================================== */
             <div className="dev-pane-content">
               {devProfile ? (
@@ -1131,17 +1136,17 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       <div>
                         <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#ffffff' }}>Developer Registration: Active &amp; Verified</h4>
                         <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.82rem', color: '#a7f3d0' }}>
-                          Statutory consent accepted under Section 6 of the Digital Personal Data Protection Act, 2023.
+                          Developer registration consent is active.
                         </p>
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <button
                         type="button"
                         onClick={() => setShowConsentNoticeModal(true)}
                         className="admin-btn outline-sm"
-                        style={{ background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', padding: '0.45rem 0.85rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                        style={{ background: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.25)', color: '#ffffff', padding: '0.5rem 0.95rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
                       >
                         Read Consent Notice
                       </button>
@@ -1150,15 +1155,15 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         type="button"
                         onClick={handleWithdrawConsent}
                         disabled={withdrawingConsent}
-                        style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.45)', color: '#fca5a5', padding: '0.45rem 0.85rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
-                        title="Withdraw consent and deregister developer profile under DPDP Act Section 6(4)"
+                        style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.45)', color: '#fca5a5', padding: '0.5rem 0.95rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600 }}
+                        title="Withdraw consent and deregister developer profile"
                       >
                         {withdrawingConsent ? 'Withdrawing...' : 'Withdraw Consent & Deregister'}
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem', fontSize: '0.85rem' }}>
+                  <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.85rem', fontSize: '0.85rem' }}>
                     <div>
                       <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Full Legal Name</span>
                       <strong style={{ color: '#ffffff' }}>{devProfile.legalName}</strong>
@@ -1175,27 +1180,65 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Contact Phone</span>
                       <strong style={{ color: '#ffffff' }}>{devProfile.phone}</strong>
                     </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Consent Status</span>
+                      <strong style={{ color: '#10b981' }}>Active</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Consent Accepted On</span>
+                      <strong style={{ color: '#ffffff' }}>
+                        {devProfile.consentAcceptedAt || devProfile.createdAt
+                          ? new Date(devProfile.consentAcceptedAt || devProfile.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : 'Recorded on registration'}
+                      </strong>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="dev-kyc-intro-card" style={{ background: 'rgba(212, 175, 55, 0.08)', border: '1px solid rgba(212, 175, 55, 0.25)', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div className="intro-icon" style={{ background: 'rgba(212, 175, 55, 0.15)', color: '#ffd700', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', shrink: 0 }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                      </svg>
+                <>
+                  {(previousDevConsent || user?.developerConsentWithdrawnAt) && (
+                    <div className="dev-kyc-intro-card" style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.25)', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                        <div className="intro-icon" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 style={{ margin: 0, color: '#fca5a5', fontSize: '1rem' }}>Developer Consent Status: Withdrawn</h4>
+                          <p style={{ margin: '0.2rem 0 0 0', color: '#cbd5e1', fontSize: '0.82rem', lineHeight: 1.45 }}>
+                            Developer consent was previously accepted on{' '}
+                            <strong>{new Date(previousDevConsent?.acceptedAt || user?.developerConsentAcceptedAt || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+                            {' '}and withdrawn on{' '}
+                            <strong>{new Date(previousDevConsent?.withdrawnAt || user?.developerConsentWithdrawnAt || Date.now()).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</strong>
+                            . You may re-register with consent below at any time to resume verified software publishing.
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <h4 style={{ margin: 0, color: '#ffd700', fontSize: '1rem' }}>Developer Registration &amp; DPDP Consent</h4>
-                      <p style={{ margin: '0.2rem 0 0 0', color: '#cbd5e1', fontSize: '0.82rem', lineHeight: 1.45 }}>
-                        To maintain transparent creator accountability across Upper Store, please provide your legal name, public developer name, phone number, and username. <strong>No identity documents, government numbers, or verification URLs are collected.</strong>
-                      </p>
+                  )}
+
+                  <div className="dev-kyc-intro-card" style={{ background: 'rgba(212, 175, 55, 0.08)', border: '1px solid rgba(212, 175, 55, 0.25)', borderRadius: '16px', padding: '1.25rem', marginBottom: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div className="intro-icon" style={{ background: 'rgba(212, 175, 55, 0.15)', color: '#ffd700', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                          <circle cx="9" cy="7" r="4" />
+                          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 style={{ margin: 0, color: '#ffd700', fontSize: '1rem' }}>Developer Registration &amp; Consent</h4>
+                        <p style={{ margin: '0.2rem 0 0 0', color: '#cbd5e1', fontSize: '0.82rem', lineHeight: 1.45 }}>
+                          To maintain transparent creator accountability across Upper Store, please provide your legal name, public developer name, phone number, and username. <strong>No identity documents, government numbers, or verification URLs are collected.</strong>
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </>
               )}
 
               <form id="dev-kyc-form" onSubmit={handleKycSubmit} className="dev-form-grid">
@@ -1281,7 +1324,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         required
                       />
                       <label htmlFor="dev-kyc-agree" style={{ fontSize: '0.84rem', color: '#e2e8f0', lineHeight: 1.5, cursor: 'pointer' }}>
-                        I have read the Developer Consent Notice and give affirmative consent to process my legal name, developer name, and contact phone number for developer publishing and platform accountability under the DPDP Act 2023. I understand that I may withdraw this consent at any time.
+                        I have read the Developer Consent Notice and give affirmative consent to process my legal name, developer name, and contact phone number for developer publishing and platform accountability. I understand that I may withdraw this consent at any time.
                       </label>
                     </div>
 
@@ -1327,7 +1370,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                           <polyline points="14 2 14 8 20 8" />
                         </svg>
-                        Developer Statutory Consent Notice (DPDP Act 2023)
+                        Developer Consent Notice
                       </h3>
                       <button
                         type="button"
@@ -1344,10 +1387,10 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         <strong>2. Zero Identity Document Policy:</strong> Upper Store does not collect, demand, or store government identity cards, Aadhaar numbers, or verification documents.
                       </p>
                       <p style={{ margin: '0 0 0.6rem 0' }}>
-                        <strong>3. Purpose of Processing (Section 5):</strong> Your details are processed strictly to associate uploaded software releases with an authentic creator, provide public attribution on product pages, and ensure platform security against deceptive binaries.
+                        <strong>3. Purpose of Processing:</strong> Your details are processed strictly to associate uploaded software releases with an authentic creator, provide public attribution on product pages, and ensure platform security against deceptive binaries.
                       </p>
                       <p style={{ margin: '0 0 0.6rem 0' }}>
-                        <strong>4. Statutory Right to Withdraw Consent (Section 6(4)):</strong> Under the Digital Personal Data Protection Act, 2023, you have the absolute legal right to withdraw your consent at any time. When you click the &quot;Withdraw Consent&quot; button in your Developer Studio, your developer profile and associated data will be immediately removed.
+                        <strong>4. Right to Withdraw Consent:</strong> You have the right to withdraw your consent at any time. When you click the &quot;Withdraw Consent&quot; button in your Developer Studio, your developer profile and associated data will be immediately removed.
                       </p>
                       <p style={{ margin: '0 0 0.6rem 0' }}>
                         <strong>5. Grievance Redressal:</strong> Grievance Officer: Jitendra Sahu (grievance@upperstore.in | Bhubaneswar, Odisha).

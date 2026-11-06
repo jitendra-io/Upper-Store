@@ -36,9 +36,31 @@ const getMyDeveloperProfile = async (req, res) => {
     }
 
     if (devSnap.empty) {
+      let previousConsent = null;
+      try {
+        let uDoc = userId ? await db.collection('users').doc(userId).get() : null;
+        if ((!uDoc || !uDoc.exists) && cleanEmail) {
+          const uSnap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+          if (!uSnap.empty) uDoc = uSnap.docs[0];
+        }
+        if (uDoc && uDoc.exists) {
+          const uData = uDoc.data();
+          if (uData.developerConsentWithdrawnAt || uData.developerConsentAcceptedAt) {
+            previousConsent = {
+              status: uData.developerConsentStatus || 'withdrawn',
+              acceptedAt: uData.developerConsentAcceptedAt || null,
+              withdrawnAt: uData.developerConsentWithdrawnAt || null,
+            };
+          }
+        }
+      } catch (prevErr) {
+        // ignore
+      }
+
       return res.json({
         isRegistered: false,
         developer: null,
+        previousConsent,
       });
     }
 
@@ -211,6 +233,7 @@ const registerDeveloperKyc = async (req, res) => {
     }
 
     const now = new Date();
+    const nowIso = now.toISOString();
     const devPayload = {
       userId,
       email: cleanEmail,
@@ -222,8 +245,17 @@ const registerDeveloperKyc = async (req, res) => {
       vipPlan: membership?.plan || 'pro',
       avatar: userData.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanEmail)}`,
       consentStatus: 'active',
-      consentAcceptedAt: now.toISOString(),
-      updatedAt: now.toISOString(),
+      consentAcceptedAt: nowIso,
+      consentWithdrawnAt: null,
+      consentHistory: [
+        {
+          action: 'accepted',
+          type: 'developer_consent_dpdp',
+          legalBasis: 'DPDP Act 2023 Section 6',
+          timestamp: nowIso,
+        },
+      ],
+      updatedAt: nowIso,
     };
 
     let devId;
@@ -238,7 +270,9 @@ const registerDeveloperKyc = async (req, res) => {
       devPayload.isSuspended = Boolean(existingData.isSuspended);
       devPayload.suspendedAt = existingData.suspendedAt || null;
       devPayload.suspensionReason = existingData.suspensionReason || null;
-      devPayload.createdAt = existingData.createdAt || existingDoc.createTime?.toDate()?.toISOString() || now.toISOString();
+      devPayload.createdAt = existingData.createdAt || existingDoc.createTime?.toDate()?.toISOString() || nowIso;
+      // Retain original consentAcceptedAt if already set
+      devPayload.consentAcceptedAt = existingData.consentAcceptedAt || nowIso;
       devJoinedAt = existingData.joinedAt || formatExactMonthYear(devPayload.createdAt);
       devPayload.joinedAt = devJoinedAt;
 
@@ -250,20 +284,23 @@ const registerDeveloperKyc = async (req, res) => {
       devPayload.suspendedAt = null;
       devPayload.suspensionReason = null;
       devPayload.joinedAt = devJoinedAt;
-      devPayload.createdAt = now.toISOString();
+      devPayload.createdAt = nowIso;
 
       const newDoc = await db.collection('developers').add(devPayload);
       devId = newDoc.id;
     }
 
-    // Mark user record as developer
+    // Mark user record as developer with consent audit timestamps
     if (userDocRef) {
       try {
         const uUpdate = {
           isDeveloper: true,
           developerDisplayName: displayName.trim(),
           developerJoinedAt: devJoinedAt,
-          developerUpdatedAt: now.toISOString(),
+          developerUpdatedAt: nowIso,
+          developerConsentStatus: 'active',
+          developerConsentAcceptedAt: devPayload.consentAcceptedAt || nowIso,
+          developerConsentWithdrawnAt: null,
         };
         if (cleanDevUsername) {
           uUpdate.username = cleanDevUsername;
@@ -304,33 +341,69 @@ const withdrawDeveloperConsent = async (req, res) => {
   try {
     const userId = req.user.uid;
     const cleanEmail = (req.user.email || '').trim().toLowerCase();
+    const nowIso = new Date().toISOString();
 
-    // 1. Delete developer record from Firestore
+    // 1. Find developer record to capture timestamps and log audit trail before deleting
     let devSnap = await db.collection('developers').where('userId', '==', userId).get();
     if (devSnap.empty && cleanEmail) {
       devSnap = await db.collection('developers').where('email', '==', cleanEmail).get();
     }
 
+    let existingAcceptedAt = null;
     for (const doc of devSnap.docs) {
+      const dData = doc.data();
+      if (dData.consentAcceptedAt) {
+        existingAcceptedAt = dData.consentAcceptedAt;
+      }
+      // Record in regulatory consent audit trail
+      try {
+        await db.collection('consent_audit_logs').add({
+          userId: userId || dData.userId,
+          email: cleanEmail || dData.email,
+          role: 'developer',
+          action: 'withdrawn',
+          legalBasis: 'DPDP Act 2023 Section 6(4)',
+          consentAcceptedAt: dData.consentAcceptedAt || dData.createdAt || null,
+          consentWithdrawnAt: nowIso,
+          timestamp: nowIso,
+        });
+      } catch (auditErr) {
+        console.warn('Developer consent audit log error:', auditErr.message);
+      }
       await doc.ref.delete();
     }
 
-    // 2. Update user doc to revoke developer status
+    // 2. Update user doc to revoke developer status and store consent withdrawal timestamp
+    const devUpdate = {
+      isDeveloper: false,
+      developerWithdrawnAt: nowIso,
+      developerConsentStatus: 'withdrawn',
+      developerConsentWithdrawnAt: nowIso,
+    };
+    if (existingAcceptedAt) {
+      devUpdate.developerConsentAcceptedAt = existingAcceptedAt;
+    }
+
     if (userId) {
       const uDoc = await db.collection('users').doc(userId).get();
       if (uDoc.exists) {
-        await uDoc.ref.update({
-          isDeveloper: false,
-          developerWithdrawnAt: new Date().toISOString(),
-        });
+        const uData = uDoc.data();
+        const currentHist = Array.isArray(uData.consentHistory) ? uData.consentHistory : [];
+        devUpdate.consentHistory = [
+          ...currentHist,
+          {
+            action: 'withdrawn',
+            type: 'developer_consent_dpdp',
+            legalBasis: 'DPDP Act 2023 Section 6(4)',
+            timestamp: nowIso,
+          },
+        ];
+        await uDoc.ref.update(devUpdate);
       }
     } else if (cleanEmail) {
       const uSnap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
       if (!uSnap.empty) {
-        await uSnap.docs[0].ref.update({
-          isDeveloper: false,
-          developerWithdrawnAt: new Date().toISOString(),
-        });
+        await uSnap.docs[0].ref.update(devUpdate);
       }
     }
 
@@ -370,7 +443,7 @@ const withdrawDeveloperConsent = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Developer consent successfully withdrawn and profile deregistered in compliance with Section 6(4) of the DPDP Act 2023.',
+      message: 'Developer consent successfully withdrawn and profile deregistered.',
     });
   } catch (error) {
     console.error('Error withdrawing developer consent:', error);
@@ -411,16 +484,18 @@ const getAllDevelopers = async (req, res) => {
         id: doc.id,
         userId: d.userId,
         email: d.email,
+        username: d.username,
         legalName: d.legalName,
         displayName: d.displayName,
         phone: d.phone,
-        aadhaarNumber: d.aadhaarNumber,
-        aadhaarDriveLink: d.aadhaarDriveLink,
         vipPlan: (d.subscriptionEnded || d.vipPlan === 'free') ? 'free' : (d.vipPlan || 'free'),
         avatar: d.avatar,
         isSuspended: Boolean(d.isSuspended),
         suspendedAt: d.suspendedAt || null,
         suspensionReason: d.suspensionReason || null,
+        consentStatus: d.consentStatus || 'active',
+        consentAcceptedAt: d.consentAcceptedAt || d.createdAt || null,
+        consentWithdrawnAt: d.consentWithdrawnAt || null,
         productsCount: prodCount,
         joinedAt: d.joinedAt || formatExactMonthYear(d.createdAt || doc.createTime?.toDate() || new Date()),
         createdAt: d.createdAt,

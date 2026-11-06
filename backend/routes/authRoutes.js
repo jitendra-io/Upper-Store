@@ -23,6 +23,8 @@ const {
   uploadCoverImage,
   removeCoverImage,
   deleteUserAccount,
+  withdrawUserConsent,
+  regrantUserConsent,
 } = require('../controllers/authController');
 
 // Multer storage for profile background / cover images
@@ -90,6 +92,8 @@ router.put('/user/username', protect, updateUsername);
 router.put('/user/profile', protect, updateFullProfile);
 router.post('/user/cover-image', protect, handleCoverUpload, uploadCoverImage);
 router.delete('/user/cover-image', protect, removeCoverImage);
+router.post('/user/withdraw-consent', protect, withdrawUserConsent);
+router.post('/user/regrant-consent', protect, regrantUserConsent);
 router.delete('/user/delete-account', protect, deleteUserAccount);
 
 module.exports = router;

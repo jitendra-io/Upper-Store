@@ -51,7 +51,7 @@ const Contact = () => {
       ? {
           name: form.name,
           email: form.email,
-          message: `[STATUTORY GRIEVANCE / DPDP ACT 2023]\nSubject: ${form.subject || 'Data Protection & Grievance'}\nDetails:\n${form.message}`,
+          message: `[DATA PRIVACY & GRIEVANCE]\nSubject: ${form.subject || 'Data Protection & Grievance'}\nDetails:\n${form.message}`,
         }
       : {
           name: form.name,
@@ -133,7 +133,7 @@ const Contact = () => {
             <button
               type="button"
               className={`contact-type-tab ${formType === 'grievance' ? 'active' : ''}`}
-              onClick={() => { setFormType('grievance'); setSent(false); setErrorMsg(''); setForm(prev => ({ ...prev, subject: 'DPDP Act / Grievance Redressal Notice' })); }}
+              onClick={() => { setFormType('grievance'); setSent(false); setErrorMsg(''); setForm(prev => ({ ...prev, subject: 'Privacy & Grievance Notice' })); }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -187,7 +187,7 @@ const Contact = () => {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                   </svg>
-                  Statutory Grievance Redressal Officer (IT Rules & DPDP Act 2023)
+                  Grievance Redressal &amp; Data Protection Officer
                 </h4>
                 <p style={{ margin: '0.25rem 0', lineHeight: 1.5, color: '#cbd5e1' }}>
                   <strong>Officer:</strong> Jitendra Sahu &bull; <strong>Designation:</strong> Resident Grievance Redressal &amp; Data Protection Officer
@@ -196,7 +196,7 @@ const Contact = () => {
                   <strong>Address:</strong> Plot No. 104, Infocity Avenue, Bhubaneswar, Odisha - 751024, India
                 </p>
                 <p style={{ margin: '0.25rem 0', lineHeight: 1.5, color: '#ffd700' }}>
-                  <strong>Email:</strong> grievance@upperstore.in &bull; <strong>Statutory SLA:</strong> Acknowledgment within 24–48h | Final disposal within 15 days
+                  <strong>Email:</strong> grievance@upperstore.in &bull; <strong>Response Time:</strong> Acknowledgment within 24–48h | Final resolution within 15 days
                 </p>
               </div>
             )}

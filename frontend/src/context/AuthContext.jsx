@@ -230,6 +230,60 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
+  // Withdraw user consent
+  const withdrawConsent = async () => {
+    const activeToken = token || localStorage.getItem('upper_user_token');
+    if (!activeToken) throw new Error('Not authenticated');
+    const res = await fetch(`${API_BASE}/api/auth/user/withdraw-consent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${activeToken}`,
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to withdraw consent.');
+    }
+    const updated = {
+      ...user,
+      consentStatus: 'withdrawn',
+      consentWithdrawnAt: data.consentWithdrawnAt || new Date().toISOString(),
+      isDeveloper: false,
+      developerConsentStatus: 'withdrawn',
+      developerConsentWithdrawnAt: data.consentWithdrawnAt || new Date().toISOString(),
+    };
+    setUser(updated);
+    localStorage.setItem('upper_user_data', JSON.stringify(updated));
+    return data;
+  };
+
+  // Re-grant user consent
+  const regrantConsent = async () => {
+    const activeToken = token || localStorage.getItem('upper_user_token');
+    if (!activeToken) throw new Error('Not authenticated');
+    const res = await fetch(`${API_BASE}/api/auth/user/regrant-consent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${activeToken}`,
+      },
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Failed to re-grant consent.');
+    }
+    const updated = {
+      ...user,
+      consentStatus: 'active',
+      consentAcceptedAt: data.consentAcceptedAt || new Date().toISOString(),
+      consentWithdrawnAt: null,
+    };
+    setUser(updated);
+    localStorage.setItem('upper_user_data', JSON.stringify(updated));
+    return data;
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -258,6 +312,8 @@ export const AuthProvider = ({ children }) => {
         refreshUserStatus,
         updateMembership,
         updateUserProfile,
+        withdrawConsent,
+        regrantConsent,
       }}
     >
       {children}

@@ -139,6 +139,12 @@
   gap: 1rem;
 }
 
+.terms-checkboxes-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .terms-checkbox-label {
   display: flex;
   align-items: flex-start;

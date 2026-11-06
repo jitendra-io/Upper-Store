@@ -307,6 +307,17 @@ const registerUser = async (req, res) => {
       totalVipDays: 0,
       totalAmountSpent: 0,
       lastSubscribedAt: null,
+      consentStatus: 'active',
+      consentAcceptedAt: createdAt,
+      consentWithdrawnAt: null,
+      consentHistory: [
+        {
+          action: 'accepted',
+          type: 'user_statutory_dpdp',
+          legalBasis: 'DPDP Act 2023 Section 6',
+          timestamp: createdAt,
+        },
+      ],
       joinedAt,
       createdAt,
     });
@@ -323,6 +334,9 @@ const registerUser = async (req, res) => {
       totalVipDays: 0,
       totalAmountSpent: 0,
       lastSubscribedAt: null,
+      consentStatus: 'active',
+      consentAcceptedAt: createdAt,
+      consentWithdrawnAt: null,
       joinedAt,
       createdAt,
       role: 'user',
@@ -408,6 +422,12 @@ const loginUser = async (req, res) => {
       lastSubscriptionPlan: userData.lastSubscriptionPlan || null,
       joinedAt,
       createdAt: userData.createdAt || userDoc.createTime?.toDate()?.toISOString() || new Date().toISOString(),
+      consentStatus: userData.consentStatus || 'active',
+      consentAcceptedAt: userData.consentAcceptedAt || userData.createdAt || null,
+      consentWithdrawnAt: userData.consentWithdrawnAt || null,
+      developerConsentAcceptedAt: userData.developerConsentAcceptedAt || null,
+      developerConsentWithdrawnAt: userData.developerConsentWithdrawnAt || null,
+      developerConsentStatus: userData.developerConsentStatus || null,
       role: 'user',
     };
 
@@ -516,6 +536,17 @@ const googleOAuthLogin = async (req, res) => {
         totalVipDays: 0,
         totalAmountSpent: 0,
         lastSubscribedAt: null,
+        consentStatus: 'active',
+        consentAcceptedAt: createdAt,
+        consentWithdrawnAt: null,
+        consentHistory: [
+          {
+            action: 'accepted',
+            type: 'user_statutory_dpdp',
+            legalBasis: 'DPDP Act 2023 Section 6',
+            timestamp: createdAt,
+          },
+        ],
         joinedAt,
         createdAt,
       });
@@ -533,6 +564,9 @@ const googleOAuthLogin = async (req, res) => {
         totalVipDays: 0,
         totalAmountSpent: 0,
         lastSubscribedAt: null,
+        consentStatus: 'active',
+        consentAcceptedAt: createdAt,
+        consentWithdrawnAt: null,
         joinedAt,
         createdAt,
         role: 'user',
@@ -587,6 +621,12 @@ const googleOAuthLogin = async (req, res) => {
         lastSubscriptionPlan: existingData.lastSubscriptionPlan || null,
         joinedAt,
         createdAt: existingData.createdAt || userDoc.createTime?.toDate()?.toISOString() || new Date().toISOString(),
+        consentStatus: existingData.consentStatus || 'active',
+        consentAcceptedAt: existingData.consentAcceptedAt || existingData.createdAt || null,
+        consentWithdrawnAt: existingData.consentWithdrawnAt || null,
+        developerConsentAcceptedAt: existingData.developerConsentAcceptedAt || null,
+        developerConsentWithdrawnAt: existingData.developerConsentWithdrawnAt || null,
+        developerConsentStatus: existingData.developerConsentStatus || null,
         role: 'user',
       };
 
@@ -628,6 +668,12 @@ const getAllUsers = async (req, res) => {
           lastSubscribedAt: data.lastSubscribedAt || null,
           joinedAt: data.joinedAt || formatExactMonthYear(data.createdAt || doc.createTime?.toDate() || new Date()),
           createdAt: data.createdAt || doc.createTime?.toDate()?.toISOString(),
+          consentStatus: data.consentStatus || 'active',
+          consentAcceptedAt: data.consentAcceptedAt || data.createdAt || null,
+          consentWithdrawnAt: data.consentWithdrawnAt || null,
+          developerConsentAcceptedAt: data.developerConsentAcceptedAt || null,
+          developerConsentWithdrawnAt: data.developerConsentWithdrawnAt || null,
+          developerConsentStatus: data.developerConsentStatus || null,
         };
       })
     );
@@ -913,6 +959,12 @@ const getUserStatus = async (req, res) => {
       lastSubscriptionPlan: userData.lastSubscriptionPlan || null,
       joinedAt: userData.joinedAt || formatExactMonthYear(userData.createdAt || userDoc.createTime?.toDate() || new Date()),
       createdAt: userData.createdAt || userDoc.createTime?.toDate()?.toISOString() || new Date().toISOString(),
+      consentStatus: userData.consentStatus || 'active',
+      consentAcceptedAt: userData.consentAcceptedAt || userData.createdAt || null,
+      consentWithdrawnAt: userData.consentWithdrawnAt || null,
+      developerConsentAcceptedAt: userData.developerConsentAcceptedAt || null,
+      developerConsentWithdrawnAt: userData.developerConsentWithdrawnAt || null,
+      developerConsentStatus: userData.developerConsentStatus || null,
       subscriptionData: {
         subscriptionCount: Number(userData.subscriptionCount) || 0,
         totalVipDays: Number(userData.totalVipDays) || 0,
@@ -1616,7 +1668,7 @@ const deleteUserAccount = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Your account and associated personal data have been completely erased from Upper Store in compliance with Section 12 of the Digital Personal Data Protection Act, 2023.',
+      message: 'Your account and associated personal data have been completely erased from Upper Store.',
     });
   } catch (error) {
     console.error('Account erasure error:', error);
@@ -1624,7 +1676,207 @@ const deleteUserAccount = async (req, res) => {
   }
 };
 
+// @desc    Withdraw authenticated user's statutory consent (DPDP Act 2023 Section 6(4))
+// @route   POST /api/auth/user/withdraw-consent
+// @access  Private (Authenticated User)
+const withdrawUserConsent = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const cleanEmail = (req.user.email || '').trim().toLowerCase();
+    const nowIso = new Date().toISOString();
+
+    if (!userId && !cleanEmail) {
+      return res.status(400).json({ message: 'User identification required to process consent withdrawal.' });
+    }
+
+    let userDocRef = null;
+    let userData = null;
+
+    if (userId) {
+      const doc = await db.collection('users').doc(userId).get();
+      if (doc.exists) {
+        userDocRef = doc.ref;
+        userData = doc.data();
+      }
+    }
+    if (!userData && cleanEmail) {
+      const snap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!snap.empty) {
+        userDocRef = snap.docs[0].ref;
+        userData = snap.docs[0].data();
+      }
+    }
+
+    if (!userDocRef || !userData) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    const currentHistory = Array.isArray(userData.consentHistory) ? userData.consentHistory : [];
+    const newHistory = [
+      ...currentHistory,
+      {
+        action: 'withdrawn',
+        type: 'user_statutory_dpdp',
+        legalBasis: 'DPDP Act 2023 Section 6(4)',
+        timestamp: nowIso,
+      },
+    ];
+
+    const updates = {
+      consentStatus: 'withdrawn',
+      consentWithdrawnAt: nowIso,
+      consentHistory: newHistory,
+      updatedAt: nowIso,
+    };
+
+    // If user was registered as a developer, withdraw developer consent too
+    if (userData.isDeveloper) {
+      updates.isDeveloper = false;
+      updates.developerConsentStatus = 'withdrawn';
+      updates.developerConsentWithdrawnAt = nowIso;
+      updates.developerWithdrawnAt = nowIso;
+    }
+
+    await userDocRef.update(updates);
+
+    // Deregister developer document from developers collection if exists
+    try {
+      const devSnap = userId
+        ? await db.collection('developers').where('userId', '==', userId).get()
+        : await db.collection('developers').where('email', '==', cleanEmail).get();
+      for (const d of devSnap.docs) {
+        await d.ref.delete();
+      }
+    } catch (dErr) {
+      console.warn('Developer doc delete on user consent withdrawal error:', dErr.message);
+    }
+
+    // Reset developer products
+    try {
+      const prodSnap = userId
+        ? await db.collection('products').where('developerId', '==', userId).get()
+        : await db.collection('products').where('developerEmail', '==', cleanEmail).get();
+      for (const p of prodSnap.docs) {
+        await p.ref.update({
+          developerTier: 'free',
+          isDeveloperProduct: false,
+          updatedAt: nowIso,
+        });
+      }
+      const cacheService = require('../services/cacheService');
+      cacheService.invalidate('products_list');
+    } catch (pErr) {
+      // ignore
+    }
+
+    // Record regulatory audit trail
+    try {
+      await db.collection('consent_audit_logs').add({
+        userId: userId || userDocRef.id,
+        email: cleanEmail || userData.email,
+        role: 'user',
+        action: 'withdrawn',
+        legalBasis: 'DPDP Act 2023 Section 6(4)',
+        consentAcceptedAt: userData.consentAcceptedAt || userData.createdAt || null,
+        consentWithdrawnAt: nowIso,
+        timestamp: nowIso,
+      });
+    } catch (auditErr) {
+      // ignore
+    }
+
+    res.json({
+      success: true,
+      message: 'Consent successfully withdrawn.',
+      consentStatus: 'withdrawn',
+      consentWithdrawnAt: nowIso,
+    });
+  } catch (error) {
+    console.error('Error withdrawing user consent:', error);
+    res.status(500).json({ message: 'Failed to process consent withdrawal. Please contact support.' });
+  }
+};
+
+// @desc    Re-grant user statutory consent (DPDP Act 2023 Section 6)
+// @route   POST /api/auth/user/regrant-consent
+// @access  Private (Authenticated User)
+const regrantUserConsent = async (req, res) => {
+  try {
+    const userId = req.user.uid;
+    const cleanEmail = (req.user.email || '').trim().toLowerCase();
+    const nowIso = new Date().toISOString();
+
+    let userDocRef = null;
+    let userData = null;
+
+    if (userId) {
+      const doc = await db.collection('users').doc(userId).get();
+      if (doc.exists) {
+        userDocRef = doc.ref;
+        userData = doc.data();
+      }
+    }
+    if (!userData && cleanEmail) {
+      const snap = await db.collection('users').where('email', '==', cleanEmail).limit(1).get();
+      if (!snap.empty) {
+        userDocRef = snap.docs[0].ref;
+        userData = snap.docs[0].data();
+      }
+    }
+
+    if (!userDocRef || !userData) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    const currentHistory = Array.isArray(userData.consentHistory) ? userData.consentHistory : [];
+    const newHistory = [
+      ...currentHistory,
+      {
+        action: 'regranted',
+        type: 'user_statutory_dpdp',
+        legalBasis: 'DPDP Act 2023 Section 6',
+        timestamp: nowIso,
+      },
+    ];
+
+    await userDocRef.update({
+      consentStatus: 'active',
+      consentAcceptedAt: nowIso,
+      consentWithdrawnAt: null,
+      consentHistory: newHistory,
+      updatedAt: nowIso,
+    });
+
+    try {
+      await db.collection('consent_audit_logs').add({
+        userId: userId || userDocRef.id,
+        email: cleanEmail || userData.email,
+        role: 'user',
+        action: 'regranted',
+        legalBasis: 'DPDP Act 2023 Section 6',
+        consentAcceptedAt: nowIso,
+        consentWithdrawnAt: null,
+        timestamp: nowIso,
+      });
+    } catch (auditErr) {
+      // ignore
+    }
+
+    res.json({
+      success: true,
+      message: 'Consent successfully re-granted.',
+      consentStatus: 'active',
+      consentAcceptedAt: nowIso,
+    });
+  } catch (error) {
+    console.error('Error re-granting consent:', error);
+    res.status(500).json({ message: 'Failed to re-grant consent.' });
+  }
+};
+
 module.exports = {
+  withdrawUserConsent,
+  regrantUserConsent,
   deleteUserAccount,
   deleteUserByAdmin,
   loginAdmin,
@@ -1638,9 +1890,6 @@ module.exports = {
   getUserStatus,
   validateUsernameFormat,
   generateUniqueUsername,
-
-
-
   updateUsername,
   getUsernameStatus,
   checkUsernameAvailability,
