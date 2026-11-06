@@ -20,7 +20,7 @@ const parseYouTubeVideoId = (url) => {
 };
 
 const ProductDetailModal = ({ product, onClose }) => {
-  const { user, token, isLoggedIn, openAuthModal } = useAuth();
+  const { user, token, isLoggedIn, openAuthModal, regrantConsent } = useAuth();
   const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
@@ -149,36 +149,46 @@ const ProductDetailModal = ({ product, onClose }) => {
     checkBanStatus();
   }, [user]);
 
+  const isConsentWithdrawn = Boolean(user && user.consentStatus === 'withdrawn');
+
   const hasUserAcceptedTerms = () => {
     if (!user || !user.email) return false;
+    if (user.consentStatus === 'withdrawn') return false;
     const cleanEmail = user.email.trim().toLowerCase();
     return localStorage.getItem(`upper_terms_accepted_${cleanEmail}`) === 'true';
   };
 
   const handleDownloadClick = (e) => {
     if (!isLoggedIn) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       openAuthModal("Authentication Required: Please sign in to download this application or digital package.");
       return;
     }
 
     if (isBanned || user?.isBanned) {
-      e.preventDefault();
+      if (e) e.preventDefault();
       alert("Account Banned: Downloads and product reviews are restricted. Please submit an appeal on the Contact page.");
       return;
     }
 
-    if (!hasUserAcceptedTerms()) {
-      e.preventDefault();
+    if (!hasUserAcceptedTerms() || isConsentWithdrawn) {
+      if (e) e.preventDefault();
       setTermsModalOpen(true);
       return;
     }
 
-    // Terms already accepted! Track download in database
+    // Terms already accepted and consent active! Track download in database
     recordUserDownload(user?.email || '', product);
   };
 
-  const handleAcceptTerms = () => {
+  const handleAcceptTerms = async () => {
+    try {
+      if (isConsentWithdrawn && regrantConsent) {
+        await regrantConsent();
+      }
+    } catch (err) {
+      console.error('Failed to re-grant consent:', err);
+    }
     if (user && user.email) {
       const cleanEmail = user.email.trim().toLowerCase();
       localStorage.setItem(`upper_terms_accepted_${cleanEmail}`, 'true');
@@ -440,7 +450,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                     isFeeCleared ? (
                       /* VIP OR FEE-PAID OR FEE REMOVED: UNRESTRICTED FREE DOWNLOAD */
                       <a
-                        href={isLoggedIn ? getSecureDownloadUrl(product) : '#'}
+                        href={isLoggedIn && hasUserAcceptedTerms() && !isConsentWithdrawn ? getSecureDownloadUrl(product) : '#'}
                         target={isDirectDownloadFile(product?.apkFile) ? '_self' : '_blank'}
                         rel="noopener noreferrer"
                         download={isDirectDownloadFile(product?.apkFile)}
@@ -606,8 +616,10 @@ const ProductDetailModal = ({ product, onClose }) => {
       {/* ONE-TIME TERMS & CONDITIONS ACCEPTANCE MODAL */}
       <TermsAcceptanceModal
         isOpen={termsModalOpen}
+        isConsentWithdrawn={isConsentWithdrawn}
         onAccept={handleAcceptTerms}
         onCancel={() => setTermsModalOpen(false)}
+        onClose={() => setTermsModalOpen(false)}
       />
 
       {/* PRODUCT REVIEWS POPUP FROM DETAILS */}

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { CheckIcon, CloseIcon, QrCodeIcon, CreditCardIcon, LockIcon } from './Icons';
-import upperUpiQr from '../assets/upper-upi-qr.png';
 import './CheckoutModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -59,16 +58,19 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
   const priceUSD = isFeeOnly ? feeUSD : (!isNaN(parsedPrice) && parsedPrice > 0 ? parsedPrice : 19);
   const priceINR = isFeeOnly ? feeINR : Math.round(priceUSD * 85);
 
-  const handleCopyUpiId = () => {
-    if (!paymentConfig.upiId) return;
-    navigator.clipboard.writeText(paymentConfig.upiId);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2200);
+  const getUpiUrl = (scheme = 'upi') => {
+    if (!paymentConfig.upiId) return '#';
+    const note = encodeURIComponent(`${product.title} ${isFeeOnly ? 'Fee' : 'Pro'}`);
+    const payee = encodeURIComponent('Upper Store');
+    const pa = encodeURIComponent(paymentConfig.upiId);
+    const am = priceINR;
+    if (scheme === 'phonepe') return `phonepe://pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
+    if (scheme === 'gpay') return `tez://upi/pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
+    if (scheme === 'paytm') return `paytmmp://pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
+    return `upi://pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
   };
 
-  const upiDeepLink = paymentConfig.upiId
-    ? `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent(paymentConfig.payeeName || 'Upper Store')}&am=${priceINR}&cu=INR&tn=${encodeURIComponent(`${product.title} ${isFeeOnly ? 'Fee' : 'Pro'}`)}`
-    : '#';
+  const upiDeepLink = getUpiUrl('upi');
 
   const handleCheckout = async () => {
     if (!isLoggedIn) {
@@ -348,10 +350,10 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                     />
                     <div className="gateway-content">
                       <div className="gateway-title-row">
-                        <strong>Instant UPI QR (India)</strong>
+                        <strong>Instant UPI Payment (India)</strong>
                         <span className="gateway-badge inr">₹{priceINR} INR</span>
                       </div>
-                      <span className="gateway-desc">GPay, PhonePe, Paytm, BHIM, CRED</span>
+                      <span className="gateway-desc">PhonePe, GPay, Paytm, BHIM, CRED</span>
                     </div>
                   </label>
 
@@ -374,10 +376,10 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                 </div>
               </div>
 
-              {/* REAL UPI QR PAYMENT BOX */}
+              {/* REAL UPI PAYMENT BOX */}
               {gateway === 'upi_qr' && (
                 <div className="checkout-upi-box" style={{ background: 'rgba(20, 16, 32, 0.75)', border: '1px solid rgba(212, 175, 55, 0.35)', borderRadius: '12px', padding: '14px', margin: '14px 0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#22c55e', background: 'rgba(34, 197, 94, 0.12)', padding: '3px 8px', borderRadius: '999px', fontWeight: 800 }}>
                       <LockIcon size={11} /> DIRECT UPI TRANSFER
                     </div>
@@ -386,23 +388,47 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '14px', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ background: '#ffffff', padding: '6px', borderRadius: '10px', textAlign: 'center' }}>
-                      <img src={upperUpiQr} alt="UPI QR" style={{ width: '100%', display: 'block', borderRadius: '4px' }} />
-                      <span style={{ fontSize: '10px', color: '#0f172a', fontWeight: 800, textTransform: 'uppercase', display: 'block', marginTop: '2px' }}>Scan & Pay</span>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ fontSize: '12px', color: '#cbd5e1' }}>
-                        Payee: <strong>{paymentConfig.payeeName}</strong>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.4)', padding: '4px 8px', borderRadius: '6px' }}>
-                        <code style={{ color: '#ffd700', fontSize: '12px', fontWeight: 700, flex: 1, wordBreak: 'break-all' }}>{paymentConfig.upiId || 'Loading UPI ID...'}</code>
-                        <button type="button" onClick={handleCopyUpiId} style={{ background: 'rgba(255,215,0,0.15)', border: '1px solid rgba(255,215,0,0.4)', color: '#ffd700', fontSize: '11px', padding: '2px 6px', borderRadius: '4px', cursor: 'pointer' }}>
-                          {copiedUpi ? 'Copied!' : 'Copy'}
-                        </button>
-                      </div>
-                      <a href={upiDeepLink} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: '#10b981', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '6px 10px', borderRadius: '6px', textDecoration: 'none' }}>
-                        <QrCodeIcon size={13} /> Open UPI App (GPay/PhonePe)
+                  {/* 1-Tap UPI Apps Grid */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <p style={{ fontSize: '12px', color: '#cbd5e1', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                      <strong>Step 1:</strong> Tap your preferred UPI app to pay <strong>₹{priceINR}</strong>:
+                    </p>
+                    <div className="checkout-upi-apps-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      <a
+                        href={getUpiUrl('phonepe')}
+                        className="checkout-app-btn phonepe-btn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'linear-gradient(135deg, #5f259f 0%, #4a1d7c 100%)', color: '#ffffff', padding: '10px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', border: '1px solid rgba(168, 85, 247, 0.4)', minHeight: '42px', boxSizing: 'border-box' }}
+                      >
+                        <span>PhonePe</span>
+                      </a>
+                      <a
+                        href={getUpiUrl('gpay')}
+                        className="checkout-app-btn gpay-btn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'linear-gradient(135deg, #1a73e8 0%, #1557b0 100%)', color: '#ffffff', padding: '10px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', border: '1px solid rgba(66, 133, 244, 0.4)', minHeight: '42px', boxSizing: 'border-box' }}
+                      >
+                        <span>Google Pay</span>
+                      </a>
+                      <a
+                        href={getUpiUrl('paytm')}
+                        className="checkout-app-btn paytm-btn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'linear-gradient(135deg, #002e6e 0%, #001f4d 100%)', color: '#ffffff', padding: '10px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', border: '1px solid rgba(0, 186, 242, 0.5)', minHeight: '42px', boxSizing: 'border-box' }}
+                      >
+                        <span>Paytm</span>
+                      </a>
+                      <a
+                        href={getUpiUrl('upi')}
+                        className="checkout-app-btn other-upi-btn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.08) 100%)', color: '#ffd700', padding: '10px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 700, textDecoration: 'none', border: '1px solid rgba(212, 175, 55, 0.4)', minHeight: '42px', boxSizing: 'border-box' }}
+                      >
+                        <span>Other UPI Apps</span>
                       </a>
                     </div>
                   </div>
@@ -410,7 +436,7 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                   {/* UTR Input */}
                   <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px dashed rgba(255,255,255,0.15)', borderRadius: '8px', padding: '10px' }}>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#f1f5f9', marginBottom: '5px' }}>
-                      Enter 12-Digit UPI Reference / UTR Number:
+                      Step 2: Enter 12-Digit UPI Reference / UTR Number:
                     </label>
                     <input
                       type="text"
@@ -420,7 +446,7 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                       style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '7px 10px', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700, fontSize: '13px' }}
                     />
                     <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginTop: '3px' }}>
-                      * Found in your UPI app receipt under "UPI Ref No" or "UTR".
+                      * Found in your Google Pay, PhonePe, or Paytm receipt under "UPI Ref No" or "UTR".
                     </span>
                   </div>
                 </div>

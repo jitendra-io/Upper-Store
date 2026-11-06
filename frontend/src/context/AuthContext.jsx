@@ -36,6 +36,9 @@ export const AuthProvider = ({ children }) => {
             totalAmountSpent: statusData.totalAmountSpent ?? prevUser.totalAmountSpent ?? 0,
             lastSubscribedAt: statusData.lastSubscribedAt ?? prevUser.lastSubscribedAt ?? null,
             subscriptionData: statusData.subscriptionData || prevUser.subscriptionData || null,
+            consentStatus: statusData.consentStatus || prevUser.consentStatus || 'active',
+            consentAcceptedAt: statusData.consentAcceptedAt || prevUser.consentAcceptedAt || null,
+            consentWithdrawnAt: statusData.consentWithdrawnAt || prevUser.consentWithdrawnAt || null,
           };
           localStorage.setItem('upper_user_data', JSON.stringify(updated));
           return updated;
@@ -255,6 +258,10 @@ export const AuthProvider = ({ children }) => {
     };
     setUser(updated);
     localStorage.setItem('upper_user_data', JSON.stringify(updated));
+    if (user?.email) {
+      const cleanEmail = user.email.trim().toLowerCase();
+      localStorage.removeItem(`upper_terms_accepted_${cleanEmail}`);
+    }
     return data;
   };
 
@@ -281,6 +288,10 @@ export const AuthProvider = ({ children }) => {
     };
     setUser(updated);
     localStorage.setItem('upper_user_data', JSON.stringify(updated));
+    if (user?.email) {
+      const cleanEmail = user.email.trim().toLowerCase();
+      localStorage.setItem(`upper_terms_accepted_${cleanEmail}`, 'true');
+    }
     return data;
   };
 

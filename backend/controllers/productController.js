@@ -596,10 +596,19 @@ const trackProductDownload = async (req, res) => {
     if (userEmail) {
       const cleanEmail = userEmail.trim().toLowerCase();
       const userSnapshot = await db.collection('users').where('email', '==', cleanEmail).get();
-      if (!userSnapshot.empty && userSnapshot.docs[0].data().isBanned) {
-        return res.status(403).json({
-          message: 'Your account has been banned. Product downloads are restricted.',
-        });
+      if (!userSnapshot.empty) {
+        const uData = userSnapshot.docs[0].data();
+        if (uData.isBanned) {
+          return res.status(403).json({
+            message: 'Your account has been banned. Product downloads are restricted.',
+          });
+        }
+        if (uData.consentStatus === 'withdrawn') {
+          return res.status(403).json({
+            message: 'Consent Withdrawn: You must accept data processing consent before downloading software.',
+            consentWithdrawn: true,
+          });
+        }
       }
     }
 

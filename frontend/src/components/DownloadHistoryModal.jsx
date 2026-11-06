@@ -5,12 +5,24 @@ import { useAuth } from '../context/AuthContext';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, clearUserDownloadHistory, recordUserDownload, getSecureDownloadUrl } from '../utils/downloadTracker';
 import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import { getUserVipTier } from '../utils/vipValidator';
+import TermsAcceptanceModal from './TermsAcceptanceModal';
 import './DownloadHistoryModal.css';
 
 const DownloadHistoryModal = ({ isOpen, onClose }) => {
-  const { user } = useAuth();
+  const { user, regrantConsent } = useAuth();
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [pendingItem, setPendingItem] = useState(null);
+
+  const isConsentWithdrawn = Boolean(user && user.consentStatus === 'withdrawn');
+
+  const hasUserAcceptedTerms = () => {
+    if (!user || !user.email) return false;
+    if (user.consentStatus === 'withdrawn') return false;
+    const cleanEmail = user.email.trim().toLowerCase();
+    return localStorage.getItem(`upper_terms_accepted_${cleanEmail}`) === 'true';
+  };
 
   const handleBrowseCatalog = () => {
     onClose();
@@ -71,6 +83,39 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
       apkFile: item.apkFile,
       price: item.price,
     });
+  };
+
+  const handleRedownloadClick = (e, item) => {
+    if (isConsentWithdrawn || !hasUserAcceptedTerms()) {
+      if (e) e.preventDefault();
+      setPendingItem(item);
+      setTermsModalOpen(true);
+      return;
+    }
+    handleRedownload(item);
+  };
+
+  const handleAcceptTerms = async () => {
+    try {
+      if (isConsentWithdrawn && regrantConsent) {
+        await regrantConsent();
+      }
+    } catch (err) {
+      console.error('Failed to re-grant consent:', err);
+    }
+    if (user && user.email) {
+      const cleanEmail = user.email.trim().toLowerCase();
+      localStorage.setItem(`upper_terms_accepted_${cleanEmail}`, 'true');
+    }
+    setTermsModalOpen(false);
+    if (pendingItem) {
+      handleRedownload(pendingItem);
+      const targetUrl = getSecureDownloadUrl(pendingItem);
+      if (targetUrl && targetUrl !== '#') {
+        window.location.href = targetUrl;
+      }
+      setPendingItem(null);
+    }
   };
 
   const userAvatar = user.photoURL || `https://unavatar.io/${encodeURIComponent(user.email ? user.email.trim().toLowerCase() : 'user')}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(user.email || 'user')}`;
@@ -179,12 +224,12 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
                   </div>
                   <div className="history-item-action">
                     <a
-                      href={getSecureDownloadUrl(item)}
+                      href={!isConsentWithdrawn && hasUserAcceptedTerms() ? getSecureDownloadUrl(item) : '#'}
                       target="_self"
                       rel="noopener noreferrer"
                       download
                       className="history-redownload-btn"
-                      onClick={() => handleRedownload(item)}
+                      onClick={(e) => handleRedownloadClick(e, item)}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -211,6 +256,23 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
           </span>
         </div>
       </div>
+
+      {/* TERMS & CONSENT ACCEPTANCE MODAL FOR REDOWNLOAD */}
+      {termsModalOpen && (
+        <TermsAcceptanceModal
+          isOpen={termsModalOpen}
+          isConsentWithdrawn={isConsentWithdrawn}
+          onAccept={handleAcceptTerms}
+          onCancel={() => {
+            setTermsModalOpen(false);
+            setPendingItem(null);
+          }}
+          onClose={() => {
+            setTermsModalOpen(false);
+            setPendingItem(null);
+          }}
+        />
+      )}
     </div>,
     document.body
   );

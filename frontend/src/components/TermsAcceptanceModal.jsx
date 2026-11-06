@@ -1,22 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import './TermsAcceptanceModal.css';
 
-const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
+const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose, isConsentWithdrawn }) => {
   const [agreed, setAgreed] = useState(false);
   const [isAdult, setIsAdult] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setAgreed(false);
+      setIsAdult(false);
+      setConsentAgreed(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
     setAgreed(false);
     setIsAdult(false);
+    setConsentAgreed(false);
     if (onCancel) onCancel();
     if (onClose) onClose();
   };
 
+  const canAccept = agreed && isAdult && (!isConsentWithdrawn || consentAgreed);
+
   const handleAccept = () => {
-    if (agreed && isAdult) {
+    if (canAccept) {
       onAccept();
     }
   };
@@ -33,8 +56,12 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
               <polyline points="9 12 11 14 15 10"></polyline>
             </svg>
             <div>
-              <h3>One-Time Terms & Conditions Agreement</h3>
-              <p className="terms-modal-sub">Please review and accept our store governance terms before downloading software or digital assets.</p>
+              <h3>{isConsentWithdrawn ? 'Consent & Store Terms Agreement' : 'One-Time Terms & Conditions Agreement'}</h3>
+              <p className="terms-modal-sub">
+                {isConsentWithdrawn
+                  ? 'Your consent is currently withdrawn. Please re-grant consent and accept store governance terms before downloading software.'
+                  : 'Please review and accept our store governance terms before downloading software or digital assets.'}
+              </p>
             </div>
           </div>
           <button className="terms-close-btn" onClick={handleClose} title="Close Modal">
@@ -47,9 +74,25 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
 
         {/* TERMS CLAUSES BODY */}
         <div className="terms-modal-body">
+          {isConsentWithdrawn && (
+            <div className="terms-consent-alert">
+              <div className="terms-consent-alert-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <div className="terms-consent-alert-text">
+                <strong>Data Processing Consent Required</strong>
+                <p>You have currently withdrawn consent. In accordance with platform governance, downloading applications and digital assets requires active consent to process your account details for delivery and licensing.</p>
+              </div>
+            </div>
+          )}
+
           <div className="terms-clause-card">
             <div className="terms-clause-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 3v18M3 7l9-4 9 4M3 7l4 9h4L3 7zm18 0l-4 9h-4l4-9z"></path>
               </svg>
             </div>
@@ -63,7 +106,7 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
 
           <div className="terms-clause-card">
             <div className="terms-clause-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
                 <line x1="2" y1="10" x2="22" y2="10"></line>
               </svg>
@@ -78,7 +121,7 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
 
           <div className="terms-clause-card">
             <div className="terms-clause-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </div>
@@ -105,6 +148,19 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
               </span>
             </label>
 
+            {isConsentWithdrawn && (
+              <label className="terms-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={consentAgreed}
+                  onChange={(e) => setConsentAgreed(e.target.checked)}
+                />
+                <span className="checkbox-text">
+                  I give affirmative consent to Upper Store to process my account details for <strong>software downloads, licensing, and security updates</strong>.
+                </span>
+              </label>
+            )}
+
             <label className="terms-checkbox-label">
               <input
                 type="checkbox"
@@ -123,10 +179,10 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose }) => {
             </button>
             <button
               className="terms-accept-btn"
-              disabled={!agreed || !isAdult}
+              disabled={!canAccept}
               onClick={handleAccept}
             >
-              Accept Terms & Continue Download
+              {isConsentWithdrawn ? 'Accept Consent & Continue Download' : 'Accept Terms & Continue Download'}
             </button>
           </div>
         </div>

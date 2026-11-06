@@ -6,6 +6,7 @@
   height: 100vh;
   background: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   z-index: 100050;
   display: flex;
   align-items: center;
@@ -13,6 +14,7 @@
   padding: 1.5rem;
   font-family: 'Outfit', sans-serif;
   animation: termsFadeIn 0.25s ease-out;
+  box-sizing: border-box;
 }
 
 @keyframes termsFadeIn {
@@ -32,6 +34,7 @@
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(212, 175, 55, 0.2);
   overflow: hidden;
   animation: termsSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
 @keyframes termsSlideUp {
@@ -46,6 +49,7 @@
   align-items: flex-start;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
+  gap: 0.75rem;
 }
 
 .terms-header-brand {
@@ -96,6 +100,39 @@
   flex-direction: column;
   gap: 1rem;
   flex: 1;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Consent Alert Box */
+.terms-consent-alert {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+}
+
+.terms-consent-alert-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.terms-consent-alert-text strong {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-bottom: 0.2rem;
+}
+
+.terms-consent-alert-text p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #fde68a;
 }
 
 .terms-clause-card {
@@ -105,11 +142,15 @@
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 12px;
   padding: 1rem;
+  box-sizing: border-box;
 }
 
 .terms-clause-icon {
   font-size: 1.3rem;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .terms-clause-card h4 {
@@ -137,6 +178,7 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-sizing: border-box;
 }
 
 .terms-checkboxes-group {
@@ -153,11 +195,13 @@
   font-size: 0.84rem;
   color: #e0e0e0;
   user-select: none;
+  line-height: 1.4;
 }
 
 .terms-checkbox-label input[type="checkbox"] {
   width: 17px;
   height: 17px;
+  min-width: 17px;
   accent-color: #d4af37;
   cursor: pointer;
   margin-top: 2px;
@@ -214,15 +258,148 @@
   box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
 }
 
+/* Phone and Mobile Responsive Overrides */
 @media (max-width: 600px) {
-  .terms-modal-card {
-    max-height: 90vh;
+  .terms-modal-backdrop {
+    padding: 0.45rem;
+    align-items: center;
   }
+
+  .terms-modal-card {
+    width: 100%;
+    max-width: 100%;
+    max-height: 94vh;
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.95), 0 0 20px rgba(212, 175, 55, 0.15);
+  }
+
+  .terms-modal-header {
+    padding: 0.85rem 0.95rem;
+    gap: 0.65rem;
+  }
+
+  .terms-header-brand {
+    gap: 0.65rem;
+  }
+
+  .terms-header-brand svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .terms-header-brand h3 {
+    font-size: 0.98rem;
+    line-height: 1.3;
+  }
+
+  .terms-modal-sub {
+    font-size: 0.74rem;
+    line-height: 1.35;
+    margin-top: 0.15rem;
+  }
+
+  .terms-close-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .terms-modal-body {
+    padding: 0.85rem 0.95rem;
+    gap: 0.65rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .terms-consent-alert {
+    padding: 0.7rem 0.8rem;
+    gap: 0.6rem;
+    border-radius: 10px;
+  }
+
+  .terms-consent-alert-text strong {
+    font-size: 0.8rem;
+  }
+
+  .terms-consent-alert-text p {
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  .terms-clause-card {
+    padding: 0.75rem 0.85rem;
+    gap: 0.65rem;
+    border-radius: 10px;
+  }
+
+  .terms-clause-icon {
+    font-size: 1.1rem;
+  }
+
+  .terms-clause-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .terms-clause-card h4 {
+    font-size: 0.84rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .terms-clause-card p {
+    font-size: 0.75rem;
+    line-height: 1.42;
+  }
+
+  .terms-modal-footer {
+    padding: 0.85rem 0.95rem;
+    gap: 0.75rem;
+  }
+
+  .terms-checkboxes-group {
+    gap: 0.55rem;
+  }
+
+  .terms-checkbox-label {
+    gap: 0.6rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  .terms-checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    margin-top: 1px;
+  }
+
   .terms-footer-buttons {
     flex-direction: column-reverse;
+    gap: 0.45rem;
   }
-  .terms-cancel-btn, .terms-accept-btn {
+
+  .terms-cancel-btn,
+  .terms-accept-btn {
     width: 100%;
-    text-align: center;
+    min-height: 44px;
+    padding: 0.7rem 1rem;
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 22px;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 380px) {
+  .terms-modal-backdrop {
+    padding: 0.25rem;
+  }
+
+  .terms-header-brand h3 {
+    font-size: 0.92rem;
+  }
+
+  .terms-clause-card {
+    padding: 0.65rem 0.75rem;
   }
 }

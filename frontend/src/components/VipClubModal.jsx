@@ -15,7 +15,6 @@ import {
   LockIcon,
 } from './Icons';
 import CancelSubscriptionModal from './CancelSubscriptionModal';
-import upperUpiQr from '../assets/upper-upi-qr.png';
 import './VipClubModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -135,18 +134,20 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
   const activePlan = planDetails[selectedPlan];
   const isBanned = Boolean(user?.isBanned);
 
-  // Copy UPI ID to clipboard
-  const handleCopyUpiId = () => {
-    if (!paymentConfig.upiId) return;
-    navigator.clipboard.writeText(paymentConfig.upiId);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2200);
+  // Deep links for Mobile UPI Apps
+  const getUpiUrl = (scheme = 'upi') => {
+    if (!paymentConfig.upiId) return '#';
+    const note = encodeURIComponent(`Upper VIP ${activePlan.name}`);
+    const payee = encodeURIComponent('Upper Store');
+    const pa = encodeURIComponent(paymentConfig.upiId);
+    const am = activePlan.priceINR;
+    if (scheme === 'phonepe') return `phonepe://pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
+    if (scheme === 'gpay') return `tez://upi/pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
+    if (scheme === 'paytm') return `paytmmp://pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
+    return `upi://pay?pa=${pa}&pn=${payee}&am=${am}&cu=INR&tn=${note}`;
   };
 
-  // UPI Deep link for Mobile Devices
-  const upiDeepLink = paymentConfig.upiId
-    ? `upi://pay?pa=${encodeURIComponent(paymentConfig.upiId)}&pn=${encodeURIComponent(paymentConfig.payeeName || 'Upper Store')}&am=${activePlan.priceINR}&cu=INR&tn=${encodeURIComponent(`Upper VIP ${activePlan.name}`)}`
-    : '#';
+  const upiDeepLink = getUpiUrl('upi');
 
   // Handle Subscription Submission with Strict Validation
   const handleSubscribe = async () => {
@@ -649,7 +650,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                       onChange={() => setGateway('upi_qr')}
                     />
                     <QrCodeIcon size={15} style={{ color: '#ffd700' }} />
-                    <span>Instant UPI QR (GPay • PhonePe • Paytm • BHIM)</span>
+                    <span>Instant UPI Payment (PhonePe • GPay • Paytm • BHIM)</span>
                   </label>
                   <label className={`vip-gateway-chip ${gateway === 'stripe' ? 'active' : ''}`}>
                     <input
@@ -665,7 +666,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                 </div>
               </div>
 
-              {/* REAL UPI QR PAYMENT BOX */}
+              {/* REAL UPI PAYMENT BOX */}
               {gateway === 'upi_qr' && (
                 <div className="vip-upi-box">
                   <div className="upi-box-header">
@@ -678,56 +679,44 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                     </span>
                   </div>
 
-                  <div className="upi-qr-display-grid">
-                    {/* QR Code Container */}
-                    <div className="upi-qr-frame">
-                      <img src={upperUpiQr} alt="Upper Store Official UPI QR Code" className="upi-qr-img" />
-                      <span className="qr-scan-label">Scan with Any UPI App</span>
-                    </div>
-
-                    {/* Payee Info & Copy Action */}
-                    <div className="upi-info-col">
-                      <div className="upi-field-group">
-                        <span className="upi-field-label">Official Payee:</span>
-                        <span className="upi-payee-name">{paymentConfig.payeeName}</span>
-                      </div>
-
-                      <div className="upi-field-group">
-                        <span className="upi-field-label">Official UPI ID (VPA):</span>
-                        <div className="upi-vpa-copy-wrap">
-                          <code className="upi-vpa-code">{paymentConfig.upiId || 'Loading UPI ID...'}</code>
-                          <button
-                            type="button"
-                            className="upi-copy-btn"
-                            onClick={handleCopyUpiId}
-                            title="Copy UPI ID"
-                          >
-                            {copiedUpi ? (
-                              <>
-                                <CheckIcon size={12} style={{ color: '#22c55e' }} />
-                                <span>Copied!</span>
-                              </>
-                            ) : (
-                              <span>Copy UPI</span>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Mobile One-Tap Payment Deep-link */}
+                  {/* 1-Tap UPI Apps Grid */}
+                  <div className="vip-upi-apps-section">
+                    <p className="vip-upi-instruction">
+                      <strong>Step 1:</strong> Tap your preferred UPI app to pay <strong>₹{activePlan.priceINR}</strong>:
+                    </p>
+                    <div className="vip-upi-apps-grid">
                       <a
-                        href={upiDeepLink}
-                        className="mobile-upi-launch-btn"
+                        href={getUpiUrl('phonepe')}
+                        className="vip-upi-app-card phonepe"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <QrCodeIcon size={16} />
-                        <span>Tap to Pay via UPI App (PhonePe / GPay)</span>
+                        <span className="app-name">PhonePe</span>
                       </a>
-
-                      <p className="upi-step-hint">
-                        <strong>Step 1:</strong> Scan the QR or open your UPI app and pay <strong>₹{activePlan.priceINR}</strong>.
-                      </p>
+                      <a
+                        href={getUpiUrl('gpay')}
+                        className="vip-upi-app-card gpay"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="app-name">Google Pay</span>
+                      </a>
+                      <a
+                        href={getUpiUrl('paytm')}
+                        className="vip-upi-app-card paytm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="app-name">Paytm</span>
+                      </a>
+                      <a
+                        href={getUpiUrl('upi')}
+                        className="vip-upi-app-card other-upi"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="app-name">Other UPI Apps</span>
+                      </a>
                     </div>
                   </div>
 

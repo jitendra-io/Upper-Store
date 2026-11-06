@@ -36,7 +36,7 @@ const sortVipReviews = (reviewList) => {
 };
 
 const ProductReviewsModal = ({ product, isOpen, onClose }) => {
-  const { user, token, isLoggedIn, openAuthModal } = useAuth();
+  const { user, token, isLoggedIn, openAuthModal, regrantConsent } = useAuth();
   const [reviews, setReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(() => Number(product?.averageRating) || 5.0);
   const [reviewsCount, setReviewsCount] = useState(() => Number(product?.reviewsCount) || 0);
@@ -275,9 +275,12 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     }
   };
 
+  const isConsentWithdrawn = Boolean(user && user.consentStatus === 'withdrawn');
+
   // Download handling for unverified users
   const hasUserAcceptedTerms = () => {
     if (!user || !user.email) return false;
+    if (user.consentStatus === 'withdrawn') return false;
     return localStorage.getItem(`upper_terms_accepted_${cleanUserEmail}`) === 'true';
   };
 
@@ -293,7 +296,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
       return;
     }
 
-    if (!hasUserAcceptedTerms()) {
+    if (!hasUserAcceptedTerms() || isConsentWithdrawn) {
       setTermsModalOpen(true);
       return;
     }
@@ -312,7 +315,14 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     setDownloadHistorySync((prev) => prev + 1);
   };
 
-  const handleAcceptTerms = () => {
+  const handleAcceptTerms = async () => {
+    try {
+      if (isConsentWithdrawn && regrantConsent) {
+        await regrantConsent();
+      }
+    } catch (err) {
+      console.error('Failed to re-grant consent:', err);
+    }
     if (user && user.email) {
       localStorage.setItem(`upper_terms_accepted_${cleanUserEmail}`, 'true');
     }
@@ -662,8 +672,9 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
       {termsModalOpen && (
         <TermsAcceptanceModal
           isOpen={termsModalOpen}
-          product={product}
+          isConsentWithdrawn={isConsentWithdrawn}
           onAccept={handleAcceptTerms}
+          onCancel={() => setTermsModalOpen(false)}
           onClose={() => setTermsModalOpen(false)}
         />
       )}

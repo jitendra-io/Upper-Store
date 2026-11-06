@@ -13,12 +13,21 @@ const recordDownload = async (req, res) => {
     if (userEmail) {
       cleanEmail = userEmail.trim().toLowerCase();
       
-      // Check ban status if email provided
+      // Check ban and consent status if email provided
       const userSnapshot = await db.collection('users').where('email', '==', cleanEmail).get();
-      if (!userSnapshot.empty && userSnapshot.docs[0].data().isBanned) {
-        return res.status(403).json({
-          message: 'Your account has been banned. Software downloads are restricted.',
-        });
+      if (!userSnapshot.empty) {
+        const uData = userSnapshot.docs[0].data();
+        if (uData.isBanned) {
+          return res.status(403).json({
+            message: 'Your account has been banned. Software downloads are restricted.',
+          });
+        }
+        if (uData.consentStatus === 'withdrawn') {
+          return res.status(403).json({
+            message: 'Consent Withdrawn: You must accept data processing consent before downloading software.',
+            consentWithdrawn: true,
+          });
+        }
       }
     }
 
