@@ -234,6 +234,12 @@ const createCheckoutSession = async (req, res) => {
         });
       }
 
+      if (req.body.isAgeConfirmed !== true) {
+        return res.status(400).json({
+          message: 'You must confirm that you are 18 years old or older to purchase a subscription.',
+        });
+      }
+
       // Check current active membership: If user already has an active subscription, they cannot purchase another unless cancelled
       const currentMembership = userData.membership;
       const isCurrentVipActive =
@@ -980,6 +986,9 @@ const completeSandboxCheckout = async (req, res) => {
       if (!normalized) {
         return res.status(400).json({ message: 'Validation Error: Invalid subscription plan.' });
       }
+      if (req.body.isAgeConfirmed !== true) {
+        return res.status(400).json({ message: 'You must confirm that you are 18 years old or older to purchase a subscription.' });
+      }
       const existingMembership = userSnapshot.docs[0].data().membership;
       if (existingMembership?.plan === 'elite' &&
           existingMembership?.validUntil &&
@@ -1355,6 +1364,13 @@ const submitUpiPayment = async (req, res) => {
       ['pro', 'elite', 'pro_monthly', 'elite_yearly', 'vip_monthly', 'vip_yearly'].includes(plan);
 
     if (isSubscriptionRequest) {
+      // Age verification check (18+ required for subscriptions)
+      if (req.body.isAgeConfirmed !== true) {
+        return res.status(400).json({
+          message: 'You must confirm that you are 18 years old or older to purchase a subscription.',
+        });
+      }
+
       // 1. Check if user already has an active approved subscription
       const currentMembership = userData.membership;
       const isCurrentVipActive =

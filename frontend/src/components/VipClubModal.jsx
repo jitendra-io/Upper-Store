@@ -36,6 +36,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
   const [payerUpiId, setPayerUpiId] = useState('');
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [pendingSubmission, setPendingSubmission] = useState(null);
+  const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState({
     paymentMode: 'upi_qr',
     upiId: '9692093386@naviaxis',
@@ -69,6 +70,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
   useEffect(() => {
     if (!isOpen) return;
 
+    setIsAgeConfirmed(false);
     fetchEligibility();
 
     const fetchConfig = async () => {
@@ -156,6 +158,11 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
       return;
     }
 
+    if (!isAgeConfirmed) {
+      setError('You must confirm that you are 18 years old or older to purchase a subscription.');
+      return;
+    }
+
     if (eligibility?.hasActiveSubscription) {
       setError('Active Subscription Exists: You currently have an active plan. Under store rules, you cannot request another subscription unless you cancel your current plan first.');
       return;
@@ -198,6 +205,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
             utrNumber: cleanUtr,
             payerUpiId: payerUpiId.trim(),
             payerName: user?.displayName || '',
+            isAgeConfirmed: true,
           }),
         });
 
@@ -248,6 +256,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
           plan: selectedPlan,
           gateway: 'stripe',
           currency: 'USD',
+          isAgeConfirmed: true,
         }),
       });
 
@@ -273,6 +282,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
             productId: `upper-vip-${selectedPlan}`,
             plan: selectedPlan,
             gateway: 'stripe',
+            isAgeConfirmed: true,
           }),
         });
         const mockData = await mockRes.json();
@@ -750,6 +760,24 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                 </div>
               )}
 
+              {/* AGE VERIFICATION CHECKBOX (18+ REQUIRED FOR SUBSCRIPTION) */}
+              <div className="vip-age-box">
+                <label className="vip-age-label">
+                  <input
+                    type="checkbox"
+                    className="vip-age-checkbox"
+                    checked={isAgeConfirmed}
+                    onChange={(e) => {
+                      setIsAgeConfirmed(e.target.checked);
+                      if (error && error.includes('18 years')) setError(null);
+                    }}
+                  />
+                  <span className="vip-age-text">
+                    I confirm that I am <strong>18 years old or older</strong>.
+                  </span>
+                </label>
+              </div>
+
               {/* VALIDATION NOTICES & STATUS */}
               {isBanned && (
                 <div className="vip-error-banner" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
@@ -763,9 +791,9 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
               {/* SUBSCRIBE CTA */}
               <button
                 type="button"
-                className={`vip-subscribe-btn ${selectedPlan === 'elite' ? 'btn-elite' : 'btn-pro'} ${isBanned ? 'disabled' : ''}`}
+                className={`vip-subscribe-btn ${selectedPlan === 'elite' ? 'btn-elite' : 'btn-pro'} ${isBanned || !isAgeConfirmed ? 'disabled' : ''}`}
                 onClick={handleSubscribe}
-                disabled={loading || isBanned}
+                disabled={loading || isBanned || !isAgeConfirmed}
               >
                 {loading ? (
                   <span className="vip-spinner-wrap">

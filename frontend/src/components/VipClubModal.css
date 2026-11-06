@@ -350,6 +350,50 @@
   margin-bottom: 1rem;
 }
 
+/* AGE VERIFICATION CHECKBOX (18+ CONFIRMATION) */
+.vip-age-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.95rem;
+  backdrop-filter: blur(10px);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.vip-age-box:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(212, 175, 55, 0.35);
+}
+
+.vip-age-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.vip-age-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #d4af37;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.vip-age-text {
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+}
+
+.vip-age-text strong {
+  color: #ffd700;
+  font-weight: 700;
+}
+
 /* SUBSCRIBE CTA BUTTON */
 .vip-subscribe-btn {
   width: 100%;

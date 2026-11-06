@@ -17,6 +17,7 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [upiUtr, setUpiUtr] = useState('');
   const [pendingSubmission, setPendingSubmission] = useState(null);
+  const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState({
     upiId: '9692093386@naviaxis',
     payeeName: 'JITENDRA KUMAR MISHRA',
@@ -24,6 +25,9 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
 
   useEffect(() => {
     if (!isOpen) return;
+    setIsAgeConfirmed(false);
+    setError(null);
+    setUpiUtr('');
     const fetchConfig = async () => {
       try {
         const res = await fetch(`${API_BASE}/api/settings/payment-config`);
@@ -44,6 +48,11 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
   if (!isOpen || !product) return null;
 
   const isFeeOnly = plan === 'download_fee';
+  const isSubscription =
+    plan === 'pro' ||
+    plan === 'elite' ||
+    ['pro_monthly', 'elite_yearly', 'vip_monthly', 'vip_yearly'].includes(plan) ||
+    String(product?.id || '').startsWith('upper-vip');
   const feeINR = typeof platformFeeAmount === 'number' ? Math.max(0, platformFeeAmount) : 19;
   const feeUSD = Math.max(0.1, Math.round((feeINR / 85) * 100) / 100);
   const parsedPrice = product.price ? parseFloat(String(product.price).replace(/[^0-9.]/g, '')) : 19;
@@ -61,6 +70,11 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
   const handleCheckout = async () => {
     if (!isLoggedIn) {
       alert('Please sign in to your Upper Store account before proceeding.');
+      return;
+    }
+
+    if (isSubscription && !isAgeConfirmed) {
+      setError('You must confirm that you are 18 years old or older to purchase a subscription.');
       return;
     }
 
@@ -92,6 +106,7 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
             amount: priceINR,
             utrNumber: cleanUtr,
             payerName: user?.displayName || '',
+            isAgeConfirmed: isSubscription ? isAgeConfirmed : true,
           }),
         });
 
@@ -139,6 +154,7 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
           plan,
           gateway: 'stripe',
           currency: 'USD',
+          isAgeConfirmed: isSubscription ? isAgeConfirmed : true,
         }),
       });
 
@@ -407,6 +423,26 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                 </div>
               )}
 
+              {/* AGE CONFIRMATION CHECKBOX FOR SUBSCRIPTION PURCHASES */}
+              {isSubscription && (
+                <div className="checkout-age-box">
+                  <label className="checkout-age-label">
+                    <input
+                      type="checkbox"
+                      className="checkout-age-checkbox"
+                      checked={isAgeConfirmed}
+                      onChange={(e) => {
+                        setIsAgeConfirmed(e.target.checked);
+                        if (error && error.includes('18 years')) setError(null);
+                      }}
+                    />
+                    <span className="checkout-age-text">
+                      I confirm that I am <strong>18 years old or older</strong>.
+                    </span>
+                  </label>
+                </div>
+              )}
+
               {error && <div className="checkout-error-banner">{error}</div>}
 
               {/* Submit CTA */}
@@ -414,7 +450,7 @@ const CheckoutModal = ({ isOpen, onClose, product, plan = 'pro', onLicenseIssued
                 type="button"
                 className="checkout-pay-cta-btn"
                 onClick={handleCheckout}
-                disabled={loading}
+                disabled={loading || (isSubscription && !isAgeConfirmed)}
               >
                 {loading ? (
                   <span className="btn-spinner-wrap">
