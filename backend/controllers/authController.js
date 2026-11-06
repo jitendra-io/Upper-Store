@@ -1672,7 +1672,7 @@ const deleteUserAccount = async (req, res) => {
     });
   } catch (error) {
     console.error('Account erasure error:', error);
-    res.status(500).json({ message: 'Error processing account deletion. Please contact the Grievance Officer at grievance@upperstore.in.' });
+    res.status(500).json({ message: 'Error processing account deletion. Please contact the Grievance Officer at upper.official.in@gmail.com or send message through contacts page.' });
   }
 };
 
