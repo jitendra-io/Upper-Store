@@ -567,6 +567,8 @@ const fulfillOrderAndIssueLicense = async ({
           isVip: true,
           vipPlan: membershipPlan,
           vipExpiresAt: validUntil,
+          vipCancelledAt: null,
+          cancelledAt: null,
           lastSubscribedAt: startDate,
           lastSubscriptionPlan: membershipPlan,
           lastSubscriptionOrderId: orderId,
@@ -593,26 +595,53 @@ const fulfillOrderAndIssueLicense = async ({
         // Restore developer VIP tier and product tags upon new subscription
         try {
           const targetUid = userRef.id;
-          const devSnap = targetUid
+          const devSnap1 = targetUid
             ? await db.collection('developers').where('userId', '==', targetUid).get()
-            : await db.collection('developers').where('email', '==', cleanEmail).get();
-          for (const d of devSnap.docs) {
+            : { docs: [] };
+          const devSnap2 = cleanEmail
+            ? await db.collection('developers').where('email', '==', cleanEmail).get()
+            : { docs: [] };
+          const devSnap3 = userData.username
+            ? await db.collection('developers').where('username', '==', userData.username).get()
+            : { docs: [] };
+
+          const devDocsMap = new Map();
+          devSnap1.docs.forEach(d => devDocsMap.set(d.id, d));
+          devSnap2.docs.forEach(d => devDocsMap.set(d.id, d));
+          devSnap3.docs.forEach(d => devDocsMap.set(d.id, d));
+
+          for (const d of devDocsMap.values()) {
             await d.ref.update({
               vipPlan: membershipPlan,
               isVipActive: true,
               subscriptionEnded: false,
+              cancelledAt: null,
               updatedAt: startDate,
             });
           }
-          const prodSnap = targetUid
+
+          const prodSnap1 = targetUid
             ? await db.collection('products').where('developerId', '==', targetUid).get()
-            : await db.collection('products').where('developerEmail', '==', cleanEmail).get();
-          for (const p of prodSnap.docs) {
+            : { docs: [] };
+          const prodSnap2 = cleanEmail
+            ? await db.collection('products').where('developerEmail', '==', cleanEmail).get()
+            : { docs: [] };
+          const prodSnap3 = userData.username
+            ? await db.collection('products').where('developerUsername', '==', userData.username).get()
+            : { docs: [] };
+
+          const prodDocsMap = new Map();
+          prodSnap1.docs.forEach(p => prodDocsMap.set(p.id, p));
+          prodSnap2.docs.forEach(p => prodDocsMap.set(p.id, p));
+          prodSnap3.docs.forEach(p => prodDocsMap.set(p.id, p));
+
+          for (const p of prodDocsMap.values()) {
             await p.ref.update({
               developerTier: membershipPlan,
               updatedAt: startDate,
             });
           }
+
           const cacheService = require('../services/cacheService');
           cacheService.invalidate('products_list');
           const { invalidateSearchCache } = require('../services/searchService');

@@ -8,6 +8,13 @@ import './DeveloperStudioModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+const parseYouTubeVideoId = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const clean = url.trim();
+  const match = clean.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match && match[1] ? match[1] : null;
+};
+
 const CATEGORIES = [
   'Mobile App',
   'Windows App',
@@ -55,6 +62,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
     description: '',
     releaseNotes: '',
     directApkUrl: '',
+    videoUrl: '',
     imageUrl1: '',
     imageUrl2: '',
     imageUrl3: '',
@@ -292,6 +300,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       description: product.description || '',
       releaseNotes: product.releaseNotes || '',
       directApkUrl: product.directApkUrl || product.apkUrl || '',
+      videoUrl: product.videoUrl || '',
       imageUrl1: product.images && product.images[0] ? product.images[0] : (product.image || ''),
       imageUrl2: product.images && product.images[1] ? product.images[1] : '',
       imageUrl3: product.images && product.images[2] ? product.images[2] : '',
@@ -315,6 +324,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       description: '',
       releaseNotes: '',
       directApkUrl: '',
+      videoUrl: '',
       imageUrl1: '',
       imageUrl2: '',
       imageUrl3: '',
@@ -831,6 +841,51 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                     <h4 className="card-heading">Media Assets &amp; Official Attribution</h4>
                   </div>
 
+                  {/* OPTIONAL PRODUCT DEMO VIDEO URL (YOUTUBE VIDEO LINK) */}
+                  <div className="dev-field-group dev-video-highlight-box">
+                    <label style={{ color: '#38bdf8' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '5px' }}>
+                        <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                      </svg>
+                      Product Demo Video URL (Optional - YouTube Video Link)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://www.youtube.com/watch?v=... or https://youtu.be/..."
+                      value={productForm.videoUrl}
+                      onChange={(e) => setProductForm({ ...productForm, videoUrl: e.target.value })}
+                    />
+                    <small className="field-hint">
+                      Paste YouTube video link (watch, shorts, or share URL) for interactive showcase playback in the Video Demos section.
+                    </small>
+
+                    {/* LIVE YOUTUBE SHOWCASE PREVIEW */}
+                    {(() => {
+                      const ytId = parseYouTubeVideoId(productForm.videoUrl);
+                      if (!ytId) return null;
+                      return (
+                        <div className="dev-video-preview-row">
+                          <img
+                            src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                            alt="YouTube Video Preview Thumbnail"
+                            className="dev-video-thumb-preview"
+                            onError={(e) => { e.target.style.display = 'none'; }}
+                          />
+                          <div className="dev-video-meta-preview">
+                            <span className="dev-video-status-tag">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                              Verified YouTube Demo Showcase
+                            </span>
+                            <span className="dev-video-link-preview">Video ID: {ytId}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
                   <div className="form-fields-grid grid-3">
                     <div className="dev-field-group">
                       <label>Primary Screenshot URL</label>
@@ -971,6 +1026,18 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                             </svg>
                             <span>{p.averageRating ? p.averageRating.toFixed(1) : '5.0'}</span>
                           </span>
+                          {p.videoUrl && (
+                            <>
+                              <span>&bull;</span>
+                              <span style={{ color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                                  <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                                </svg>
+                                Video Demo
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                       <div className="release-actions">

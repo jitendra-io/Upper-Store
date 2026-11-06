@@ -593,6 +593,10 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
+.dev-mini-app-logo-avatar {
+  flex-shrink: 0;
+}
+
 .dev-mini-logo-placeholder {
   width: 18px;
   height: 18px;

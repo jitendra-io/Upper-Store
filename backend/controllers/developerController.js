@@ -96,12 +96,26 @@ const getMyDeveloperProfile = async (req, res) => {
       const m = uData?.membership;
       const vUntil = m?.validUntil;
       const isExp = Boolean(vUntil && new Date(vUntil) < new Date());
-      const isCanc = Boolean(m?.isCancelled || uData?.vipCancelledAt || m?.cancelledAt);
-      if (m && (m.plan === 'pro' || m.plan === 'elite') && !isExp && !isCanc) {
+      // An active cancellation requires membership.isCancelled or cancellation after last subscription on free tier
+      const hasActiveCancellation = Boolean(
+        m?.isCancelled ||
+        (uData?.vipCancelledAt && (!uData?.lastSubscribedAt || new Date(uData.vipCancelledAt) >= new Date(uData.lastSubscribedAt)) && m?.plan === 'free')
+      );
+      if (m && (m.plan === 'pro' || m.plan === 'elite') && !isExp && !hasActiveCancellation) {
         effectiveVipPlan = m.plan;
         isVipActive = true;
+        subscriptionEnded = false;
+        if (devData.vipPlan !== m.plan || !devData.isVipActive || devData.subscriptionEnded || devData.cancelledAt) {
+          await devDoc.ref.update({
+            vipPlan: m.plan,
+            isVipActive: true,
+            subscriptionEnded: false,
+            cancelledAt: null,
+            updatedAt: new Date().toISOString(),
+          });
+        }
       } else {
-        subscriptionEnded = Boolean(isExp || isCanc || m?.plan === 'free' || devData.subscriptionEnded);
+        subscriptionEnded = Boolean(isExp || hasActiveCancellation || m?.plan === 'free' || devData.subscriptionEnded);
         effectiveVipPlan = 'free';
         isVipActive = false;
         if (devData.vipPlan && devData.vipPlan !== 'free') {
@@ -731,41 +745,44 @@ const getPublicDeveloperProfile = async (req, res) => {
     const membership = userData?.membership || null;
     const validUntil = membership?.validUntil || null;
     const isExpiredByDate = Boolean(validUntil && new Date(validUntil) < new Date());
-    const isCancelled = Boolean(membership?.isCancelled || userData?.vipCancelledAt || membership?.cancelledAt);
+    const isCancelled = Boolean(
+      membership?.isCancelled ||
+      (userData?.vipCancelledAt && (!userData?.lastSubscribedAt || new Date(userData.vipCancelledAt) >= new Date(userData.lastSubscribedAt)) && membership?.plan === 'free')
+    );
 
     let isVipActive = false;
     let subscriptionEnded = false;
     let currentVipPlan = 'free';
 
     // A creator only gets premium rings and tags if their VIP subscription is valid, active, non-expired, and non-cancelled
-    if (membership && (membership.plan === 'pro' || membership.plan === 'elite')) {
-      if (isExpiredByDate || isCancelled) {
-        subscriptionEnded = true;
-        isVipActive = false;
-        currentVipPlan = 'free';
-      } else {
-        isVipActive = true;
-        subscriptionEnded = false;
-        currentVipPlan = membership.plan;
+    if (membership && (membership.plan === 'pro' || membership.plan === 'elite') && !isExpiredByDate && !isCancelled) {
+      isVipActive = true;
+      subscriptionEnded = false;
+      currentVipPlan = membership.plan;
+
+      // Auto-heal developer doc if it had stale vipPlan: 'free' or subscriptionEnded: true
+      if (devDoc && (devData?.vipPlan !== currentVipPlan || !devData?.isVipActive || devData?.subscriptionEnded || devData?.cancelledAt)) {
+        devDoc.ref.update({
+          vipPlan: currentVipPlan,
+          isVipActive: true,
+          subscriptionEnded: false,
+          cancelledAt: null,
+          updatedAt: new Date().toISOString(),
+        }).catch(() => {});
       }
     } else {
       // Free tier, expired, cancelled, or deleted
-      subscriptionEnded = Boolean(isExpiredByDate || isCancelled || membership?.plan === 'free' || devData?.subscriptionEnded);
+      subscriptionEnded = true;
       isVipActive = false;
       currentVipPlan = 'free';
-    }
 
-    // Sync stale Firestore developer document if subscription has ended or was cancelled
-    if (devDoc && !isVipActive && devData?.vipPlan && devData.vipPlan !== 'free') {
-      try {
-        await devDoc.ref.update({
+      if (devDoc && devData?.vipPlan && devData.vipPlan !== 'free') {
+        devDoc.ref.update({
           vipPlan: 'free',
           isVipActive: false,
           subscriptionEnded: true,
           updatedAt: new Date().toISOString(),
-        });
-      } catch (syncErr) {
-        // ignore
+        }).catch(() => {});
       }
     }
 
@@ -827,6 +844,24 @@ const getPublicDeveloperProfile = async (req, res) => {
       createdAt: devData?.createdAt || userData?.createdAt || null,
     };
 
+    // Auto-sync products developerTier to match current active VIP tier
+    if (isVipActive && matchedProducts.some((p) => p.developerTier !== currentVipPlan)) {
+      matchedProducts.forEach((p) => {
+        if (p.id && p.developerTier !== currentVipPlan) {
+          db.collection('products').doc(p.id).update({
+            developerTier: currentVipPlan,
+            updatedAt: new Date().toISOString(),
+          }).catch(() => {});
+        }
+      });
+      try {
+        const cacheService = require('../services/cacheService');
+        cacheService.invalidate('products_list');
+        const { invalidateSearchCache } = require('../services/searchService');
+        invalidateSearchCache();
+      } catch (_) {}
+    }
+
     res.json({
       developer: publicProfile,
       stats: {
@@ -837,6 +872,11 @@ const getPublicDeveloperProfile = async (req, res) => {
       products: matchedProducts.map((p) => {
         const safe = { ...p };
         delete safe.developerEmail;
+        if (isVipActive) {
+          safe.developerTier = currentVipPlan;
+        } else if (subscriptionEnded) {
+          safe.developerTier = 'free';
+        }
         return safe;
       }),
     });

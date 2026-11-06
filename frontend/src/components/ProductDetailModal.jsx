@@ -11,6 +11,13 @@ import { CrownIcon, DiamondIcon, SparkleIcon, LockIcon, CheckIcon, ArrowRightIco
 import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import './ProductDetailModal.css';
 
+const parseYouTubeVideoId = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const clean = url.trim();
+  const match = clean.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match && match[1] ? match[1] : null;
+};
+
 const ProductDetailModal = ({ product, onClose }) => {
   const { user, token, isLoggedIn, openAuthModal } = useAuth();
   const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
@@ -169,9 +176,12 @@ const ProductDetailModal = ({ product, onClose }) => {
     ? product.images
     : (product?.image ? [product.image] : []);
 
+  const ytVideoId = parseYouTubeVideoId(product?.videoUrl);
   const [activeImage, setActiveImage] = useState(allImages[0] || '');
+  const [activeMediaMode, setActiveMediaMode] = useState('image');
 
   useEffect(() => {
+    setActiveMediaMode('image');
     if (allImages.length > 0) setActiveImage(allImages[0]);
   }, [product]);
 
@@ -217,8 +227,19 @@ const ProductDetailModal = ({ product, onClose }) => {
         <div className="modal-content-grid">
           {/* LEFT COLUMN: Media Preview & Persona Trust Highlights */}
           <div className="modal-media-column">
-            {/* Cover Image with Preserved Aspect Ratio */}
-            {activeImage && (
+            {/* Cover Image or Embedded YouTube Video Showcase */}
+            {activeMediaMode === 'video' && ytVideoId ? (
+              <div className="modal-cover-frame modal-video-frame">
+                <iframe
+                  src={`https://www.youtube.com/embed/${ytVideoId}?autoplay=1&rel=0`}
+                  title={`${product.title} Demo Showcase`}
+                  className="modal-cover-video-iframe"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+                <span className="modal-category-badge video-badge">YouTube Showcase</span>
+              </div>
+            ) : activeImage ? (
               <div className="modal-cover-frame">
                 <img
                   src={activeImage}
@@ -228,16 +249,39 @@ const ProductDetailModal = ({ product, onClose }) => {
                 />
                 <span className="modal-category-badge">{product.category}</span>
               </div>
-            )}
+            ) : null}
 
-            {/* Multiple Screenshots Gallery Thumbs */}
-            {allImages.length > 1 && (
+            {/* Multiple Screenshots Gallery Thumbs & Video Showcase Switcher */}
+            {(allImages.length > 1 || ytVideoId) && (
               <div className="modal-thumbs-row">
+                {ytVideoId && (
+                  <button
+                    type="button"
+                    className={`thumb-btn video-thumb-btn ${activeMediaMode === 'video' ? 'active' : ''}`}
+                    onClick={() => setActiveMediaMode('video')}
+                    title="Watch YouTube Product Demo Video"
+                  >
+                    <img
+                      src={`https://img.youtube.com/vi/${ytVideoId}/hqdefault.jpg`}
+                      alt="Demo Video"
+                      referrerPolicy="no-referrer"
+                    />
+                    <span className="video-thumb-play-icon">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                    </span>
+                  </button>
+                )}
                 {allImages.map((imgUrl, idx) => (
                   <button
                     key={idx}
-                    className={`thumb-btn ${activeImage === imgUrl ? 'active' : ''}`}
-                    onClick={() => setActiveImage(imgUrl)}
+                    type="button"
+                    className={`thumb-btn ${activeMediaMode === 'image' && activeImage === imgUrl ? 'active' : ''}`}
+                    onClick={() => {
+                      setActiveMediaMode('image');
+                      setActiveImage(imgUrl);
+                    }}
                   >
                     <img src={imgUrl} alt={`Screenshot ${idx + 1}`} referrerPolicy="no-referrer" />
                   </button>

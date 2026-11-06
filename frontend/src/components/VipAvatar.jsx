@@ -9,7 +9,7 @@ import './VipAvatar.css';
  * @param {string} src - Avatar image URL
  * @param {string} alt - Alt text
  * @param {'official'|'elite'|'pro'|'free'} plan - Validated membership tier
- * @param {'sm'|'md'|'lg'|'xl'} size - Avatar size (sm: 32px, md: 44px, lg: 64px, xl: 84px)
+ * @param {'xs'|'sm'|'md'|'lg'|'xl'} size - Avatar size (xs: 22px, sm: 32px, md: 44px, lg: 64px, xl: 84px)
  * @param {string} className - Optional container class
  * @param {string} fallbackSeed - Optional seed for avatar fallback
  */

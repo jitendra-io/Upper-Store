@@ -262,11 +262,28 @@ const DeveloperProfile = () => {
     ['upperstore', 'upper-store', 'upper_store'].includes(cleanUsername)
   );
 
-  const isVipActive = Boolean(developer.isVipActive && (developer.vipPlan === 'elite' || developer.vipPlan === 'pro') && !developer.subscriptionEnded);
-  const isElite = isVipActive && developer.vipPlan === 'elite';
-  const isPro = isVipActive && developer.vipPlan === 'pro';
+  // Authenticated owner live membership fallback:
+  // If the visiting user owns this profile and has an active VIP membership in their auth session,
+  // ensure the profile reflects their active tier even before server re-fetch.
+  const ownerMembershipPlan = isOwner && user?.membership?.validUntil && new Date(user.membership.validUntil) > new Date() && !user.membership.isCancelled
+    ? user.membership.plan
+    : null;
+
+  const effectivePlan = (ownerMembershipPlan === 'elite' || ownerMembershipPlan === 'pro')
+    ? ownerMembershipPlan
+    : (developer.vipPlan === 'elite' || developer.vipPlan === 'pro')
+    ? developer.vipPlan
+    : 'free';
+
+  const isVipActive = Boolean(
+    !isOfficialDev &&
+    (effectivePlan === 'elite' || effectivePlan === 'pro') &&
+    (developer.isVipActive || ownerMembershipPlan || (developer.vipPlan && !developer.subscriptionEnded))
+  );
+  const isElite = isVipActive && effectivePlan === 'elite';
+  const isPro = isVipActive && effectivePlan === 'pro';
   const isDev = Boolean(developer.isDeveloper);
-  const isSubscriptionEnded = Boolean(developer.subscriptionEnded || (!isOfficialDev && !isVipActive));
+  const isSubscriptionEnded = Boolean(developer.subscriptionEnded && !ownerMembershipPlan);
 
   // Premium rotating conic ring for active creators / VIPs (Official gets emerald green ring)
   const avatarRingPlan = isOfficialDev
@@ -489,6 +506,13 @@ const DeveloperProfile = () => {
                 product.id,
                 product.downloadCount ?? product.downloadsCount ?? product.downloads ?? 0
               );
+              const productCardTier = isOfficialDev
+                ? 'official'
+                : (product.developerTier === 'elite' || (isElite && (!product.developerTier || product.developerTier === 'free')))
+                ? 'elite'
+                : (product.developerTier === 'pro' || (isPro && (!product.developerTier || product.developerTier === 'free')))
+                ? 'pro'
+                : 'free';
 
               return (
                 <div
@@ -527,11 +551,13 @@ const DeveloperProfile = () => {
                   <div className="dev-mini-card-body">
                     <div className="dev-mini-card-header-row">
                       {product.logo ? (
-                        <img
+                        <VipAvatar
                           src={product.logo}
-                          alt=""
-                          className="dev-mini-app-logo"
-                          onError={(e) => { e.target.style.display = 'none'; }}
+                          alt={product.title}
+                          plan={productCardTier}
+                          size="xs"
+                          fallbackSeed={product.title}
+                          className="dev-mini-app-logo-avatar"
                         />
                       ) : (
                         <div className="dev-mini-logo-placeholder">
@@ -543,6 +569,7 @@ const DeveloperProfile = () => {
                       <h4 className="dev-mini-card-title" title={product.title}>
                         {product.title}
                       </h4>
+                      <VipFlairBadge plan={productCardTier} compact={true} />
                     </div>
 
                     <div className="dev-mini-card-meta-row">

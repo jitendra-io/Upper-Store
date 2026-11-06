@@ -339,6 +339,12 @@ const createProduct = async (req, res) => {
     const licensePrice = req.body.licensePrice ? String(req.body.licensePrice).trim() : '';
     const isPlatformFeeWaived = req.body.isPlatformFeeWaived === true || req.body.isPlatformFeeWaived === 'true';
 
+    const effectiveTier = (req.membership?.plan === 'elite' || req.membership?.plan === 'pro')
+      ? req.membership.plan
+      : (req.developer?.vipPlan === 'elite' || req.developer?.vipPlan === 'pro') && !req.developer.subscriptionEnded
+      ? req.developer.vipPlan
+      : 'free';
+
     const productData = {
       isDeveloperProduct: Boolean(req.developer),
       developerId: req.developer ? req.user.uid : null,
@@ -346,7 +352,7 @@ const createProduct = async (req, res) => {
       developerUsername: req.developer ? (req.developer.username || req.user.username || null) : null,
       developerName: req.developer ? (req.developer.displayName || req.user.displayName || req.user.email.split('@')[0]) : 'Upper Store',
       developerAvatar: req.developer ? (req.developer.avatar || req.user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(req.user.email)}`) : null,
-      developerTier: req.developer ? (req.developer.vipPlan || req.membership?.plan || 'pro') : null,
+      developerTier: req.developer ? effectiveTier : null,
       isStoreOfficial: !req.developer,
       title: title.trim(),
       category: category.trim(),
@@ -441,6 +447,14 @@ const updateProduct = async (req, res) => {
     }
     if (req.developer && (req.developer.username || req.user?.username)) {
       updatedData.developerUsername = req.developer.username || req.user?.username;
+    }
+    const effectiveEditTier = (req.membership?.plan === 'elite' || req.membership?.plan === 'pro')
+      ? req.membership.plan
+      : (req.developer?.vipPlan === 'elite' || req.developer?.vipPlan === 'pro') && !req.developer.subscriptionEnded
+      ? req.developer.vipPlan
+      : null;
+    if (effectiveEditTier) {
+      updatedData.developerTier = effectiveEditTier;
     }
 
     if (tags !== undefined || customTags !== undefined) {

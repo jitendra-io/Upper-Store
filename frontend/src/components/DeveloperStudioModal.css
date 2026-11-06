@@ -1435,3 +1435,80 @@
     text-align: center;
   }
 }
+
+/* Product Demo Video (YouTube Showcase) Highlight Box */
+.dev-field-group.dev-video-highlight-box {
+  background: rgba(56, 189, 248, 0.04);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transition: all 0.25s ease;
+  margin-bottom: 0.75rem;
+}
+
+.dev-field-group.dev-video-highlight-box:focus-within {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.12);
+}
+
+.dev-field-group.dev-video-highlight-box input {
+  background: rgba(0, 0, 0, 0.45);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.dev-field-group.dev-video-highlight-box input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.dev-video-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+}
+
+.dev-video-thumb-preview {
+  width: 64px;
+  height: 36px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #000;
+}
+
+.dev-video-meta-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.dev-video-status-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #38bdf8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dev-video-link-preview {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-family: monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
