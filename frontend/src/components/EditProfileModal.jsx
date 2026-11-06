@@ -1012,7 +1012,7 @@ export const EditProfileModal = ({
                 • <strong>Right to Erasure:</strong> You can permanently erase your entire account and all associated personal data from Upper Store at any time.
               </p>
               <p style={{ margin: 0 }}>
-                • <strong>Grievance Redressal:</strong> For any data protection inquiries, reach our designated Grievance Officer at <a href="mailto:grievance@upperstore.in" style={{ color: '#ffd700', textDecoration: 'underline' }}>grievance@upperstore.in</a>.
+                • <strong>Grievance Redressal:</strong> For any data protection inquiries, reach our designated Grievance Officer at <a href="mailto:upper.official.in@gmail.com" style={{ color: '#ffd700', textDecoration: 'underline' }}>upper.official.in@gmail.com</a>.
               </p>
             </div>
 

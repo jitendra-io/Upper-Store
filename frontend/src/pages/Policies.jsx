@@ -155,7 +155,7 @@ We do not sell user data to advertising networks, profile users across external 
 • Official Designation: Resident Grievance Redressal Officer & Data Protection Officer
 • Entity: Upper Store Digital Asset & Software Platform
 • Registered Physical Address: Plot No. 104, Infocity Avenue, Bhubaneswar, Odisha - 751024, India
-• Direct Grievance Email: grievance@upperstore.in (CC: upper.official.in@gmail.com)
+• Direct Grievance Email: upper.official.in@gmail.com (CC: upper.official.in@gmail.com)
 • Acknowledgment Window: Written acknowledgment and ticket generation within 24 to 48 hours.
 • Final Disposal Timeline: Complete investigation, remedy, and disposal within 15 calendar days.
 

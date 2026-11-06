@@ -402,7 +402,7 @@ const AuthModal = () => {
                   <p style={{ margin: '0 0 4px 0' }}><strong>Personal Data Collected:</strong> Email, username, profile name, IP address, download logs.</p>
                   <p style={{ margin: '0 0 4px 0' }}><strong>Processing Purpose:</strong> Authentication, software licensing, anti-abuse security.</p>
                   <p style={{ margin: '0 0 4px 0' }}><strong>Your Rights:</strong> Right to access, correct, erase data, and withdraw consent at any time.</p>
-                  <p style={{ margin: 0 }}><strong>Grievance Officer:</strong> grievance@upperstore.in | SLA: 24–48h response, 15 days resolution.</p>
+                  <p style={{ margin: 0 }}><strong>Grievance Officer:</strong> upper.official.in@gmail.com | SLA: 24–48h response, 15 days resolution.</p>
                 </div>
               )}
             </div>
