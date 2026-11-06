@@ -9,6 +9,7 @@ import CheckoutModal from './CheckoutModal';
 import VipClubModal from './VipClubModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, LockIcon, CheckIcon, ArrowRightIcon, CloseIcon } from './Icons';
 import { VipAvatar, VipFlairBadge } from './VipAvatar';
+import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import './ProductDetailModal.css';
 
 const parseYouTubeVideoId = (url) => {
@@ -28,6 +29,26 @@ const ProductDetailModal = ({ product, onClose }) => {
   const [vipModalOpen, setVipModalOpen] = useState(false);
   const [feePaid, setFeePaid] = useState(() => localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
   const [copiedSha, setCopiedSha] = useState(false);
+
+  const getProductDevTier = (prod) => {
+    if (!prod) return 'free';
+    if (!prod.developerUsername || prod.developerUsername === 'upperstore' || prod.isStoreOfficial) {
+      return 'official';
+    }
+    const rawTier = String(prod.developerTier || '').toLowerCase().trim();
+    if (rawTier === 'elite' || rawTier === 'pro') return rawTier;
+    if (user && isUserVipActive(user)) {
+      const isOwnerProduct =
+        (prod.developerId && user.uid && String(prod.developerId) === String(user.uid)) ||
+        (prod.developerUsername && user.username && prod.developerUsername.toLowerCase() === user.username.toLowerCase()) ||
+        (prod.developerEmail && user.email && prod.developerEmail.toLowerCase() === user.email.toLowerCase()) ||
+        (user.email && prod.developerUsername && user.email.split('@')[0].toLowerCase() === prod.developerUsername.toLowerCase());
+      if (isOwnerProduct) {
+        return getUserVipTier(user);
+      }
+    }
+    return 'free';
+  };
 
   useEffect(() => {
     setFeePaid(localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
@@ -335,7 +356,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                   <VipAvatar
                     src={product.developerAvatar || '/logo.png'}
                     alt={product.developerName || 'Upper Store'}
-                    plan={(!product.developerUsername || product.developerUsername === 'upperstore' || product.isStoreOfficial) ? 'official' : (product.developerTier === 'elite' ? 'elite' : product.developerTier === 'pro' ? 'pro' : 'free')}
+                    plan={getProductDevTier(product)}
                     size="sm"
                     fallbackSeed={product.developerUsername || product.developerEmail || product.developerName || 'upperstore'}
                   />
@@ -347,7 +368,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                       @{product.developerUsername || 'upperstore'}
                     </span>
                   </div>
-                  <VipFlairBadge plan={(!product.developerUsername || product.developerUsername === 'upperstore' || product.isStoreOfficial) ? 'official' : (product.developerTier === 'elite' ? 'elite' : product.developerTier === 'pro' ? 'pro' : 'free')} compact={true} />
+                  <VipFlairBadge plan={getProductDevTier(product)} compact={true} />
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="dev-redirect-icon" style={{ marginLeft: '4px', color: '#fbbf24' }}>
                     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                     <polyline points="15 3 21 3 21 9"></polyline>

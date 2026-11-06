@@ -231,8 +231,17 @@ const deleteReview = async (req, res) => {
   const { reviewId } = req.params;
 
   try {
-    const docRef = db.collection('reviews').doc(reviewId);
-    const doc = await docRef.get();
+    let docRef = db.collection('reviews').doc(reviewId);
+    let doc = await docRef.get();
+
+    // Fallback: If not found by document ID, try finding by field 'id'
+    if (!doc.exists) {
+      const snapById = await db.collection('reviews').where('id', '==', reviewId).limit(1).get();
+      if (!snapById.empty) {
+        doc = snapById.docs[0];
+        docRef = doc.ref;
+      }
+    }
 
     if (!doc.exists) {
       return res.status(404).json({ message: 'Review not found.' });
@@ -241,18 +250,24 @@ const deleteReview = async (req, res) => {
     const reviewData = doc.data();
     const productId = reviewData.productId;
     const reviewOwnerEmail = (reviewData.userEmail || '').trim().toLowerCase();
+    const reviewOwnerUid = reviewData.userId || reviewData.userUid || null;
 
-    // Verify ownership: Admin OR verified author
+    // Verify ownership: Admin OR verified author (by email or UID)
     if (req.user?.role !== 'admin') {
       let requesterEmail = (req.user?.email || '').trim().toLowerCase();
-      if (!requesterEmail && req.user?.uid) {
-        const userDoc = await db.collection('users').doc(req.user.uid).get();
+      const requesterUid = req.user?.uid || req.user?.id || null;
+
+      if (!requesterEmail && requesterUid) {
+        const userDoc = await db.collection('users').doc(requesterUid).get();
         if (userDoc.exists) {
           requesterEmail = (userDoc.data().email || '').trim().toLowerCase();
         }
       }
 
-      if (!requesterEmail || requesterEmail !== reviewOwnerEmail) {
+      const isEmailMatch = requesterEmail && reviewOwnerEmail && requesterEmail === reviewOwnerEmail;
+      const isUidMatch = requesterUid && reviewOwnerUid && String(requesterUid) === String(reviewOwnerUid);
+
+      if (!isEmailMatch && !isUidMatch) {
         return res.status(403).json({
           message: 'Forbidden: You are not authorized to delete another user’s review.',
         });
@@ -275,6 +290,11 @@ const deleteReview = async (req, res) => {
         reviewsCount: remainingReviews.length,
       });
     }
+
+    // Invalidate review and product caches immediately
+    cacheService.invalidate(`reviews_${productId}`);
+    cacheService.invalidate('all_reviews');
+    cacheService.invalidate('products_list');
 
     res.json({
       message: 'Review deleted successfully.',

@@ -115,10 +115,17 @@ const DeveloperProfile = () => {
 
     // 3. Normal developer/creator profile ownership checks
     const userHandle = (user.username || '').toLowerCase();
+    const userEmail = (user.email || '').toLowerCase().trim();
+    const userEmailPrefix = userEmail.split('@')[0];
     if (userHandle && devHandle && userHandle === devHandle) return true;
-    if (user.uid && developer.userId && user.uid === developer.userId) return true;
-    if (user.id && developer.id && user.id === developer.id) return true;
-    if (user.email && developer.email && user.email.toLowerCase() === developer.email.toLowerCase()) return true;
+    if (userHandle && cleanUsername && userHandle === cleanUsername) return true;
+    if (userEmailPrefix && devHandle && userEmailPrefix === devHandle) return true;
+    if (userEmailPrefix && cleanUsername && userEmailPrefix === cleanUsername) return true;
+    if (user.uid && developer.userId && String(user.uid) === String(developer.userId)) return true;
+    if (user.id && developer.userId && String(user.id) === String(developer.userId)) return true;
+    if (user.uid && developer.id && String(user.uid) === String(developer.id)) return true;
+    if (user.id && developer.id && String(user.id) === String(developer.id)) return true;
+    if (userEmail && developer.email && userEmail === developer.email.toLowerCase().trim()) return true;
     return false;
   }, [user, developer, cleanUsername]);
 
@@ -265,25 +272,38 @@ const DeveloperProfile = () => {
   // Authenticated owner live membership fallback:
   // If the visiting user owns this profile and has an active VIP membership in their auth session,
   // ensure the profile reflects their active tier even before server re-fetch.
-  const ownerMembershipPlan = isOwner && user?.membership?.validUntil && new Date(user.membership.validUntil) > new Date() && !user.membership.isCancelled
-    ? user.membership.plan
-    : null;
+  const isAuthUserVip = Boolean(
+    user?.membership &&
+    (user.membership.plan === 'elite' || user.membership.plan === 'pro') &&
+    user.membership.validUntil &&
+    new Date(user.membership.validUntil) > new Date() &&
+    !user.membership.isCancelled &&
+    !user.vipCancelledAt &&
+    !user.isBanned
+  );
+  const ownerMembershipPlan = isOwner && isAuthUserVip ? user.membership.plan : null;
 
-  const effectivePlan = (ownerMembershipPlan === 'elite' || ownerMembershipPlan === 'pro')
-    ? ownerMembershipPlan
-    : (developer.vipPlan === 'elite' || developer.vipPlan === 'pro')
-    ? developer.vipPlan
-    : 'free';
+  // Resolve developer VIP tier:
+  // Check owner session, then server developer.vipPlan (checking both 'elite' and 'pro')
+  const devVipRaw = String(developer.vipPlan || '').toLowerCase().trim();
+  const isDevVipFromServer = Boolean(
+    (devVipRaw === 'elite' || devVipRaw === 'pro') &&
+    !developer.subscriptionEnded &&
+    developer.isVipActive !== false
+  );
+
+  const effectivePlan = ownerMembershipPlan
+    || (isDevVipFromServer ? devVipRaw : null)
+    || ((devVipRaw === 'elite' || devVipRaw === 'pro') ? devVipRaw : 'free');
 
   const isVipActive = Boolean(
     !isOfficialDev &&
-    (effectivePlan === 'elite' || effectivePlan === 'pro') &&
-    (developer.isVipActive || ownerMembershipPlan || (developer.vipPlan && !developer.subscriptionEnded))
+    (effectivePlan === 'elite' || effectivePlan === 'pro')
   );
   const isElite = isVipActive && effectivePlan === 'elite';
   const isPro = isVipActive && effectivePlan === 'pro';
   const isDev = Boolean(developer.isDeveloper);
-  const isSubscriptionEnded = Boolean(developer.subscriptionEnded && !ownerMembershipPlan);
+  const isSubscriptionEnded = Boolean(developer.subscriptionEnded && !ownerMembershipPlan && !isDevVipFromServer);
 
   // Premium rotating conic ring for active creators / VIPs (Official gets emerald green ring)
   const avatarRingPlan = isOfficialDev
@@ -506,13 +526,12 @@ const DeveloperProfile = () => {
                 product.id,
                 product.downloadCount ?? product.downloadsCount ?? product.downloads ?? 0
               );
+              const rawTier = String(product.developerTier || '').toLowerCase().trim();
               const productCardTier = isOfficialDev
                 ? 'official'
-                : (product.developerTier === 'elite' || (isElite && (!product.developerTier || product.developerTier === 'free')))
-                ? 'elite'
-                : (product.developerTier === 'pro' || (isPro && (!product.developerTier || product.developerTier === 'free')))
-                ? 'pro'
-                : 'free';
+                : (rawTier === 'elite' || rawTier === 'pro')
+                ? rawTier
+                : (isElite ? 'elite' : isPro ? 'pro' : 'free');
 
               return (
                 <div

@@ -770,6 +770,11 @@ const getPublicDeveloperProfile = async (req, res) => {
           updatedAt: new Date().toISOString(),
         }).catch(() => {});
       }
+    } else if (devData && (devData.vipPlan === 'pro' || devData.vipPlan === 'elite') && !devData.subscriptionEnded && !devData.cancelledAt) {
+      // Developer record itself is marked active VIP
+      isVipActive = true;
+      subscriptionEnded = false;
+      currentVipPlan = devData.vipPlan;
     } else {
       // Free tier, expired, cancelled, or deleted
       subscriptionEnded = true;

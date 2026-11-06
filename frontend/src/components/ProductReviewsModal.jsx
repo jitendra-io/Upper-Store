@@ -161,7 +161,9 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
 
   const isVerifiedDownloader = isLoggedIn && hasUserDownloadedProduct();
   const cleanUserEmail = user?.email ? user.email.trim().toLowerCase() : '';
-  const userExistingReview = cleanUserEmail ? reviews.find(r => r.userEmail === cleanUserEmail) : null;
+  const userExistingReview = cleanUserEmail
+    ? reviews.find((r) => (r.userEmail || '').trim().toLowerCase() === cleanUserEmail)
+    : null;
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -186,10 +188,10 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
     try {
       const userAvatar = user.photoURL || `https://unavatar.io/${encodeURIComponent(cleanUserEmail)}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(cleanUserEmail)}`;
 
-      const token = localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
+      const activeAuthToken = token || localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
       const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (activeAuthToken) {
+        headers['Authorization'] = `Bearer ${activeAuthToken}`;
       }
 
       const res = await fetch(`${API_BASE}/api/reviews/product/${product.id}`, {
@@ -222,33 +224,52 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   };
 
   const handleDeleteReview = async (reviewId) => {
-    if (!reviewId) return;
+    const targetId = reviewId || userExistingReview?.id || userExistingReview?._id;
+    if (!targetId && !cleanUserEmail) return;
     if (!window.confirm('Are you sure you want to delete your review? You can submit a new review after deleting.')) return;
 
-    setDeletingId(reviewId);
+    setDeletingId(targetId || 'active');
     try {
-      const token = localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
+      const activeAuthToken = token || localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
       const headers = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (activeAuthToken) {
+        headers['Authorization'] = `Bearer ${activeAuthToken}`;
       }
 
-      const res = await fetch(`${API_BASE}/api/reviews/${reviewId}`, {
+      // Optimistic state update: immediately remove from local reviews state and reset form
+      setReviews((prev) =>
+        prev.filter(
+          (r) =>
+            r.id !== targetId &&
+            r._id !== targetId &&
+            (r.userEmail || '').trim().toLowerCase() !== cleanUserEmail
+        )
+      );
+      setReviewsCount((prev) => Math.max(0, prev - 1));
+      setUserComment('');
+      setUserRating(5);
+
+      const endpoint = targetId
+        ? `${API_BASE}/api/reviews/${targetId}`
+        : `${API_BASE}/api/reviews/product/${product.id}`;
+
+      const res = await fetch(endpoint, {
         method: 'DELETE',
         headers,
       });
+
       if (res.ok) {
         setFormMsg({ type: 'success', text: 'Your review was deleted. You can now submit a new review.' });
-        setUserComment('');
-        setUserRating(5);
         loadReviews();
         window.dispatchEvent(new CustomEvent('reviewsUpdated', { detail: { productId: product.id } }));
       } else {
         const data = await res.json();
+        loadReviews();
         setFormMsg({ type: 'error', text: data.message || 'Failed to delete review.' });
       }
     } catch (err) {
-      setFormMsg({ type: 'error', text: 'Error deleting review.' });
+      loadReviews();
+      setFormMsg({ type: 'error', text: 'Error deleting review. Please try again.' });
     } finally {
       setDeletingId(null);
     }
@@ -430,8 +451,8 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                 <button
                   type="button"
                   className="review-delete-btn"
-                  disabled={deletingId === userExistingReview.id}
-                  onClick={() => handleDeleteReview(userExistingReview.id)}
+                  disabled={Boolean(deletingId)}
+                  onClick={() => handleDeleteReview(userExistingReview.id || userExistingReview._id)}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -439,7 +460,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                     <line x1="10" y1="11" x2="10" y2="17"></line>
                     <line x1="14" y1="11" x2="14" y2="17"></line>
                   </svg>
-                  <span>{deletingId === userExistingReview.id ? 'Deleting...' : 'Delete My Review'}</span>
+                  <span>{deletingId ? 'Deleting...' : 'Delete My Review'}</span>
                 </button>
               </div>
             ) : (
@@ -542,14 +563,15 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
             ) : (
               <div className="reviews-cards-stack">
                 {reviews.map((rev) => {
-                  const isUserCard = cleanUserEmail && rev.userEmail === cleanUserEmail;
+                  const isUserCard = cleanUserEmail && (rev.userEmail || '').trim().toLowerCase() === cleanUserEmail;
                   const m = rev.userMembership || rev.membership;
                   const isVipValid = m && (m.plan === 'elite' || m.plan === 'pro') && !m.isCancelled && !m.cancelledAt && m.validUntil && new Date(m.validUntil) > new Date();
                   const isElite = isVipValid && (m.plan === 'elite' || m.badge === 'purple');
                   const isPro = isVipValid && (m.plan === 'pro' || m.badge === 'gold');
+                  const revTargetId = rev.id || rev._id;
 
                   return (
-                    <div key={rev.id || rev.userEmail} className={`review-comment-card ${isUserCard ? 'user-own-card' : ''} ${isElite ? 'elite-card' : isPro ? 'pro-card' : ''}`}>
+                    <div key={rev.id || rev._id || rev.userEmail} className={`review-comment-card ${isUserCard ? 'user-own-card' : ''} ${isElite ? 'elite-card' : isPro ? 'pro-card' : ''}`}>
                       {isElite && (
                         <div className="pinned-elite-ribbon">
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
@@ -610,20 +632,20 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                       <p className="review-comment-body">{rev.comment}</p>
 
                       {/* REQUIREMENT 3: Only delete button for user's own review, no edit button */}
-                      {isUserCard && rev.id && (
+                      {isUserCard && (revTargetId || rev.userEmail) && (
                         <div className="review-card-actions">
                           <button
                             type="button"
                             className="review-delete-btn sm"
-                            disabled={deletingId === rev.id}
-                            onClick={() => handleDeleteReview(rev.id)}
+                            disabled={Boolean(deletingId)}
+                            onClick={() => handleDeleteReview(revTargetId)}
                             title="Delete this review to submit a new one"
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="3 6 5 6 21 6"></polyline>
                               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                             </svg>
-                            <span>{deletingId === rev.id ? 'Deleting...' : 'Delete Review'}</span>
+                            <span>{deletingId ? 'Deleting...' : 'Delete Review'}</span>
                           </button>
                         </div>
                       )}

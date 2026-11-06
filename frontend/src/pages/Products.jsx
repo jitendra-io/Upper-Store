@@ -6,7 +6,7 @@ import VipPromoBanner from '../components/VipPromoBanner';
 import StarRatingBadge from '../components/StarRatingBadge';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import { useAuth } from '../context/AuthContext';
-import { isUserVipActive } from '../utils/vipValidator';
+import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
 import './Products.css';
 
@@ -100,6 +100,25 @@ const Products = () => {
   const ITEMS_PER_PAGE = 10;
   const MAX_PAGES_LIMIT = 10;
   const [, setRefreshDownloads] = useState(0);
+
+  const getProductDevTier = (product) => {
+    if (!product.developerUsername || product.developerUsername === 'upperstore' || product.isStoreOfficial) {
+      return 'official';
+    }
+    const rawTier = String(product.developerTier || '').toLowerCase().trim();
+    if (rawTier === 'elite' || rawTier === 'pro') return rawTier;
+    if (user && isUserVipActive(user)) {
+      const isOwnerProduct =
+        (product.developerId && user.uid && String(product.developerId) === String(user.uid)) ||
+        (product.developerUsername && user.username && product.developerUsername.toLowerCase() === user.username.toLowerCase()) ||
+        (product.developerEmail && user.email && product.developerEmail.toLowerCase() === user.email.toLowerCase()) ||
+        (user.email && product.developerUsername && user.email.split('@')[0].toLowerCase() === product.developerUsername.toLowerCase());
+      if (isOwnerProduct) {
+        return getUserVipTier(user);
+      }
+    }
+    return 'free';
+  };
 
   const loadProducts = async () => {
     try {
@@ -346,7 +365,7 @@ const Products = () => {
                     <VipAvatar
                       src={product.developerAvatar || '/logo.png'}
                       alt={product.developerName || 'Upper Store'}
-                      plan={(!product.developerUsername || product.developerUsername === 'upperstore' || product.isStoreOfficial) ? 'official' : (product.developerTier === 'elite' ? 'elite' : product.developerTier === 'pro' ? 'pro' : 'free')}
+                      plan={getProductDevTier(product)}
                       size="sm"
                       fallbackSeed={product.developerUsername || product.developerEmail || product.developerName || 'upperstore'}
                     />
@@ -356,7 +375,7 @@ const Products = () => {
                         @{product.developerUsername || 'upperstore'}
                       </span>
                     </span>
-                    <VipFlairBadge plan={(!product.developerUsername || product.developerUsername === 'upperstore' || product.isStoreOfficial) ? 'official' : (product.developerTier === 'elite' ? 'elite' : product.developerTier === 'pro' ? 'pro' : 'free')} compact={true} />
+                    <VipFlairBadge plan={getProductDevTier(product)} compact={true} />
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="dev-redirect-icon" style={{ marginLeft: '4px', color: '#fbbf24' }}>
                       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                       <polyline points="15 3 21 3 21 9"></polyline>
