@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   ShieldOffIcon,
@@ -104,7 +105,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onCancelled }) => {
     }
   };
 
-  return (
+  const modalContent = (
     <div className="cancel-modal-backdrop" onClick={onClose}>
       <div className="cancel-modal-card" onClick={(e) => e.stopPropagation()}>
         {/* MODAL CLOSE BUTTON */}
@@ -252,6 +253,8 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onCancelled }) => {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 
 export default CancelSubscriptionModal;

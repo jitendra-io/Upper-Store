@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { MAJOR_50_COUNTRIES } from '../utils/countries';
 import './EditProfileModal.css';
@@ -428,7 +429,7 @@ export const EditProfileModal = ({
     }
   };
 
-  return (
+  const modalContent = (
     <div className="edit-profile-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="edit-profile-modal-box" onClick={(e) => e.stopPropagation()}>
         {/* HEADER */}
@@ -1026,6 +1027,8 @@ export const EditProfileModal = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 
 export default EditProfileModal;

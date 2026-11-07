@@ -7,7 +7,12 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('auth') === '1';
+    }
+    return false;
+  });
   const [authModalPrompt, setAuthModalPrompt] = useState('');
   const [authModalTab, setAuthModalTab] = useState('login'); // 'login' | 'register'
 

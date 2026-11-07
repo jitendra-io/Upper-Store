@@ -51,7 +51,7 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose, isConsentWi
         {/* HEADER */}
         <div className="terms-modal-header">
           <div className="terms-header-brand">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e61919" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               <polyline points="9 12 11 14 15 10"></polyline>
             </svg>
@@ -92,7 +92,7 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose, isConsentWi
 
           <div className="terms-clause-card">
             <div className="terms-clause-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e61919" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 3v18M3 7l9-4 9 4M3 7l4 9h4L3 7zm18 0l-4 9h-4l4-9z"></path>
               </svg>
             </div>
@@ -106,7 +106,7 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose, isConsentWi
 
           <div className="terms-clause-card">
             <div className="terms-clause-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e61919" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect>
                 <line x1="2" y1="10" x2="22" y2="10"></line>
               </svg>
@@ -121,7 +121,7 @@ const TermsAcceptanceModal = ({ isOpen, onAccept, onCancel, onClose, isConsentWi
 
           <div className="terms-clause-card">
             <div className="terms-clause-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e61919" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </div>

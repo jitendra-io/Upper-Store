@@ -13,74 +13,48 @@ const BackgroundAnimation = () => {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
+    const isMobile = window.innerWidth <= 768 || 'ontouchstart' in window;
     let mouse = { x: width * 0.5, y: height * 0.35, targetX: width * 0.5, targetY: height * 0.35 };
     let scrollY = window.scrollY || 0;
     let isPaused = false;
-    let animationFrameId;
+    let animationFrameId = null;
+    let needsRender = true;
 
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
+    const drawFrame = () => {
+      ctx.clearRect(0, 0, width, height);
 
-    const handleMouseMove = (e) => {
-      mouse.targetX = e.clientX;
-      mouse.targetY = e.clientY;
-    };
+      // Ambient Hero Crimson Glow (Left focal anchor)
+      const heroLeftGrad = ctx.createRadialGradient(
+        width * 0.18,
+        height * 0.22 - scrollY * 0.15,
+        10,
+        width * 0.18,
+        height * 0.22 - scrollY * 0.15,
+        Math.min(width, height) * 0.45
+      );
+      heroLeftGrad.addColorStop(0, 'rgba(230, 25, 25, 0.11)');
+      heroLeftGrad.addColorStop(0.5, 'rgba(160, 15, 15, 0.04)');
+      heroLeftGrad.addColorStop(1, 'rgba(7, 7, 9, 0)');
+      ctx.fillStyle = heroLeftGrad;
+      ctx.fillRect(0, 0, width, height);
 
-    const handleScroll = () => {
-      scrollY = window.scrollY || 0;
-    };
+      // Ambient 3D Crystal Core Crimson Glow (Right focal anchor)
+      const coreRightGrad = ctx.createRadialGradient(
+        width * 0.78,
+        height * 0.32 - scrollY * 0.18,
+        10,
+        width * 0.78,
+        height * 0.32 - scrollY * 0.18,
+        Math.min(width, height) * 0.5
+      );
+      coreRightGrad.addColorStop(0, 'rgba(255, 42, 42, 0.13)');
+      coreRightGrad.addColorStop(0.5, 'rgba(180, 10, 10, 0.05)');
+      coreRightGrad.addColorStop(1, 'rgba(7, 7, 9, 0)');
+      ctx.fillStyle = coreRightGrad;
+      ctx.fillRect(0, 0, width, height);
 
-    const handleModalToggle = (e) => {
-      isPaused = Boolean(e.detail);
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('modalToggle', handleModalToggle);
-
-    // Render loop: atmospheric crimson volumetric glows
-    const render = () => {
-      if (!isPaused) {
-        ctx.clearRect(0, 0, width, height);
-
-        // Smooth cursor lerp
-        mouse.x += (mouse.targetX - mouse.x) * 0.06;
-        mouse.y += (mouse.targetY - mouse.y) * 0.06;
-
-        // Ambient Hero Crimson Glow (Left focal anchor)
-        const heroLeftGrad = ctx.createRadialGradient(
-          width * 0.18,
-          height * 0.22 - scrollY * 0.15,
-          10,
-          width * 0.18,
-          height * 0.22 - scrollY * 0.15,
-          Math.min(width, height) * 0.45
-        );
-        heroLeftGrad.addColorStop(0, 'rgba(230, 25, 25, 0.11)');
-        heroLeftGrad.addColorStop(0.5, 'rgba(160, 15, 15, 0.04)');
-        heroLeftGrad.addColorStop(1, 'rgba(7, 7, 9, 0)');
-        ctx.fillStyle = heroLeftGrad;
-        ctx.fillRect(0, 0, width, height);
-
-        // Ambient 3D Crystal Core Crimson Glow (Right focal anchor)
-        const coreRightGrad = ctx.createRadialGradient(
-          width * 0.78,
-          height * 0.32 - scrollY * 0.18,
-          10,
-          width * 0.78,
-          height * 0.32 - scrollY * 0.18,
-          Math.min(width, height) * 0.5
-        );
-        coreRightGrad.addColorStop(0, 'rgba(255, 42, 42, 0.13)');
-        coreRightGrad.addColorStop(0.5, 'rgba(180, 10, 10, 0.05)');
-        coreRightGrad.addColorStop(1, 'rgba(7, 7, 9, 0)');
-        ctx.fillStyle = coreRightGrad;
-        ctx.fillRect(0, 0, width, height);
-
-        // Subtle interactive mouse ambient spotlight
+      // Subtle interactive mouse ambient spotlight on desktop only
+      if (!isMobile) {
         const mouseGrad = ctx.createRadialGradient(
           mouse.x,
           mouse.y,
@@ -94,6 +68,57 @@ const BackgroundAnimation = () => {
         ctx.fillStyle = mouseGrad;
         ctx.fillRect(0, 0, width, height);
       }
+    };
+
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+      needsRender = true;
+    };
+
+    const handleMouseMove = (e) => {
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+      needsRender = true;
+    };
+
+    const handleScroll = () => {
+      scrollY = window.scrollY || 0;
+      needsRender = true;
+    };
+
+    const handleModalToggle = (e) => {
+      isPaused = Boolean(e.detail);
+    };
+
+    window.addEventListener('resize', handleResize);
+    if (!isMobile) {
+      window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('modalToggle', handleModalToggle);
+
+    // Initial render
+    drawFrame();
+
+    // Render loop: on mobile only re-renders when scroll or resize occurs.
+    // On desktop, only re-renders when cursor is moving or scrolling.
+    const render = () => {
+      if (!isPaused && needsRender) {
+        if (!isMobile) {
+          const dx = Math.abs(mouse.targetX - mouse.x);
+          const dy = Math.abs(mouse.targetY - mouse.y);
+          if (dx > 0.5 || dy > 0.5) {
+            mouse.x += (mouse.targetX - mouse.x) * 0.06;
+            mouse.y += (mouse.targetY - mouse.y) * 0.06;
+          } else {
+            needsRender = false;
+          }
+        } else {
+          needsRender = false;
+        }
+        drawFrame();
+      }
       animationFrameId = requestAnimationFrame(render);
     };
 
@@ -102,7 +127,9 @@ const BackgroundAnimation = () => {
     return () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('mousemove', handleMouseMove);
+      if (!isMobile) {
+        window.removeEventListener('mousemove', handleMouseMove);
+      }
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('modalToggle', handleModalToggle);
     };

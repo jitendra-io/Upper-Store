@@ -23,16 +23,31 @@ const parseYouTubeVideoId = (url) => {
 const ProductDetailModal = ({ product, onClose }) => {
   const { user, token, isLoggedIn, openAuthModal, regrantConsent } = useAuth();
   const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
-  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('terms') === '1';
+    }
+    return false;
+  });
   const [reviewModalOpen, setReviewModalOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('reviews') === '1';
     }
     return false;
   });
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('checkout') === '1';
+    }
+    return false;
+  });
   const [checkoutPlan, setCheckoutPlan] = useState('pro');
-  const [vipModalOpen, setVipModalOpen] = useState(false);
+  const [vipModalOpen, setVipModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('vip') === '1';
+    }
+    return false;
+  });
   const [feePaid, setFeePaid] = useState(() => localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
   const [copiedSha, setCopiedSha] = useState(false);
 

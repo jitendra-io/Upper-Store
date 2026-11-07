@@ -26,7 +26,12 @@ import './App.css';
 function AppContent() {
   const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('search') === '1';
+    }
+    return false;
+  });
   const [selectedSearchProduct, setSelectedSearchProduct] = useState(null);
 
   // History tracking refs for phone & browser Back button support

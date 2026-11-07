@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { VipAvatar } from './VipAvatar';
 import { formatDownloadCount } from '../utils/downloadTracker';
@@ -222,7 +223,7 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
   const totalMatches = (results.products?.length || 0) + (results.developers?.length || 0);
   const hasTypedQuery = query.trim().length >= 2;
 
-  return (
+  const modalContent = (
     <div
       className="global-search-overlay"
       onClick={(e) => {
@@ -510,6 +511,8 @@ const GlobalSearchModal = ({ isOpen, onClose, onSelectProduct }) => {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 
 export default GlobalSearchModal;

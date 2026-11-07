@@ -2,7 +2,7 @@
 .checkout-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 9999999;
+  z-index: 20000000;
   background: rgba(5, 5, 8, 0.88);
   backdrop-filter: blur(14px);
   display: flex;
@@ -325,19 +325,19 @@
 /* Pay CTA */
 .checkout-pay-cta-btn {
   width: 100%;
-  background: linear-gradient(135deg, #e61919 0%, #aa820a 100%);
-  color: #0b0b0e;
+  background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
+  color: #ffffff;
   border: none;
   font-size: 0.95rem;
   font-weight: 800;
   padding: 0.85rem 1.25rem;
-  border-radius: 12px;
+  border-radius: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.4);
   transition: all 0.2s ease;
   margin-top: 0.25rem;
 }

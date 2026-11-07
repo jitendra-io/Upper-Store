@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { formatDownloadCount, getProductDownloadCount } from '../utils/downloadTracker';
 import './DeveloperDownloadsModal.css';
 
@@ -30,7 +31,7 @@ export const DeveloperDownloadsModal = ({
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <div
       className="dev-downloads-modal-overlay"
       onClick={(e) => {
@@ -180,6 +181,8 @@ export const DeveloperDownloadsModal = ({
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 
 export default DeveloperDownloadsModal;

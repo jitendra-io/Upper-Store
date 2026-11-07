@@ -592,7 +592,7 @@
   width: 100vw;
   height: 100vh;
   background: rgba(10, 10, 14, 0.85);
-  z-index: 99995;
+  z-index: 1000000;
   display: flex;
   align-items: center;
   justify-content: center;

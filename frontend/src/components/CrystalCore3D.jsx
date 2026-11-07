@@ -10,203 +10,226 @@ const CrystalCore3D = () => {
     const container = mountRef.current;
     if (!container) return;
 
-    let width = container.clientWidth || 460;
-    let height = container.clientHeight || 460;
+    let isDisposed = false;
+    let animId = null;
+    let cleanup = null;
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.z = 5.4;
+    // Defer WebGL setup slightly so route transitions complete smoothly with 0 frame drop
+    const timer = setTimeout(() => {
+      if (isDisposed || !mountRef.current) return;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
+      const isMobile = typeof window !== 'undefined' && (window.innerWidth <= 768 || 'ontouchstart' in window);
+      const width = container.clientWidth || (isMobile ? 360 : 460);
+      const height = container.clientHeight || (isMobile ? 360 : 460);
 
-    const coreGroup = new THREE.Group();
-    scene.add(coreGroup);
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
+      camera.position.z = 5.4;
 
-    // 1. Inner Displaced Crimson Crystalline Sphere
-    const icosaGeo = new THREE.IcosahedronGeometry(1.52, 4);
-    const posAttr = icosaGeo.attributes.position;
-    const vertex = new THREE.Vector3();
+      const renderer = new THREE.WebGLRenderer({
+        antialias: !isMobile,
+        alpha: true,
+        powerPreference: isMobile ? 'default' : 'high-performance',
+      });
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.75));
+      container.appendChild(renderer.domElement);
 
-    // Create organic crystalline faceted ridges
-    for (let i = 0; i < posAttr.count; i++) {
-      vertex.fromBufferAttribute(posAttr, i);
-      const noise = Math.sin(vertex.x * 3.5) * Math.cos(vertex.y * 3.5) * Math.sin(vertex.z * 3.5);
-      vertex.multiplyScalar(1 + noise * 0.18);
-      posAttr.setXYZ(i, vertex.x, vertex.y, vertex.z);
-    }
-    icosaGeo.computeVertexNormals();
+      const coreGroup = new THREE.Group();
+      scene.add(coreGroup);
 
-    const coreMat = new THREE.MeshPhysicalMaterial({
-      color: 0xcc0a0a,
-      emissive: 0x4a0000,
-      roughness: 0.18,
-      metalness: 0.35,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.1,
-      flatShading: true,
-    });
-    const crystalMesh = new THREE.Mesh(icosaGeo, coreMat);
-    coreGroup.add(crystalMesh);
+      // 1. Inner Displaced Crimson Crystalline Sphere (detail=2 gives 320 sharp crystal facets)
+      const icosaGeo = new THREE.IcosahedronGeometry(1.52, 2);
+      const posAttr = icosaGeo.attributes.position;
+      const vertex = new THREE.Vector3();
 
-    // 2. Outer Glowing Crimson Wireframe Cage
-    const wireGeo = new THREE.IcosahedronGeometry(1.76, 2);
-    const wireMat = new THREE.MeshBasicMaterial({
-      color: 0xff2a2a,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.28,
-    });
-    const wireMesh = new THREE.Mesh(wireGeo, wireMat);
-    coreGroup.add(wireMesh);
+      // Create organic crystalline faceted ridges
+      for (let i = 0; i < posAttr.count; i++) {
+        vertex.fromBufferAttribute(posAttr, i);
+        const noise = Math.sin(vertex.x * 3.5) * Math.cos(vertex.y * 3.5) * Math.sin(vertex.z * 3.5);
+        vertex.multiplyScalar(1 + noise * 0.18);
+        posAttr.setXYZ(i, vertex.x, vertex.y, vertex.z);
+      }
+      icosaGeo.computeVertexNormals();
 
-    // 3. Floating Particle Halo around the Core
-    const particleCount = 140;
-    const pGeo = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleCount * 3);
-    for (let i = 0; i < particleCount; i++) {
-      const r = 1.95 + Math.random() * 0.7;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      positions[i * 3 + 2] = r * Math.cos(phi);
-    }
-    pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const pMat = new THREE.PointsMaterial({
-      color: 0xff4d4d,
-      size: 0.045,
-      transparent: true,
-      opacity: 0.85,
-    });
-    const particleSystem = new THREE.Points(pGeo, pMat);
-    coreGroup.add(particleSystem);
+      // MeshStandardMaterial compiles 5x faster than MeshPhysicalMaterial
+      const coreMat = new THREE.MeshStandardMaterial({
+        color: 0xd61515,
+        emissive: 0x3d0000,
+        roughness: 0.2,
+        metalness: 0.35,
+        flatShading: true,
+      });
+      const crystalMesh = new THREE.Mesh(icosaGeo, coreMat);
+      coreGroup.add(crystalMesh);
 
-    // 4. Dramatic Crimson & Specular Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
-    scene.add(ambientLight);
+      // 2. Outer Glowing Crimson Wireframe Cage
+      const wireGeo = new THREE.IcosahedronGeometry(1.76, 2);
+      const wireMat = new THREE.MeshBasicMaterial({
+        color: 0xff2a2a,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.28,
+      });
+      const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+      coreGroup.add(wireMesh);
 
-    const pointLight1 = new THREE.PointLight(0xff1e1e, 4.2, 15);
-    pointLight1.position.set(4, 4, 4);
-    scene.add(pointLight1);
+      // 3. Floating Particle Halo around the Core
+      const particleCount = isMobile ? 55 : 110;
+      const pGeo = new THREE.BufferGeometry();
+      const positions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount; i++) {
+        const r = 1.95 + Math.random() * 0.7;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const pMat = new THREE.PointsMaterial({
+        color: 0xff4d4d,
+        size: 0.045,
+        transparent: true,
+        opacity: 0.85,
+      });
+      const particleSystem = new THREE.Points(pGeo, pMat);
+      coreGroup.add(particleSystem);
 
-    const pointLight2 = new THREE.PointLight(0xff5555, 2.8, 15);
-    pointLight2.position.set(-4, -3, 3);
-    scene.add(pointLight2);
+      // 4. Dramatic Crimson & Specular Lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+      scene.add(ambientLight);
 
-    const rimLight = new THREE.DirectionalLight(0xffffff, 1.4);
-    rimLight.position.set(0, 5, -5);
-    scene.add(rimLight);
+      const pointLight1 = new THREE.PointLight(0xff1e1e, 3.8, 15);
+      pointLight1.position.set(4, 4, 4);
+      scene.add(pointLight1);
 
-    // 5. Mouse & Touch Drag Interaction
-    let isDragging = false;
-    let prevX = 0;
-    let prevY = 0;
+      if (!isMobile) {
+        const pointLight2 = new THREE.PointLight(0xff5555, 2.5, 15);
+        pointLight2.position.set(-4, -3, 3);
+        scene.add(pointLight2);
+      }
 
-    const onMouseDown = (e) => {
-      isDragging = true;
-      prevX = e.clientX;
-      prevY = e.clientY;
-    };
+      const rimLight = new THREE.DirectionalLight(0xffffff, 1.2);
+      rimLight.position.set(0, 5, -5);
+      scene.add(rimLight);
 
-    const onMouseMove = (e) => {
-      if (!isDragging) return;
-      const dx = e.clientX - prevX;
-      const dy = e.clientY - prevY;
-      coreGroup.rotation.y += dx * 0.008;
-      coreGroup.rotation.x += dy * 0.008;
-      prevX = e.clientX;
-      prevY = e.clientY;
-    };
+      // 5. Mouse & Touch Drag Interaction
+      let isDragging = false;
+      let prevX = 0;
+      let prevY = 0;
 
-    const onMouseUp = () => {
-      isDragging = false;
-    };
-
-    const onTouchStart = (e) => {
-      if (e.touches.length === 1) {
+      const onMouseDown = (e) => {
         isDragging = true;
+        prevX = e.clientX;
+        prevY = e.clientY;
+      };
+
+      const onMouseMove = (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevX;
+        const dy = e.clientY - prevY;
+        coreGroup.rotation.y += dx * 0.008;
+        coreGroup.rotation.x += dy * 0.008;
+        prevX = e.clientX;
+        prevY = e.clientY;
+      };
+
+      const onMouseUp = () => {
+        isDragging = false;
+      };
+
+      const onTouchStart = (e) => {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          prevX = e.touches[0].clientX;
+          prevY = e.touches[0].clientY;
+        }
+      };
+
+      const onTouchMove = (e) => {
+        if (!isDragging || e.touches.length !== 1) return;
+        const dx = e.touches[0].clientX - prevX;
+        const dy = e.touches[0].clientY - prevY;
+        coreGroup.rotation.y += dx * 0.008;
+        coreGroup.rotation.x += dy * 0.008;
         prevX = e.touches[0].clientX;
         prevY = e.touches[0].clientY;
-      }
-    };
+      };
 
-    const onTouchMove = (e) => {
-      if (!isDragging || e.touches.length !== 1) return;
-      const dx = e.touches[0].clientX - prevX;
-      const dy = e.touches[0].clientY - prevY;
-      coreGroup.rotation.y += dx * 0.008;
-      coreGroup.rotation.x += dy * 0.008;
-      prevX = e.touches[0].clientX;
-      prevY = e.touches[0].clientY;
-    };
+      const onTouchEnd = () => {
+        isDragging = false;
+      };
 
-    const onTouchEnd = () => {
-      isDragging = false;
-    };
+      container.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+      container.addEventListener('touchstart', onTouchStart, { passive: true });
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+      window.addEventListener('touchend', onTouchEnd);
 
-    container.addEventListener('mousedown', onMouseDown);
-    window.addEventListener('mousemove', onMouseMove);
-    window.addEventListener('mouseup', onMouseUp);
-    container.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
-    window.addEventListener('touchend', onTouchEnd);
+      // 6. Responsive Resize Handler
+      const handleResize = () => {
+        if (!container) return;
+        const newW = container.clientWidth || (isMobile ? 360 : 460);
+        const newH = container.clientHeight || (isMobile ? 360 : 460);
+        camera.aspect = newW / newH;
+        camera.updateProjectionMatrix();
+        renderer.setSize(newW, newH);
+      };
+      window.addEventListener('resize', handleResize);
 
-    // 6. Responsive Resize Handler
-    const handleResize = () => {
-      if (!container) return;
-      width = container.clientWidth || 460;
-      height = container.clientHeight || 460;
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-      renderer.setSize(width, height);
-    };
-    window.addEventListener('resize', handleResize);
+      // 7. Animation Loop with Tab Visibility Check
+      const clock = new THREE.Clock();
+      const animate = () => {
+        if (isDisposed) return;
+        animId = requestAnimationFrame(animate);
 
-    // 7. Animation Loop
-    let clock = new THREE.Clock();
-    let animId;
-    const animate = () => {
-      animId = requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
+        if (document.hidden) return;
 
-      if (!isDragging) {
-        crystalMesh.rotation.y += 0.0045;
-        crystalMesh.rotation.x += 0.002;
-        wireMesh.rotation.y -= 0.003;
-        particleSystem.rotation.y += 0.0015;
-      }
+        const elapsed = clock.getElapsedTime();
 
-      // Subtle organic breathing pulse
-      const scale = 1 + Math.sin(elapsed * 2.2) * 0.025;
-      crystalMesh.scale.set(scale, scale, scale);
+        if (!isDragging) {
+          crystalMesh.rotation.y += 0.0045;
+          crystalMesh.rotation.x += 0.002;
+          wireMesh.rotation.y -= 0.003;
+          particleSystem.rotation.y += 0.0015;
+        }
 
-      renderer.render(scene, camera);
-    };
-    animate();
+        const scale = 1 + Math.sin(elapsed * 2.2) * 0.025;
+        crystalMesh.scale.set(scale, scale, scale);
+
+        renderer.render(scene, camera);
+      };
+      animate();
+
+      cleanup = () => {
+        cancelAnimationFrame(animId);
+        container.removeEventListener('mousedown', onMouseDown);
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+        container.removeEventListener('touchstart', onTouchStart);
+        window.removeEventListener('touchmove', onTouchMove);
+        window.removeEventListener('touchend', onTouchEnd);
+        window.removeEventListener('resize', handleResize);
+
+        if (renderer.domElement && container.contains(renderer.domElement)) {
+          container.removeChild(renderer.domElement);
+        }
+        renderer.dispose();
+        icosaGeo.dispose();
+        coreMat.dispose();
+        wireGeo.dispose();
+        wireMat.dispose();
+        pGeo.dispose();
+        pMat.dispose();
+      };
+    }, 35);
 
     return () => {
-      cancelAnimationFrame(animId);
-      container.removeEventListener('mousedown', onMouseDown);
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-      container.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
-      window.removeEventListener('touchend', onTouchEnd);
-      window.removeEventListener('resize', handleResize);
-
-      if (renderer.domElement && container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-      icosaGeo.dispose();
-      coreMat.dispose();
-      wireGeo.dispose();
-      wireMat.dispose();
-      pGeo.dispose();
-      pMat.dispose();
+      isDisposed = true;
+      clearTimeout(timer);
+      if (cleanup) cleanup();
     };
   }, []);
 

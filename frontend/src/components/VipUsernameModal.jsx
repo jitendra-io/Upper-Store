@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import './VipUsernameModal.css';
@@ -159,7 +160,7 @@ export const VipUsernameModal = ({ isOpen, onClose, onOpenVipClub }) => {
   const changesRemaining = quotaStatus?.changesRemaining ?? 2;
   const isAtLimit = quotaStatus && quotaStatus.changesRemaining <= 0;
 
-  return (
+  const modalContent = (
     <div className="vip-username-backdrop" onClick={onClose} role="dialog" aria-modal="true">
       <div className="vip-username-modal" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
@@ -369,5 +370,7 @@ export const VipUsernameModal = ({ isOpen, onClose, onOpenVipClub }) => {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 

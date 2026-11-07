@@ -2,7 +2,7 @@
 .license-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 999999;
+  z-index: 1000000;
   background: rgba(5, 5, 8, 0.85);
   backdrop-filter: blur(12px);
   display: flex;
@@ -154,15 +154,15 @@
 }
 
 .license-explore-btn {
-  background: linear-gradient(135deg, #e61919 0%, #aa820a 100%);
-  color: #0b0b0e;
+  background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
+  color: #ffffff;
   border: none;
   font-size: 0.85rem;
   font-weight: 700;
   padding: 0.65rem 1.35rem;
-  border-radius: 24px;
+  border-radius: 8px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.3);
+  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.4);
   transition: all 0.2s ease;
 }
 

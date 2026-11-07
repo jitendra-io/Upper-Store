@@ -411,6 +411,12 @@
     font-size: 0.74rem;
   }
 
+  .hero-crimson-badge,
+  .hero-main-title,
+  .hero-main-subtitle {
+    animation: none !important;
+  }
+
   .stat-divider {
     display: none;
   }

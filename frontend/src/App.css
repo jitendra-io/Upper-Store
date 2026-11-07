@@ -39,6 +39,22 @@
   will-change: transform, opacity;
 }
 
+@keyframes routeFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .route-page-container {
+    animation: routeFadeIn 0.18s ease-out both !important;
+    will-change: opacity;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .route-page-container {
     animation: none !important;
