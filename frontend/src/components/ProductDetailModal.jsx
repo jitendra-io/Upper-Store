@@ -534,7 +534,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                               </span>
                             </div>
                             <span className="upsell-desc" style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
-                              Pro (₹99/mo) &bull; Elite (₹399/yr) &bull; <CrownIcon size={13} /> Gold / <DiamondIcon size={13} /> Purple Badges
+                              Pro (₹99/mo) &bull; Elite (₹399/yr) &bull; <CrownIcon size={13} /> Yellow &amp; White Ring / <DiamondIcon size={13} /> Crimson &amp; White Ring
                             </span>
                           </div>
                         </div>

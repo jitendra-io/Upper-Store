@@ -582,8 +582,8 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                   const isUserCard = cleanUserEmail && (rev.userEmail || '').trim().toLowerCase() === cleanUserEmail;
                   const m = rev.userMembership || rev.membership;
                   const isVipValid = m && (m.plan === 'elite' || m.plan === 'pro') && !m.isCancelled && !m.cancelledAt && m.validUntil && new Date(m.validUntil) > new Date();
-                  const isElite = isVipValid && (m.plan === 'elite' || m.badge === 'purple');
-                  const isPro = isVipValid && (m.plan === 'pro' || m.badge === 'gold');
+                  const isElite = isVipValid && (m.plan === 'elite' || m.badge === 'purple' || m.badge === 'crimson');
+                  const isPro = isVipValid && (m.plan === 'pro' || m.badge === 'gold' || m.badge === 'yellow');
                   const revTargetId = rev.id || rev._id;
 
                   return (

@@ -316,7 +316,7 @@ const UserLicensesModal = ({ isOpen, onClose }) => {
                         {isCancelled && (
                           <div className="license-cancelled-notice">
                             <span className="cancelled-notice-text">
-                              This VIP subscription was cancelled. All associated privileges (zero platform fees, VIP badges, pinned reviews) have been invalidated.
+                              This VIP subscription was cancelled. All associated privileges (zero platform fees, glowing VIP rings &amp; badges, pinned reviews) have been invalidated.
                             </span>
                             <button
                               type="button"

@@ -137,7 +137,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onCancelled }) => {
           </div>
           <div className="cancel-plan-details">
             <span className="cancel-plan-name">
-              {isElite ? 'Royal Purple Elite VIP' : 'Golden Pro Member'}
+              {isElite ? 'Crimson Elite VIP' : 'Golden Pro Member'}
             </span>
             <span className="cancel-plan-validity">
               {user?.membership?.validUntil
@@ -161,7 +161,7 @@ const CancelSubscriptionModal = ({ isOpen, onClose, onCancelled }) => {
             </li>
             <li>
               <span className="revoked-bullet">&times;</span>
-              <span><strong>Prestige Badge Removal:</strong> Your {isElite ? 'Royal Purple Diamond' : 'Golden Crown'} badge will be removed immediately from your profile and comments.</span>
+              <span><strong>Prestige Ring &amp; Badge Removal:</strong> Your {isElite ? 'Crimson Diamond badge & glowing crimson ring' : 'Golden Crown badge & glowing yellow ring'} will be removed immediately from your profile and comments.</span>
             </li>
             <li>
               <span className="revoked-bullet">&times;</span>

@@ -113,8 +113,16 @@
   line-height: 1.3;
 }
 
-.text-gold,
-.text-purple {
+.text-gold {
+  color: #ffd700;
+  background: linear-gradient(135deg, #ffe600 0%, #ffd700 50%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.45));
+}
+
+.text-purple,
+.text-crimson {
   color: #ff4d4d;
   background: linear-gradient(135deg, #ff4d4d 0%, #e61919 100%);
   -webkit-background-clip: text;
@@ -155,8 +163,12 @@
   color: #34d399;
 }
 
-.perk-gold,
-.perk-purple {
+.perk-gold {
+  color: #ffd700;
+}
+
+.perk-purple,
+.perk-crimson {
   color: #ff4d4d;
 }
 
@@ -221,9 +233,19 @@
 }
 
 .chip-badge-circle.gold,
-.chip-badge-circle.purple {
+.chip-badge-circle.pro {
+  background: rgba(255, 215, 0, 0.18);
+  border: 1.5px solid rgba(255, 215, 0, 0.55);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+  color: #ffd700;
+}
+
+.chip-badge-circle.purple,
+.chip-badge-circle.crimson,
+.chip-badge-circle.elite {
   background: rgba(230, 25, 25, 0.2);
-  border: 1.5px solid rgba(255, 42, 42, 0.5);
+  border: 1.5px solid rgba(255, 42, 42, 0.55);
+  box-shadow: 0 0 12px rgba(230, 25, 25, 0.4);
   color: #ff4d4d;
 }
 

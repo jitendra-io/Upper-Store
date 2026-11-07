@@ -76,7 +76,8 @@
   -webkit-text-fill-color: transparent;
 }
 
-.purple-text {
+.purple-text,
+.crimson-text {
   color: #ff8080;
   background: linear-gradient(135deg, #ff8080 0%, #e61919 100%);
   -webkit-background-clip: text;
@@ -159,11 +160,12 @@
 }
 
 .check-icon-gold {
-  color: #ff2a2a;
+  color: #ffd700;
 }
 
-.check-icon-purple {
-  color: #ff8080;
+.check-icon-purple,
+.check-icon-crimson {
+  color: #ff4d4d;
 }
 
 /* ========================================================
@@ -393,14 +395,15 @@
   margin-top: 2px;
 }
 
-.perk-bullet.purple {
+.perk-bullet.purple,
+.perk-bullet.crimson {
   background: rgba(255, 42, 42, 0.2);
   color: #ff8080;
 }
 
 .perk-bullet.gold {
-  background: rgba(230, 25, 25, 0.2);
-  color: #ff2a2a;
+  background: rgba(255, 215, 0, 0.18);
+  color: #ffd700;
 }
 
 .screenshot-perks-list li strong {

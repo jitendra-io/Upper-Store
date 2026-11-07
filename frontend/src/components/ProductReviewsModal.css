@@ -548,14 +548,16 @@
   display: inline-flex;
 }
 
-.review-avatar-frame.frame-purple .review-user-avatar {
+.review-avatar-frame.frame-purple .review-user-avatar,
+.review-avatar-frame.frame-crimson .review-user-avatar {
   border: 2px solid #ff2a2a;
-  box-shadow: 0 0 12px rgba(230, 25, 25, 0.65);
+  box-shadow: 0 0 12px rgba(230, 25, 25, 0.65), 0 0 20px rgba(255, 255, 255, 0.25);
 }
 
-.review-avatar-frame.frame-gold .review-user-avatar {
+.review-avatar-frame.frame-gold .review-user-avatar,
+.review-avatar-frame.frame-yellow .review-user-avatar {
   border: 2px solid #ffd700;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.65);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.65), 0 0 20px rgba(255, 255, 255, 0.25);
 }
 
 .user-membership-pill {

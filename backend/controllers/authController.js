@@ -14,7 +14,7 @@ const generateToken = (uid, role = 'user', email = null) => {
 };
 
 const resolveUserMembership = async (userData, userDocRef = null) => {
-  const defaultMembership = { plan: 'free', badge: null, validUntil: null };
+  const defaultMembership = { plan: 'free', badge: null, ring: null, validUntil: null };
   if (!userData || !userData.membership) return defaultMembership;
   const m = userData.membership;
   if (m.plan && m.plan !== 'free') {
@@ -73,7 +73,8 @@ const resolveUserMembership = async (userData, userDocRef = null) => {
     }
     return {
       plan: m.plan,
-      badge: m.badge || (m.plan === 'elite' ? 'purple' : 'gold'),
+      badge: m.badge || (m.plan === 'elite' ? 'crimson' : 'gold'),
+      ring: m.ring || (m.plan === 'elite' ? 'crimson_white' : 'yellow_white'),
       validUntil: m.validUntil || null,
     };
   }

@@ -44,11 +44,11 @@ const VipPromoBanner = ({ onOpenVipModal, compact = false }) => {
           </div>
 
           <h3 className="vip-banner-headline">
-            Unlock <span className="text-gold">Zero Platform Fees</span> &amp; <span className="text-purple">VIP Community Badges</span>
+            Unlock <span className="text-gold">Zero Platform Fees</span> &amp; <span className="text-crimson">Glowing VIP Rings</span>
           </h3>
 
           <p className="vip-banner-subtext">
-            Elevate your downloads with official <strong>Golden Crown</strong> and <strong>Royal Purple Diamond</strong> badges, pinned review placement, and 100% complimentary downloads.
+            Elevate your downloads with official <strong>Glowing Yellow &amp; White (Pro)</strong> and <strong>Glowing Crimson &amp; White (Elite)</strong> avatar rings, pinned review placement, and 100% complimentary downloads.
           </p>
 
           <div className="vip-banner-perks-row">
@@ -56,10 +56,10 @@ const VipPromoBanner = ({ onOpenVipModal, compact = false }) => {
               <CheckIcon size={13} className="perk-check" /> ₹0 Platform Fee
             </span>
             <span className="banner-perk-item">
-              <CrownIcon size={13} className="perk-gold" /> Golden Pro Badge
+              <CrownIcon size={13} className="perk-gold" /> Glowing Yellow &amp; White Ring
             </span>
             <span className="banner-perk-item">
-              <DiamondIcon size={13} className="perk-purple" /> Pinned Elite Reviews
+              <DiamondIcon size={13} className="perk-crimson" /> Glowing Crimson &amp; White Ring
             </span>
             <span className="banner-perk-item">
               <CheckIcon size={13} className="perk-check" /> Ultra-Speed CDN
@@ -85,7 +85,7 @@ const VipPromoBanner = ({ onOpenVipModal, compact = false }) => {
             {/* ELITE PILL (BEST VALUE) */}
             <div className="vip-mini-chip elite" onClick={(e) => handleQuickSubscribe(e, 'elite')}>
               <span className="chip-save-ribbon">SAVE 66%</span>
-              <div className="chip-badge-circle purple">
+              <div className="chip-badge-circle elite">
                 <DiamondIcon size={14} />
               </div>
               <div className="chip-info">

@@ -88,7 +88,7 @@ export const VipFlairBadge = ({ plan = 'free', compact = false, className = '' }
   return (
     <span
       className={`vip-flair-badge ${isElite ? 'elite' : 'pro'} ${compact ? 'compact' : ''} ${className}`}
-      title={isElite ? 'Official Royal Purple Elite VIP' : 'Official Golden Crown Pro VIP'}
+      title={isElite ? 'Official Crimson Diamond Elite VIP' : 'Official Golden Crown Pro VIP'}
     >
       <span className="vip-flair-icon">
         {isElite ? <DiamondIcon size={12} /> : <CrownIcon size={12} />}

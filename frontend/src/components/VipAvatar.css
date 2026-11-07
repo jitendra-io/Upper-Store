@@ -34,6 +34,15 @@
 }
 
 /* 3. Ambient Diffused Breathing Glow (Elite VIP: Glowing Crimson & White) */
+@keyframes vipBreathingCrimson {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(230, 25, 25, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 42, 42, 0.8), 0 0 32px rgba(255, 255, 255, 0.5);
+  }
+}
+
 @keyframes vipBreathingPurple {
   0%, 100% {
     box-shadow: 0 0 10px rgba(230, 25, 25, 0.5), 0 0 20px rgba(255, 255, 255, 0.3);
@@ -44,6 +53,15 @@
 }
 
 /* 3b. Compact Diffused Breathing Glow for Small Avatars (Elite VIP: Glowing Crimson & White) */
+@keyframes vipBreathingCrimsonSm {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(230, 25, 25, 0.5), 0 0 10px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(255, 42, 42, 0.8), 0 0 18px rgba(255, 255, 255, 0.5);
+  }
+}
+
 @keyframes vipBreathingPurpleSm {
   0%, 100% {
     box-shadow: 0 0 5px rgba(230, 25, 25, 0.5), 0 0 10px rgba(255, 255, 255, 0.3);
@@ -181,7 +199,7 @@
 
 /* ELITE TIER: Glowing Crimson & White Rotating Ring */
 .vip-avatar-wrap.elite {
-  animation: vipBreathingPurple 3.2s ease-in-out infinite;
+  animation: vipBreathingCrimson 3.2s ease-in-out infinite;
 }
 
 .vip-avatar-wrap.elite::before {
@@ -222,7 +240,7 @@
 
 .vip-avatar-wrap.sm.elite,
 .vip-avatar-wrap.xs.elite {
-  animation: vipBreathingPurpleSm 3.2s ease-in-out infinite;
+  animation: vipBreathingCrimsonSm 3.2s ease-in-out infinite;
 }
 
 .vip-avatar-wrap.sm.official,

@@ -62,7 +62,7 @@ const getProductReviews = async (req, res) => {
       reviews = reviews.map((r) => {
         const m = r.userMembership || r.membership;
         if (m && m.validUntil && new Date(m.validUntil) < new Date()) {
-          const expiredDefault = { plan: 'free', badge: null, validUntil: null };
+          const expiredDefault = { plan: 'free', badge: null, ring: null, validUntil: null };
           return {
             ...r,
             userMembership: expiredDefault,
@@ -164,7 +164,7 @@ const addOrUpdateReview = async (req, res) => {
       });
     }
 
-    let userMembership = { plan: 'free', badge: null };
+    let userMembership = { plan: 'free', badge: null, ring: null };
     if (!userSnapshot.empty) {
       const uData = userSnapshot.docs[0].data();
       if (uData.membership && uData.membership.plan && uData.membership.plan !== 'free') {
@@ -172,7 +172,8 @@ const addOrUpdateReview = async (req, res) => {
         if (!isExpired) {
           userMembership = {
             plan: uData.membership.plan,
-            badge: uData.membership.badge || (uData.membership.plan === 'elite' ? 'purple' : 'gold'),
+            badge: uData.membership.badge || (uData.membership.plan === 'elite' ? 'crimson' : 'gold'),
+            ring: uData.membership.ring || (uData.membership.plan === 'elite' ? 'crimson_white' : 'yellow_white'),
             validUntil: uData.membership.validUntil || null,
           };
         }

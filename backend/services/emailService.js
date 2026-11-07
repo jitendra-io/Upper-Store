@@ -501,12 +501,13 @@ const sendVipSubscriptionEmail = async ({
   }
 
   const name = escapeHtml(displayName || userEmail.split('@')[0]);
-  const isElite = plan === 'elite' || badge === 'purple';
+  const isElite = plan === 'elite' || badge === 'purple' || badge === 'crimson';
   const planTitle = isElite ? 'Upper Elite VIP (Annual All-Access)' : 'Upper Pro Member (Monthly Pass)';
-  const badgeTitle = isElite ? 'Royal Purple VIP Badge' : 'Crimson Pro VIP Badge';
-  const themeColor = isElite ? '#c084fc' : '#ff2a2a';
-  const themeBgGlow = isElite ? 'rgba(192, 132, 252, 0.12)' : 'rgba(230, 25, 25, 0.12)';
-  const themeBorder = isElite ? 'rgba(192, 132, 252, 0.4)' : 'rgba(230, 25, 25, 0.4)';
+  const badgeTitle = isElite ? 'Crimson Diamond Elite VIP Badge' : 'Golden Crown Pro VIP Badge';
+  const ringTitle = isElite ? 'Glowing Crimson & White Avatar Ring' : 'Glowing Yellow & White Aura Ring';
+  const themeColor = isElite ? '#ff2a2a' : '#ffd700';
+  const themeBgGlow = isElite ? 'rgba(230, 25, 25, 0.12)' : 'rgba(255, 215, 0, 0.12)';
+  const themeBorder = isElite ? 'rgba(230, 25, 25, 0.45)' : 'rgba(255, 215, 0, 0.45)';
   const safeOrderId = escapeHtml(orderId || 'Direct-VIP');
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
@@ -528,8 +529,8 @@ const sendVipSubscriptionEmail = async ({
   const endFormatted = formatEmailDate(validUntil);
 
   const iconSvg = isElite
-    ? `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;"><path d="M6 3h12l4 6-10 12L2 9z"></path><path d="M11 3 8 9l4 12 4-12-3-6"></path><path d="M2 9h20"></path></svg>`
-    : `<svg width="34" height="34" viewBox="0 0 24 24" fill="#ff2a2a" stroke="none" style="display: inline-block; vertical-align: middle;"><path d="M5 19h14a1 1 0 0 0 0-2H5a1 1 0 0 0 0 2zm15.6-11.8a1 1 0 0 0-1.1-.2L16 8.7l-3.2-5.4a1 1 0 0 0-1.6 0L8 8.7 4.5 7a1 1 0 0 0-1.4 1.2l2.3 8.3c.1.3.4.5.7.5h11.8c.3 0 .6-.2.7-.5l2.3-8.3a1 1 0 0 0-.3-1z"></path></svg>`;
+    ? `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display: inline-block; vertical-align: middle;"><path d="M6 3h12l4 6-10 12L2 9z"></path><path d="M11 3 8 9l4 12 4-12-3-6"></path><path d="M2 9h20"></path></svg>`
+    : `<svg width="34" height="34" viewBox="0 0 24 24" fill="#ffd700" stroke="none" style="display: inline-block; vertical-align: middle;"><path d="M5 19h14a1 1 0 0 0 0-2H5a1 1 0 0 0 0 2zm15.6-11.8a1 1 0 0 0-1.1-.2L16 8.7l-3.2-5.4a1 1 0 0 0-1.6 0L8 8.7 4.5 7a1 1 0 0 0-1.4 1.2l2.3 8.3c.1.3.4.5.7.5h11.8c.3 0 .6-.2.7-.5l2.3-8.3a1 1 0 0 0-.3-1z"></path></svg>`;
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -559,7 +560,7 @@ const sendVipSubscriptionEmail = async ({
         .details-table td.label { color: #71717a; font-weight: 600; width: 42%; }
         .details-table td.value { color: #ffffff; font-weight: 600; text-align: right; }
         .perks-list { background: rgba(255, 255, 255, 0.02); border-left: 3px solid ${themeColor}; padding: 16px 20px; border-radius: 8px; margin: 22px 0; font-size: 13px; line-height: 1.8; color: #9496a1; }
-        .cta-btn { display: inline-block; background: ${isElite ? 'linear-gradient(135deg, #a855f7 0%, #7e22ce 100%)' : 'linear-gradient(135deg, #e61919 0%, #b30f0f 100%)'}; color: #ffffff !important; font-weight: 700; text-decoration: none; padding: 14px 34px; border-radius: 8px; font-size: 14px; letter-spacing: 0.4px; box-shadow: 0 8px 24px ${isElite ? 'rgba(168, 85, 247, 0.4)' : 'rgba(230, 25, 25, 0.4)'}; text-align: center; }
+        .cta-btn { display: inline-block; background: ${isElite ? 'linear-gradient(135deg, #e61919 0%, #ff2a2a 100%)' : 'linear-gradient(135deg, #ffd700 0%, #d4af37 100%)'}; color: ${isElite ? '#ffffff' : '#0a0a0f'} !important; font-weight: 700; text-decoration: none; padding: 14px 34px; border-radius: 8px; font-size: 14px; letter-spacing: 0.4px; box-shadow: 0 8px 24px ${isElite ? 'rgba(230, 25, 25, 0.45)' : 'rgba(255, 215, 0, 0.45)'}; text-align: center; }
         .email-footer { background: #09090c; padding: 24px 20px; text-align: center; font-size: 11.5px; color: #52525b; border-top: 1px solid rgba(255, 255, 255, 0.05); }
       </style>
     </head>
@@ -594,6 +595,10 @@ const sendVipSubscriptionEmail = async ({
               <td class="value" style="color: ${themeColor};">${badgeTitle}</td>
             </tr>
             <tr>
+              <td class="label">VIP Avatar Ring:</td>
+              <td class="value" style="color: ${themeColor};">${ringTitle}</td>
+            </tr>
+            <tr>
               <td class="label">Effective Start Date:</td>
               <td class="value">${startFormatted}</td>
             </tr>
@@ -613,9 +618,10 @@ const sendVipSubscriptionEmail = async ({
 
           <div class="perks-list">
             <div>&bull; <strong>0 INR Platform Fee:</strong> Unlimited complimentary downloads for all free software in the catalog.</div>
-            <div>&bull; <strong>Verified Badge:</strong> Glowing VIP badge displayed alongside your username in community and review discussions.</div>
+            <div>&bull; <strong>VIP Avatar Ring:</strong> ${ringTitle} active in dark mode across the store.</div>
+            <div>&bull; <strong>Verified Community Badge:</strong> ${badgeTitle} displayed alongside your username in community and review discussions.</div>
             <div>&bull; <strong>Edge CDN Priority:</strong> Direct low-latency routing through dedicated mirror servers.</div>
-            ${isElite ? '<div>&bull; <strong>Top-Ranked Pinned Comments:</strong> Your reviews are highlighted and pinned at the top of every product page.</div>' : ''}
+            ${isElite ? '<div>&bull; <strong>Top-Ranked Pinned Comments:</strong> Your reviews are highlighted with crimson ribbon and pinned at the top of every product page.</div>' : ''}
           </div>
 
           <p style="font-size: 12.5px; color: #71717a;">Your VIP privileges remain active through <strong>${endFormatted}</strong>. You can view or manage your subscription anytime from your profile.</p>

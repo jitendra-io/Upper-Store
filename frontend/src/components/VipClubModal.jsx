@@ -100,11 +100,13 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
       billing: 'Monthly Pass',
       priceINR: 99,
       priceUSD: 1.25,
-      badgeName: 'Golden VIP Badge',
+      badgeName: 'Golden Crown Badge',
       badgeClass: 'badge-gold',
+      ringName: 'Glowing Yellow & White Aura Ring',
       perks: [
         '₹0 Platform Fee on all free app downloads',
-        'Official Golden VIP Badge beside your name',
+        'Glowing Yellow & White Aura Ring on avatar',
+        'Official Golden Crown VIP Badge beside your name',
         'Priority high-speed CDN bandwidth',
         'VIP Developer Studio: Publish up to 3 products in Store',
         'Gold-highlighted community product reviews',
@@ -117,11 +119,13 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
       billing: 'Annual All-Access (Save 66%)',
       priceINR: 399,
       priceUSD: 4.99,
-      badgeName: 'Royal Purple Badge',
-      badgeClass: 'badge-purple',
+      badgeName: 'Crimson Diamond Badge',
+      badgeClass: 'badge-elite',
+      ringName: 'Glowing Crimson & White Avatar Ring',
       perks: [
         '₹0 Platform Fee on all downloads for 1 full year',
-        'Official Royal Purple VIP Badge on profile & reviews',
+        'Glowing Crimson & White Avatar Ring in dark mode',
+        'Official Crimson Diamond VIP Badge on profile & reviews',
         'VIP Developer Studio: Publish UNLIMITED products in Store',
         'Top-Ranked Pinned Comments in all review sections',
         'Ultra VIP dedicated CDN download servers',
@@ -331,9 +335,9 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
           {celebrationData ? (
             /* CELEBRATION / WELCOME STATE */
             <div className="vip-celebration-state">
-              <div className={`celebration-badge-ring ${celebrationData.badge === 'purple' ? 'ring-purple' : 'ring-gold'}`}>
+              <div className={`celebration-badge-ring ${celebrationData.badge === 'purple' || celebrationData.badge === 'crimson' || celebrationData.plan === 'elite' ? 'ring-crimson' : 'ring-gold'}`}>
                 <span className="celebration-badge-icon">
-                  {celebrationData.badge === 'purple' ? <DiamondIcon size={34} /> : <CrownIcon size={34} />}
+                  {celebrationData.badge === 'purple' || celebrationData.badge === 'crimson' || celebrationData.plan === 'elite' ? <DiamondIcon size={34} /> : <CrownIcon size={34} />}
                 </span>
               </div>
               <h3 className="celebration-title">
@@ -341,10 +345,10 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
               </h3>
               <p className="celebration-subtext">
                 Your account <strong>{user?.email}</strong> is now verified as an official{' '}
-                <strong className={celebrationData.badge === 'purple' ? 'text-purple' : 'text-gold'} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                <strong className={celebrationData.badge === 'purple' || celebrationData.badge === 'crimson' || celebrationData.plan === 'elite' ? 'text-purple text-crimson' : 'text-gold'} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                   {celebrationData.plan === 'elite' ? (
                     <>
-                      <DiamondIcon size={16} /> Royal Purple Elite VIP
+                      <DiamondIcon size={16} /> Crimson Diamond Elite VIP
                     </>
                   ) : (
                     <>
@@ -441,7 +445,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
           ) : eligibility?.hasActiveSubscription ? (
             /* ACTIVE SUBSCRIPTION GUARD: USER CANNOT REQUEST ANOTHER PLAN UNLESS CANCELLED */
             <div className="vip-active-state">
-              <div className={`active-badge-ring ${eligibility.activeSubscription?.plan === 'elite' ? 'ring-purple' : 'ring-gold'}`}>
+              <div className={`active-badge-ring ${eligibility.activeSubscription?.plan === 'elite' ? 'ring-crimson' : 'ring-gold'}`}>
                 <span className="active-badge-icon">
                   {eligibility.activeSubscription?.plan === 'elite' ? <DiamondIcon size={36} /> : <CrownIcon size={36} />}
                 </span>
@@ -454,7 +458,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
               </div>
 
               <h3 className="active-title">
-                Active {eligibility.activeSubscription?.plan === 'elite' ? 'Royal Purple Elite VIP' : 'Golden Pro Member'} Pass
+                Active {eligibility.activeSubscription?.plan === 'elite' ? 'Crimson Elite VIP' : 'Golden Pro Member'} Pass
               </h3>
 
               <p className="active-subtext">
@@ -474,7 +478,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                   <span className="check-gold">
                     <CheckIcon size={13} />
                   </span>
-                  <span><strong>Prestige Badge:</strong> Official verified badge displayed across comments &amp; profile.</span>
+                  <span><strong>Prestige Ring &amp; Badge:</strong> {eligibility.activeSubscription?.plan === 'elite' ? 'Glowing Crimson & White Avatar Ring with Diamond badge' : 'Glowing Yellow & White Aura Ring with Crown badge'}.</span>
                 </div>
                 <div className="active-perk-item">
                   <span className="check-gold">
@@ -595,7 +599,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                     <span className="price-amount">₹99</span>
                     <span className="price-period">/ month</span>
                   </div>
-                  <span className="plan-sub-tag">Golden Community Badge</span>
+                  <span className="plan-sub-tag">Yellow &amp; White Ring + Golden Badge</span>
                 </div>
 
                 <div
@@ -616,7 +620,7 @@ const VipClubModal = ({ isOpen, onClose, defaultPlan = 'elite' }) => {
                     <span className="price-amount">₹399</span>
                     <span className="price-period">/ year</span>
                   </div>
-                  <span className="plan-sub-tag">Royal Purple Badge + Priority CDN</span>
+                  <span className="plan-sub-tag">Crimson &amp; White Ring + Priority CDN</span>
                 </div>
               </div>
 

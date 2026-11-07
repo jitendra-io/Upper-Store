@@ -68,8 +68,8 @@ const VipClub = () => {
       a: `Standard users pay a platform fee of ₹${platformFee.amount} INR when downloading free community and developer software. As a Pro or Elite VIP member, this platform fee is 100% waived (₹0 INR) on all eligible software downloads throughout your active subscription period.`,
     },
     {
-      q: 'How do the Golden and Royal Purple badges work?',
-      a: 'The moment your VIP membership is active, your user avatar and profile automatically receive your official badge—Golden Crown for Pro members and Royal Purple Diamond for Elite members. These badges appear beside your name across the platform, including product comment and review threads.',
+      q: 'How do the VIP Avatar Rings and Verified Badges work?',
+      a: 'The moment your VIP membership is active, your user avatar and profile automatically receive your official ring and badge—a Glowing Yellow & White Aura Ring with Golden Crown for Pro members, and a Glowing Crimson & White Avatar Ring with Crimson Diamond for Elite members. These stand out prominently in dark mode across the platform, including product comment and review threads.',
     },
     {
       q: 'What is the Pinned Elite VIP Review privilege?',
@@ -207,7 +207,7 @@ const VipClub = () => {
           </h1>
 
           <p className="vip-hero-subtitle">
-            Say goodbye to platform fees. Unlock ₹0 download fees on all software, distinguish yourself with official Golden Crown &amp; Royal Purple Diamond badges, and pin your reviews at the top of every app page.
+            Say goodbye to platform fees. Unlock ₹0 download fees on all software, distinguish yourself with official glowing yellow &amp; white (Pro) and glowing crimson &amp; white (Elite) avatar rings &amp; badges, and pin your reviews at the top of every app page.
           </p>
 
           <div className="vip-hero-cta-row">
@@ -249,7 +249,7 @@ const VipClub = () => {
                   {activePlanKey === 'elite' ? <DiamondIcon size={20} /> : <CrownIcon size={20} />}
                 </div>
                 <div className="vip-active-text">
-                  <h4>Your {activePlanKey === 'elite' ? 'Royal Purple Elite VIP' : 'Golden Pro Member'} Subscription is Active</h4>
+                  <h4>Your {activePlanKey === 'elite' ? 'Crimson Elite VIP' : 'Golden Pro Member'} Subscription is Active</h4>
                   <p>
                     Full VIP privileges active until <strong>{new Date(eligibility?.activeSubscription?.validUntil || user?.membership?.validUntil).toLocaleDateString()}</strong> &bull; Under platform policy, you cannot request another subscription unless you cancel your current plan first.
                   </p>
@@ -325,7 +325,7 @@ const VipClub = () => {
             <div className="screenshot-card-header">
               <div className="card-badge-pill purple">
                 <DiamondIcon size={14} />
-                <span>Royal Purple Elite VIP</span>
+                <span>Crimson Diamond Elite VIP</span>
               </div>
               <span className="card-tag-pill pinned-tag">
                 <StarIcon size={12} fill="currentColor" /> Pinned Review Feature
@@ -344,14 +344,14 @@ const VipClub = () => {
             </div>
 
             <div className="screenshot-details">
-              <h4>Royal Purple Diamond Badge &amp; Pinned Review</h4>
+              <h4>Crimson Diamond Badge &amp; Pinned Review</h4>
               <ul className="screenshot-perks-list">
                 <li>
                   <span className="perk-bullet purple">
                     <CheckIcon size={12} />
                   </span>
                   <div>
-                    <strong>Top-Ranked Pinned Review:</strong> Your review is pinned with a purple ribbon at the very top of product threads for thousands of creators to see.
+                    <strong>Top-Ranked Pinned Review:</strong> Your review is pinned with a crimson ribbon at the very top of product threads for thousands of creators to see.
                   </div>
                 </li>
                 <li>
@@ -359,7 +359,7 @@ const VipClub = () => {
                     <CheckIcon size={12} />
                   </span>
                   <div>
-                    <strong>Royal Purple Diamond Pill:</strong> Verified Elite badge displayed directly beside your display name.
+                    <strong>Crimson Diamond Pill:</strong> Verified Elite badge displayed directly beside your display name.
                   </div>
                 </li>
                 <li>
@@ -606,7 +606,7 @@ const VipClub = () => {
                 <DiamondIcon size={13} /> Annual All-Access
               </span>
               <h3>Elite VIP</h3>
-              <p className="tier-desc">The ultimate tier: complete zero fees for 1 full year, pinned comments, and purple prestige.</p>
+              <p className="tier-desc">The ultimate tier: complete zero fees for 1 full year, pinned comments, and elite crimson prestige.</p>
               <div className="tier-price-box">
                 <span className="price-currency">₹</span>
                 <span className="price-val">399</span>
@@ -621,10 +621,10 @@ const VipClub = () => {
               </div>
               <div className="perk-line included">
                 <DiamondIcon size={13} className="check-icon-purple" />
-                <span><strong>Royal Purple Diamond Badge</strong> beside your name</span>
+                <span><strong>Crimson Diamond VIP Badge</strong> beside your name</span>
               </div>
               <div className="perk-line included">
-                <StarIcon size={13} fill="#c084fc" />
+                <StarIcon size={13} fill="#ff2a2a" />
                 <span><strong>Pinned Reviews:</strong> Anchored at the top of every app page</span>
               </div>
               <div className="perk-line included">
@@ -681,7 +681,7 @@ const VipClub = () => {
                 <td>Official Profile Badge</td>
                 <td>None</td>
                 <td className="gold-text"><CrownIcon size={13} /> Golden Crown</td>
-                <td className="purple-text"><DiamondIcon size={13} /> Royal Purple Diamond</td>
+                <td className="purple-text"><DiamondIcon size={13} /> Crimson Diamond</td>
               </tr>
               <tr>
                 <td>Avatar Glowing Aura Frame</td>

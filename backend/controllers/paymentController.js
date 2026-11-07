@@ -50,8 +50,9 @@ const VIP_SUBSCRIPTION_PLANS = Object.freeze({
     amountUSD: 1.25,
     amountINR: 99,
     badge: 'gold',
+    ring: 'yellow_white',
     tierRank: 1,
-    features: ['zero_platform_fee', 'gold_vip_badge', 'priority_cdn', 'vip_community'],
+    features: ['zero_platform_fee', 'gold_vip_badge', 'glowing_yellow_white_ring', 'priority_cdn', 'vip_community'],
   },
   elite: {
     planId: 'elite',
@@ -61,9 +62,10 @@ const VIP_SUBSCRIPTION_PLANS = Object.freeze({
     durationDays: 365,
     amountUSD: 4.99,
     amountINR: 399,
-    badge: 'purple',
+    badge: 'crimson',
+    ring: 'crimson_white',
     tierRank: 2,
-    features: ['zero_platform_fee', 'purple_vip_badge', 'pinned_reviews', 'ultra_vip_cdn', 'early_access'],
+    features: ['zero_platform_fee', 'crimson_vip_badge', 'glowing_crimson_white_ring', 'pinned_reviews', 'ultra_vip_cdn', 'early_access'],
   },
 });
 
@@ -143,6 +145,7 @@ const resolvePlanDetails = async (productId, plan = 'pro') => {
       amountUSD: vipConfig.amountUSD,
       amountINR: vipConfig.amountINR,
       badge: vipConfig.badge,
+      ring: vipConfig.ring || (plan === 'elite' ? 'crimson_white' : 'yellow_white'),
       features: vipConfig.features,
     };
   }
@@ -543,7 +546,8 @@ const fulfillOrderAndIssueLicense = async ({
       if (isVipPlan) {
         const vipDays = (plan === 'elite' || plan === 'vip_yearly') ? 365 : 30;
         const membershipPlan = (plan === 'elite' || plan === 'vip_yearly') ? 'elite' : 'pro';
-        const badge = membershipPlan === 'elite' ? 'purple' : 'gold';
+        const badge = membershipPlan === 'elite' ? 'crimson' : 'gold';
+        const ring = membershipPlan === 'elite' ? 'crimson_white' : 'yellow_white';
         const amountNum = Number(amount) || (membershipPlan === 'elite' ? 399 : 99);
         const startDate = new Date().toISOString();
 
@@ -556,7 +560,7 @@ const fulfillOrderAndIssueLicense = async ({
         if (currentExpiryMs > nowMs && userData.membership?.plan === membershipPlan) {
           // Extending same tier: stack vipDays onto current expiry date
           validUntil = new Date(currentExpiryMs + vipDays * 86400000).toISOString();
-          console.log(`⭐ [VIP Stacking] User ${cleanEmail} extended ${membershipPlan} by ${vipDays} days. New expiry: ${validUntil}`);
+          console.log(`[VIP Stacking] User ${cleanEmail} extended ${membershipPlan} by ${vipDays} days. New expiry: ${validUntil}`);
         } else {
           // New subscription, expired subscription, or upgrade from Pro to Elite
           validUntil = new Date(nowMs + vipDays * 86400000).toISOString();
@@ -565,6 +569,7 @@ const fulfillOrderAndIssueLicense = async ({
         const membershipData = {
           plan: membershipPlan,
           badge,
+          ring,
           validUntil,
         };
 
@@ -656,7 +661,7 @@ const fulfillOrderAndIssueLicense = async ({
           console.warn('[VIP Activation] Error syncing developer profile/products:', syncErr.message);
         }
 
-        console.log(`[VIP Activation] User ${cleanEmail} VIP activated (${membershipPlan}) with ${badge} badge.`);
+        console.log(`[VIP Activation] User ${cleanEmail} VIP activated (${membershipPlan}) with ${badge} badge and ${ring} ring.`);
 
         // Send VIP Membership Confirmation Email with Plan, Badge, Start Date, and End Date
         sendVipSubscriptionEmail({
@@ -1170,7 +1175,8 @@ const cancelSubscription = async (req, res) => {
     }
 
     const cancelledPlan = currentMembership.plan;
-    const previousBadge = currentMembership.badge || (cancelledPlan === 'elite' ? 'purple' : 'gold');
+    const previousBadge = currentMembership.badge || (cancelledPlan === 'elite' ? 'crimson' : 'gold');
+    const previousRing = currentMembership.ring || (cancelledPlan === 'elite' ? 'crimson_white' : 'yellow_white');
     const previousExpiry = currentMembership.validUntil;
 
     const cancellationTimestamp = new Date().toISOString();
@@ -1179,6 +1185,7 @@ const cancelSubscription = async (req, res) => {
     const invalidatedMembership = {
       plan: 'free',
       badge: null,
+      ring: null,
       validUntil: null,
       isCancelled: true,
       cancelledAt: cancellationTimestamp,
@@ -1475,7 +1482,7 @@ const submitUpiPayment = async (req, res) => {
     return res.status(201).json({
       success: true,
       status: 'pending_verification',
-      message: `Payment request submitted successfully. Reference UTR: ${cleanUtr}. Our administrative team verifies payments promptly. Your VIP badge and cryptographic license will activate upon verification.`,
+      message: `Payment request submitted successfully. Reference UTR: ${cleanUtr}. Our administrative team verifies payments promptly. Your VIP avatar ring, verified badge, and cryptographic license will activate upon verification.`,
       orderId,
       utrNumber: cleanUtr,
       paymentRecord,

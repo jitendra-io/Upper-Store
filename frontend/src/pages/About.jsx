@@ -148,7 +148,7 @@ const About = () => {
                 <div className="perk-badge-label pro">PRO VIP PLAN</div>
                 <h5>Pro Developer Pass</h5>
                 <p>
-                  Publish up to <strong>3 products</strong> in the Store with official developer attribution, verified badge, and community broadcast privileges.
+                  Publish up to <strong>3 products</strong> in the Store with official developer attribution, glowing yellow &amp; white aura ring, verified badge, and community broadcast privileges.
                 </p>
               </div>
 
@@ -156,7 +156,7 @@ const About = () => {
                 <div className="perk-badge-label elite">ELITE VIP PLAN</div>
                 <h5>Elite Developer Pass</h5>
                 <p>
-                  Publish <strong>UNLIMITED products</strong> in the Store with royal purple verified flair, highest catalog ranking, and pinned community reviews.
+                  Publish <strong>UNLIMITED products</strong> in the Store with glowing crimson &amp; white avatar ring, verified flair, highest catalog ranking, and pinned community reviews.
                 </p>
               </div>
             </div>
