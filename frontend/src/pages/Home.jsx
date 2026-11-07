@@ -1,620 +1,71 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import logoImg from '../assets/logo.jpg';
-import ProductDetailModal from '../components/ProductDetailModal';
-import ProductReviewsModal from '../components/ProductReviewsModal';
-import VipPromoBanner from '../components/VipPromoBanner';
-import VipClubModal from '../components/VipClubModal';
-import StarRatingBadge from '../components/StarRatingBadge';
-import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
+import CrystalCore3D from '../components/CrystalCore3D';
 import { ArrowRightIcon } from '../components/Icons';
-import { useAuth } from '../context/AuthContext';
-import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
-import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import './Home.css';
-import './Products.css';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-
-
-const parseYouTubeVideoId = (url) => {
-  if (!url || typeof url !== 'string') return null;
-  const clean = url.trim();
-  const match = clean.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  return match && match[1] ? match[1] : null;
-};
-
-const getVideoPlayerSource = (url) => {
-  if (!url || typeof url !== 'string') return { type: 'none', src: '' };
-  const clean = url.trim();
-
-  // 1. YouTube Video
-  const ytId = parseYouTubeVideoId(clean);
-  if (ytId) {
-    return {
-      type: 'iframe',
-      src: `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&controls=1&rel=0&enablejsapi=1`
-    };
-  }
-
-  // 2. Google Drive video
-  const driveMatch = clean.match(/drive\.google\.com\/(?:file\/d\/|open\?id=)([a-zA-Z0-9_-]+)/);
-  if (driveMatch && driveMatch[1]) {
-    return {
-      type: 'iframe',
-      src: `https://drive.google.com/file/d/${driveMatch[1]}/preview`
-    };
-  }
-
-  // 3. Direct Video Stream (MP4, WebM, OGG, or direct video file)
-  if (clean.match(/\.(mp4|webm|ogg|mov)(\?|$)/i) || clean.includes('lh3.googleusercontent.com')) {
-    return { type: 'video', src: clean };
-  }
-
-  // 4. Standard Direct MP4 / Video Link
-  return { type: 'video', src: clean };
-};
-
-const FALLBACK_POSTER = 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=800';
-
-const getSafeImageUrl = (url) => {
-  if (!url || typeof url !== 'string') return FALLBACK_POSTER;
-  const clean = url.trim();
-  if ((clean.includes('photos.app.goo.gl') || clean.includes('photos.google.com')) && !clean.includes('lh3.googleusercontent.com')) {
-    return FALLBACK_POSTER;
-  }
-  return clean;
-};
 
 const Home = () => {
-  const { user } = useAuth();
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [catalogProducts, setCatalogProducts] = useState([]);
-  const [totalProductsCount, setTotalProductsCount] = useState(0);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [reviewModalProduct, setReviewModalProduct] = useState(null);
-  const [activeVideoId, setActiveVideoId] = useState(null);
-  const [vipModalOpen, setVipModalOpen] = useState(false);
-  const [vipModalPlan, setVipModalPlan] = useState('elite');
-  const [, setRefreshDownloads] = useState(0);
-
-  const getProductDevTier = (product) => {
-    if (!product.developerUsername || product.developerUsername === 'upperstore' || product.isStoreOfficial) {
-      return 'official';
-    }
-    const rawTier = String(product.developerTier || '').toLowerCase().trim();
-    if (rawTier === 'elite' || rawTier === 'pro') return rawTier;
-    if (user && isUserVipActive(user)) {
-      const isOwnerProduct =
-        (product.developerId && user.uid && String(product.developerId) === String(user.uid)) ||
-        (product.developerUsername && user.username && product.developerUsername.toLowerCase() === user.username.toLowerCase()) ||
-        (product.developerEmail && user.email && product.developerEmail.toLowerCase() === user.email.toLowerCase()) ||
-        (user.email && product.developerUsername && user.email.split('@')[0].toLowerCase() === product.developerUsername.toLowerCase());
-      if (isOwnerProduct) {
-        return getUserVipTier(user);
-      }
-    }
-    return 'free';
-  };
-
-  const deckTrackRef = useRef(null);
-
-  const scrollDeck = (direction) => {
-    if (deckTrackRef.current) {
-      const scrollAmount = 340;
-      deckTrackRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  useEffect(() => {
-    const handleUpdate = () => setRefreshDownloads((prev) => prev + 1);
-    window.addEventListener('productDownloadsUpdated', handleUpdate);
-    return () => window.removeEventListener('productDownloadsUpdated', handleUpdate);
-  }, []);
-
-  useEffect(() => {
-    const fetchCatalogProducts = async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/products`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.length > 0) {
-            setTotalProductsCount(data.length);
-            setFeaturedProducts(data.slice(0, 3));
-            setCatalogProducts(data);
-          } else {
-            setTotalProductsCount(0);
-            setFeaturedProducts([]);
-            setCatalogProducts([]);
-          }
-        }
-      } catch (err) {
-        setTotalProductsCount(0);
-        setFeaturedProducts([]);
-        setCatalogProducts([]);
-      }
-    };
-    fetchCatalogProducts();
-  }, []);
-
   return (
-    <div className="home-wrapper" style={{ zIndex: 1, position: 'relative' }}>
-      
-      {/* HERO SECTION */}
-      <section className="home-hero">
-        <div className="hero-badge-pill">
-          <span className="hero-badge-dot"></span>
-          Official Software & Developer Asset Platform
-        </div>
-        
-        <h1 className="home-hero-title">
-          Empowering Creators with <br className="hero-desktop-br" />
-          <span className="gold-gradient-text">Premier Software & Assets</span>
-        </h1>
-        
-        <p className="home-hero-desc">
-          Explore cryptographic SHA-256 verified applications, desktop utilities, developer tools, and luxury design systems—crafted with precision for modern creators.
-        </p>
-        
-        <div className="home-hero-actions">
-          <Link to="/products" className="home-btn-primary">
-            Explore Catalog
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '8px' }}>
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </Link>
-          <Link to="/about" className="home-btn-secondary">
-            About Us
-          </Link>
+    <div className="home-wrapper">
+      {/* 1. ASYMMETRIC 2-COLUMN HERO SECTION */}
+      <section className="home-hero-grid">
+        {/* Left Column: Platform Mission & High-Conversion CTAs */}
+        <div className="hero-left-column">
+          <div className="hero-crimson-badge">
+            <span className="crimson-badge-dot" />
+            <span className="crimson-badge-text">Next-Gen Software Technology Platform</span>
+          </div>
+
+          <h1 className="hero-main-title">
+            Powering the Future Through{' '}
+            <span className="hero-title-crimson">Intelligent Software</span>
+          </h1>
+
+          <p className="hero-main-subtitle">
+            Advanced digital software products combining ultra-low latency performance, neural intelligence, and device-bound security—engineered for teams operating at the frontier.
+          </p>
+
+          <div className="hero-actions-row">
+            <Link to="/products" className="btn-crimson-primary">
+              <span>Explore Catalog</span>
+              <ArrowRightIcon size={16} />
+            </Link>
+            <Link to="/about" className="btn-glass-secondary">
+              About Us
+            </Link>
+          </div>
         </div>
 
-        {/* METRICS STATS RIBBON */}
+        {/* Right Column: Interactive 3D Crimson Crystalline Core */}
+        <div className="hero-right-column">
+          <CrystalCore3D />
+        </div>
+      </section>
+
+      {/* 2. TELEMETRY & SYSTEM HEALTH METRICS RIBBON */}
+      <section className="home-metrics-section">
         <div className="home-stats-ribbon">
           <div className="stat-card">
             <span className="stat-number">100%</span>
             <span className="stat-label">Verified Releases</span>
           </div>
-          <div className="stat-divider"></div>
+          <div className="stat-divider" />
           <div className="stat-card">
-            <span className="stat-number">99.9%</span>
+            <span className="stat-number">95.05%</span>
             <span className="stat-label">System Uptime</span>
           </div>
-          <div className="stat-divider"></div>
+          <div className="stat-divider" />
           <div className="stat-card">
             <span className="stat-number">ImageKit</span>
             <span className="stat-label">Global CDN Engine</span>
           </div>
-          <div className="stat-divider"></div>
+          <div className="stat-divider" />
           <div className="stat-card">
             <span className="stat-number">SHA-256</span>
             <span className="stat-label">Package Protection</span>
           </div>
         </div>
       </section>
-
-      {/* INTERACTIVE VIP PROMO BANNER */}
-      {!isUserVipActive(user) && (
-        <section className="home-vip-banner-section" style={{ maxWidth: '1240px', margin: '0 auto 2.5rem auto', padding: '0 1.5rem', boxSizing: 'border-box' }}>
-        <VipPromoBanner
-            onOpenVipModal={(plan) => {
-              setVipModalPlan(plan);
-              setVipModalOpen(true);
-            }}
-          />
-        </section>
-      )}
-
-      {/* FEATURED PRODUCTS SPOTLIGHT */}
-      <section className="home-section featured-section">
-        <div className="section-header-center">
-          <span className="section-eyebrow">Curated Selection</span>
-          <h2>Featured <span className="gold-gradient-text">Product Spotlight</span></h2>
-          <p>Hand-picked software releases and essential digital tools ready for instant deployment.</p>
-        </div>
-
-        {featuredProducts.length === 0 ? (
-          <div className="no-videos-placeholder" style={{ margin: '1rem auto' }}>
-            <div className="no-videos-icon">
-              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-              </svg>
-            </div>
-            <h3>No Products Uploaded Yet</h3>
-            <p>Upload new products from the Admin Dashboard to feature them here on the home page.</p>
-          </div>
-        ) : (
-          <div className="products-grid">
-            {featuredProducts.map((prod) => {
-              const downloadsCount = getProductDownloadCount(prod.id, prod.downloadCount);
-              return (
-                <div key={prod.id} className="product-card">
-                  <div className="product-image" onClick={() => setSelectedProduct(prod)} style={{ cursor: 'pointer' }}>
-                    <img
-                      src={prod.image || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=500'}
-                      alt={prod.title}
-                      referrerPolicy="no-referrer"
-                    />
-                    <span className="product-category">{prod.category}</span>
-                  </div>
-                  <div className="product-info">
-                    <div className="product-title-row">
-                      {prod.logo ? (
-                        <img src={prod.logo} alt="" className="product-app-logo" referrerPolicy="no-referrer" />
-                      ) : (
-                        <div className="product-logo-placeholder-sm">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                          </svg>
-                        </div>
-                      )}
-                      <div>
-                        <h3>{prod.title}</h3>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.15rem' }}>
-                          {prod.version && <span className="catalog-ver-tag">v{prod.version}</span>}
-                          {/* 5-Star Rating Badge next to version */}
-                          <StarRatingBadge
-                            productId={prod.id}
-                            initialRating={prod.averageRating || 5.0}
-                            initialCount={prod.reviewsCount || 0}
-                            onClick={() => setReviewModalProduct(prod)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <Link
-                      to={'/developer/' + (prod.developerUsername || 'upperstore')}
-                      className="product-developer-attribution clickable-dev-link"
-                      onClick={(e) => e.stopPropagation()}
-                      title={'View @' + (prod.developerUsername || 'upperstore') + ' Profile'}
-                    >
-                      <VipAvatar
-                        src={prod.developerAvatar || '/logo.png'}
-                        alt={prod.developerName || 'Upper Store'}
-                        plan={getProductDevTier(prod)}
-                        size="sm"
-                        fallbackSeed={prod.developerUsername || prod.developerEmail || prod.developerName || 'upperstore'}
-                      />
-                      <span className="product-developer-name">
-                        {prod.developerName || 'Upper Store'}
-                        <span className="product-dev-username-tag" style={{ color: '#fbbf24', marginLeft: '5px', fontSize: '0.78rem', fontFamily: 'monospace' }}>
-                          @{prod.developerUsername || 'upperstore'}
-                        </span>
-                      </span>
-                      <VipFlairBadge plan={getProductDevTier(prod)} compact={true} />
-                    </Link>
-                    <p>{prod.description}</p>
-                    <div className="product-footer">
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                        <span className="product-price">{prod.price}</span>
-                        <span className="product-downloads-badge">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '3px' }}>
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                          </svg>
-                          {formatDownloadCount(downloadsCount)} Downloads
-                        </span>
-                      </div>
-                      <button className="view-btn" onClick={() => setSelectedProduct(prod)}>
-                        Details
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div className="section-cta-row">
-          <Link to="/products" className="view-all-link-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-            View Complete Product Catalog ({totalProductsCount} {totalProductsCount === 1 ? 'Item' : 'Items'}) <ArrowRightIcon size={14} style={{ marginLeft: '6px' }} />
-          </Link>
-        </div>
-      </section>
-
-      {/* PRODUCT VIDEO SHOWCASE & VISUAL EXPERIENCE */}
-      <section className="home-section video-showcase-section">
-        <div className="section-header-center">
-          <span className="section-eyebrow">Visual Experience</span>
-          <h2>Product <span className="gold-gradient-text">Video Demos</span></h2>
-          <p>Watch hands-on video walkthroughs, live feature demonstrations, and UI animations of our software and digital assets.</p>
-        </div>
-
-        <div className="video-showcase-container">
-          {(() => {
-            const allProductsList = catalogProducts.length > 0 ? catalogProducts : featuredProducts;
-            const videoProducts = allProductsList.filter((p) => p.videoUrl && p.videoUrl.trim() !== '');
-
-            const videoList = videoProducts.map((p) => {
-              const ytId = parseYouTubeVideoId(p.videoUrl);
-              const ytThumbnail = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : '';
-              const posterUrl = (p.videoPoster && p.videoPoster.trim() !== '') ? p.videoPoster : ytThumbnail;
-
-              return {
-                id: `custom-vid-${p._id || p.id}`,
-                productId: p._id || p.id,
-                title: p.title ? `${p.title} - Video Demo` : 'Product Video Demo',
-                category: p.category || 'Product Showcase',
-                badge: p.version ? `v${p.version}` : 'Official Demo',
-                videoUrl: p.videoUrl,
-                hasCustomPoster: Boolean(posterUrl),
-                poster: posterUrl,
-                description: p.description || 'Watch hands-on video demonstration of this software package.',
-                features: ['SHA-256 Verified', p.version ? `v${p.version}` : 'Latest Release', 'Direct Download Available']
-              };
-            });
-
-            if (videoList.length === 0) {
-              return (
-                <div className="no-videos-placeholder">
-                  <div className="no-videos-icon">
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
-                      <line x1="7" y1="2" x2="7" y2="22"></line>
-                      <line x1="17" y1="2" x2="17" y2="22"></line>
-                      <line x1="2" y1="12" x2="22" y2="12"></line>
-                      <line x1="2" y1="7" x2="7" y2="7"></line>
-                      <line x1="2" y1="17" x2="7" y2="17"></line>
-                      <line x1="17" y1="17" x2="22" y2="17"></line>
-                      <line x1="17" y1="7" x2="22" y2="7"></line>
-                    </svg>
-                  </div>
-                  <h3>No Product Video Demos Uploaded Yet</h3>
-                  <p>Add YouTube video URLs for your products in the Admin Dashboard to feature interactive walkthroughs here.</p>
-                </div>
-              );
-            }
-
-            const currentVideo = videoList.find((v) => v.id === activeVideoId) || videoList[0];
-            const matchingProduct = allProductsList.find((p) => (p._id || p.id) === currentVideo.productId) || allProductsList[0];
-            const playerSrc = getVideoPlayerSource(currentVideo.videoUrl);
-            const safePoster = getSafeImageUrl(currentVideo.poster);
-
-            return (
-              <>
-                {/* Main Active Video Player */}
-                <div className="main-video-player-card" key={'player-' + currentVideo.id}>
-                  <div className="video-viewport-wrapper">
-                    {playerSrc.type === 'iframe' ? (
-                      <iframe
-                        key={currentVideo.id}
-                        src={playerSrc.src}
-                        title={currentVideo.title}
-                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        allowFullScreen
-                        className="featured-video-element"
-                        style={{ border: 'none', width: '100%', height: '100%', minHeight: '340px' }}
-                      />
-                    ) : (
-                      <video
-                        key={currentVideo.id}
-                        src={playerSrc.src}
-                        poster={safePoster}
-                        controls
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        referrerPolicy="no-referrer"
-                        className="featured-video-element"
-                      />
-                    )}
-                    <div className="video-badge-tag">{currentVideo.badge}</div>
-                  </div>
-
-                  <div className="video-details-panel">
-                    <div className="video-meta-header">
-                      <span className="video-category-pill">{currentVideo.category}</span>
-                      <h3 className="video-title">{currentVideo.title}</h3>
-                      <p className="video-desc">{currentVideo.description}</p>
-                    </div>
-
-                    <div className="video-features-chips">
-                      {currentVideo.features.map((feat, idx) => (
-                        <span key={idx} className="video-feature-chip">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                          </svg>
-                          {feat}
-                        </span>
-                      ))}
-                    </div>
-
-                    {matchingProduct && (
-                      <button className="video-action-btn" onClick={() => setSelectedProduct(matchingProduct)}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                          <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        View Product Details & Downloads
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Slidable Video Deck Carousel */}
-                {videoList.length > 1 && (
-                  <div className="video-deck-slider-wrapper">
-                    <button 
-                      className="deck-scroll-btn deck-scroll-left" 
-                      onClick={() => scrollDeck('left')}
-                      aria-label="Scroll left"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-
-                    <div className="video-deck-scroll-track" ref={deckTrackRef}>
-                      {videoList.map((vid) => {
-                        const isActive = vid.id === (activeVideoId || videoList[0]?.id);
-                        const safeDeckPoster = getSafeImageUrl(vid.poster);
-                        const deckPlayerSrc = getVideoPlayerSource(vid.videoUrl);
-                        const useVideoFrame = deckPlayerSrc.type === 'video' && !vid.hasCustomPoster;
-
-                        return (
-                          <div
-                            key={vid.id}
-                            className={`video-deck-card ${isActive ? 'active' : ''}`}
-                            onClick={() => setActiveVideoId(vid.id)}
-                          >
-                            <div className="deck-thumb-frame">
-                              {useVideoFrame ? (
-                                <video
-                                  src={`${deckPlayerSrc.src}#t=0.5`}
-                                  preload="metadata"
-                                  muted
-                                  playsInline
-                                  referrerPolicy="no-referrer"
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: 'none' }}
-                                />
-                              ) : (
-                                <img
-                                  src={safeDeckPoster}
-                                  alt={vid.title}
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => {
-                                    e.currentTarget.onerror = null;
-                                    e.currentTarget.src = FALLBACK_POSTER;
-                                  }}
-                                />
-                              )}
-                              <div className="deck-play-overlay">
-                                <div className="play-icon-circle">
-                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                  </svg>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="deck-card-info">
-                              <span className="deck-cat">{vid.category}</span>
-                              <h4>{vid.title}</h4>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    <button 
-                      className="deck-scroll-btn deck-scroll-right" 
-                      onClick={() => scrollDeck('right')}
-                      aria-label="Scroll right"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                      </svg>
-                    </button>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-        </div>
-      </section>
-
-      {/* CORE PLATFORM PILLARS */}
-      <section className="home-section pillars-section">
-        <div className="section-header-center">
-          <span className="section-eyebrow">Technical Excellence</span>
-          <h2>Built for Speed, <span className="gold-gradient-text">Security & Elegance</span></h2>
-          <p>Our infrastructure guarantees high availability, cryptographic integrity, and zero latency.</p>
-        </div>
-
-        <div className="pillars-grid">
-          <div className="pillar-card">
-            <div className="pillar-icon-box">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-              </svg>
-            </div>
-            <h3>High-Speed CDN Mirroring</h3>
-            <p>Visual assets and branding media are optimized dynamically via global ImageKit CDN edge locations for sub-millisecond load times.</p>
-          </div>
-
-          <div className="pillar-card">
-            <div className="pillar-icon-box">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
-            </div>
-            <h3>Cryptographic Integrity</h3>
-            <p>Executable installers (.exe & .apk) are mirrored directly via verified GitHub Release tags with cryptographic SHA-256 verification.</p>
-          </div>
-
-          <div className="pillar-card">
-            <div className="pillar-icon-box">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-              </svg>
-            </div>
-            <h3>Real-Time Cloud Synchronization</h3>
-            <p>Customer inquiries and support messages are synchronized in real time via encrypted Firebase Firestore databases to ensure fast inbox response.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* OFFICIAL BRAND SHOWCASE CARD */}
-      <section className="home-section brand-showcase-section">
-        <div className="brand-logo-showcase-box">
-          <img src={logoImg} alt="Upper Store Official Logo" className="brand-showcase-logo" />
-          <h3 className="brand-showcase-title">UPPER STORE</h3>
-          <p className="brand-showcase-subtitle">Verified Software Assets & Developer Enterprise Platform</p>
-          <div className="brand-showcase-actions">
-            <Link to="/about" className="brand-btn-gold">About Us</Link>
-            <Link to="/press" className="brand-btn-outline">Official Press Kit</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* FINAL CTA HERO BANNER */}
-      <section className="home-section cta-banner-section">
-        <div className="cta-banner-box">
-          <h2>Ready to Elevate Your Digital Experience?</h2>
-          <p>Browse our catalog of software applications or reach out to our team for custom enterprise solutions.</p>
-          <div className="cta-banner-buttons">
-            <Link to="/products" className="cta-btn-gold">
-              Explore Products Catalog
-            </Link>
-            <Link to="/contact" className="cta-btn-outline">
-              Contact Support & Licensing
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* PRODUCT DETAIL MODAL */}
-      {selectedProduct && (
-        <ProductDetailModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
-
-      {/* PRODUCT REVIEWS & USER COMMENTS MODAL */}
-      {reviewModalProduct && (
-        <ProductReviewsModal
-          product={reviewModalProduct}
-          isOpen={!!reviewModalProduct}
-          onClose={() => setReviewModalProduct(null)}
-        />
-      )}
-
-      {/* VIP CLUB CHECKOUT MODAL */}
-      <VipClubModal
-        isOpen={vipModalOpen}
-        onClose={() => setVipModalOpen(false)}
-        defaultPlan={vipModalPlan}
-      />
     </div>
   );
 };

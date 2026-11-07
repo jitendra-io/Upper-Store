@@ -3,7 +3,7 @@
   align-items: center;
   gap: 0.22rem;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(230, 25, 25, 0.25);
   padding: 0.22rem 0.35rem;
   border-radius: 8px;
   cursor: pointer;
@@ -12,10 +12,10 @@
 }
 
 .star-rating-badge:hover {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: #d4af37;
+  background: rgba(230, 25, 25, 0.15);
+  border-color: #e61919;
   transform: translateY(-1px);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 0 8px rgba(230, 25, 25, 0.25);
 }
 
 .stars-flex-row {
@@ -25,12 +25,12 @@
 }
 
 .star-svg {
-  stroke: #d4af37;
+  stroke: #e61919;
   stroke-width: 1.5px;
 }
 
 .star-svg.full {
-  fill: #d4af37;
+  fill: #e61919;
 }
 
 .star-svg.half {
@@ -39,7 +39,7 @@
 
 .star-svg.empty {
   fill: rgba(255, 255, 255, 0.1);
-  stroke: rgba(212, 175, 55, 0.5);
+  stroke: rgba(230, 25, 25, 0.5);
 }
 
 .rating-num {

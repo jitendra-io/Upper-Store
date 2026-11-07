@@ -27,7 +27,7 @@
   background: var(--color-bg-secondary);
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid rgba(201, 168, 76, 0.2);
+  border: 1px solid rgba(230, 25, 25, 0.2);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
@@ -76,7 +76,7 @@
   height: 36px;
   border-radius: 8px;
   object-fit: cover;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(230, 25, 25, 0.4);
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -135,7 +135,7 @@
   font-weight: 600;
   border-radius: 40px;
   border: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-body), sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
 }
@@ -143,23 +143,23 @@
 .download-btn {
   background: var(--color-accent-primary);
   color: var(--color-bg-primary);
-  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.25);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25);
 }
 
 .download-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(201, 168, 76, 0.4);
+  box-shadow: 0 6px 18px rgba(230, 25, 25, 0.4);
 }
 
 .purchase-btn {
   background: var(--color-accent-primary);
   color: var(--color-bg-primary);
-  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.25);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25);
 }
 
 .purchase-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(201, 168, 76, 0.4);
+  box-shadow: 0 6px 18px rgba(230, 25, 25, 0.4);
 }
 
 .release-notes {

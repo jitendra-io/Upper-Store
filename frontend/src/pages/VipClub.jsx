@@ -367,7 +367,7 @@ const VipClub = () => {
                     <CheckIcon size={12} />
                   </span>
                   <div>
-                    <strong>Purple Glowing Avatar Ring:</strong> Luminescent frame around your profile avatar that stands out in dark mode.
+                    <strong>Crimson &amp; White Glowing Avatar Ring:</strong> Luminescent crimson and white rotating ring around your profile avatar that stands out in dark mode.
                   </div>
                 </li>
                 <li>
@@ -423,7 +423,7 @@ const VipClub = () => {
                     <CheckIcon size={12} />
                   </span>
                   <div>
-                    <strong>Golden Avatar Frame:</strong> Circular golden border with subtle glow around your profile photo.
+                    <strong>Glowing Yellow &amp; White Aura Ring:</strong> Circular glowing yellow and white rotating ring with halo glow around your profile photo.
                   </div>
                 </li>
                 <li>
@@ -579,7 +579,7 @@ const VipClub = () => {
               </div>
               <div className="perk-line included">
                 <CheckIcon size={13} className="check-icon-green" />
-                <span><strong>Golden Aura Frame</strong> on your avatar</span>
+                <span><strong>Glowing Yellow &amp; White Aura Ring</strong> on your avatar</span>
               </div>
               <div className="perk-line included">
                 <CheckIcon size={13} className="check-icon-green" />
@@ -629,7 +629,7 @@ const VipClub = () => {
               </div>
               <div className="perk-line included">
                 <CheckIcon size={13} className="check-icon-green" />
-                <span><strong>Purple Glowing Avatar Aura</strong> in dark mode</span>
+                <span><strong>Glowing Crimson &amp; White Avatar Ring</strong> in dark mode</span>
               </div>
               <div className="perk-line included">
                 <CheckIcon size={13} className="check-icon-green" />
@@ -686,8 +686,8 @@ const VipClub = () => {
               <tr>
                 <td>Avatar Glowing Aura Frame</td>
                 <td>Standard</td>
-                <td className="gold-text">Golden Glow Ring</td>
-                <td className="purple-text">Royal Purple Glow Ring</td>
+                <td className="gold-text">Yellow &amp; White Glow Ring</td>
+                <td className="purple-text">Crimson &amp; White Glow Ring</td>
               </tr>
               <tr>
                 <td>Review Placement in Product Pages</td>

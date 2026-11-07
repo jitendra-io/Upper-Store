@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { recordUserDownload, getProductDownloadCount, formatDownloadCount, getSecureDownloadUrl, isDirectDownloadFile } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
@@ -23,7 +24,12 @@ const ProductDetailModal = ({ product, onClose }) => {
   const { user, token, isLoggedIn, openAuthModal, regrantConsent } = useAuth();
   const [downloadCount, setDownloadCount] = useState(() => getProductDownloadCount(product?.id, product?.downloadCount));
   const [termsModalOpen, setTermsModalOpen] = useState(false);
-  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewModalOpen, setReviewModalOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('reviews') === '1';
+    }
+    return false;
+  });
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState('pro');
   const [vipModalOpen, setVipModalOpen] = useState(false);
@@ -247,7 +253,7 @@ const ProductDetailModal = ({ product, onClose }) => {
     }
   };
 
-  return (
+  const modalContent = (
     <div className="modal-backdrop-overlay" onClick={handleBackdropClick}>
       <div className="modal-card-container">
         {/* Close Icon */}
@@ -328,7 +334,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                 <img src={product.logo} alt="" className="modal-app-logo" referrerPolicy="no-referrer" />
               ) : (
                 <div className="modal-logo-placeholder">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                     <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                     <line x1="12" y1="22.08" x2="12" y2="12"></line>
@@ -356,44 +362,41 @@ const ProductDetailModal = ({ product, onClose }) => {
                   </span>
                   <span className="pill-item price-pill">{product.price}</span>
                 </div>
-                <Link
-                  to={'/developer/' + (product.developerUsername || 'upperstore')}
-                  className="modal-developer-attribution clickable-dev-link"
-                  title={'View @' + (product.developerUsername || 'upperstore') + ' Profile'}
-                  onClick={() => { if (onClose) onClose(); }}
-                >
-                  <span className="modal-dev-label">Published by:</span>
-                  <VipAvatar
-                    src={product.developerAvatar || '/logo.png'}
-                    alt={product.developerName || 'Upper Store'}
-                    plan={getProductDevTier(product)}
-                    size="sm"
-                    fallbackSeed={product.developerUsername || product.developerEmail || product.developerName || 'upperstore'}
-                  />
-                  <div className="modal-dev-info-cluster">
-                    <span className="modal-dev-name-text">
-                      {product.developerName || 'Upper Store'}
-                    </span>
-                    <span className="modal-dev-handle-text">
-                      @{product.developerUsername || 'upperstore'}
-                    </span>
-                  </div>
-                  <VipFlairBadge plan={getProductDevTier(product)} compact={true} />
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="dev-redirect-icon" style={{ marginLeft: '4px', color: '#fbbf24' }}>
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                </Link>
+                {(() => {
+                  const devHandle = (product.developerUsername || (product.developerEmail ? product.developerEmail.split('@')[0] : '') || 'upperstore').replace(/^@/, '');
+                  return (
+                    <Link
+                      to={'/developer/' + devHandle}
+                      className="modal-developer-attribution clickable-dev-link"
+                      title={'View @' + devHandle + ' Profile'}
+                      onClick={() => { if (onClose) onClose(); }}
+                    >
+                      <VipAvatar
+                        src={product.developerAvatar || '/logo.png'}
+                        alt={'@' + devHandle}
+                        plan={getProductDevTier(product)}
+                        size="sm"
+                        fallbackSeed={devHandle}
+                      />
+                      <span className="modal-dev-handle-text">@{devHandle}</span>
+                      <VipFlairBadge plan={getProductDevTier(product)} compact={true} />
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="dev-redirect-icon" style={{ marginLeft: '4px' }}>
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                      </svg>
+                    </Link>
+                  );
+                })()}
                 {Array.isArray(product.tags) && product.tags.filter(Boolean).length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginTop: '0.45rem' }}>
                     {product.tags.filter(Boolean).slice(0, 2).map((tag, idx) => (
                       <span key={idx} style={{
                         fontSize: '0.72rem',
                         fontWeight: 600,
-                        color: '#d4af37',
-                        background: 'rgba(212, 175, 55, 0.1)',
-                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ff4d4d',
+                        background: 'rgba(230, 25, 25, 0.1)',
+                        border: '1px solid rgba(230, 25, 25, 0.3)',
                         padding: '0.15rem 0.5rem',
                         borderRadius: '6px'
                       }}>
@@ -545,7 +548,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                       title="Unlock commercial rights, unlimited exports, and cryptographically verified key"
                     >
                       <div className="pro-btn-content">
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                         </svg>
                         <span className="pro-btn-text">Buy Pro License</span>
@@ -565,7 +568,7 @@ const ProductDetailModal = ({ product, onClose }) => {
               <div className="modal-security-box">
                 <div className="security-checksum-row">
                   <span className="checksum-label">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                     </svg>
                     SHA-256:
@@ -598,7 +601,7 @@ const ProductDetailModal = ({ product, onClose }) => {
             {product.releaseNotes && (
               <div className="modal-release-notes">
                 <h4>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -651,6 +654,8 @@ const ProductDetailModal = ({ product, onClose }) => {
       )}
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 
 export default ProductDetailModal;

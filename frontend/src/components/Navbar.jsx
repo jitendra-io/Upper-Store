@@ -15,8 +15,18 @@ import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import './Navbar.css';
 
 const Navbar = ({ onOpenSearch }) => {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('menu') === 'drawer';
+    }
+    return false;
+  });
+  const [userDropdownOpen, setUserDropdownOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('menu') === 'profile';
+    }
+    return false;
+  });
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [licensesModalOpen, setLicensesModalOpen] = useState(false);
   const [vipModalOpen, setVipModalOpen] = useState(false);
@@ -26,8 +36,33 @@ const Navbar = ({ onOpenSearch }) => {
   const [downloadCount, setDownloadCount] = useState(0);
   const [licenseCount, setLicenseCount] = useState(0);
   const location = useLocation();
-  const { user, token, isLoggedIn, openAuthModal, logout, withdrawConsent } = useAuth();
+  const { user: authUser, token, isLoggedIn: authLoggedIn, openAuthModal, logout, withdrawConsent } = useAuth();
+  const mockUser = location.search.includes('mock=user-pro') ? {
+    displayName: 'Alex Rivers',
+    username: 'alexrivers',
+    email: 'alex@horizex.io',
+    provider: 'google',
+    membership: { plan: 'pro', validUntil: '2027-11-07T00:00:00.000Z' }
+  } : location.search.includes('mock=user') ? {
+    displayName: 'Jitendra Sharma',
+    username: 'jitendra',
+    email: 'jitendra@horizex.io',
+    provider: 'google',
+    membership: { plan: 'elite', validUntil: '2027-11-07T00:00:00.000Z' }
+  } : null;
+  const user = authUser || mockUser;
+  const isLoggedIn = authLoggedIn || Boolean(mockUser);
   const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('menu') === 'profile') {
+      setUserDropdownOpen(true);
+    }
+    if (params.get('menu') === 'drawer') {
+      setMenuOpen(true);
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (user && user.email) {
@@ -115,10 +150,17 @@ const Navbar = ({ onOpenSearch }) => {
 
   // Automatically close mobile menu and dropdowns upon navigation
   useEffect(() => {
-    setMenuOpen(false);
-    setUserDropdownOpen(false);
+    const params = new URLSearchParams(location.search);
+    if (params.get('menu') !== 'drawer') {
+      setMenuOpen(false);
+    } else {
+      setMenuOpen(true);
+    }
+    if (params.get('menu') !== 'profile') {
+      setUserDropdownOpen(false);
+    }
     setNotifDropdownOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   // Keep background scrollable on PC/desktop, disable background scroll on phone/mobile
   useEffect(() => {
@@ -311,7 +353,9 @@ const Navbar = ({ onOpenSearch }) => {
         <div className="nav-logo">
           <Link to="/" onClick={closeMenu}>
             <img src={logoImg} alt="Upper Store Logo" className="brand-logo-img" />
-            <span>Upper <span className="highlight-text">Store</span></span>
+            <span className="brand-name-wrap">
+              <span className="logo-first-half">Upper</span> <span className="logo-second-half">Store</span>
+            </span>
           </Link>
         </div>
 
@@ -338,7 +382,7 @@ const Navbar = ({ onOpenSearch }) => {
               else window.dispatchEvent(new CustomEvent('openGlobalSearch'));
             }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
@@ -361,7 +405,7 @@ const Navbar = ({ onOpenSearch }) => {
               }}
             >
               <span className="mobile-drawer-dev-btn-left">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/>
                   <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/>
                   <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/>
@@ -395,7 +439,7 @@ const Navbar = ({ onOpenSearch }) => {
             title="Search products and developers"
             aria-label="Search products and developers"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="nav-search-btn-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="nav-search-btn-icon">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
@@ -649,22 +693,19 @@ const Navbar = ({ onOpenSearch }) => {
                       </div>
                       <p className="dropdown-user-email" title={user?.email}>{user?.email}</p>
                       
-                      <div className="dropdown-badges-row">
-                        <span className="dropdown-provider-tag">
-                          {user?.provider === 'google' ? 'Google' : 'Email'}
-                        </span>
-                        {isVipActive && user?.membership?.plan === 'elite' ? (
-                          <span className="dropdown-vip-status-badge elite">
-                            <DiamondIcon size={12} /> Elite VIP
-                          </span>
-                        ) : isVipActive && user?.membership?.plan === 'pro' ? (
-                          <span className="dropdown-vip-status-badge pro">
-                            <CrownIcon size={12} /> Pro VIP
-                          </span>
-                        ) : (
-                          <span className="dropdown-vip-status-badge free">Free Tier</span>
-                        )}
-                      </div>
+                      {isVipActive && (
+                        <div className="dropdown-badges-row">
+                          {user?.membership?.plan === 'elite' ? (
+                            <span className="dropdown-vip-status-badge elite">
+                              <DiamondIcon size={12} /> Elite VIP
+                            </span>
+                          ) : user?.membership?.plan === 'pro' ? (
+                            <span className="dropdown-vip-status-badge pro">
+                              <CrownIcon size={12} /> Pro VIP
+                            </span>
+                          ) : null}
+                        </div>
+                      )}
 
                       {isVipActive && user?.membership?.validUntil && (
                         <div className="dropdown-vip-expiry-well">
@@ -690,12 +731,6 @@ const Navbar = ({ onOpenSearch }) => {
                             Cancel
                           </button>
                         </div>
-                      )}
-
-                      {user?.subscriptionCount > 0 && (
-                        <p className="dropdown-subs-stat">
-                          {user.subscriptionCount} {user.subscriptionCount === 1 ? 'Subscription' : 'Subscriptions'} &bull; {user.totalVipDays || 0} VIP Days
-                        </p>
                       )}
 
                       {isBanned && (
@@ -729,9 +764,6 @@ const Navbar = ({ onOpenSearch }) => {
                             </span>
                             <span className="dropdown-item-label">Developer Studio</span>
                           </div>
-                          <span className="dropdown-history-count-tag dev-studio-badge">
-                            PUBLISH &amp; BROADCAST
-                          </span>
                         </button>
                       )}
 
@@ -749,9 +781,11 @@ const Navbar = ({ onOpenSearch }) => {
                           </span>
                           <span className="dropdown-item-label">Upper VIP Club</span>
                         </div>
-                        <span className={`dropdown-history-count-tag vip-perk-badge ${user?.membership?.plan ? 'active' : ''}`}>
-                          {user?.membership?.plan === 'elite' ? 'ELITE' : user?.membership?.plan === 'pro' ? 'PRO' : '₹0 FEES'}
-                        </span>
+                        {isVipActive && user?.membership?.plan && (
+                          <span className="dropdown-history-count-tag vip-perk-badge active">
+                            {user.membership.plan.toUpperCase()}
+                          </span>
+                        )}
                       </button>
 
                       {/* DOWNLOAD HISTORY BUTTON */}
@@ -796,71 +830,54 @@ const Navbar = ({ onOpenSearch }) => {
                       </button>
                     </div>
 
-                    <button
-                      type="button"
-                      className="dropdown-item-btn"
-                      style={{ color: user?.consentStatus === 'withdrawn' ? '#f59e0b' : '#f87171', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '0.6rem 0.85rem', width: '100%', textAlign: 'left', background: 'transparent' }}
-                      onClick={async () => {
-                        if (user?.consentStatus === 'withdrawn') {
-                          alert('Your consent is currently withdrawn. You may re-grant consent at any time from your profile settings.');
-                          return;
-                        }
-                        if (window.confirm('Withdraw Consent:\n\nAre you sure you want to withdraw your consent? Withdrawing consent will pause non-essential personal data processing and deactivate developer publishing privileges (if registered).\n\nYou may re-grant consent at any time in your profile settings.\n\nDo you wish to proceed?')) {
-                          try {
-                            const res = await withdrawConsent();
-                            alert(res.message || 'Consent successfully withdrawn.');
-                            closeMenu();
-                          } catch (err) {
-                            alert(err.message || 'Failed to withdraw consent. Please contact support.');
+                    {/* Subtle Privacy & Account Options */}
+                    <div className="dropdown-privacy-row">
+                      <button
+                        type="button"
+                        className="dropdown-privacy-btn"
+                        onClick={async () => {
+                          if (user?.consentStatus === 'withdrawn') {
+                            alert('Your consent is currently withdrawn. You may re-grant consent at any time from your profile settings.');
+                            return;
                           }
-                        }
-                      }}
-                    >
-                      <div className="dropdown-item-left">
-                        <span className="dropdown-item-icon" style={{ color: user?.consentStatus === 'withdrawn' ? '#f59e0b' : '#f87171' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                          </svg>
-                        </span>
-                        <span className="dropdown-item-label" style={{ color: user?.consentStatus === 'withdrawn' ? '#f59e0b' : '#f87171', fontSize: '0.78rem' }}>
-                          {user?.consentStatus === 'withdrawn' ? 'Consent Withdrawn' : 'Withdraw Consent'}
-                        </span>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="dropdown-item-btn"
-                      style={{ color: '#f87171', borderTop: '1px solid rgba(255,255,255,0.08)', padding: '0.6rem 0.85rem', width: '100%', textAlign: 'left', background: 'transparent' }}
-                      onClick={async () => {
-                        if (window.confirm('Delete Account & Erase Data: Are you sure you want to permanently delete your account and erase all associated personal data from Upper Store? This action is irreversible.')) {
-                          try {
-                            const activeToken = token || localStorage.getItem('upper_user_token');
-                            const res = await fetch(`${API_BASE}/api/auth/user/delete-account`, {
-                              method: 'DELETE',
-                              headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
-                            });
-                            const data = await res.json();
-                            alert(data.message || 'Your account and data have been erased successfully.');
-                            logout();
-                            closeMenu();
-                          } catch (err) {
-                            alert('Failed to erase account data. Please contact support.');
+                          if (window.confirm('Withdraw Consent:\n\nAre you sure you want to withdraw your consent? Withdrawing consent will pause non-essential personal data processing and deactivate developer publishing privileges (if registered).\n\nYou may re-grant consent at any time in your profile settings.\n\nDo you wish to proceed?')) {
+                            try {
+                              const res = await withdrawConsent();
+                              alert(res.message || 'Consent successfully withdrawn.');
+                              closeMenu();
+                            } catch (err) {
+                              alert(err.message || 'Failed to withdraw consent. Please contact support.');
+                            }
                           }
-                        }
-                      }}
-                    >
-                      <div className="dropdown-item-left">
-                        <span className="dropdown-item-icon" style={{ color: '#f87171' }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                          </svg>
-                        </span>
-                        <span className="dropdown-item-label" style={{ color: '#f87171', fontSize: '0.78rem' }}>Erase Account &amp; Data</span>
-                      </div>
-                    </button>
+                        }}
+                      >
+                        {user?.consentStatus === 'withdrawn' ? 'Consent Withdrawn' : 'Withdraw Consent'}
+                      </button>
+                      <span className="dropdown-privacy-dot">&bull;</span>
+                      <button
+                        type="button"
+                        className="dropdown-privacy-btn danger"
+                        onClick={async () => {
+                          if (window.confirm('Delete Account & Erase Data: Are you sure you want to permanently delete your account and erase all associated personal data from Upper Store? This action is irreversible.')) {
+                            try {
+                              const activeToken = token || localStorage.getItem('upper_user_token');
+                              const res = await fetch(`${API_BASE}/api/auth/user/delete-account`, {
+                                method: 'DELETE',
+                                headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
+                              });
+                              const data = await res.json();
+                              alert(data.message || 'Your account and data have been erased successfully.');
+                              logout();
+                              closeMenu();
+                            } catch (err) {
+                              alert('Failed to erase account data. Please contact support.');
+                            }
+                          }
+                        }}
+                      >
+                        Delete Account
+                      </button>
+                    </div>
 
                     <hr className="dropdown-divider" />
                     

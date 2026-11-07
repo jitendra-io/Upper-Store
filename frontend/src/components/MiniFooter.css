@@ -4,7 +4,7 @@
   background: rgba(14, 14, 17, 0.85);
   backdrop-filter: blur(12px);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-body), sans-serif;
   color: #a0a0a0;
   margin-top: auto;
 }
@@ -30,7 +30,7 @@
   height: 28px;
   border-radius: 6px;
   object-fit: cover;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(230, 25, 25, 0.4);
 }
 
 .mini-brand-name {
@@ -41,7 +41,7 @@
 }
 
 .mini-brand-name span {
-  color: #d4af37;
+  color: #e61919;
 }
 
 .mini-copyright {
@@ -66,14 +66,14 @@
 }
 
 .social-link:hover {
-  color: #d4af37;
+  color: #e61919;
   transform: translateY(-2px);
 }
 
 .mini-accent-bar {
   height: 3px;
   width: 100%;
-  background: linear-gradient(90deg, #d4af37 0%, #aa820a 50%, #d4af37 100%);
+  background: linear-gradient(90deg, #e61919 0%, #aa820a 50%, #e61919 100%);
 }
 
 /* Mobile Responsive */

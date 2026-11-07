@@ -33,7 +33,7 @@
   background: rgba(14, 15, 21, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 20px;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.88), 0 0 40px rgba(212, 175, 55, 0.08);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.88), 0 0 40px rgba(230, 25, 25, 0.08);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -54,7 +54,7 @@
   left: 20%;
   right: 20%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(230, 25, 25, 0.5), transparent);
   pointer-events: none;
   z-index: 10;
 }
@@ -97,10 +97,10 @@
 }
 
 .dev-vip-icon-box.pro {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(180, 140, 20, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.2) 0%, rgba(180, 140, 20, 0.1) 100%);
   border: 1px solid rgba(255, 215, 0, 0.45);
-  color: #ffd700;
-  box-shadow: 0 0 16px rgba(212, 175, 55, 0.22);
+  color: #ff2a2a;
+  box-shadow: 0 0 16px rgba(230, 25, 25, 0.22);
 }
 
 .dev-header-text {
@@ -228,8 +228,8 @@
 
 .dev-segmented-tab.active {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(212, 175, 55, 0.35);
-  color: #ffd700;
+  border-color: rgba(230, 25, 25, 0.35);
+  color: #ff2a2a;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
 
@@ -318,7 +318,7 @@
 }
 
 .dev-modal-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.4);
+  background: rgba(230, 25, 25, 0.4);
 }
 
 .dev-pane-content {
@@ -329,8 +329,8 @@
 
 /* 7. KYC Gate Card */
 .dev-kyc-gate-card {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(168, 85, 247, 0.05) 100%);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.08) 0%, rgba(168, 85, 247, 0.05) 100%);
+  border: 1px solid rgba(230, 25, 25, 0.25);
   border-radius: 14px;
   padding: 1rem 1.25rem;
   display: flex;
@@ -351,7 +351,7 @@
 .gate-text h4 {
   margin: 0 0 0.2rem;
   font-size: 0.95rem;
-  color: #ffd700;
+  color: #ff2a2a;
   font-weight: 700;
 }
 
@@ -363,7 +363,7 @@
 }
 
 .gate-action-btn {
-  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  background: linear-gradient(135deg, #ff2a2a 0%, #e61919 100%);
   color: #0d0e14;
   border: none;
   font-weight: 700;
@@ -378,7 +378,7 @@
 
 .gate-action-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.4);
 }
 
 /* 8. Form Architecture */
@@ -409,9 +409,9 @@
   width: 22px;
   height: 22px;
   border-radius: 6px;
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  color: #ffd700;
+  background: rgba(230, 25, 25, 0.15);
+  border: 1px solid rgba(230, 25, 25, 0.35);
+  color: #ff2a2a;
   font-size: 0.72rem;
   font-weight: 800;
   display: flex;
@@ -492,8 +492,8 @@
 .dev-field-group textarea:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(212, 175, 55, 0.6);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15), 0 0 16px rgba(212, 175, 55, 0.08);
+  border-color: rgba(230, 25, 25, 0.6);
+  box-shadow: 0 0 0 3px rgba(230, 25, 25, 0.15), 0 0 16px rgba(230, 25, 25, 0.08);
 }
 
 /* Custom Select Dropdown with Clean SVG Chevron */
@@ -613,7 +613,7 @@
 
 .status-proof-link {
   font-size: 0.76rem;
-  color: #ffd700;
+  color: #ff2a2a;
   text-decoration: underline;
   font-weight: 700;
 }
@@ -653,7 +653,7 @@
 
 .dev-terms-agreement input {
   margin-top: 0.25rem;
-  accent-color: #d4af37;
+  accent-color: #e61919;
   cursor: pointer;
 }
 
@@ -684,7 +684,7 @@
 
 .dev-release-card:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(212, 175, 55, 0.25);
+  border-color: rgba(230, 25, 25, 0.25);
 }
 
 .release-thumbnail {
@@ -720,8 +720,8 @@
 
 .release-ver-pill {
   font-size: 0.68rem;
-  background: rgba(212, 175, 55, 0.15);
-  color: #ffd700;
+  background: rgba(230, 25, 25, 0.15);
+  color: #ff2a2a;
   padding: 0.1rem 0.45rem;
   border-radius: 6px;
   font-weight: 700;
@@ -839,7 +839,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #d4af37;
+  color: #e61919;
 }
 
 .live-broadcast-card {
@@ -858,8 +858,8 @@
 }
 
 .live-broadcast-card.pro {
-  border: 1.5px solid rgba(212, 175, 55, 0.5);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.2);
+  border: 1.5px solid rgba(230, 25, 25, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(230, 25, 25, 0.2);
 }
 
 .live-author-row {
@@ -897,8 +897,8 @@
 }
 
 .live-cat-badge.pro {
-  background: rgba(212, 175, 55, 0.2);
-  border: 1px solid #ffd700;
+  background: rgba(230, 25, 25, 0.2);
+  border: 1px solid #ff2a2a;
   color: #fef08a;
 }
 
@@ -955,9 +955,9 @@
   font-size: 0.68rem;
   font-weight: 800;
   padding: 0.18rem 0.55rem;
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  color: #ffd700;
+  background: rgba(230, 25, 25, 0.15);
+  border: 1px solid rgba(230, 25, 25, 0.35);
+  color: #ff2a2a;
   border-radius: 6px;
 }
 
@@ -991,7 +991,7 @@
 }
 
 .dev-primary-btn {
-  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  background: linear-gradient(135deg, #ff2a2a 0%, #e61919 100%);
   border: none;
   color: #090a0f;
   font-size: 0.84rem;
@@ -1000,7 +1000,7 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.35);
   font-family: inherit;
   display: inline-flex;
   align-items: center;
@@ -1009,7 +1009,7 @@
 
 .dev-primary-btn:hover:not(:disabled) {
   transform: translateY(-1.5px);
-  box-shadow: 0 6px 22px rgba(212, 175, 55, 0.5);
+  box-shadow: 0 6px 22px rgba(230, 25, 25, 0.5);
   background: linear-gradient(135deg, #ffe033 0%, #e6b800 100%);
 }
 
@@ -1035,8 +1035,8 @@
 .dev-spinner {
   width: 34px;
   height: 34px;
-  border: 2.5px solid rgba(212, 175, 55, 0.2);
-  border-top-color: #d4af37;
+  border: 2.5px solid rgba(230, 25, 25, 0.2);
+  border-top-color: #e61919;
   border-radius: 50%;
   animation: devSpin 0.75s linear infinite;
 }
@@ -1232,7 +1232,7 @@
 
 /* Edit Mode Active Banner */
 .dev-edit-active-banner {
-  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(212, 175, 55, 0.08) 100%);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(230, 25, 25, 0.08) 100%);
   border: 1px solid rgba(56, 189, 248, 0.4);
   border-radius: 12px;
   padding: 0.8rem 1.1rem;
@@ -1294,8 +1294,8 @@
 }
 
 .dev-username-wrap:focus-within {
-  border-color: rgba(212, 175, 55, 0.7);
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+  border-color: rgba(230, 25, 25, 0.7);
+  box-shadow: 0 0 0 3px rgba(230, 25, 25, 0.15);
 }
 
 .dev-username-prefix {
@@ -1316,14 +1316,14 @@
 
 /* 13. Limit Alert Card & Allowance Strip */
 .dev-limit-alert-card {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(239, 68, 68, 0.08) 100%);
-  border: 1px solid rgba(212, 175, 55, 0.45);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.12) 0%, rgba(239, 68, 68, 0.08) 100%);
+  border: 1px solid rgba(230, 25, 25, 0.45);
   border-radius: 14px;
   padding: 1.1rem 1.35rem;
   display: flex;
   align-items: center;
   gap: 1.1rem;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(230, 25, 25, 0.1);
 }
 
 .limit-alert-icon {
@@ -1342,7 +1342,7 @@
 .limit-alert-content h4 {
   margin: 0 0 0.25rem;
   font-size: 0.96rem;
-  color: #ffd700;
+  color: #ff2a2a;
   font-weight: 800;
 }
 
@@ -1354,7 +1354,7 @@
 }
 
 .limit-upgrade-btn {
-  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  background: linear-gradient(135deg, #ff2a2a 0%, #e61919 100%);
   color: #0d0e14;
   font-weight: 800;
   font-size: 0.82rem;
@@ -1364,12 +1364,12 @@
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.35);
 }
 
 .limit-upgrade-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.5);
 }
 
 .dev-allowance-strip {
@@ -1391,8 +1391,8 @@
 }
 
 .allowance-badge {
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(230, 25, 25, 0.15);
+  border: 1px solid rgba(230, 25, 25, 0.4);
   color: #fbbf24;
   font-size: 0.72rem;
   font-weight: 800;
@@ -1414,7 +1414,7 @@
 .allowance-upgrade-link {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #ffd700;
+  color: #ff2a2a;
   text-decoration: none;
   transition: all 0.2s ease;
 }

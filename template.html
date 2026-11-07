@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizex — Futuristic Software Ecosystem & Product Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Space Grotesk, Inter, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Three.js for the Interactive 3D Red Crystalline Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        obsidian: {
+                            950: '#050507',
+                            900: '#070709',
+                            800: '#0d0d12',
+                            700: '#14141b',
+                            600: '#1c1c26',
+                        },
+                        crimson: {
+                            400: '#ff4d4d',
+                            500: '#ff2a2a',
+                            600: '#e61919',
+                            700: '#b30f0f',
+                            900: '#4d0606',
+                        }
+                    },
+                    boxShadow: {
+                        'crimson-glow': '0 0 25px -3px rgba(230, 25, 25, 0.45), 0 0 10px -2px rgba(255, 42, 42, 0.3)',
+                        'crimson-glow-lg': '0 0 45px -5px rgba(230, 25, 25, 0.6), 0 0 20px -4px rgba(255, 42, 42, 0.4)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.55)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #070709;
+            color: #ffffff;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(230, 25, 25, 0.12) 0%, transparent 35%),
+                radial-gradient(circle at 85% 25%, rgba(230, 25, 25, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 65%, rgba(180, 15, 15, 0.07) 0%, transparent 50%);
+        }
+
+        /* Subtle Futuristic Grid Overlay */
+        .bg-grid-pattern {
+            background-size: 48px 48px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        }
+
+        /* Glassmorphic Surface Card */
+        .glass-card {
+            background: linear-gradient(145deg, rgba(20, 20, 27, 0.85) 0%, rgba(13, 13, 18, 0.92) 100%);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(230, 25, 25, 0.45);
+            box-shadow: 0 12px 40px -10px rgba(230, 25, 25, 0.22), 0 0 1px 1px rgba(230, 25, 25, 0.25);
+            transform: translateY(-4px);
+        }
+
+        .glass-pill {
+            background: rgba(20, 20, 28, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        /* Glowing Crimson Pill Badge from Screenshot */
+        .crimson-badge {
+            background: linear-gradient(90deg, rgba(230, 25, 25, 0.18) 0%, rgba(140, 10, 10, 0.28) 100%);
+            border: 1px solid rgba(255, 42, 42, 0.4);
+            box-shadow: 0 0 20px rgba(230, 25, 25, 0.25);
+        }
+
+        /* Custom Red Vertical Scanline Graphic from Screenshot */
+        .crimson-scanlines {
+            background: repeating-linear-gradient(
+                90deg,
+                #e61919 0px,
+                #ff2a2a 2px,
+                #4d0606 4px,
+                #0d0d12 9px,
+                #990f0f 12px,
+                #ff4d4d 14px,
+                #140404 18px
+            );
+            position: relative;
+            overflow: hidden;
+        }
+        .crimson-scanlines::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, #0d0d12 5%, transparent 45%, #0d0d12 95%);
+        }
+
+        /* Floating Animation for Telemetry Badges */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-float-1 { animation: floatSlow 5s ease-in-out infinite; }
+        .animate-float-2 { animation: floatSlow 6.5s ease-in-out 1s infinite; }
+        .animate-float-3 { animation: floatSlow 5.5s ease-in-out 2s infinite; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #070709; }
+        ::-webkit-scrollbar-thumb { background: #262632; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e61919; }
+
+        /* Radial Gauge Animation */
+        .radial-progress {
+            transition: stroke-dashoffset 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+    </style>
+</head>
+<body class="font-sans antialiased selection:bg-crimson-600 selection:text-white bg-grid-pattern">
+
+    <!-- Toast Notification Container (No alert() used) -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- ==================== 1. STICKY GLASSMORPHIC NAVBAR ==================== -->
+    <header class="sticky top-0 z-40 w-full bg-obsidian-900/80 backdrop-blur-xl border-b border-white/[0.07]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo matching Screenshot ("Hor" in red, "izex" in white) -->
+            <a href="#" class="flex items-center gap-2.5 group focus:outline-none">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-crimson-500 to-crimson-900 flex items-center justify-center shadow-crimson-glow border border-crimson-400/40 group-hover:scale-105 transition-transform">
+                    <i data-lucide="cpu" class="w-5 h-5 text-white"></i>
+                </div>
+                <span class="font-display text-2xl font-bold tracking-tight">
+                    <span class="text-crimson-500 drop-shadow-[0_0_10px_rgba(230,25,25,0.6)]">Hor</span><span class="text-white">izex</span>
+                </span>
+                <span class="hidden sm:inline-block ml-1 px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest bg-white/[0.06] text-gray-400 rounded border border-white/10">v4.2 OS</span>
+            </a>
+
+            <!-- Center Navigation Links -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
+                <a href="#hero" class="hover:text-white transition-colors">Home</a>
+                <a href="#products" class="text-crimson-500 font-semibold relative after:content-[''] after:absolute after:-bottom-1.5 after:left-0 after:w-full after:h-0.5 after:bg-crimson-500 after:rounded-full">Products</a>
+                <a href="#benchmarks" class="hover:text-white transition-colors">Architecture</a>
+                <a href="#frontier" class="hover:text-white transition-colors">Solutions</a>
+                <a href="#pricing" class="hover:text-white transition-colors">Licensing</a>
+            </nav>
+
+            <!-- Right Actions -->
+            <div class="flex items-center gap-3">
+                <button onclick="focusProductSearch()" class="hidden sm:flex items-center gap-2.5 px-3.5 py-2 rounded-lg bg-obsidian-700/90 hover:bg-obsidian-600 border border-white/10 text-xs text-gray-400 hover:text-white transition-all">
+                    <i data-lucide="search" class="w-3.5 h-3.5 text-crimson-400"></i>
+                    <span>Find Software...</span>
+                    <kbd class="px-1.5 py-0.5 text-[10px] font-mono bg-black/50 text-gray-400 rounded border border-white/10">⌘K</kbd>
+                </button>
+
+                <a href="#products" class="px-5 py-2.5 rounded-lg bg-crimson-600 hover:bg-crimson-500 text-white font-medium text-sm shadow-crimson-glow hover:shadow-crimson-glow-lg transition-all flex items-center gap-2">
+                    <span>Get Started</span>
+                    <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                </a>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" onclick="toggleMobileMenu()" class="md:hidden p-2.5 rounded-lg bg-obsidian-700 border border-white/10 text-gray-300 hover:text-white">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Dropdown Drawer -->
+        <div id="mobileMenu" class="hidden md:hidden bg-obsidian-800/95 backdrop-blur-xl border-b border-white/10 px-6 py-5 space-y-3">
+            <a href="#hero" onclick="toggleMobileMenu()" class="block py-2 text-gray-300 hover:text-white font-medium">Home</a>
+            <a href="#products" onclick="toggleMobileMenu()" class="block py-2 text-crimson-400 font-semibold">Software Products</a>
+            <a href="#benchmarks" onclick="toggleMobileMenu()" class="block py-2 text-gray-300 hover:text-white font-medium">Architecture & Telemetry</a>
+            <a href="#frontier" onclick="toggleMobileMenu()" class="block py-2 text-gray-300 hover:text-white font-medium">Frontier Capabilities</a>
+            <a href="#pricing" onclick="toggleMobileMenu()" class="block py-2 text-gray-300 hover:text-white font-medium">Licensing & Pricing</a>
+        </div>
+    </header>
+
+    <!-- ==================== 2. HERO SECTION (MATCHING SCREENSHOT) ==================== -->
+    <section id="hero" class="relative pt-10 pb-20 lg:pt-16 lg:pb-28 overflow-hidden">
+        <!-- Ambient Background Crimson Spotlight -->
+        <div class="pointer-events-none absolute top-1/2 right-10 -translate-y-1/2 w-[480px] h-[480px] bg-crimson-600/20 rounded-full blur-[130px]"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+                
+                <!-- Left Column: Typography, CTAs, Social Proof -->
+                <div class="lg:col-span-6 space-y-7 z-10">
+                    <!-- Glowing Pill Badge -->
+                    <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full crimson-badge">
+                        <span class="w-2 h-2 rounded-full bg-crimson-500 animate-ping"></span>
+                        <span class="w-2 h-2 rounded-full bg-crimson-500 -ml-4"></span>
+                        <span class="text-xs font-medium tracking-wide text-red-200">Next-Gen Software Technology Platform</span>
+                    </div>
+
+                    <!-- High-Contrast Headline -->
+                    <h1 class="font-display text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.08] text-white">
+                        Powering the <br class="hidden sm:inline" />
+                        Future Through <br class="hidden sm:inline" />
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-white via-red-100 to-crimson-500">Intelligent Software</span>
+                    </h1>
+
+                    <!-- Subtitle Description -->
+                    <p class="text-gray-400 text-base sm:text-lg leading-relaxed max-w-xl">
+                        Advanced digital software products combining ultra-low latency performance, neural intelligence, and device-bound security—engineered for teams operating at the frontier.
+                    </p>
+
+                    <!-- CTA Row + Enterprise Avatar Stack (As seen in screenshot) -->
+                    <div class="flex flex-wrap items-center gap-6 pt-2">
+                        <a href="#products" class="px-7 py-3.5 rounded-lg bg-crimson-600 hover:bg-crimson-500 text-white font-semibold text-sm shadow-crimson-glow hover:shadow-crimson-glow-lg transition-all flex items-center gap-2.5">
+                            <span>Explore Products</span>
+                            <i data-lucide="layers" class="w-4 h-4"></i>
+                        </a>
+
+                        <button onclick="openProductModal('upper-store')" class="px-6 py-3.5 rounded-lg bg-obsidian-700/80 hover:bg-obsidian-600 text-gray-200 font-medium text-sm border border-white/10 hover:border-crimson-500/40 transition-all flex items-center gap-2">
+                            <i data-lucide="terminal" class="w-4 h-4 text-crimson-400"></i>
+                            <span>Quick CLI Install</span>
+                        </button>
+
+                        <!-- 500+ Enterprise Clients Social Proof -->
+                        <div class="flex items-center gap-3.5 pl-1">
+                            <div class="flex -space-x-2.5">
+                                <img src="https://placehold.co/80x80/1f1f2e/ffffff?text=JD" alt="Client 1" class="w-9 h-9 rounded-full border-2 border-obsidian-900 object-cover">
+                                <img src="https://placehold.co/80x80/7f1d1d/ffffff?text=AK" alt="Client 2" class="w-9 h-9 rounded-full border-2 border-obsidian-900 object-cover">
+                                <img src="https://placehold.co/80x80/312e81/ffffff?text=MR" alt="Client 3" class="w-9 h-9 rounded-full border-2 border-obsidian-900 object-cover">
+                                <div class="w-9 h-9 rounded-full border-2 border-obsidian-900 bg-crimson-600 text-[10px] font-mono font-bold flex items-center justify-center text-white">+497</div>
+                            </div>
+                            <div>
+                                <div class="text-white font-display font-bold text-base leading-none">500+</div>
+                                <div class="text-xs text-gray-400 mt-0.5">Enterprise Clients</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mini Quick-Jump Product Pills -->
+                    <div class="pt-4 border-t border-white/[0.07] flex flex-wrap items-center gap-2 text-xs text-gray-400">
+                        <span class="font-mono uppercase tracking-wider text-gray-500 mr-1">Flagship Suite:</span>
+                        <button onclick="openProductModal('upper-store')" class="px-2.5 py-1 rounded bg-white/[0.04] hover:bg-crimson-500/20 hover:text-red-200 border border-white/5 transition-colors">Upper Store</button>
+                        <button onclick="openProductModal('upper-player')" class="px-2.5 py-1 rounded bg-white/[0.04] hover:bg-crimson-500/20 hover:text-red-200 border border-white/5 transition-colors">Upper Player</button>
+                        <button onclick="openProductModal('horizex-ai')" class="px-2.5 py-1 rounded bg-white/[0.04] hover:bg-crimson-500/20 hover:text-red-200 border border-white/5 transition-colors">Horizex AI Core</button>
+                        <button onclick="openProductModal('quantumsync')" class="px-2.5 py-1 rounded bg-white/[0.04] hover:bg-crimson-500/20 hover:text-red-200 border border-white/5 transition-colors">QuantumSync DB</button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Interactive 3D Crimson Crystalline Core & Floating Badges -->
+                <div class="lg:col-span-6 relative flex items-center justify-center min-h-[420px] sm:min-h-[500px]">
+                    <!-- Glowing Ring Backdrop -->
+                    <div class="absolute w-72 h-72 sm:w-96 sm:h-96 rounded-full border border-crimson-500/20 animate-pulse"></div>
+                    <div class="absolute w-80 h-80 sm:w-[430px] sm:h-[430px] rounded-full border border-white/[0.04]"></div>
+
+                    <!-- Three.js Canvas Container -->
+                    <div id="coreCanvasContainer" class="w-full h-[420px] sm:h-[480px] cursor-grab active:cursor-grabbing relative z-10" title="Drag to rotate the Horizex Neural Core"></div>
+
+                    <!-- Floating Top-Left Badge (Matches screenshot: "Systems that think and adapt") -->
+                    <div class="glass-pill rounded-xl p-3.5 pr-5 flex items-center gap-3.5 absolute top-8 left-2 sm:left-6 z-20 animate-float-1 shadow-glass">
+                        <div class="w-10 h-10 rounded-lg bg-crimson-600/20 border border-crimson-500/40 flex items-center justify-center text-crimson-400">
+                            <i data-lucide="cpu" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs font-semibold text-white leading-tight">Systems that think</div>
+                            <div class="text-[11px] text-gray-400">and adapt in real-time</div>
+                        </div>
+                    </div>
+
+                    <!-- Floating Top-Right Telemetry Tag -->
+                    <div class="glass-pill rounded-xl px-3.5 py-2.5 hidden sm:flex items-center gap-2.5 absolute top-14 right-4 z-20 animate-float-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                        <span class="font-mono text-xs text-gray-200">99.98% Uptime SLA</span>
+                    </div>
+
+                    <!-- Floating Bottom-Right Stats Card (Matches screenshot: "180K+ Active Users | 4.9/5 User Satisfaction") -->
+                    <div class="glass-pill rounded-2xl p-4 sm:px-6 sm:py-4 flex items-center gap-6 absolute bottom-6 right-2 sm:right-6 z-20 animate-float-3 shadow-glass border border-white/15">
+                        <div>
+                            <div class="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight">180K+</div>
+                            <div class="text-[11px] text-gray-400 mt-0.5">Active Deployments</div>
+                        </div>
+                        <div class="h-9 w-px bg-white/10"></div>
+                        <div>
+                            <div class="font-display text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-1.5">
+                                <span>4.9/5</span>
+                                <i data-lucide="star" class="w-4 h-4 text-crimson-500 fill-crimson-500"></i>
+                            </div>
+                            <div class="text-[11px] text-gray-400 mt-0.5">User Satisfaction</div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Hint -->
+                    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 text-[11px] font-mono text-gray-500 flex items-center gap-1.5 pointer-events-none">
+                        <i data-lucide="move-3d" class="w-3.5 h-3.5 text-crimson-500"></i>
+                        <span>Interactive 3D Core — Drag to Inspect</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 3. SOFTWARE PRODUCTS SHOWCASE ("OUR SOFTWARE SUITE") ==================== -->
+    <section id="products" class="py-20 lg:py-28 relative border-t border-white/[0.06]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            
+            <!-- Section Header -->
+            <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-crimson-600/15 border border-crimson-500/30 text-crimson-400 text-xs font-mono uppercase tracking-widest mb-3">
+                        <i data-lucide="package-check" class="w-3.5 h-3.5"></i>
+                        <span>Production-Grade Software Catalog</span>
+                    </div>
+                    <h2 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+                        Software Products Engineered <br class="hidden sm:inline" />
+                        <span class="text-crimson-500">For The Frontier</span>
+                    </h2>
+                </div>
+                <p class="text-gray-400 max-w-md text-sm sm:text-base">
+                    Deploy standalone desktop clients, cloud distribution registries, or neural automation engines. Every product ships with cryptographic license validation and full telemetry.
+                </p>
+            </div>
+
+            <!-- Interactive Filter Tabs + Search Input -->
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-10 p-2 rounded-2xl bg-obsidian-800/90 border border-white/[0.07]">
+                <!-- Category Tabs -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="categoryTabs">
+                    <button onclick="filterProducts('all')" data-cat="all" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all bg-crimson-600 text-white shadow-crimson-glow whitespace-nowrap">
+                        All Products (6)
+                    </button>
+                    <button onclick="filterProducts('distribution')" data-cat="distribution" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/[0.04] whitespace-nowrap">
+                        Distribution & Cloud
+                    </button>
+                    <button onclick="filterProducts('media')" data-cat="media" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/[0.04] whitespace-nowrap">
+                        Media & Client Apps
+                    </button>
+                    <button onclick="filterProducts('ai')" data-cat="ai" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/[0.04] whitespace-nowrap">
+                        AI & Automation
+                    </button>
+                    <button onclick="filterProducts('security')" data-cat="security" class="cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/[0.04] whitespace-nowrap">
+                        Security & DevOps
+                    </button>
+                </div>
+
+                <!-- Live Search Input -->
+                <div class="relative min-w-[260px]">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input 
+                        id="productSearchInput" 
+                        type="text" 
+                        oninput="handleSearchProducts(this.value)"
+                        placeholder="Search by name, stack, or feature..." 
+                        class="w-full pl-10 pr-8 py-2 rounded-xl bg-obsidian-900/90 border border-white/10 focus:border-crimson-500 focus:outline-none text-sm text-white placeholder-gray-500 transition-colors"
+                    >
+                    <button id="clearSearchBtn" onclick="clearProductSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Software Products Grid -->
+            <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <!-- Empty Search State -->
+            <div id="emptyProductsState" class="hidden text-center py-16 glass-card rounded-2xl">
+                <div class="w-12 h-12 rounded-xl bg-crimson-500/10 border border-crimson-500/30 flex items-center justify-center mx-auto mb-4 text-crimson-400">
+                    <i data-lucide="search-x" class="w-6 h-6"></i>
+                </div>
+                <h3 class="font-display text-xl font-bold text-white">No matching software products found</h3>
+                <p class="text-gray-400 text-sm mt-1 mb-5">Try clearing your search query or switching to All Products.</p>
+                <button onclick="clearProductSearch()" class="px-4 py-2 rounded-lg bg-crimson-600 text-white text-xs font-semibold">Reset Filters</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 4. TELEMETRY & BENCHMARKS (EXACT REPLICA OF SCREENSHOT MIDDLE PANEL) ==================== -->
+    <section id="benchmarks" class="py-20 lg:py-28 relative bg-obsidian-800/40 border-y border-white/[0.06]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                
+                <!-- Left Column: Red Scanline Graphic + 3 Engineering Pillars + 96% Radial Gauge -->
+                <div class="lg:col-span-5 space-y-8">
+                    <div>
+                        <span class="inline-block px-3.5 py-1.5 rounded-md bg-crimson-600 text-white text-xs font-semibold shadow-crimson-glow mb-4">
+                            Learn More
+                        </span>
+                        <p class="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-sm">
+                            We create powerful, scalable, and forward-thinking software products designed to help engineering organizations outpace conventional limits.
+                        </p>
+                    </div>
+
+                    <!-- Glowing Red Barcode / Matrix Scanlines Box from Screenshot -->
+                    <div class="rounded-2xl p-1 bg-gradient-to-b from-crimson-500/40 to-transparent">
+                        <div class="h-44 rounded-xl crimson-scanlines flex items-end p-5 relative">
+                            <div class="relative z-10 flex items-center justify-between w-full">
+                                <div>
+                                    <span class="font-mono text-[11px] uppercase tracking-widest text-red-300 block">Real-Time Kernel Stream</span>
+                                    <span class="font-display text-lg font-bold text-white">Horizex Neural Bus v4.2</span>
+                                </div>
+                                <span class="px-2.5 py-1 rounded bg-black/70 border border-crimson-500/40 font-mono text-xs text-crimson-400">2.4 TB/s</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3 Engineering Pillars + 96% Deployment Success Radial Gauge (Side by side like screenshot) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center pt-2">
+                        <div class="sm:col-span-7 space-y-5">
+                            <div class="border-l-2 border-crimson-500 pl-4">
+                                <h4 class="font-display font-bold text-white text-sm">01. Discovery & Vision Mapping</h4>
+                                <p class="text-xs text-gray-400 mt-1">Every software release starts with deep telemetry discovery and deterministic architecture modeling.</p>
+                            </div>
+                            <div class="border-l-2 border-white/15 hover:border-crimson-500 transition-colors pl-4">
+                                <h4 class="font-display font-bold text-white text-sm">02. Research & Strategic Core</h4>
+                                <p class="text-xs text-gray-400 mt-1">Our engineering team dives deep into kernel-level optimization, TLS caching, and zero-trust cryptography.</p>
+                            </div>
+                            <div class="border-l-2 border-white/15 hover:border-crimson-500 transition-colors pl-4">
+                                <h4 class="font-display font-bold text-white text-sm">03. Frontier Engineering</h4>
+                                <p class="text-xs text-gray-400 mt-1">Bringing strategic roadmaps to life—building resilient binaries and cloud microservices with precision.</p>
+                            </div>
+                        </div>
+
+                        <!-- 96% Deployment Success Radial Card (Exact match to screenshot) -->
+                        <div class="sm:col-span-5 glass-card rounded-2xl p-5 flex flex-col items-center justify-center text-center">
+                            <div class="relative w-32 h-32 flex items-center justify-center">
+                                <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                                    <!-- Track -->
+                                    <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" />
+                                    <!-- Glowing Red Progress Ring (96% of 314.15 = 301.5) -->
+                                    <circle cx="60" cy="60" r="50" fill="none" stroke="#e61919" stroke-width="8" stroke-linecap="round"
+                                        stroke-dasharray="314.16" stroke-dashoffset="12.56"
+                                        class="radial-progress drop-shadow-[0_0_8px_rgba(230,25,25,0.8)]" />
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center px-2">
+                                    <span class="font-display text-2xl font-bold text-white">96%</span>
+                                    <span class="text-[10px] text-gray-400 leading-tight mt-0.5">Deployment<br/>Success</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Headline + Animated Crimson Progress Bars (Exact match to screenshot) -->
+                <div class="lg:col-span-7 space-y-8 lg:pl-6">
+                    <div>
+                        <h2 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
+                            Building The Future Through <br class="hidden sm:inline" />
+                            Intelligent Technology
+                        </h2>
+                        <p class="text-gray-400 text-sm sm:text-base mt-4 leading-relaxed">
+                            Behind every Horizex software product is a team that refuses to accept conventional limits—engineers and systems researchers who operate at the absolute frontier of technological possibility every single day.
+                        </p>
+                    </div>
+
+                    <!-- Progress Bars Stack -->
+                    <div class="space-y-4">
+                        <!-- Bar 1 -->
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex items-center justify-between text-sm font-medium mb-3">
+                                <span class="text-white font-display">Artificial Intelligence & Neural Pipelines</span>
+                                <span class="font-mono text-xs text-gray-300">95%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-crimson-600 to-crimson-400 rounded-full shadow-crimson-glow" style="width: 95%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Bar 2 -->
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex items-center justify-between text-sm font-medium mb-3">
+                                <span class="text-white font-display">Quantum & Low-Latency Edge Computing</span>
+                                <span class="font-mono text-xs text-gray-300">92%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-crimson-600 to-crimson-400 rounded-full shadow-crimson-glow" style="width: 92%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Bar 3 -->
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex items-center justify-between text-sm font-medium mb-3">
+                                <span class="text-white font-display">Cloud Infrastructure & Distributed Caching</span>
+                                <span class="font-mono text-xs text-gray-300">97%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-crimson-600 to-crimson-400 rounded-full shadow-crimson-glow" style="width: 97%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Bar 4 -->
+                        <div class="glass-card rounded-xl p-5">
+                            <div class="flex items-center justify-between text-sm font-medium mb-3">
+                                <span class="text-white font-display">Cryptographic Licensing & Zero-Trust Security</span>
+                                <span class="font-mono text-xs text-gray-300">99%</span>
+                            </div>
+                            <div class="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-crimson-600 to-crimson-400 rounded-full shadow-crimson-glow" style="width: 99%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Live Architecture Benchmark Trigger -->
+                    <div class="glass-card rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-crimson-500/30">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-10 h-10 rounded-xl bg-crimson-600/20 border border-crimson-500/40 flex items-center justify-center text-crimson-400 shrink-0">
+                                <i data-lucide="activity" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-display font-bold text-white">Run Live Product Latency Stress-Test</div>
+                                <div class="text-xs text-gray-400" id="stressTestStatus">Simulate 50,000 concurrent requests across Upper Store & QuantumSync DB.</div>
+                            </div>
+                        </div>
+                        <button id="stressTestBtn" onclick="runLatencyBenchmark()" class="px-4 py-2.5 rounded-lg bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-mono uppercase tracking-wider font-semibold shadow-crimson-glow transition-all shrink-0">
+                            Run Benchmark
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 5. FRONTIER CAPABILITY TILES (RIGHT SCREENSHOT SECTION) ==================== -->
+    <section id="frontier" class="py-20 lg:py-24 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-14">
+                <h2 class="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                    Solutions Engineered For <br />
+                    <span class="text-crimson-500">The Frontier</span>
+                </h2>
+                <p class="text-gray-400 text-sm sm:text-base mt-3">
+                    Modular software primitives that power all six flagship applications in the Horizex ecosystem.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Tile 1 -->
+                <div class="glass-card rounded-2xl p-7 text-center flex flex-col items-center group">
+                    <div class="w-14 h-14 rounded-2xl bg-white/[0.05] group-hover:bg-crimson-600/20 border border-white/10 group-hover:border-crimson-500/40 flex items-center justify-center text-white group-hover:text-crimson-400 transition-all mb-5">
+                        <i data-lucide="brain-circuit" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-white mb-2">Artificial Intelligence</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Machine intelligence engines that don't just automate tasks—they synthesize context and self-optimize execution paths.
+                    </p>
+                </div>
+
+                <!-- Tile 2 -->
+                <div class="glass-card rounded-2xl p-7 text-center flex flex-col items-center group">
+                    <div class="w-14 h-14 rounded-2xl bg-white/[0.05] group-hover:bg-crimson-600/20 border border-white/10 group-hover:border-crimson-500/40 flex items-center justify-center text-white group-hover:text-crimson-400 transition-all mb-5">
+                        <i data-lucide="link-2" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-white mb-2">Distributed Systems</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Multi-region state replication and cryptographic activation key verification with sub-12ms global edge finality.
+                    </p>
+                </div>
+
+                <!-- Tile 3 -->
+                <div class="glass-card rounded-2xl p-7 text-center flex flex-col items-center group">
+                    <div class="w-14 h-14 rounded-2xl bg-white/[0.05] group-hover:bg-crimson-600/20 border border-white/10 group-hover:border-crimson-500/40 flex items-center justify-center text-white group-hover:text-crimson-400 transition-all mb-5">
+                        <i data-lucide="database" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-white mb-2">Advanced Data Fabric</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Engineering high-throughput data pipelines and TLS in-memory caching that give organizations analytical supremacy.
+                    </p>
+                </div>
+
+                <!-- Tile 4 -->
+                <div class="glass-card rounded-2xl p-7 text-center flex flex-col items-center group">
+                    <div class="w-14 h-14 rounded-2xl bg-white/[0.05] group-hover:bg-crimson-600/20 border border-white/10 group-hover:border-crimson-500/40 flex items-center justify-center text-white group-hover:text-crimson-400 transition-all mb-5">
+                        <i data-lucide="shield-check" class="w-7 h-7"></i>
+                    </div>
+                    <h3 class="font-display text-lg font-bold text-white mb-2">Hardware-Bound Security</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed">
+                        Device-bound licensing keys, rate-limited API gateways, and zero-trust telemetry protection out of the box.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 6. LICENSING & PRICING TIERS ==================== -->
+    <section id="pricing" class="py-20 lg:py-28 relative border-t border-white/[0.06]">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                <div>
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-crimson-600/15 border border-crimson-500/30 text-crimson-400 text-xs font-mono uppercase tracking-widest mb-3">
+                        <span>Flexible Software Licensing</span>
+                    </div>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight">
+                        Deploy Single Apps or the <span class="text-crimson-500">Full Ecosystem</span>
+                    </h2>
+                </div>
+
+                <!-- Billing Cycle Toggle -->
+                <div class="inline-flex items-center p-1.5 rounded-xl bg-obsidian-800 border border-white/10 self-start">
+                    <button id="monthlyBtn" onclick="setBillingCycle('monthly')" class="px-4 py-2 rounded-lg text-xs font-semibold bg-crimson-600 text-white shadow-crimson-glow transition-all">
+                        Monthly Billing
+                    </button>
+                    <button id="annualBtn" onclick="setBillingCycle('annual')" class="px-4 py-2 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all flex items-center gap-1.5">
+                        <span>Annual Sync</span>
+                        <span class="px-1.5 py-0.5 rounded bg-crimson-500/20 text-crimson-400 font-mono text-[10px]">-25%</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Tier 1: Developer Indie -->
+                <div class="glass-card rounded-2xl p-8 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-display text-xl font-bold text-white">Developer Node</span>
+                            <span class="font-mono text-xs px-2.5 py-1 rounded bg-white/5 text-gray-400">Single Seat</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Ideal for individual engineers testing Upper Store, Upper Player, and CLI tools.</p>
+                        <div class="my-6 flex items-baseline gap-1">
+                            <span class="font-display text-4xl font-bold text-white" id="priceDev">$29</span>
+                            <span class="text-xs text-gray-400">/ month</span>
+                        </div>
+                        <ul class="space-y-3 text-xs sm:text-sm text-gray-300 border-t border-white/10 pt-6">
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> Access to 3 Flagship Client Apps</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> 2 Device-Bound Activation Keys</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> 100GB Edge CDN Distribution Quota</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> Community Discord & CLI Docs</li>
+                        </ul>
+                    </div>
+                    <button onclick="selectPlan('Developer Node')" class="mt-8 w-full py-3 rounded-xl bg-white/[0.06] hover:bg-crimson-600 text-white font-semibold text-sm border border-white/10 hover:border-crimson-500 transition-all">
+                        Generate Developer Key
+                    </button>
+                </div>
+
+                <!-- Tier 2: Pro Suite (Highlighted Crimson) -->
+                <div class="glass-card rounded-2xl p-8 flex flex-col justify-between border-crimson-500/60 shadow-crimson-glow relative">
+                    <div class="absolute -top-3.5 right-6 px-3 py-1 rounded-full bg-crimson-600 text-white font-mono text-[10px] uppercase tracking-widest font-bold shadow-crimson-glow">
+                        Most Popular
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-display text-xl font-bold text-white">Pro Engineering Team</span>
+                            <span class="font-mono text-xs px-2.5 py-1 rounded bg-crimson-500/20 text-crimson-400">Up to 15 Seats</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Full software suite access with automated webhook pipelines and priority TLS caching.</p>
+                        <div class="my-6 flex items-baseline gap-1">
+                            <span class="font-display text-4xl font-bold text-white" id="pricePro">$99</span>
+                            <span class="text-xs text-gray-400">/ month</span>
+                        </div>
+                        <ul class="space-y-3 text-xs sm:text-sm text-gray-200 border-t border-white/10 pt-6">
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> All 6 Horizex Software Products</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> 25 Hardware-Bound License Keys</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> Horizex AI Core Webhook Orchestrator</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> QuantumSync Redis/TLS Cluster Included</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> 24/7 Priority Kernel Support</li>
+                        </ul>
+                    </div>
+                    <button onclick="selectPlan('Pro Engineering Team')" class="mt-8 w-full py-3 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white font-semibold text-sm shadow-crimson-glow transition-all">
+                        Provision Pro Suite
+                    </button>
+                </div>
+
+                <!-- Tier 3: Enterprise Cluster -->
+                <div class="glass-card rounded-2xl p-8 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <span class="font-display text-xl font-bold text-white">Enterprise Cluster</span>
+                            <span class="font-mono text-xs px-2.5 py-1 rounded bg-white/5 text-gray-400">Unlimited</span>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Custom air-gapped on-premise deployments, dedicated SLA, and source-level audits.</p>
+                        <div class="my-6 flex items-baseline gap-1">
+                            <span class="font-display text-4xl font-bold text-white" id="priceEnt">$349</span>
+                            <span class="text-xs text-gray-400">/ month</span>
+                        </div>
+                        <ul class="space-y-3 text-xs sm:text-sm text-gray-300 border-t border-white/10 pt-6">
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> Unlimited Seats & Floating License Server</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> Self-Hosted Upper Store Registry</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> Custom Sentinel Mesh Firewall Rules</li>
+                            <li class="flex items-center gap-2.5"><i data-lucide="check" class="w-4 h-4 text-crimson-500"></i> 99.99% Guaranteed SLA & Dedicated Engineer</li>
+                        </ul>
+                    </div>
+                    <button onclick="selectPlan('Enterprise Cluster')" class="mt-8 w-full py-3 rounded-xl bg-white/[0.06] hover:bg-crimson-600 text-white font-semibold text-sm border border-white/10 hover:border-crimson-500 transition-all">
+                        Request Enterprise Deployment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== 7. FOOTER ==================== -->
+    <footer class="bg-obsidian-950 border-t border-white/[0.07] py-14">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 pb-10 border-b border-white/[0.06]">
+                <div>
+                    <a href="#" class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-crimson-600 flex items-center justify-center shadow-crimson-glow">
+                            <i data-lucide="cpu" class="w-4 h-4 text-white"></i>
+                        </div>
+                        <span class="font-display text-2xl font-bold tracking-tight">
+                            <span class="text-crimson-500">Hor</span><span class="text-white">izex</span>
+                        </span>
+                    </a>
+                    <p class="text-xs text-gray-500 mt-2 max-w-sm">
+                        Next-generation software products, media engines, and autonomous cloud infrastructure built for high-velocity teams.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-3 px-4 py-2 rounded-full bg-obsidian-800 border border-white/10">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span class="font-mono text-xs text-gray-300">All 14 Global Edge Clusters Operational</span>
+                </div>
+            </div>
+
+            <div class="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
+                <div>© 2026 Horizex Technologies Inc. All rights reserved.</div>
+                <div class="flex items-center gap-6">
+                    <a href="#products" class="hover:text-crimson-400 transition-colors">Product Registry</a>
+                    <a href="#benchmarks" class="hover:text-crimson-400 transition-colors">Telemetry</a>
+                    <a href="#pricing" class="hover:text-crimson-400 transition-colors">Licensing SLA</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ==================== INTERACTIVE PRODUCT SPEC & CLI MODAL ==================== -->
+    <div id="productModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="glass-card rounded-2xl max-w-2xl w-full p-6 sm:p-8 border border-crimson-500/40 shadow-crimson-glow-lg relative max-h-[90vh] overflow-y-auto">
+            <!-- Close Button -->
+            <button onclick="closeProductModal()" class="absolute top-5 right-5 p-2 rounded-lg bg-white/5 hover:bg-crimson-600/30 text-gray-400 hover:text-white transition-colors">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+
+            <div id="modalContent">
+                <!-- Populated dynamically when a product card is clicked -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+    <script>
+        // 1. Software Products Catalog Data
+        const softwareProducts = [
+            {
+                id: 'upper-store',
+                name: 'Upper Store',
+                tagline: 'Web Software Distribution & Digital Registry',
+                category: 'distribution',
+                categoryLabel: 'Distribution & Cloud',
+                version: 'v3.8.4',
+                status: 'Stable Release',
+                icon: 'shopping-bag',
+                metrics: '140K+ Packages Pulled',
+                rating: '4.9',
+                description: 'High-speed web-based software distribution platform and curated utility marketplace with multi-region edge caching, cryptographic SHA-256 binary verification, and automated delta updates.',
+                stack: ['Next.js Edge', 'TLS Redis Cache', 'Zero-Trust Auth', 'CDN Mesh'],
+                cliCommand: 'npx @horizex/upper-store init --registry=global-edge',
+                sysReq: 'Linux / macOS / Windows 11 • Node 20+ or Docker Runtime',
+                releaseNotes: 'Added instant delta binary patching and hardware-bound organization token validation.'
+            },
+            {
+                id: 'upper-player',
+                name: 'Upper Player',
+                tagline: 'Glass-Morphic Media Streaming & High-Speed Downloader',
+                category: 'media',
+                categoryLabel: 'Media & Client Apps',
+                version: 'v2.6.0',
+                status: 'Hot Release',
+                icon: 'play-circle',
+                metrics: '85K+ Active Desktop Nodes',
+                rating: '5.0',
+                description: 'Ultra-sleek glassmorphic media player and multi-threaded stream downloader protected by single-device cryptographic activation keys, hardware-accelerated 4K60 decoding, and smart playlist syncing.',
+                stack: ['Rust Core', 'Hardware NVDEC', 'Device-Bound Key', 'HLS/DASH'],
+                cliCommand: 'horizex install upper-player --activate-key=HRZX-PRO-9941',
+                sysReq: 'Windows 10/11, macOS (Apple Silicon & Intel), Ubuntu 22.04+',
+                releaseNotes: 'Introduced single-device cryptographic activation lock and 8K HDR10+ zero-copy rendering pipeline.'
+            },
+            {
+                id: 'horizex-ai',
+                name: 'Horizex AI Core',
+                tagline: 'Autonomous Neural Pipeline & Webhook Orchestrator',
+                category: 'ai',
+                categoryLabel: 'AI & Automation',
+                version: 'v4.2.1',
+                status: 'Frontier AI',
+                icon: 'sparkles',
+                metrics: '1.2M+ Daily Executions',
+                rating: '4.9',
+                description: 'Self-healing autonomous agent engine that connects your code repositories, cloud deployment webhooks, and live production telemetry into a unified deterministic pipeline.',
+                stack: ['Neural Engine', 'Webhook Mesh', 'Auto-Remediation', 'gRPC'],
+                cliCommand: 'curl -sSL https://sh.horizex.io/ai-core | sh -s -- --cluster=prod',
+                sysReq: 'Cloud Native Kubernetes / Docker Swarm / Serverless Edge',
+                releaseNotes: 'Reduced cold-start neural inference latency by 42% across distributed edge workers.'
+            },
+            {
+                id: 'quantumsync',
+                name: 'QuantumSync DB',
+                tagline: 'Distributed Low-Latency TLS In-Memory Cache Engine',
+                category: 'distribution',
+                categoryLabel: 'Distribution & Cloud',
+                version: 'v1.9.7',
+                status: 'Production Ready',
+                icon: 'zap',
+                metrics: '0.4ms P99 Latency',
+                rating: '4.8',
+                description: 'Drop-in distributed in-memory state store engineered with persistent rediss:// TLS multiplexing, instant failover recovery, and real-time conflict-free replicated data types (CRDTs).',
+                stack: ['rediss:// TLS', 'In-Memory CRDT', 'Sub-ms Sync', 'Multi-Region'],
+                cliCommand: 'docker run -d -p 6379:6379 horizex/quantumsync:latest --tls-strict',
+                sysReq: 'Any OCI Container Host • 512MB RAM Minimum',
+                releaseNotes: 'Enhanced connection pooling stability for serverless high-concurrency workloads.'
+            },
+            {
+                id: 'sentinel-mesh',
+                name: 'Sentinel Mesh',
+                tagline: 'Zero-Trust API Gateway & Telemetry Firewall',
+                category: 'security',
+                categoryLabel: 'Security & DevOps',
+                version: 'v5.1.0',
+                status: 'Enterprise Grade',
+                icon: 'shield-alert',
+                metrics: '99.99% Threat Block',
+                rating: '4.9',
+                description: 'Intelligent edge perimeter guard providing token-bucket rate limiting, automated DDoS mitigation, cryptographic license key verification, and deep packet telemetry inspection.',
+                stack: ['eBPF Kernel', 'Rate Limiter', 'JWT / Key Guard', 'SOC2 Ready'],
+                cliCommand: 'horizex-cli deploy sentinel-mesh --policy=strict-zero-trust',
+                sysReq: 'Linux Kernel 5.15+ (eBPF enabled) or Kubernetes Ingress',
+                releaseNotes: 'New adaptive rate-limiting engine prevents credential stuffing and license key brute-forcing.'
+            },
+            {
+                id: 'vision-studio',
+                name: 'VisionStudio 3D',
+                tagline: 'AI-Assisted Cinematic Rendering & Camera Directive Suite',
+                category: 'media',
+                categoryLabel: 'Media & Client Apps',
+                version: 'v3.0.2',
+                status: 'Creative Suite',
+                icon: 'video',
+                metrics: '64K+ Studios & Creators',
+                rating: '4.9',
+                description: 'Real-time 3D viewport and structured cinematic prompt generator for technical directors. Design camera trajectories, volumetric crimson lighting rigs, and physically based shaders.',
+                stack: ['WebGPU / Vulkan', 'Camera Rig JSON', 'PBR Shaders', 'Real-Time Ray'],
+                cliCommand: 'npx @horizex/vision-studio launch --gpu-accel',
+                sysReq: 'NVIDIA RTX / Apple M-Series GPU • 16GB Unified Memory',
+                releaseNotes: 'Added instant JSON scene manifest export for automated video synthesis pipelines.'
+            }
+        ];
+
+        let currentCategory = 'all';
+        let currentSearchQuery = '';
+
+        // 2. Render Software Product Cards
+        function renderProducts() {
+            const grid = document.getElementById('productsGrid');
+            const emptyState = document.getElementById('emptyProductsState');
+
+            const filtered = softwareProducts.filter(prod => {
+                const matchesCat = currentCategory === 'all' || prod.category === currentCategory;
+                const q = currentSearchQuery.toLowerCase().trim();
+                const matchesSearch = !q || 
+                    prod.name.toLowerCase().includes(q) ||
+                    prod.tagline.toLowerCase().includes(q) ||
+                    prod.description.toLowerCase().includes(q) ||
+                    prod.stack.some(s => s.toLowerCase().includes(q));
+                return matchesCat && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(prod => `
+                <article class="glass-card rounded-2xl p-6 flex flex-col justify-between group relative overflow-hidden">
+                    <!-- Subtle Top Corner Crimson Glow -->
+                    <div class="pointer-events-none absolute -top-12 -right-12 w-28 h-28 bg-crimson-600/15 rounded-full blur-2xl group-hover:bg-crimson-500/30 transition-all"></div>
+
+                    <div>
+                        <!-- Top Row: Icon + Version & Live Status Badge -->
+                        <div class="flex items-start justify-between gap-4 mb-5">
+                            <div class="w-12 h-12 rounded-xl bg-crimson-600/15 border border-crimson-500/30 group-hover:bg-crimson-600 group-hover:text-white text-crimson-400 flex items-center justify-center transition-all shadow-crimson-glow">
+                                <i data-lucide="${prod.icon}" class="w-6 h-6"></i>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-0.5 rounded-full bg-white/[0.06] border border-white/10 font-mono text-[11px] text-gray-300">${prod.version}</span>
+                                    <span class="px-2.5 py-0.5 rounded-full bg-crimson-500/15 border border-crimson-500/30 font-mono text-[10px] text-crimson-400">${prod.status}</span>
+                                </div>
+                                <span class="text-[11px] text-gray-500 font-mono">${prod.categoryLabel}</span>
+                            </div>
+                        </div>
+
+                        <!-- Product Title & Tagline -->
+                        <h3 class="font-display text-xl font-bold text-white group-hover:text-crimson-400 transition-colors">
+                            ${prod.name}
+                        </h3>
+                        <p class="text-xs font-medium text-red-200/80 mt-0.5">${prod.tagline}</p>
+
+                        <!-- Description -->
+                        <p class="text-xs sm:text-sm text-gray-400 mt-3 leading-relaxed">
+                            ${prod.description}
+                        </p>
+
+                        <!-- Architecture Stack Pills -->
+                        <div class="flex flex-wrap gap-1.5 mt-5">
+                            ${prod.stack.map(tag => `
+                                <span class="px-2.5 py-1 rounded-md bg-obsidian-900/90 border border-white/[0.07] font-mono text-[11px] text-gray-300">
+                                    ${tag}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Footer Metrics & Action Buttons -->
+                    <div class="pt-5 mt-6 border-t border-white/[0.07]">
+                        <div class="flex items-center justify-between text-xs text-gray-400 mb-4">
+                            <span class="flex items-center gap-1.5">
+                                <i data-lucide="activity" class="w-3.5 h-3.5 text-crimson-500"></i>
+                                ${prod.metrics}
+                            </span>
+                            <span class="flex items-center gap-1 font-mono text-white">
+                                <i data-lucide="star" class="w-3.5 h-3.5 text-crimson-500 fill-crimson-500"></i>
+                                ${prod.rating}/5
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <button onclick="openProductModal('${prod.id}')" class="py-2.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-white text-xs font-semibold border border-white/10 transition-all flex items-center justify-center gap-1.5">
+                                <i data-lucide="terminal" class="w-3.5 h-3.5 text-crimson-400"></i>
+                                <span>Specs & CLI</span>
+                            </button>
+                            <button onclick="triggerDirectDownload('${prod.name}', '${prod.version}')" class="py-2.5 px-3 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-semibold shadow-crimson-glow transition-all flex items-center justify-center gap-1.5">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Get Build</span>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        // 3. Filter & Search Handlers
+        function filterProducts(category) {
+            currentCategory = category;
+            document.querySelectorAll('.cat-tab').forEach(btn => {
+                if (btn.dataset.cat === category) {
+                    btn.className = 'cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all bg-crimson-600 text-white shadow-crimson-glow whitespace-nowrap';
+                } else {
+                    btn.className = 'cat-tab px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all text-gray-400 hover:text-white hover:bg-white/[0.04] whitespace-nowrap';
+                }
+            });
+            renderProducts();
+        }
+
+        function handleSearchProducts(val) {
+            currentSearchQuery = val;
+            const clearBtn = document.getElementById('clearSearchBtn');
+            if (val.trim().length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            renderProducts();
+        }
+
+        function clearProductSearch() {
+            const input = document.getElementById('productSearchInput');
+            input.value = '';
+            currentSearchQuery = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            filterProducts('all');
+        }
+
+        function focusProductSearch() {
+            const el = document.getElementById('productSearchInput');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => el.focus(), 350);
+        }
+
+        // Keyboard shortcut Cmd/Ctrl + K
+        window.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault();
+                focusProductSearch();
+            }
+            if (e.key === 'Escape') {
+                closeProductModal();
+            }
+        });
+
+        // 4. Product Modal Inspection & Copy CLI Command
+        function openProductModal(productId) {
+            const prod = softwareProducts.find(p => p.id === productId);
+            if (!prod) return;
+
+            const modal = document.getElementById('productModal');
+            const content = document.getElementById('modalContent');
+
+            content.innerHTML = `
+                <div class="flex items-center gap-3.5 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-crimson-600/20 border border-crimson-500/40 flex items-center justify-center text-crimson-400">
+                        <i data-lucide="${prod.icon}" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="font-display text-2xl font-bold text-white">${prod.name}</h3>
+                            <span class="px-2.5 py-0.5 rounded-full bg-crimson-500/20 border border-crimson-500/40 font-mono text-xs text-crimson-400">${prod.version}</span>
+                        </div>
+                        <p class="text-xs text-gray-400">${prod.tagline}</p>
+                    </div>
+                </div>
+
+                <p class="text-sm text-gray-300 leading-relaxed mb-6">
+                    ${prod.description}
+                </p>
+
+                <!-- CLI Quick Installation Box -->
+                <div class="mb-6">
+                    <label class="block font-mono text-[11px] uppercase tracking-wider text-gray-400 mb-2">
+                        Quick CLI Installation & Activation
+                    </label>
+                    <div class="flex items-center justify-between gap-2 p-3.5 rounded-xl bg-obsidian-950 border border-white/10 font-mono text-xs text-red-200">
+                        <code id="cliSnippetText" class="overflow-x-auto whitespace-nowrap">$ ${prod.cliCommand}</code>
+                        <button onclick="copyCliCommand('${prod.cliCommand}')" class="px-3 py-1.5 rounded-lg bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-sans font-semibold shrink-0 flex items-center gap-1.5">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Specs Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                    <div class="p-4 rounded-xl bg-obsidian-900/90 border border-white/[0.07]">
+                        <div class="text-[11px] font-mono uppercase text-gray-500 mb-1">System Requirements</div>
+                        <div class="text-xs text-gray-200 font-medium">${prod.sysReq}</div>
+                    </div>
+                    <div class="p-4 rounded-xl bg-obsidian-900/90 border border-white/[0.07]">
+                        <div class="text-[11px] font-mono uppercase text-gray-500 mb-1">Latest Release Notes</div>
+                        <div class="text-xs text-gray-200 font-medium">${prod.releaseNotes}</div>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-white/10">
+                    <button onclick="closeProductModal()" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-gray-300">
+                        Close Window
+                    </button>
+                    <button onclick="triggerDirectDownload('${prod.name}', '${prod.version}'); closeProductModal();" class="px-5 py-2.5 rounded-xl bg-crimson-600 hover:bg-crimson-500 text-white text-xs font-semibold shadow-crimson-glow flex items-center gap-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Download Binary (${prod.version})</span>
+                    </button>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function closeProductModal() {
+            const modal = document.getElementById('productModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function copyCliCommand(cmd) {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = cmd;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showToast('CLI Command Copied', `Copied "${cmd}" to clipboard.`);
+        }
+
+        function triggerDirectDownload(name, version) {
+            showToast(`Initializing ${name} ${version}`, 'Verifying SHA-256 checksum & preparing edge stream...');
+        }
+
+        // 5. Live Latency Stress-Test Simulation
+        function runLatencyBenchmark() {
+            const btn = document.getElementById('stressTestBtn');
+            const status = document.getElementById('stressTestStatus');
+            btn.disabled = true;
+            btn.innerHTML = 'Running Test...';
+            status.innerHTML = '<span class="text-crimson-400 font-mono">Dispatching 50,000 TLS packets across 14 edge nodes...</span>';
+
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = 'Re-Run Benchmark';
+                status.innerHTML = '<span class="text-emerald-400 font-mono">Completed: 0.38ms Avg Latency • 99.994% Cache Hit Ratio • Zero Packet Loss</span>';
+                showToast('Benchmark Complete', 'Horizex Edge Cluster achieved 0.38ms P99 latency.');
+            }, 1400);
+        }
+
+        // 6. Pricing Billing Toggle
+        function setBillingCycle(cycle) {
+            const monthlyBtn = document.getElementById('monthlyBtn');
+            const annualBtn = document.getElementById('annualBtn');
+            const pDev = document.getElementById('priceDev');
+            const pPro = document.getElementById('pricePro');
+            const pEnt = document.getElementById('priceEnt');
+
+            if (cycle === 'annual') {
+                annualBtn.className = 'px-4 py-2 rounded-lg text-xs font-semibold bg-crimson-600 text-white shadow-crimson-glow transition-all flex items-center gap-1.5';
+                monthlyBtn.className = 'px-4 py-2 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all';
+                pDev.textContent = '$22';
+                pPro.textContent = '$74';
+                pEnt.textContent = '$262';
+            } else {
+                monthlyBtn.className = 'px-4 py-2 rounded-lg text-xs font-semibold bg-crimson-600 text-white shadow-crimson-glow transition-all';
+                annualBtn.className = 'px-4 py-2 rounded-lg text-xs font-semibold text-gray-400 hover:text-white transition-all flex items-center gap-1.5';
+                pDev.textContent = '$29';
+                pPro.textContent = '$99';
+                pEnt.textContent = '$349';
+            }
+        }
+
+        function selectPlan(planName) {
+            showToast(`${planName} Selected`, 'Provisioning cryptographic activation key in your workspace...');
+        }
+
+        // 7. Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        // 8. Custom Toast Notification (No alert())
+        function showToast(title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'glass-card pointer-events-auto rounded-xl p-4 border-l-4 border-l-crimson-500 shadow-crimson-glow flex items-start gap-3 max-w-sm transition-all duration-300';
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-crimson-600/20 border border-crimson-500/40 flex items-center justify-center text-crimson-400 shrink-0 mt-0.5">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                </div>
+                <div class="text-xs">
+                    <div class="font-display font-bold text-white">${title}</div>
+                    <div class="text-gray-400 mt-0.5 leading-relaxed">${message}</div>
+                </div>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3600);
+        }
+
+        // 9. Interactive 3D Three.js Glowing Crimson Crystalline Sphere (Hero Centerpiece matching Screenshot)
+        function initHero3DCore() {
+            const container = document.getElementById('coreCanvasContainer');
+            if (!container || typeof THREE === 'undefined') return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 5.5;
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const coreGroup = new THREE.Group();
+            scene.add(coreGroup);
+
+            // Inner Displaced Crimson Crystalline Sphere
+            const icosaGeo = new THREE.IcosahedronGeometry(1.55, 4);
+            const posAttr = icosaGeo.attributes.position;
+            const vertex = new THREE.Vector3();
+
+            // Create organic crystalline ridges similar to the screenshot's red orb
+            for (let i = 0; i < posAttr.count; i++) {
+                vertex.fromBufferAttribute(posAttr, i);
+                const noise = Math.sin(vertex.x * 3.5) * Math.cos(vertex.y * 3.5) * Math.sin(vertex.z * 3.5);
+                vertex.multiplyScalar(1 + noise * 0.18);
+                posAttr.setXYZ(i, vertex.x, vertex.y, vertex.z);
+            }
+            icosaGeo.computeVertexNormals();
+
+            const coreMat = new THREE.MeshPhysicalMaterial({
+                color: 0xcc0a0a,
+                emissive: 0x4a0000,
+                roughness: 0.18,
+                metalness: 0.35,
+                clearcoat: 1.0,
+                clearcoatRoughness: 0.1,
+                flatShading: true
+            });
+            const crystalMesh = new THREE.Mesh(icosaGeo, coreMat);
+            coreGroup.add(crystalMesh);
+
+            // Outer Glowing Crimson Wireframe Cage
+            const wireGeo = new THREE.IcosahedronGeometry(1.78, 2);
+            const wireMat = new THREE.MeshBasicMaterial({
+                color: 0xff2a2a,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.28
+            });
+            const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+            coreGroup.add(wireMesh);
+
+            // Floating Particle Halo around the Orb
+            const particleCount = 160;
+            const pGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            for (let i = 0; i < particleCount; i++) {
+                const r = 2.0 + Math.random() * 0.7;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+                positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+                positions[i * 3 + 2] = r * Math.cos(phi);
+            }
+            pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const pMat = new THREE.PointsMaterial({
+                color: 0xff4d4d,
+                size: 0.045,
+                transparent: true,
+                opacity: 0.85
+            });
+            const particleSystem = new THREE.Points(pGeo, pMat);
+            coreGroup.add(particleSystem);
+
+            // Dramatic Crimson & Specular Rim Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+            scene.add(ambientLight);
+
+            const pointLight1 = new THREE.PointLight(0xff1e1e, 4.2, 15);
+            pointLight1.position.set(4, 4, 4);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xff5555, 2.8, 15);
+            pointLight2.position.set(-4, -3, 3);
+            scene.add(pointLight2);
+
+            const rimLight = new THREE.DirectionalLight(0xffffff, 1.5);
+            rimLight.position.set(0, 5, -5);
+            scene.add(rimLight);
+
+            // Mouse & Touch Drag Interaction
+            let isDragging = false;
+            let prevX = 0;
+            let prevY = 0;
+
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                prevX = e.clientX;
+                prevY = e.clientY;
+            });
+
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - prevX;
+                const dy = e.clientY - prevY;
+                coreGroup.rotation.y += dx * 0.008;
+                coreGroup.rotation.x += dy * 0.008;
+                prevX = e.clientX;
+                prevY = e.clientY;
+            });
+
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    prevX = e.touches[0].clientX;
+                    prevY = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', () => { isDragging = false; });
+
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - prevX;
+                const dy = e.touches[0].clientY - prevY;
+                coreGroup.rotation.y += dx * 0.008;
+                coreGroup.rotation.x += dy * 0.008;
+                prevX = e.touches[0].clientX;
+                prevY = e.touches[0].clientY;
+            }, { passive: true });
+
+            // Responsive Resize Handler
+            window.addEventListener('resize', () => {
+                if (!container) return;
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            });
+
+            // Animation Loop
+            let clock = new THREE.Clock();
+            function animate() {
+                requestAnimationFrame(animate);
+                const elapsed = clock.getElapsedTime();
+
+                if (!isDragging) {
+                    crystalMesh.rotation.y += 0.0045;
+                    crystalMesh.rotation.x += 0.002;
+                    wireMesh.rotation.y -= 0.003;
+                    particleSystem.rotation.y += 0.0015;
+                }
+
+                // Subtle breathing pulse
+                const scale = 1 + Math.sin(elapsed * 2.2) * 0.025;
+                crystalMesh.scale.set(scale, scale, scale);
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        }
+
+        // Initialize Everything on Window Load
+        window.onload = function () {
+            renderProducts();
+            lucide.createIcons();
+            initHero3DCore();
+        };
+    </script>
+</body>
+</html>

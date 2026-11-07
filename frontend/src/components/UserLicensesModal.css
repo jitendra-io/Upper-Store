@@ -19,14 +19,14 @@
 
 .license-modal-box {
   background: #0f0f13;
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: 1px solid rgba(230, 25, 25, 0.35);
   border-radius: 18px;
   width: 100%;
   max-width: 640px;
   max-height: 88vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(230, 25, 25, 0.15);
   animation: licenseSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   overflow: hidden;
 }
@@ -43,7 +43,7 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.06) 0%, transparent 100%);
+  background: linear-gradient(180deg, rgba(230, 25, 25, 0.06) 0%, transparent 100%);
 }
 
 .license-modal-title {
@@ -108,8 +108,8 @@
 .license-spinner {
   width: 36px;
   height: 36px;
-  border: 3px solid rgba(212, 175, 55, 0.2);
-  border-top-color: #d4af37;
+  border: 3px solid rgba(230, 25, 25, 0.2);
+  border-top-color: #e61919;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -131,8 +131,8 @@
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  background: rgba(212, 175, 55, 0.08);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(230, 25, 25, 0.08);
+  border: 1px solid rgba(230, 25, 25, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,7 +154,7 @@
 }
 
 .license-explore-btn {
-  background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+  background: linear-gradient(135deg, #e61919 0%, #aa820a 100%);
   color: #0b0b0e;
   border: none;
   font-size: 0.85rem;
@@ -162,13 +162,13 @@
   padding: 0.65rem 1.35rem;
   border-radius: 24px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.3);
   transition: all 0.2s ease;
 }
 
 .license-explore-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
+  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.45);
 }
 
 /* License List */
@@ -180,7 +180,7 @@
 
 .license-card {
   background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid rgba(230, 25, 25, 0.2);
   border-radius: 14px;
   padding: 1.15rem;
   display: flex;
@@ -190,7 +190,7 @@
 }
 
 .license-card:hover {
-  border-color: rgba(212, 175, 55, 0.45);
+  border-color: rgba(230, 25, 25, 0.45);
 }
 
 .license-card-header {
@@ -221,9 +221,9 @@
 }
 
 .license-plan-badge {
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  color: #d4af37;
+  background: rgba(230, 25, 25, 0.15);
+  border: 1px solid rgba(230, 25, 25, 0.35);
+  color: #e61919;
   font-size: 0.68rem;
   font-weight: 700;
   padding: 0.15rem 0.5rem;
@@ -287,9 +287,9 @@
 }
 
 .copy-key-btn {
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  color: #d4af37;
+  background: rgba(230, 25, 25, 0.15);
+  border: 1px solid rgba(230, 25, 25, 0.35);
+  color: #e61919;
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0.3rem 0.65rem;
@@ -303,7 +303,7 @@
 }
 
 .copy-key-btn:hover {
-  background: #d4af37;
+  background: #e61919;
   color: #0b0b0e;
 }
 
@@ -565,7 +565,7 @@
 }
 
 .rejection-retry-btn {
-  background: linear-gradient(135deg, #d4af37, #b8860b);
+  background: linear-gradient(135deg, #e61919, #b8860b);
   color: #0b0f19;
   border: none;
   font-size: 0.75rem;
@@ -582,7 +582,7 @@
 
 .rejection-retry-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.35);
 }
 
 /* Pending Approval Box */
@@ -704,7 +704,7 @@
 }
 
 .reactivate-vip-btn {
-  background: linear-gradient(135deg, #d4af37, #996515);
+  background: linear-gradient(135deg, #e61919, #996515);
   color: #0b0f19;
   border: none;
   font-size: 0.76rem;
@@ -721,7 +721,7 @@
 
 .reactivate-vip-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.3);
 }
 
 .features-cancelled {

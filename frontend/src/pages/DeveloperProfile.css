@@ -147,12 +147,12 @@
 }
 
 .vip-avatar-wrap.dev-ref-vip-avatar.pro {
-  box-shadow: 0 0 18px rgba(245, 158, 11, 0.45), 0 0 32px rgba(245, 158, 11, 0.18);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.55), 0 0 32px rgba(255, 255, 255, 0.35);
   animation: vipBreathingGold 3.2s ease-in-out infinite;
 }
 
 .vip-avatar-wrap.dev-ref-vip-avatar.elite {
-  box-shadow: 0 0 22px rgba(168, 85, 247, 0.55), 0 0 38px rgba(168, 85, 247, 0.25);
+  box-shadow: 0 0 22px rgba(230, 25, 25, 0.65), 0 0 38px rgba(255, 255, 255, 0.35);
   animation: vipBreathingPurple 3.2s ease-in-out infinite;
 }
 
@@ -495,7 +495,7 @@
   background: rgba(18, 18, 22, 0.88);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-top: 2px solid rgba(212, 175, 55, 0.45);
+  border-top: 2px solid rgba(230, 25, 25, 0.45);
   border-radius: 12px;
   overflow: hidden;
   display: flex;

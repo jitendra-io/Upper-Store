@@ -3,7 +3,7 @@
   max-width: 1100px;
   margin: 0 auto;
   min-height: calc(100vh - 120px);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-body), sans-serif;
   color: #e0e0e0;
 }
 
@@ -41,9 +41,9 @@ button.asset-btn:disabled {
 
 .press-badge-pill {
   display: inline-block;
-  background: rgba(212, 175, 55, 0.12);
-  color: #d4af37;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(230, 25, 25, 0.12);
+  color: #e61919;
+  border: 1px solid rgba(230, 25, 25, 0.3);
   font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -78,7 +78,7 @@ button.asset-btn:disabled {
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+  background: linear-gradient(135deg, #e61919 0%, #aa820a 100%);
   color: #0d0d0f;
   border: none;
   padding: 0.9rem 2.2rem;
@@ -87,12 +87,12 @@ button.asset-btn:disabled {
   font-size: 0.98rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.35);
 }
 
 .press-primary-dl-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(212, 175, 55, 0.55);
+  box-shadow: 0 8px 30px rgba(230, 25, 25, 0.55);
 }
 
 /* Shared Press Sections */
@@ -123,7 +123,7 @@ button.asset-btn:disabled {
 .boilerplate-card {
   background: rgba(20, 20, 24, 0.75);
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   border-radius: 20px;
   padding: 2.5rem;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
@@ -133,7 +133,7 @@ button.asset-btn:disabled {
 .boilerplate-content {
   position: relative;
   padding-left: 2rem;
-  border-left: 3px solid #d4af37;
+  border-left: 3px solid #e61919;
 }
 
 .quote-mark {
@@ -141,7 +141,7 @@ button.asset-btn:disabled {
   top: -1.5rem;
   left: 0.5rem;
   font-size: 4rem;
-  color: rgba(212, 175, 55, 0.15);
+  color: rgba(230, 25, 25, 0.15);
   font-family: serif;
   pointer-events: none;
 }
@@ -159,9 +159,9 @@ button.asset-btn:disabled {
 
 .copy-boilerplate-btn {
   margin-top: 1.75rem;
-  background: rgba(212, 175, 55, 0.12);
-  color: #d4af37;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(230, 25, 25, 0.12);
+  color: #e61919;
+  border: 1px solid rgba(230, 25, 25, 0.3);
   padding: 0.5rem 1.25rem;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -171,7 +171,7 @@ button.asset-btn:disabled {
 }
 
 .copy-boilerplate-btn:hover {
-  background: #d4af37;
+  background: #e61919;
   color: #0d0d0f;
 }
 
@@ -205,7 +205,7 @@ button.asset-btn:disabled {
   max-width: 120px;
   max-height: 120px;
   border-radius: 16px;
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(230, 25, 25, 0.4);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
 }
 
@@ -221,7 +221,7 @@ button.asset-btn:disabled {
 }
 
 .wordmark-badge .gold-text {
-  color: #d4af37;
+  color: #e61919;
 }
 
 .asset-card-details {
@@ -258,9 +258,9 @@ button.asset-btn:disabled {
 }
 
 .asset-format-badge.primary {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.35);
-  color: #d4af37;
+  background: rgba(230, 25, 25, 0.15);
+  border-color: rgba(230, 25, 25, 0.35);
+  color: #e61919;
 }
 
 .asset-btn-group {
@@ -286,13 +286,13 @@ button.asset-btn:disabled {
 }
 
 .asset-btn.primary {
-  background: rgba(212, 175, 55, 0.15);
-  color: #d4af37;
-  border-color: rgba(212, 175, 55, 0.35);
+  background: rgba(230, 25, 25, 0.15);
+  color: #e61919;
+  border-color: rgba(230, 25, 25, 0.35);
 }
 
 .asset-btn.primary:hover {
-  background: #d4af37;
+  background: #e61919;
   color: #0d0d0f;
 }
 
@@ -379,7 +379,7 @@ button.asset-btn:disabled {
 .font-big-spec {
   font-size: 3.5rem;
   font-weight: 700;
-  color: #d4af37;
+  color: #e61919;
   line-height: 1;
 }
 
@@ -419,7 +419,7 @@ button.asset-btn:disabled {
 .leader-card {
   background: rgba(20, 20, 24, 0.75);
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   border-radius: 20px;
   padding: 2.25rem;
   display: flex;
@@ -433,7 +433,7 @@ button.asset-btn:disabled {
   height: 130px;
   border-radius: 20px;
   overflow: hidden;
-  border: 2px solid rgba(212, 175, 55, 0.4);
+  border: 2px solid rgba(230, 25, 25, 0.4);
   flex-shrink: 0;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
 }
@@ -446,9 +446,9 @@ button.asset-btn:disabled {
 
 .leader-role-tag {
   display: inline-block;
-  background: rgba(212, 175, 55, 0.15);
-  color: #d4af37;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(230, 25, 25, 0.15);
+  color: #e61919;
+  border: 1px solid rgba(230, 25, 25, 0.3);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -536,9 +536,9 @@ button.asset-btn:disabled {
 }
 
 .img-dl-btn {
-  background: rgba(212, 175, 55, 0.15);
-  color: #d4af37;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(230, 25, 25, 0.15);
+  color: #e61919;
+  border: 1px solid rgba(230, 25, 25, 0.3);
   padding: 0.35rem 0.75rem;
   border-radius: 8px;
   font-size: 0.78rem;
@@ -548,7 +548,7 @@ button.asset-btn:disabled {
 }
 
 .img-dl-btn:hover {
-  background: #d4af37;
+  background: #e61919;
   color: #0d0d0f;
 }
 
@@ -572,7 +572,7 @@ button.asset-btn:disabled {
 }
 
 .pr-item-card:hover {
-  border-color: rgba(212, 175, 55, 0.35);
+  border-color: rgba(230, 25, 25, 0.35);
 }
 
 .pr-meta-side {
@@ -592,9 +592,9 @@ button.asset-btn:disabled {
   font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: #d4af37;
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #e61919;
+  background: rgba(230, 25, 25, 0.12);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   padding: 0.15rem 0.55rem;
   border-radius: 10px;
   width: fit-content;
@@ -662,13 +662,13 @@ button.asset-btn:disabled {
 /* Dedicated PR Contact Card */
 .dedicated-pr-card {
   background: linear-gradient(135deg, rgba(24, 24, 28, 0.95) 0%, rgba(18, 18, 22, 0.95) 100%);
-  border: 1px solid rgba(212, 175, 55, 0.4);
+  border: 1px solid rgba(230, 25, 25, 0.4);
   border-radius: 22px;
   padding: 2.5rem 3rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.7), 0 0 25px rgba(230, 25, 25, 0.15);
 }
 
 .pr-channel-tag {
@@ -700,11 +700,11 @@ button.asset-btn:disabled {
 .pr-email-badge {
   font-family: monospace;
   font-size: 0.9rem;
-  color: #d4af37;
-  background: rgba(212, 175, 55, 0.1);
+  color: #e61919;
+  background: rgba(230, 25, 25, 0.1);
   padding: 0.3rem 0.75rem;
   border-radius: 8px;
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(230, 25, 25, 0.25);
   display: inline-block;
   word-break: break-all;
 }
@@ -713,7 +713,7 @@ button.asset-btn:disabled {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  background: #d4af37;
+  background: #e61919;
   color: #0d0d0f;
   text-decoration: none;
   padding: 0.9rem 2rem;
@@ -721,13 +721,13 @@ button.asset-btn:disabled {
   font-weight: 700;
   font-size: 0.98rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.35);
   white-space: nowrap;
 }
 
 .pr-contact-action-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.55);
+  box-shadow: 0 8px 25px rgba(230, 25, 25, 0.55);
   background: #e5be3b;
 }
 

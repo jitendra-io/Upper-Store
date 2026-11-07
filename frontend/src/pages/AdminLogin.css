@@ -4,40 +4,52 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  font-family: var(--font-body);
 }
 
 .admin-login-card {
-  background: var(--color-bg-secondary);
-  border: 1px solid rgba(201, 168, 76, 0.25);
+  background: linear-gradient(145deg, rgba(20, 20, 27, 0.9) 0%, rgba(13, 13, 18, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-radius: 16px;
-  padding: 3rem;
+  padding: 3rem 2.5rem;
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  max-width: 440px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+  transition: all 0.3s ease;
+}
+
+.admin-login-card:hover {
+  border-color: rgba(230, 25, 25, 0.35);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7), 0 0 30px rgba(230, 25, 25, 0.15);
 }
 
 .admin-login-header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.2rem;
 }
 
 .admin-login-header h1 {
+  font-family: var(--font-heading);
   font-size: 2.2rem;
   font-weight: 700;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.4rem;
+  color: #ffffff;
 }
 
 .admin-login-header p {
   color: var(--color-text-secondary);
-  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
 }
 
 .admin-login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.4rem;
 }
 
 .form-group {
@@ -47,64 +59,67 @@
 }
 
 .form-group label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
   color: var(--color-text-secondary);
 }
 
 .form-group input {
-  background: rgba(17, 17, 17, 0.7);
-  border: 1px solid rgba(232, 214, 179, 0.2);
-  border-radius: 10px;
-  padding: 0.9rem 1.2rem;
-  color: var(--color-text-primary);
-  font-family: 'Outfit', sans-serif;
-  font-size: 1rem;
+  background: rgba(10, 10, 14, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 0.85rem 1.1rem;
+  color: #ffffff;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .form-group input:focus {
-  border-color: var(--color-accent-primary);
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.15);
+  border-color: rgba(230, 25, 25, 0.6);
+  box-shadow: 0 0 20px rgba(230, 25, 25, 0.25);
 }
 
 .form-group input::placeholder {
-  color: rgba(248, 245, 239, 0.3);
+  color: rgba(255, 255, 255, 0.25);
 }
 
 .login-btn {
-  background: var(--color-accent-primary);
-  color: var(--color-bg-primary);
-  border: none;
-  padding: 1rem;
-  font-size: 1.05rem;
-  font-weight: 700;
-  border-radius: 50px;
-  font-family: 'Outfit', sans-serif;
+  background: linear-gradient(135deg, #e61919 0%, #b30f0f 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 60, 60, 0.4);
+  padding: 0.95rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  font-family: var(--font-body);
   width: 100%;
-  margin-top: 0.5rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3);
+  margin-top: 0.6rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 25px rgba(230, 25, 25, 0.45);
+  cursor: pointer;
 }
 
 .login-btn:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(201, 168, 76, 0.5);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ff2a2a 0%, #cc1414 100%);
+  box-shadow: 0 0 35px rgba(230, 25, 25, 0.65);
 }
 
 .login-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-.error-banner {
-  background: rgba(255, 80, 80, 0.1);
-  border: 1px solid rgba(255, 80, 80, 0.3);
-  color: #ff8080;
-  padding: 0.8rem 1rem;
+.error-msg {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  padding: 0.75rem 1rem;
   border-radius: 8px;
-  font-size: 0.9rem;
-  text-align: center;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-size: 0.88rem;
+  margin-bottom: 0.5rem;
 }

@@ -18,17 +18,17 @@
 .auth-modal-card {
   background: rgba(18, 18, 22, 0.95);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: 1px solid rgba(230, 25, 25, 0.35);
   border-radius: 20px;
   width: 100%;
   max-width: 460px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(230, 25, 25, 0.15);
   overflow: hidden;
   overscroll-behavior: contain;
   touch-action: pan-y;
   animation: authModalPop 0.25s ease-out;
   color: #ffffff;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-body), sans-serif;
 }
 
 @keyframes authModalPop {
@@ -49,11 +49,11 @@
   display: inline-block;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #d4af37;
+  color: #e61919;
   text-transform: uppercase;
   letter-spacing: 1px;
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(230, 25, 25, 0.12);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   padding: 0.15rem 0.65rem;
   border-radius: 12px;
   margin-bottom: 0.35rem;
@@ -89,14 +89,14 @@
 
 /* PROMPT BANNER */
 .auth-prompt-banner {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(18, 18, 22, 0.9));
-  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.15), rgba(18, 18, 22, 0.9));
+  border-bottom: 1px solid rgba(230, 25, 25, 0.3);
   padding: 0.75rem 1.4rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   font-size: 0.85rem;
-  color: #d4af37;
+  color: #e61919;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -126,9 +126,9 @@
 }
 
 .auth-tab-btn.active {
-  color: #d4af37;
-  background: rgba(212, 175, 55, 0.1);
-  border-bottom: 2px solid #d4af37;
+  color: #e61919;
+  background: rgba(230, 25, 25, 0.1);
+  border-bottom: 2px solid #e61919;
 }
 
 /* ERROR BADGE */
@@ -170,7 +170,7 @@
 
 .auth-google-btn:hover {
   background: rgba(255, 255, 255, 0.16);
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(230, 25, 25, 0.4);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
@@ -236,9 +236,9 @@
 }
 
 .auth-field input:focus {
-  border-color: #d4af37;
+  border-color: #e61919;
   background: rgba(20, 20, 24, 0.9);
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 10px rgba(230, 25, 25, 0.2);
 }
 
 .password-input-wrapper {
@@ -269,7 +269,7 @@
 }
 
 .auth-submit-btn {
-  background: linear-gradient(135deg, #d4af37, #aa820a);
+  background: linear-gradient(135deg, #e61919, #aa820a);
   color: #0d0d0f;
   font-weight: 700;
   font-size: 0.95rem;
@@ -279,14 +279,14 @@
   cursor: pointer;
   transition: all 0.25s ease;
   margin-top: 0.4rem;
-  box-shadow: 0 6px 18px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 6px 18px rgba(230, 25, 25, 0.3);
   font-family: inherit;
 }
 
 .auth-submit-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #e5be48, #c59714);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(212, 175, 55, 0.45);
+  box-shadow: 0 10px 25px rgba(230, 25, 25, 0.45);
 }
 
 .auth-submit-btn:disabled {
@@ -303,7 +303,7 @@
 }
 
 .auth-terms-note a {
-  color: #d4af37;
+  color: #e61919;
   text-decoration: none;
 }
 
@@ -391,9 +391,9 @@
 }
 
 .auth-username-input-wrap:focus-within {
-  border-color: #d4af37;
+  border-color: #e61919;
   background: rgba(20, 20, 24, 0.95);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 0 15px rgba(230, 25, 25, 0.25);
 }
 
 .auth-username-prefix {

@@ -21,7 +21,7 @@
 
 .vip-modal-box {
   background: linear-gradient(145deg, rgba(20, 16, 32, 0.96) 0%, rgba(12, 12, 18, 0.98) 100%);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: 1px solid rgba(230, 25, 25, 0.35);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 40px rgba(147, 51, 234, 0.18);
   border-radius: 20px;
   width: 100%;
@@ -57,7 +57,7 @@
 
 .vip-sparkle {
   font-size: 1.5rem;
-  color: #ffd700;
+  color: #ff2a2a;
   text-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
   animation: sparklePulse 2s infinite ease-in-out;
 }
@@ -71,7 +71,7 @@
   margin: 0;
   font-size: 1.25rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #ffffff 0%, #ffd700 70%, #d4af37 100%);
+  background: linear-gradient(135deg, #ffffff 0%, #ff2a2a 70%, #e61919 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: -0.3px;
@@ -135,9 +135,9 @@
 }
 
 .vip-plan-card.pro.selected {
-  border-color: #d4af37;
-  background: linear-gradient(145deg, rgba(212, 175, 55, 0.14) 0%, rgba(20, 16, 32, 0.6) 100%);
-  box-shadow: 0 0 25px rgba(212, 175, 55, 0.25);
+  border-color: #e61919;
+  background: linear-gradient(145deg, rgba(230, 25, 25, 0.14) 0%, rgba(20, 16, 32, 0.6) 100%);
+  box-shadow: 0 0 25px rgba(230, 25, 25, 0.25);
 }
 
 .vip-plan-card.elite.selected {
@@ -201,7 +201,7 @@
 .plan-currency {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #ffd700;
+  color: #ff2a2a;
   margin-right: 2px;
 }
 
@@ -228,9 +228,9 @@
 }
 
 .plan-badge-pill.gold {
-  background: rgba(212, 175, 55, 0.18);
-  border: 1px solid rgba(212, 175, 55, 0.45);
-  color: #ffd700;
+  background: rgba(230, 25, 25, 0.18);
+  border: 1px solid rgba(230, 25, 25, 0.45);
+  color: #ff2a2a;
 }
 
 .plan-badge-pill.purple {
@@ -329,12 +329,12 @@
 
 .vip-gateway-chip input {
   margin: 0;
-  accent-color: #d4af37;
+  accent-color: #e61919;
 }
 
 .vip-gateway-chip.active {
-  background: rgba(212, 175, 55, 0.12);
-  border-color: #d4af37;
+  background: rgba(230, 25, 25, 0.12);
+  border-color: #e61919;
   color: #ffffff;
   font-weight: 600;
 }
@@ -363,7 +363,7 @@
 
 .vip-age-box:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(212, 175, 55, 0.35);
+  border-color: rgba(230, 25, 25, 0.35);
 }
 
 .vip-age-label {
@@ -377,7 +377,7 @@
 .vip-age-checkbox {
   width: 18px;
   height: 18px;
-  accent-color: #d4af37;
+  accent-color: #e61919;
   cursor: pointer;
   flex-shrink: 0;
   margin: 0;
@@ -390,7 +390,7 @@
 }
 
 .vip-age-text strong {
-  color: #ffd700;
+  color: #ff2a2a;
   font-weight: 700;
 }
 
@@ -413,18 +413,19 @@
 }
 
 .vip-subscribe-btn.btn-pro {
-  background: linear-gradient(135deg, #d4af37 0%, #aa820a 100%);
+  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
   color: #0d0d0f;
-  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 18px rgba(212, 175, 55, 0.45);
 }
 
 .vip-subscribe-btn.btn-pro:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.6);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.65);
 }
 
 .vip-subscribe-btn.btn-elite {
-  background: linear-gradient(135deg, #a855f7 0%, #6b21a8 100%);
+  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+  color: #ffffff;
   box-shadow: 0 4px 20px rgba(168, 85, 247, 0.45);
 }
 
@@ -490,8 +491,8 @@
 }
 
 .celebration-badge-ring.ring-gold {
-  background: radial-gradient(circle, rgba(212, 175, 55, 0.35) 0%, rgba(212, 175, 55, 0.05) 70%);
-  border: 2.5px solid #ffd700;
+  background: radial-gradient(circle, rgba(230, 25, 25, 0.35) 0%, rgba(230, 25, 25, 0.05) 70%);
+  border: 2.5px solid #ff2a2a;
   box-shadow: 0 0 35px rgba(255, 215, 0, 0.6);
 }
 
@@ -525,7 +526,7 @@
 }
 
 .text-gold {
-  color: #ffd700;
+  color: #ff2a2a;
 }
 
 .text-purple {
@@ -553,7 +554,7 @@
 }
 
 .check-gold {
-  color: #ffd700;
+  color: #ff2a2a;
   font-weight: 800;
 }
 
@@ -618,7 +619,7 @@
 .vip-upi-box {
   margin: 1.1rem 0;
   background: linear-gradient(135deg, rgba(20, 15, 35, 0.75) 0%, rgba(10, 10, 18, 0.9) 100%);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: 1px solid rgba(230, 25, 25, 0.35);
   border-radius: 14px;
   padding: 1.15rem;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -655,7 +656,7 @@
 }
 
 .upi-exact-amount strong {
-  color: #ffd700;
+  color: #ff2a2a;
   font-size: 0.98rem;
   letter-spacing: -0.2px;
 }
@@ -672,7 +673,7 @@
 }
 
 .vip-upi-instruction strong {
-  color: #ffd700;
+  color: #ff2a2a;
 }
 
 .vip-upi-apps-grid {
@@ -733,15 +734,15 @@
 }
 
 .vip-upi-app-card.other-upi {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.18) 0%, rgba(212, 175, 55, 0.08) 100%);
-  color: #ffd700;
-  border-color: rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.18) 0%, rgba(230, 25, 25, 0.08) 100%);
+  color: #ff2a2a;
+  border-color: rgba(230, 25, 25, 0.4);
 }
 
 .vip-upi-app-card.other-upi:hover {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.28) 0%, rgba(212, 175, 55, 0.14) 100%);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.28) 0%, rgba(230, 25, 25, 0.14) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.35);
   color: #ffffff;
 }
 
@@ -761,7 +762,7 @@
 }
 
 .step-num-pill {
-  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  background: linear-gradient(135deg, #ff2a2a 0%, #e61919 100%);
   color: #0f172a;
   font-size: 0.65rem;
   font-weight: 900;
@@ -799,7 +800,7 @@
 .utr-text-input:focus,
 .utr-payer-input:focus {
   outline: none;
-  border-color: #ffd700;
+  border-color: #ff2a2a;
   box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
 }
 
@@ -888,14 +889,14 @@
 
 .highlight-mono {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  color: #ffd700;
+  color: #ff2a2a;
   background: rgba(255, 215, 0, 0.12);
   padding: 0.15rem 0.45rem;
   border-radius: 4px;
 }
 
 .font-gold {
-  color: #ffd700;
+  color: #ff2a2a;
   font-size: 0.95rem;
 }
 
@@ -947,7 +948,7 @@
 }
 
 .pending-done-btn {
-  background: linear-gradient(135deg, #ffd700 0%, #d4af37 100%);
+  background: linear-gradient(135deg, #ff2a2a 0%, #e61919 100%);
   color: #0f172a;
   border: none;
   font-size: 0.9rem;
@@ -992,10 +993,10 @@
 }
 
 .active-badge-ring.ring-gold {
-  background: rgba(212, 175, 55, 0.15);
-  border: 1.5px solid #d4af37;
-  color: #ffd700;
-  box-shadow: 0 0 30px rgba(212, 175, 55, 0.35);
+  background: rgba(230, 25, 25, 0.15);
+  border: 1.5px solid #e61919;
+  color: #ff2a2a;
+  box-shadow: 0 0 30px rgba(230, 25, 25, 0.35);
   animation: pulseGoldRing 2.4s infinite ease-in-out;
 }
 
@@ -1005,8 +1006,8 @@
 }
 
 @keyframes pulseGoldRing {
-  0%, 100% { box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); transform: scale(1); }
-  50% { box-shadow: 0 0 35px rgba(212, 175, 55, 0.55); transform: scale(1.04); }
+  0%, 100% { box-shadow: 0 0 20px rgba(230, 25, 25, 0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 35px rgba(230, 25, 25, 0.55); transform: scale(1.04); }
 }
 
 .active-status-badge-row,
@@ -1189,7 +1190,7 @@
   background: rgba(0, 0, 0, 0.4);
   padding: 0.15rem 0.35rem;
   border-radius: 4px;
-  color: #ffd700;
+  color: #ff2a2a;
   font-family: monospace;
   font-size: 0.78rem;
 }

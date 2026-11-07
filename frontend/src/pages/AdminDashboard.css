@@ -4,7 +4,7 @@
   padding: 2rem 1.5rem 4rem;
   z-index: 1;
   position: relative;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-body), sans-serif;
   color: #e0e0e0;
 }
 
@@ -15,7 +15,7 @@
   align-items: center;
   padding: 1.25rem 1.75rem;
   background: rgba(18, 18, 22, 0.9);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   border-radius: 16px;
   margin-bottom: 1.5rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -31,8 +31,8 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(230, 25, 25, 0.12);
+  border: 1px solid rgba(230, 25, 25, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,7 +46,7 @@
 }
 
 .highlight-gold {
-  color: #d4af37;
+  color: #e61919;
 }
 
 .admin-subtext {
@@ -99,17 +99,17 @@
 }
 
 .admin-tab-btn:hover {
-  background: rgba(212, 175, 55, 0.12);
-  color: #d4af37;
-  border-color: rgba(212, 175, 55, 0.3);
+  background: rgba(230, 25, 25, 0.12);
+  color: #e61919;
+  border-color: rgba(230, 25, 25, 0.3);
 }
 
 .admin-tab-btn.active {
-  background: linear-gradient(135deg, #d4af37, #aa820a);
+  background: linear-gradient(135deg, #e61919, #aa820a);
   color: #0d0d0f;
-  border-color: #d4af37;
+  border-color: #e61919;
   font-weight: 700;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.3);
 }
 
 .tab-badge {
@@ -208,8 +208,8 @@
 .form-group.flex-2 { flex: 2; min-width: 0; }
 
 .form-group.highlight-box {
-  background: rgba(212, 175, 55, 0.05);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: rgba(230, 25, 25, 0.05);
+  border: 1px solid rgba(230, 25, 25, 0.25);
   padding: 0.85rem;
   border-radius: 10px;
   width: 100%;
@@ -239,12 +239,12 @@
 }
 
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-  border-color: #d4af37;
+  border-color: #e61919;
 }
 
 .field-hint {
   font-size: 0.72rem;
-  color: #d4af37;
+  color: #e61919;
   margin-top: 0.2rem;
 }
 
@@ -270,14 +270,14 @@
 }
 
 .admin-btn.primary {
-  background: linear-gradient(135deg, #d4af37, #aa820a);
+  background: linear-gradient(135deg, #e61919, #aa820a);
   color: #0d0d0f;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.25);
 }
 
 .admin-btn.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.4);
 }
 
 .admin-btn.secondary {
@@ -288,8 +288,8 @@
 
 .admin-btn.outline-sm {
   background: rgba(255, 255, 255, 0.05);
-  color: #d4af37;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #e61919;
+  border: 1px solid rgba(230, 25, 25, 0.3);
   font-size: 0.74rem;
   padding: 0.3rem 0.65rem;
   border-radius: 12px;
@@ -339,7 +339,7 @@
   height: 34px;
   border-radius: 8px;
   object-fit: cover;
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   flex-shrink: 0;
 }
 
@@ -490,7 +490,7 @@
   transition: all 0.2s ease;
 }
 
-.action-btn.edit:hover { background: rgba(212, 175, 55, 0.2); color: #d4af37; }
+.action-btn.edit:hover { background: rgba(230, 25, 25, 0.2); color: #e61919; }
 .action-btn.delete:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
 
 /* BAN APPEALS STACK */
@@ -502,7 +502,7 @@
 
 .appeal-card {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(230, 25, 25, 0.25);
   border-radius: 12px;
   padding: 1.1rem;
 }
@@ -521,7 +521,7 @@
 }
 
 .appeal-email {
-  color: #d4af37;
+  color: #e61919;
   font-weight: 500;
 }
 
@@ -601,7 +601,7 @@
 
 .admin-modal-box {
   background: #121216;
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: 1px solid rgba(230, 25, 25, 0.35);
   border-radius: 16px;
   width: 100%;
   max-width: 550px;
@@ -656,7 +656,7 @@
   display: flex;
   justify-content: space-between;
   font-weight: 700;
-  color: #d4af37;
+  color: #e61919;
   margin-bottom: 0.25rem;
 }
 
@@ -682,12 +682,12 @@
 }
 
 .message-item.unread {
-  border-color: rgba(212, 175, 55, 0.35);
-  background: rgba(212, 175, 55, 0.04);
+  border-color: rgba(230, 25, 25, 0.35);
+  background: rgba(230, 25, 25, 0.04);
 }
 
 .message-item:hover {
-  border-color: rgba(212, 175, 55, 0.4);
+  border-color: rgba(230, 25, 25, 0.4);
   transform: translateY(-2px);
 }
 
@@ -699,7 +699,7 @@
 }
 
 .msg-email {
-  color: #d4af37;
+  color: #e61919;
   font-size: 0.82rem;
   margin-left: 0.35rem;
 }
@@ -1139,7 +1139,7 @@
   align-items: center;
   font-size: 0.88rem;
   font-weight: 600;
-  color: #ffd700;
+  color: #ff2a2a;
   margin-bottom: 0.45rem;
 }
 
@@ -1153,22 +1153,22 @@
   display: flex;
   align-items: center;
   background: rgba(15, 17, 23, 0.95);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: 1px solid rgba(230, 25, 25, 0.35);
   border-radius: 12px;
   overflow: hidden;
   transition: border-color 0.2s ease;
 }
 
 .fee-input-wrapper:focus-within {
-  border-color: #ffd700;
-  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+  border-color: #ff2a2a;
+  box-shadow: 0 0 0 3px rgba(230, 25, 25, 0.2);
 }
 
 .fee-currency-prefix {
   padding: 0 1rem;
   font-size: 1.25rem;
   font-weight: 800;
-  color: #ffd700;
+  color: #ff2a2a;
 }
 
 .fee-number-input {
@@ -1248,17 +1248,17 @@
 }
 
 .preset-pill:hover {
-  background: rgba(212, 175, 55, 0.15);
-  border-color: rgba(212, 175, 55, 0.4);
-  color: #ffd700;
+  background: rgba(230, 25, 25, 0.15);
+  border-color: rgba(230, 25, 25, 0.4);
+  color: #ff2a2a;
   transform: translateY(-1px);
 }
 
 .preset-pill.pill-selected {
-  background: linear-gradient(135deg, #d4af37, #b8860b);
-  border-color: #ffd700;
+  background: linear-gradient(135deg, #e61919, #b8860b);
+  border-color: #ff2a2a;
   color: #0b0f19;
-  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.3);
 }
 
 /* Form Actions */
@@ -1283,7 +1283,7 @@
 /* Live Simulator */
 .fee-simulator-card {
   background: rgba(18, 20, 28, 0.7);
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(230, 25, 25, 0.25);
 }
 
 .simulator-subtitle {
@@ -1360,8 +1360,8 @@
 
 .simulated-fee-btn {
   background: linear-gradient(135deg, #1e293b, #0f172a);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  color: #ffd700;
+  border: 1px solid rgba(230, 25, 25, 0.4);
+  color: #ff2a2a;
 }
 
 .simulated-free-cleared-btn {
@@ -1377,8 +1377,8 @@
 }
 
 .simulated-upsell-box {
-  background: rgba(212, 175, 55, 0.06);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  background: rgba(230, 25, 25, 0.06);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   border-radius: 10px;
   padding: 0.75rem 0.9rem;
   display: flex;
@@ -1396,7 +1396,7 @@
 .sim-badge {
   font-size: 0.68rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #d4af37, #996515);
+  background: linear-gradient(135deg, #e61919, #996515);
   color: #0b0f19;
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
@@ -1434,7 +1434,7 @@
 
 .fee-guidelines-box h5 {
   margin: 0 0 0.5rem 0;
-  color: #ffd700;
+  color: #ff2a2a;
   font-size: 0.84rem;
   font-weight: 700;
 }
@@ -1588,7 +1588,7 @@
 }
 
 .metric-val.font-gold {
-  color: #ffd700;
+  color: #ff2a2a;
 }
 
 .metric-val.font-green {
@@ -1613,7 +1613,7 @@
 /* Payment Settings Card */
 .payment-settings-card {
   margin-bottom: 1.5rem;
-  border: 1px solid rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(230, 25, 25, 0.25);
   background: linear-gradient(145deg, rgba(20, 16, 32, 0.8) 0%, rgba(12, 12, 18, 0.95) 100%);
 }
 
@@ -1662,8 +1662,8 @@
 
 .mode-pill.active {
   background: rgba(255, 215, 0, 0.12);
-  border-color: #ffd700;
-  color: #ffd700;
+  border-color: #ff2a2a;
+  color: #ff2a2a;
   box-shadow: 0 0 14px rgba(255, 215, 0, 0.15);
 }
 
@@ -1718,7 +1718,7 @@
 
 .detail-item .detail-vpa {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  color: #ffd700;
+  color: #ff2a2a;
   background: rgba(255, 215, 0, 0.1);
   padding: 0.2rem 0.5rem;
   border-radius: 6px;
@@ -1751,9 +1751,9 @@
 }
 
 .filter-pill.active {
-  background: #ffd700;
+  background: #ff2a2a;
   color: #0f172a;
-  border-color: #ffd700;
+  border-color: #ff2a2a;
 }
 
 /* Table cells */
@@ -1785,9 +1785,9 @@
 }
 
 .plan-badge-inline.badge-pro {
-  background: rgba(212, 175, 55, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  color: #ffd700;
+  background: rgba(230, 25, 25, 0.2);
+  border: 1px solid rgba(230, 25, 25, 0.4);
+  color: #ff2a2a;
 }
 
 .utr-display-wrap {
@@ -1799,7 +1799,7 @@
 .utr-code {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 0.82rem;
-  color: #ffd700;
+  color: #ff2a2a;
   background: rgba(255, 215, 0, 0.1);
   padding: 0.2rem 0.45rem;
   border-radius: 5px;
@@ -1822,8 +1822,8 @@
 
 .copy-mini-btn:hover {
   background: rgba(255, 215, 0, 0.2);
-  color: #ffd700;
-  border-color: #ffd700;
+  color: #ff2a2a;
+  border-color: #ff2a2a;
 }
 
 /* Status Pills */

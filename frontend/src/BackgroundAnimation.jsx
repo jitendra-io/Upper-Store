@@ -6,103 +6,114 @@ const BackgroundAnimation = () => {
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    let mouse = { x: null, y: null };
+    if (!ctx) return;
 
-    const init = () => {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
 
-      particles = [];
-      const numParticles = 150; // More particles to fill the screen
+    let mouse = { x: width * 0.5, y: height * 0.35, targetX: width * 0.5, targetY: height * 0.35 };
+    let scrollY = window.scrollY || 0;
+    let isPaused = false;
+    let animationFrameId;
 
-      for (let i = 0; i < numParticles; i++) {
-        particles.push({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: (Math.random() - 0.5) * 1.2, // Random X velocity
-          vy: (Math.random() - 0.5) * 1.2, // Random Y velocity
-          radius: Math.random() * 2 + 1, // Random size between 1 and 3px
-        });
-      }
+    const handleResize = () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
     };
 
-    let isPaused = false;
+    const handleMouseMove = (e) => {
+      mouse.targetX = e.clientX;
+      mouse.targetY = e.clientY;
+    };
+
+    const handleScroll = () => {
+      scrollY = window.scrollY || 0;
+    };
+
     const handleModalToggle = (e) => {
       isPaused = Boolean(e.detail);
     };
-    window.addEventListener('modalToggle', handleModalToggle);
-
-    const draw = () => {
-      if (!isPaused) {
-        ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = '#C9A84C'; // Antique Gold
-        
-        particles.forEach((p) => {
-        // Move particle naturally
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // Bounce off edges to keep them on screen
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
-        
-        // Calculate interaction with mouse
-        if (mouse.x !== null && mouse.y !== null) {
-            let dx = mouse.x - p.x;
-            let dy = mouse.y - p.y;
-            let distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance > 0 && distance < 150) {
-                // Magnetic push away effect based on distance
-                const force = (150 - distance) / 150;
-                const pushX = (dx / distance) * force * 5; 
-                const pushY = (dy / distance) * force * 5;
-                
-                p.x -= pushX;
-                p.y -= pushY;
-            }
-        }
-
-        // Draw dot
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-      });
-      }
-      requestAnimationFrame(draw);
-    };
-
-    init();
-    draw();
-
-    const handleResize = () => init();
-    const handleMouseMove = (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-    };
-    const handleMouseLeave = () => {
-      mouse.x = null;
-      mouse.y = null;
-    };
 
     window.addEventListener('resize', handleResize);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('modalToggle', handleModalToggle);
+
+    // Render loop: atmospheric crimson volumetric glows
+    const render = () => {
+      if (!isPaused) {
+        ctx.clearRect(0, 0, width, height);
+
+        // Smooth cursor lerp
+        mouse.x += (mouse.targetX - mouse.x) * 0.06;
+        mouse.y += (mouse.targetY - mouse.y) * 0.06;
+
+        // Ambient Hero Crimson Glow (Left focal anchor)
+        const heroLeftGrad = ctx.createRadialGradient(
+          width * 0.18,
+          height * 0.22 - scrollY * 0.15,
+          10,
+          width * 0.18,
+          height * 0.22 - scrollY * 0.15,
+          Math.min(width, height) * 0.45
+        );
+        heroLeftGrad.addColorStop(0, 'rgba(230, 25, 25, 0.11)');
+        heroLeftGrad.addColorStop(0.5, 'rgba(160, 15, 15, 0.04)');
+        heroLeftGrad.addColorStop(1, 'rgba(7, 7, 9, 0)');
+        ctx.fillStyle = heroLeftGrad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Ambient 3D Crystal Core Crimson Glow (Right focal anchor)
+        const coreRightGrad = ctx.createRadialGradient(
+          width * 0.78,
+          height * 0.32 - scrollY * 0.18,
+          10,
+          width * 0.78,
+          height * 0.32 - scrollY * 0.18,
+          Math.min(width, height) * 0.5
+        );
+        coreRightGrad.addColorStop(0, 'rgba(255, 42, 42, 0.13)');
+        coreRightGrad.addColorStop(0.5, 'rgba(180, 10, 10, 0.05)');
+        coreRightGrad.addColorStop(1, 'rgba(7, 7, 9, 0)');
+        ctx.fillStyle = coreRightGrad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Subtle interactive mouse ambient spotlight
+        const mouseGrad = ctx.createRadialGradient(
+          mouse.x,
+          mouse.y,
+          0,
+          mouse.x,
+          mouse.y,
+          260
+        );
+        mouseGrad.addColorStop(0, 'rgba(230, 25, 25, 0.06)');
+        mouseGrad.addColorStop(1, 'rgba(7, 7, 9, 0)');
+        ctx.fillStyle = mouseGrad;
+        ctx.fillRect(0, 0, width, height);
+      }
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('modalToggle', handleModalToggle);
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="bg-canvas" />;
+  return (
+    <div className="bg-animation-wrapper">
+      <div className="bg-grid-overlay" />
+      <canvas ref={canvasRef} className="bg-canvas" />
+    </div>
+  );
 };
 
 export default BackgroundAnimation;

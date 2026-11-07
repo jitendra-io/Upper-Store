@@ -1,11 +1,36 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
-  --color-bg-primary: #111111; /* Noir Black */
-  --color-bg-secondary: #2E2E2E; /* Charcoal */
-  --color-accent-primary: #C9A84C; /* Antique Gold */
-  --color-text-secondary: #E8D6B3; /* Champagne */
-  --color-text-primary: #F8F5EF; /* Ivory */
+  /* Obsidian and Crimson Theme Tokens */
+  --color-bg-primary: #070709;
+  --color-bg-secondary: #0d0d12;
+  --color-bg-surface: rgba(20, 20, 27, 0.85);
+  --color-bg-surface-elevated: #161622;
+  --color-bg-glass: linear-gradient(145deg, rgba(20, 20, 27, 0.85) 0%, rgba(13, 13, 18, 0.92) 100%);
+  
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-hover: rgba(230, 25, 25, 0.5);
+  --color-border-highlight: rgba(255, 255, 255, 0.16);
+
+  --color-accent-primary: #e61919;
+  --color-accent-secondary: #ff2a2a;
+  --color-accent-glow: rgba(230, 25, 25, 0.45);
+  --color-accent-ambient: rgba(230, 25, 25, 0.12);
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #9496a1;
+  --color-text-muted: #5b5e70;
+  --color-text-crimson: #ff2a2a;
+
+  /* Fonts */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Shadows */
+  --shadow-crimson-glow: 0 0 25px -3px rgba(230, 25, 25, 0.45), 0 0 10px -2px rgba(255, 42, 42, 0.3);
+  --shadow-crimson-glow-lg: 0 0 45px -5px rgba(230, 25, 25, 0.6), 0 0 20px -4px rgba(255, 42, 42, 0.4);
+  --shadow-card: 0 8px 32px 0 rgba(0, 0, 0, 0.55);
 }
 
 * {
@@ -22,58 +47,69 @@ html, body {
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-body);
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(230, 25, 25, 0.12) 0%, transparent 35%),
+    radial-gradient(circle at 85% 25%, rgba(230, 25, 25, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 50% 65%, rgba(180, 15, 15, 0.07) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.03em;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 a {
-  color: var(--color-accent-primary);
+  color: var(--color-accent-secondary);
   text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 a:hover {
-  filter: brightness(1.2);
+  color: #ff5555;
 }
 
 button {
   cursor: pointer;
-  font-family: 'Outfit', sans-serif;
-  transition: all 0.3s ease;
+  font-family: var(--font-body);
+  transition: all 0.25s ease;
 }
 
-/* Custom Gold Luxury Scrollbar */
+/* Custom Crimson Obsidian Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(12, 12, 14, 0.95);
+  background: #070709;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #d4af37 0%, #aa820a 100%);
+  background: #262632;
   border-radius: 4px;
-  border: 1px solid rgba(12, 12, 14, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #f5e6b3 0%, #d4af37 100%);
+  background: #e61919;
+  box-shadow: 0 0 10px rgba(230, 25, 25, 0.5);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d4af37 rgba(12, 12, 14, 0.95);
+  scrollbar-color: #262632 #070709;
 }
 
 /* ==========================================================================
    PHONE / MOBILE SCROLLBAR: HIDDEN EVERYWHERE WHILE PRESERVING SCROLLING
-   Hides the visual scrollbar everywhere on phone/mobile screens while
-   retaining full touch, gesture, and programmatic scrolling capabilities.
    ========================================================================== */
 @media (max-width: 768px), (pointer: coarse) and (max-width: 1024px) {
   html,

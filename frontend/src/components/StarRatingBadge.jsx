@@ -51,7 +51,7 @@ const StarRatingBadge = ({ productId, initialRating = 5.0, initialCount = 0, onC
       className="star-rating-badge"
       onClick={(e) => {
         e.stopPropagation();
-        if (onClick) onClick();
+        if (onClick) onClick(e);
       }}
       title="Click to view all user comments & ratings"
     >

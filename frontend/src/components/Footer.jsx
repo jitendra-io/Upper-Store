@@ -40,7 +40,7 @@ const Footer = () => {
         <div className="footer-brand">
           <div className="footer-logo">
             <img src={logoImg} alt="Upper Store Logo" className="footer-logo-img" />
-            <span>Upper <span>Store</span></span>
+            <span><span style={{ color: '#ff2a2a' }}>Upper</span> <span style={{ color: '#ffffff' }}>Store</span></span>
           </div>
           <p className="footer-tagline">
             Empowering developers and creators with elite applications and assets.
@@ -86,7 +86,7 @@ const Footer = () => {
           <div className="footer-column">
             <h4>Company</h4>
             <ul>
-              <li><Link to="/vip-club" style={{ color: '#ffd700', fontWeight: 600 }}>VIP Club &amp; Badges</Link></li>
+              <li><Link to="/vip-club" style={{ color: '#ff2a2a', fontWeight: 600 }}>VIP Club &amp; Badges</Link></li>
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/blog">Blog & Updates</Link></li>
               <li><Link to="/press">Press Kit</Link></li>
@@ -119,7 +119,7 @@ const Footer = () => {
           <div className="footer-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="footer-modal-header">
               <h3>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
                 Security & Service Advisories

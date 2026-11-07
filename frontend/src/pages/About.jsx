@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import logoImg from '../assets/logo.jpg';
+import { ShieldCheckIcon, LayersIcon, ArrowRightIcon, CheckIcon } from '../components/Icons';
 import './About.css';
 
 const About = () => {
@@ -19,97 +20,122 @@ const About = () => {
 
   return (
     <div className="about-container">
-      {/* Hero Header */}
+      {/* 1. HERO HEADER */}
       <section className="about-hero">
-        <span className="about-pill-tag">Engineering Excellence</span>
-        <h1>About <span className="highlight">Upper Store</span></h1>
-        <p>Architecting Next-Generation Software Distribution for Developers &amp; Digital Creators.</p>
+        <span className="about-crimson-badge">
+          <span className="crimson-dot-pulse" />
+          Engineering Excellence &amp; Architecture
+        </span>
+        <h1 className="about-title">
+          About <span className="about-title-crimson">Upper</span> <span className="about-title-white">Store</span>
+        </h1>
+        <p className="about-subtitle">
+          Architecting Next-Generation Software Distribution for Developers &amp; Digital Creators.
+        </p>
       </section>
 
-      {/* Professional Pillars Grid */}
+      {/* 2. THREE CORE PILLARS GRID */}
       <section className="about-pillars-grid">
         <div className="about-pillar-card">
-          <div className="pillar-icon-box gold">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <div className="pillar-icon-box crimson">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="2" y1="12" x2="22" y2="12"></line>
               <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
             </svg>
           </div>
           <h3>Unified Distribution</h3>
-          <p>A single, highly reliable ecosystem for discovering and deploying Android APKs, Windows executables, and elite UI toolkits.</p>
+          <p>
+            A single, highly reliable ecosystem for discovering and deploying Android APKs, Windows executables, and high-performance digital tools.
+          </p>
         </div>
 
         <div className="about-pillar-card">
-          <div className="pillar-icon-box green">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              <polyline points="9 11 11 13 15 9"></polyline>
-            </svg>
+          <div className="pillar-icon-box crimson">
+            <ShieldCheckIcon size={24} />
           </div>
           <h3>Cryptographic Security</h3>
-          <p>Zero third-party compromise. Every binary distributed is SHA-256 verified and continuously monitored for absolute software integrity.</p>
+          <p>
+            Zero third-party compromise. Every binary distributed is SHA-256 verified and continuously monitored for absolute software integrity.
+          </p>
         </div>
 
         <div className="about-pillar-card">
-          <div className="pillar-icon-box blue">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg>
+          <div className="pillar-icon-box crimson">
+            <LayersIcon size={24} />
           </div>
           <h3>High-Speed CDN Edge</h3>
-          <p>Backed by ImageKit CDN for instant media rendering and direct high-bandwidth GitHub Release mirrors for rapid package downloads.</p>
+          <p>
+            Backed by ImageKit CDN for instant media rendering and direct high-bandwidth GitHub Release mirrors for rapid package downloads.
+          </p>
         </div>
       </section>
 
-      {/* Brand Overview & Developer Listing Requirements Section */}
+      {/* 3. BRAND COMMITMENT & ARCHITECTURE SECTION */}
       <section className="about-overview-section">
-        <div className="overview-card">
-          <h2>Our Vision &amp; Commitment</h2>
-          <p>
-            At Upper Store, we believe software delivery should be effortless, secure, and visually extraordinary. 
-            Whether you are a developer looking for standalone desktop utilities or a mobile user seeking verified applications, 
+        {/* Our Vision Card */}
+        <div className="about-card">
+          <span className="card-kicker">Core Philosophy</span>
+          <h2 className="card-heading">Our Vision &amp; Commitment</h2>
+          <p className="card-body-text">
+            At Upper Store, we believe software delivery should be effortless, secure, and visually extraordinary.
+            Whether you are a developer looking for standalone desktop utilities or a mobile user seeking verified applications,
             our platform guarantees zero bloatware, authentic releases, and uncompromised speed.
           </p>
         </div>
 
-        <div className="overview-card arch-card">
-          <h2 className="arch-heading">High-Availability System Architecture</h2>
-          <p className="arch-subtext">
+        {/* High-Availability Architecture Card */}
+        <div className="about-card arch-card">
+          <span className="card-kicker">Resilient Infrastructure</span>
+          <h2 className="card-heading">High-Availability System Architecture</h2>
+          <p className="card-body-text">
             Our architecture has been engineered using modern serverless and CDN distribution patterns that isolate heavy workloads and prevent server crashes.
           </p>
           <div className="about-arch-grid">
-            <div className="about-arch-card green">
+            <div className="arch-module-card">
+              <div className="arch-card-top">
+                <span className="arch-tag">Frontend &amp; Assets</span>
+              </div>
               <h4>Edge CDN Asset Delivery</h4>
               <p>Static frontend assets auto-scale globally across edge nodes for zero-latency UI rendering.</p>
             </div>
-            <div className="about-arch-card blue">
+
+            <div className="arch-module-card">
+              <div className="arch-card-top">
+                <span className="arch-tag">Binary Streams</span>
+              </div>
               <h4>Offloaded Binary Streams</h4>
-              <p>Multi-gigabyte APK/EXE package downloads stream directly from GitHub Release CDN mirrors.</p>
+              <p>Multi-gigabyte APK and EXE package downloads stream directly from GitHub Release CDN mirrors.</p>
             </div>
-            <div className="about-arch-card gold">
-              <h4>Autoscaling Serverless DB</h4>
-              <p>Google Firebase Firestore scales to 1,000,000+ concurrent connections without downtime.</p>
+
+            <div className="arch-module-card">
+              <div className="arch-card-top">
+                <span className="arch-tag">Data Layer</span>
+              </div>
+              <h4>Autoscaling Cloud Architecture</h4>
+              <p>Encrypted data stores with automatic load distribution scale reliably to millions of queries.</p>
             </div>
           </div>
         </div>
 
-        <div id="publish" className="overview-card publish-card-target">
-          <h2>Publishing Your Product on Upper Store</h2>
-          <p>
+        {/* 4. DEVELOPER PUBLISHING DIRECTIVE */}
+        <div id="publish" className="about-card publish-card-target">
+          <span className="card-kicker">Developer Ecosystem</span>
+          <h2 className="card-heading">Publishing Your Product on Upper Store</h2>
+          <p className="card-body-text">
             We welcome independent developers, software engineers, and digital creators to distribute their verified software applications, Android APKs, and developer tools across our global ecosystem.
           </p>
 
-          {/* INSTANT VIP DEVELOPER STUDIO HIGHLIGHT */}
+          {/* Instant VIP Developer Studio Highlight */}
           <div className="vip-instant-publish-card">
             <div className="vip-publish-header-row">
               <div className="vip-publish-title-group">
                 <span className="vip-instant-pill">Instant Publishing</span>
                 <h4 className="vip-publish-heading">Publish Instantly with VIP Plan</h4>
               </div>
-              <Link to="/vip" className="vip-publish-cta-btn">
-                <span>Take VIP Plan</span>
-                <span className="cta-arrow">&rarr;</span>
+              <Link to="/vip-club" className="vip-publish-cta-btn">
+                <span>View VIP Plans</span>
+                <ArrowRightIcon size={14} />
               </Link>
             </div>
 
@@ -119,47 +145,63 @@ const About = () => {
 
             <div className="vip-tier-perks-grid">
               <div className="vip-tier-perk-box pro">
-                <h5>Pro VIP Plan</h5>
+                <div className="perk-badge-label pro">PRO VIP PLAN</div>
+                <h5>Pro Developer Pass</h5>
                 <p>
-                  Publish up to <strong>3 products</strong> in the Store with official developer attribution, golden animated ring, and community broadcast privileges.
+                  Publish up to <strong>3 products</strong> in the Store with official developer attribution, verified badge, and community broadcast privileges.
                 </p>
               </div>
 
               <div className="vip-tier-perk-box elite">
-                <h5>Elite VIP Plan</h5>
+                <div className="perk-badge-label elite">ELITE VIP PLAN</div>
+                <h5>Elite Developer Pass</h5>
                 <p>
-                  Publish <strong>UNLIMITED products</strong> in the Store with royal purple animated ring, highest catalog ranking, and pinned community reviews.
+                  Publish <strong>UNLIMITED products</strong> in the Store with royal purple verified flair, highest catalog ranking, and pinned community reviews.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* STANDARD MANUAL EMAIL SUBMISSION OPTION */}
+          {/* Standard Manual Review Option */}
           <div className="about-manual-req-box">
             <h4>Standard Developer Review (Manual Email Queue):</h4>
             <p>
-              Creators without a VIP membership can submit software packages for manual administrative auditing by emailing <a href="mailto:upper.official.in@gmail.com" className="about-email-link">upper.official.in@gmail.com</a> with the following mandatory specifications:
+              Creators without a VIP membership can submit software packages for manual administrative auditing by emailing{' '}
+              <a href="mailto:upper.official.in@gmail.com" className="about-email-link">
+                upper.official.in@gmail.com
+              </a>{' '}
+              with the following mandatory specifications:
             </p>
             <ul className="about-req-list">
-              <li><strong>Complete Product Specifications:</strong> Title, Category, Version, Description, Key Features, &amp; YouTube Demo Video URL.</li>
-              <li><strong>GitHub Developer Account:</strong> Direct link to your active, verified GitHub repository or release binary.</li>
-              <li><strong>Creator Contact &amp; Attribution:</strong> Full legal name, developer studio handle, and contact phone number. No government identity documents are required.</li>
+              <li>
+                <CheckIcon size={14} className="check-icon" />
+                <span><strong>Complete Product Specifications:</strong> Title, Category, Version, Description, Key Features, &amp; YouTube Demo Video URL.</span>
+              </li>
+              <li>
+                <CheckIcon size={14} className="check-icon" />
+                <span><strong>GitHub Developer Account:</strong> Direct link to your active, verified GitHub repository or release binary.</span>
+              </li>
+              <li>
+                <CheckIcon size={14} className="check-icon" />
+                <span><strong>Creator Contact &amp; Attribution:</strong> Full legal name, developer studio handle, and contact phone number. No government identity documents are required.</span>
+              </li>
             </ul>
           </div>
+
           <p className="about-audit-disclaimer">
-            All product submissions undergo thorough security auditing and identity verification prior to public listing.
+            All product submissions undergo thorough security auditing and cryptographic verification prior to public listing.
           </p>
         </div>
       </section>
 
-      {/* LOGO CARD PLACED BELOW ALL THE WRITINGS */}
+      {/* 5. BRAND LOGO SHOWCASE CARD */}
       <section className="about-logo-section">
         <div className="brand-logo-showcase-card">
           <div className="showcase-logo-frame">
             <img src={logoImg} alt="Upper Store Official Logo" className="showcase-logo-img" />
           </div>
           <div className="showcase-logo-details">
-            <h2>Upper <span className="highlight">Store</span></h2>
+            <h2><span style={{ color: '#ff2a2a' }}>Upper</span> <span style={{ color: '#ffffff' }}>Store</span></h2>
             <p>Empowering digital creators with elite applications, seamless delivery, and uncompromised security.</p>
           </div>
         </div>

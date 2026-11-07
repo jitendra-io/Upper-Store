@@ -41,7 +41,7 @@ const EDITORIAL_IMAGERY = [
   },
   {
     id: 'img-3',
-    title: 'Dark Gold UI Design Assets',
+    title: 'Obsidian & Crimson UI Design Assets',
     type: 'Vector Package Banner',
     url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=600'
   }
@@ -105,7 +105,7 @@ const Press = () => {
             </div>
             <div className="asset-card-details">
               <h4>Primary Brand Logo</h4>
-              <p>Square high-res logo with gold border and dark noir backdrop.</p>
+              <p>Obsidian & Crimson dual-tone branding with geometric typography and ambient glow.</p>
               <div className="asset-tag-group">
                 <span className="asset-format-badge">SVG Vector</span>
                 <span className="asset-format-badge primary">PNG (Transparent)</span>
@@ -117,7 +117,7 @@ const Press = () => {
           <div className="asset-card">
             <div className="asset-preview-frame dark-style">
               <div className="wordmark-badge">
-                Upper <span className="gold-text">Store</span>
+                <span style={{ color: '#ff2a2a', fontWeight: 800 }}>UPPER</span> <span style={{ color: '#ffffff', fontWeight: 700 }}>STORE</span>
               </div>
             </div>
             <div className="asset-card-details">
@@ -139,13 +139,13 @@ const Press = () => {
           <div className="font-preview-left">
             <span className="font-big-spec">Aa</span>
             <div>
-              <h4>Outfit Font Family</h4>
-              <p>Primary Google Font used for headings, UI text, and brand communication.</p>
+              <h4>Space Grotesk & Inter</h4>
+              <p>Primary typography stack used for headings, UI text, and brand communication.</p>
             </div>
           </div>
           <div className="font-weights-list">
-            <span className="weight-item light">Light 300</span>
-            <span className="weight-item regular">Regular 400</span>
+            <span className="weight-item light">Regular 400</span>
+            <span className="weight-item regular">Medium 500</span>
             <span className="weight-item bold">Bold 700</span>
           </div>
         </div>
