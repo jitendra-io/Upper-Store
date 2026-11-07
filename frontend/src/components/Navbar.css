@@ -1612,25 +1612,25 @@
 
 /* VIP Tier Notification Broadcasts */
 .notif-item-card.vip-elite-card {
-  border: 1px solid rgba(168, 85, 247, 0.45);
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.08) 0%, rgba(18, 18, 24, 0.95) 100%);
-  box-shadow: 0 4px 18px rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(230, 25, 25, 0.55);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.08) 0%, rgba(18, 18, 24, 0.95) 100%);
+  box-shadow: 0 4px 18px rgba(230, 25, 25, 0.2);
 }
 
 .notif-item-card.vip-elite-card:hover {
-  border-color: #c084fc;
-  box-shadow: 0 6px 24px rgba(168, 85, 247, 0.25);
+  border-color: #ff2a2a;
+  box-shadow: 0 6px 24px rgba(230, 25, 25, 0.35);
 }
 
 .notif-item-card.vip-pro-card {
-  border: 1px solid rgba(230, 25, 25, 0.45);
-  background: linear-gradient(135deg, rgba(230, 25, 25, 0.08) 0%, rgba(18, 18, 24, 0.95) 100%);
-  box-shadow: 0 4px 18px rgba(230, 25, 25, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.06) 0%, rgba(18, 18, 24, 0.95) 100%);
+  box-shadow: 0 4px 18px rgba(255, 215, 0, 0.18);
 }
 
 .notif-item-card.vip-pro-card:hover {
-  border-color: #ff2a2a;
-  box-shadow: 0 6px 24px rgba(230, 25, 25, 0.25);
+  border-color: #ffd700;
+  box-shadow: 0 6px 24px rgba(255, 215, 0, 0.3);
 }
 
 .notif-vip-author-bar {
@@ -1643,11 +1643,11 @@
 }
 
 .notif-vip-author-bar.elite {
-  border-bottom-color: rgba(168, 85, 247, 0.25);
+  border-bottom-color: rgba(230, 25, 25, 0.35);
 }
 
 .notif-vip-author-bar.pro {
-  border-bottom-color: rgba(230, 25, 25, 0.25);
+  border-bottom-color: rgba(255, 215, 0, 0.3);
 }
 
 .notif-vip-author-meta {

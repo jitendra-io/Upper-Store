@@ -853,13 +853,15 @@
 }
 
 .live-broadcast-card.elite {
-  border: 1.5px solid rgba(168, 85, 247, 0.5);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(168, 85, 247, 0.2);
+  border: 1.5px solid rgba(230, 25, 25, 0.65);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 25px rgba(230, 25, 25, 0.25);
+  background: linear-gradient(145deg, rgba(230, 25, 25, 0.08) 0%, rgba(18, 18, 24, 0.98) 100%);
 }
 
 .live-broadcast-card.pro {
-  border: 1.5px solid rgba(230, 25, 25, 0.5);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(230, 25, 25, 0.2);
+  border: 1.5px solid rgba(255, 215, 0, 0.55);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.2);
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.06) 0%, rgba(18, 18, 24, 0.98) 100%);
 }
 
 .live-author-row {

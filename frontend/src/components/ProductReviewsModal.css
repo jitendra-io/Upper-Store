@@ -514,15 +514,15 @@
 }
 
 .review-comment-card.elite-card {
-  border: 1.5px solid rgba(168, 85, 247, 0.5);
-  background: linear-gradient(145deg, rgba(168, 85, 247, 0.08) 0%, rgba(20, 16, 32, 0.5) 100%);
-  box-shadow: 0 4px 20px rgba(147, 51, 234, 0.18);
+  border: 1.5px solid rgba(230, 25, 25, 0.65);
+  background: linear-gradient(145deg, rgba(230, 25, 25, 0.08) 0%, rgba(20, 20, 27, 0.9) 100%);
+  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.25);
 }
 
 .review-comment-card.pro-card {
-  border: 1.5px solid rgba(230, 25, 25, 0.45);
-  background: linear-gradient(145deg, rgba(230, 25, 25, 0.08) 0%, rgba(20, 16, 32, 0.5) 100%);
-  box-shadow: 0 4px 18px rgba(230, 25, 25, 0.18);
+  border: 1.5px solid rgba(255, 215, 0, 0.55);
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.06) 0%, rgba(20, 20, 27, 0.9) 100%);
+  box-shadow: 0 4px 18px rgba(255, 215, 0, 0.18);
 }
 
 .pinned-elite-ribbon {
@@ -532,13 +532,14 @@
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.4px;
-  color: #c084fc;
-  background: rgba(168, 85, 247, 0.15);
-  border: 1px solid rgba(168, 85, 247, 0.35);
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.35) 0%, rgba(255, 42, 42, 0.2) 100%);
+  border: 1px solid rgba(255, 42, 42, 0.6);
   padding: 0.2rem 0.55rem;
   border-radius: 6px;
   width: fit-content;
   margin-bottom: 0.6rem;
+  box-shadow: 0 0 14px rgba(230, 25, 25, 0.35);
 }
 
 .review-avatar-frame {
@@ -548,13 +549,13 @@
 }
 
 .review-avatar-frame.frame-purple .review-user-avatar {
-  border: 2px solid #c084fc;
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+  border: 2px solid #ff2a2a;
+  box-shadow: 0 0 12px rgba(230, 25, 25, 0.65);
 }
 
 .review-avatar-frame.frame-gold .review-user-avatar {
-  border: 2px solid #ff2a2a;
-  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.65);
 }
 
 .user-membership-pill {
@@ -567,17 +568,17 @@
 }
 
 .user-membership-pill.elite {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(126, 34, 206, 0.4) 100%);
-  border: 1px solid #c084fc;
-  color: #f3e8ff;
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.35);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.25) 0%, rgba(180, 20, 20, 0.4) 100%);
+  border: 1px solid #ff2a2a;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(230, 25, 25, 0.35);
 }
 
 .user-membership-pill.pro {
-  background: linear-gradient(135deg, rgba(230, 25, 25, 0.25) 0%, rgba(170, 130, 10, 0.4) 100%);
-  border: 1px solid #ff2a2a;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(180, 140, 10, 0.4) 100%);
+  border: 1px solid #ffd700;
   color: #fffbeb;
-  box-shadow: 0 0 10px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
 }
 
 .review-posting-tier {
@@ -592,15 +593,15 @@
 }
 
 .review-posting-tier.pro {
-  background: rgba(230, 25, 25, 0.15);
-  border: 1px solid rgba(230, 25, 25, 0.4);
-  color: #ff2a2a;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  color: #ffd700;
 }
 
 .review-posting-tier.elite {
-  background: rgba(168, 85, 247, 0.18);
-  border: 1px solid rgba(168, 85, 247, 0.45);
-  color: #c084fc;
+  background: rgba(230, 25, 25, 0.15);
+  border: 1px solid rgba(230, 25, 25, 0.5);
+  color: #ff4d4d;
 }
 
 .review-comment-card:hover {

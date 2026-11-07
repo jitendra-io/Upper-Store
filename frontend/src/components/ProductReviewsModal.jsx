@@ -376,7 +376,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                   <span>{formatCount(reviewsCount)} {reviewsCount === 1 ? 'Comment' : 'Comments'}</span>
                 </span>
                 <span className="reviews-avg-rating">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#d4af37" stroke="#d4af37" strokeWidth="1">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#ffd700" stroke="#ffd700" strokeWidth="1">
                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                   </svg>
                   <span>{averageRating.toFixed(1)} / 5.0</span>
@@ -536,7 +536,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                           onMouseLeave={() => setHoverRating(0)}
                           aria-label={`Rate ${starVal} stars`}
                         >
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive ? "#d4af37" : "none"} stroke={isActive ? "#d4af37" : "rgba(255,255,255,0.3)"} strokeWidth="1.5">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill={isActive ? "#ffd700" : "none"} stroke={isActive ? "#ffd700" : "rgba(255,255,255,0.3)"} strokeWidth="1.5">
                             <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
                           </svg>
                         </button>
@@ -622,8 +622,8 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                                     width="12"
                                     height="12"
                                     viewBox="0 0 24 24"
-                                    fill={isFilled ? "#d4af37" : "none"}
-                                    stroke={isFilled ? "#d4af37" : "rgba(255,255,255,0.2)"}
+                                    fill={isFilled ? "#ffd700" : "none"}
+                                    stroke={isFilled ? "#ffd700" : "rgba(255,255,255,0.2)"}
                                     strokeWidth="1.5"
                                   >
                                     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>

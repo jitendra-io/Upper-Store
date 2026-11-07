@@ -134,30 +134,34 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-.vip-plan-card.pro.selected {
-  border-color: #e61919;
-  background: linear-gradient(145deg, rgba(230, 25, 25, 0.14) 0%, rgba(20, 16, 32, 0.6) 100%);
-  box-shadow: 0 0 25px rgba(230, 25, 25, 0.25);
+.vip-plan-card.pro.selected,
+.vip-plan-card.active.active-pro,
+.vip-plan-card.active-pro {
+  border-color: #ffd700;
+  background: linear-gradient(145deg, rgba(255, 215, 0, 0.12) 0%, rgba(20, 20, 27, 0.9) 100%);
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.25);
 }
 
-.vip-plan-card.elite.selected {
-  border-color: #a855f7;
-  background: linear-gradient(145deg, rgba(168, 85, 247, 0.16) 0%, rgba(20, 16, 32, 0.6) 100%);
-  box-shadow: 0 0 25px rgba(168, 85, 247, 0.3);
+.vip-plan-card.elite.selected,
+.vip-plan-card.active.active-elite,
+.vip-plan-card.active-elite {
+  border-color: #ff2a2a;
+  background: linear-gradient(145deg, rgba(230, 25, 25, 0.14) 0%, rgba(20, 20, 27, 0.9) 100%);
+  box-shadow: 0 0 25px rgba(230, 25, 25, 0.35);
 }
 
 .plan-ribbon {
   position: absolute;
   top: -9px;
   right: 10px;
-  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+  background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
   color: #ffffff;
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.4px;
   padding: 0.2rem 0.55rem;
   border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
+  box-shadow: 0 2px 10px rgba(230, 25, 25, 0.5);
 }
 
 .plan-card-top {
