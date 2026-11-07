@@ -662,17 +662,17 @@
 }
 
 .fee-vip-upsell-box:hover {
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(230, 25, 25, 0.18) 100%);
-  border-color: #a855f7;
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.22) 0%, rgba(20, 20, 27, 0.95) 100%);
+  border-color: #ff2a2a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.25);
+  box-shadow: 0 4px 16px rgba(230, 25, 25, 0.3);
 }
 
 .upsell-badge {
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.5px;
-  color: #c084fc;
+  color: #ff4d4d;
 }
 
 .upsell-body {
@@ -694,7 +694,7 @@
 }
 
 .upsell-arrow {
-  color: #a855f7;
+  color: #ff2a2a;
   font-weight: 800;
   font-size: 0.9rem;
   transition: transform 0.2s ease;

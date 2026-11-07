@@ -655,8 +655,9 @@ button.asset-btn:disabled {
   line-height: 1.4;
 }
 
-.purple-text {
-  color: #a855f7;
+.purple-text,
+.crimson-text {
+  color: #ff4d4d;
 }
 
 /* Dedicated PR Contact Card */

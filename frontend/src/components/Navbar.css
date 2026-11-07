@@ -523,19 +523,20 @@
 }
 
 .dropdown-item-btn.vip-action-btn .vip-icon-box {
-  background: rgba(168, 85, 247, 0.18);
-  border-color: rgba(168, 85, 247, 0.35);
+  background: rgba(230, 25, 25, 0.18);
+  border-color: rgba(230, 25, 25, 0.35);
+  color: #ff2a2a;
 }
 
 .dropdown-item-btn.vip-action-btn:hover {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22) 0%, rgba(230, 25, 25, 0.16) 100%);
-  border-color: #c084fc;
-  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.2);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.22) 0%, rgba(18, 18, 24, 0.95) 100%);
+  border-color: #ff2a2a;
+  box-shadow: 0 4px 16px rgba(230, 25, 25, 0.25);
 }
 
 .dropdown-item-btn.vip-action-btn:hover .vip-icon-box {
-  background: rgba(168, 85, 247, 0.3);
-  border-color: #c084fc;
+  background: rgba(230, 25, 25, 0.3);
+  border-color: #ff2a2a;
 }
 
 /* Badges on right side */
@@ -557,8 +558,8 @@
 }
 
 .dropdown-history-count-tag.vip-perk-badge {
-  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
-  border: 1px solid rgba(192, 132, 252, 0.6);
+  background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
+  border: 1px solid rgba(255, 42, 42, 0.6);
   color: #ffffff;
   font-size: 0.64rem;
   letter-spacing: 0.4px;

@@ -327,17 +327,17 @@
 }
 
 .vip-tier-perk-box.pro {
-  border-left-color: #ff2a2a;
-  border-top: 1px solid rgba(255, 42, 42, 0.15);
-  border-right: 1px solid rgba(255, 42, 42, 0.15);
-  border-bottom: 1px solid rgba(255, 42, 42, 0.15);
+  border-left-color: #ffd700;
+  border-top: 1px solid rgba(255, 215, 0, 0.18);
+  border-right: 1px solid rgba(255, 215, 0, 0.18);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.18);
 }
 
 .vip-tier-perk-box.elite {
-  border-left-color: #c084fc;
-  border-top: 1px solid rgba(192, 132, 252, 0.15);
-  border-right: 1px solid rgba(192, 132, 252, 0.15);
-  border-bottom: 1px solid rgba(192, 132, 252, 0.15);
+  border-left-color: #ff2a2a;
+  border-top: 1px solid rgba(255, 42, 42, 0.18);
+  border-right: 1px solid rgba(255, 42, 42, 0.18);
+  border-bottom: 1px solid rgba(255, 42, 42, 0.18);
 }
 
 .perk-badge-label {
@@ -351,11 +351,11 @@
 }
 
 .perk-badge-label.pro {
-  color: #ff4d4d;
+  color: #ffd700;
 }
 
 .perk-badge-label.elite {
-  color: #c084fc;
+  color: #ff4d4d;
 }
 
 .vip-tier-perk-box h5 {

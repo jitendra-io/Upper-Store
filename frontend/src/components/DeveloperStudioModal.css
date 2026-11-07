@@ -90,17 +90,17 @@
 }
 
 .dev-vip-icon-box.elite {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(126, 34, 206, 0.1) 100%);
-  border: 1px solid rgba(192, 132, 252, 0.45);
-  color: #c084fc;
-  box-shadow: 0 0 16px rgba(168, 85, 247, 0.22);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.2) 0%, rgba(255, 42, 42, 0.1) 100%);
+  border: 1px solid rgba(255, 42, 42, 0.5);
+  color: #ff4d4d;
+  box-shadow: 0 0 16px rgba(230, 25, 25, 0.3);
 }
 
 .dev-vip-icon-box.pro {
-  background: linear-gradient(135deg, rgba(230, 25, 25, 0.2) 0%, rgba(180, 140, 20, 0.1) 100%);
-  border: 1px solid rgba(255, 215, 0, 0.45);
-  color: #ff2a2a;
-  box-shadow: 0 0 16px rgba(230, 25, 25, 0.22);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
 }
 
 .dev-header-text {
@@ -893,14 +893,14 @@
 }
 
 .live-cat-badge.elite {
-  background: rgba(168, 85, 247, 0.2);
-  border: 1px solid #c084fc;
-  color: #e9d5ff;
+  background: rgba(230, 25, 25, 0.2);
+  border: 1px solid #ff2a2a;
+  color: #fecaca;
 }
 
 .live-cat-badge.pro {
-  background: rgba(230, 25, 25, 0.2);
-  border: 1px solid #ff2a2a;
+  background: rgba(255, 215, 0, 0.18);
+  border: 1px solid #ffd700;
   color: #fef08a;
 }
 

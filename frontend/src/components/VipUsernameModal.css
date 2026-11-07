@@ -70,18 +70,18 @@
 }
 
 .vip-username-crown-badge.elite {
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(126, 34, 206, 0.1) 100%);
-  border: 1px solid rgba(192, 132, 252, 0.45);
-  color: #c084fc;
-  box-shadow: 0 0 16px rgba(168, 85, 247, 0.22);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.2) 0%, rgba(255, 42, 42, 0.1) 100%);
+  border: 1px solid rgba(255, 42, 42, 0.5);
+  color: #ff4d4d;
+  box-shadow: 0 0 16px rgba(230, 25, 25, 0.3);
 }
 
 .vip-username-crown-badge.pro,
 .vip-username-crown-badge.free {
-  background: linear-gradient(135deg, rgba(230, 25, 25, 0.2) 0%, rgba(180, 140, 20, 0.1) 100%);
-  border: 1px solid rgba(230, 25, 25, 0.45);
-  color: #ff2a2a;
-  box-shadow: 0 0 16px rgba(230, 25, 25, 0.18);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(212, 175, 55, 0.1) 100%);
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  color: #ffd700;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
 }
 
 .vip-username-title-wrap h3 {
@@ -162,15 +162,15 @@
 }
 
 .current-vip-badge.elite {
-  background: rgba(168, 85, 247, 0.15);
-  border: 1px solid rgba(192, 132, 252, 0.4);
-  color: #c084fc;
+  background: rgba(230, 25, 25, 0.18);
+  border: 1px solid rgba(255, 42, 42, 0.5);
+  color: #ff4d4d;
 }
 
 .current-vip-badge.pro {
-  background: rgba(230, 25, 25, 0.15);
-  border: 1px solid rgba(230, 25, 25, 0.4);
-  color: #fbbf24;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.45);
+  color: #ffd700;
 }
 
 .current-vip-badge.free {

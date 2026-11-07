@@ -431,14 +431,14 @@
 }
 
 .vip-subscribe-btn.btn-elite {
-  background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+  background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
   color: #ffffff;
-  box-shadow: 0 4px 20px rgba(168, 85, 247, 0.45);
+  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.45);
 }
 
 .vip-subscribe-btn.btn-elite:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 26px rgba(168, 85, 247, 0.65);
+  box-shadow: 0 6px 26px rgba(230, 25, 25, 0.65);
 }
 
 .vip-subscribe-btn.disabled,
@@ -540,8 +540,9 @@
   color: #ff2a2a;
 }
 
-.text-purple {
-  color: #c084fc;
+.text-purple,
+.text-crimson {
+  color: #ff4d4d;
 }
 
 .celebration-perks-box {
@@ -565,12 +566,13 @@
 }
 
 .check-gold {
-  color: #ff2a2a;
+  color: #ffd700;
   font-weight: 800;
 }
 
-.check-purple {
-  color: #c084fc;
+.check-purple,
+.check-crimson {
+  color: #ff4d4d;
   font-weight: 800;
 }
 

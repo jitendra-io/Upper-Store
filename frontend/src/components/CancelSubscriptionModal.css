@@ -125,8 +125,8 @@
 }
 
 .cancel-plan-box.elite {
-  background: rgba(168, 85, 247, 0.1);
-  border: 1px solid rgba(168, 85, 247, 0.35);
+  background: rgba(230, 25, 25, 0.1);
+  border: 1px solid rgba(230, 25, 25, 0.35);
 }
 
 .cancel-plan-icon {
@@ -140,15 +140,15 @@
 }
 
 .cancel-plan-box.pro .cancel-plan-icon {
-  background: rgba(230, 25, 25, 0.2);
-  color: #ff2a2a;
-  border: 1px solid #e61919;
+  background: rgba(255, 215, 0, 0.18);
+  color: #ffd700;
+  border: 1px solid #ffd700;
 }
 
 .cancel-plan-box.elite .cancel-plan-icon {
-  background: rgba(168, 85, 247, 0.2);
-  color: #c084fc;
-  border: 1px solid #a855f7;
+  background: rgba(230, 25, 25, 0.2);
+  color: #ff4d4d;
+  border: 1px solid #ff2a2a;
 }
 
 .cancel-plan-details {
