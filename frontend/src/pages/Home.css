@@ -9,6 +9,108 @@
   overflow-x: hidden;
 }
 
+/* ============================================================
+   SLIDE ENTRANCE ANIMATIONS (HOME PAGE)
+   ============================================================ */
+@keyframes heroPillSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes heroSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes statCardPop {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes vipBannerSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes sectionSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homeProductCardSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(32px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes videoShowcaseSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes videoDeckCardSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(36px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes videoPlayerSwap {
+  0% {
+    opacity: 0.35;
+    transform: translateY(8px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* HERO SECTION */
 .home-hero {
   text-align: center;
@@ -35,6 +137,7 @@
   margin-bottom: 1.5rem;
   max-width: 100%;
   box-sizing: border-box;
+  animation: heroPillSlideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .hero-badge-dot {
@@ -57,6 +160,7 @@
   word-break: normal;
   max-width: 100%;
   box-sizing: border-box;
+  animation: heroSlideUp 0.65s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .gold-gradient-text {
@@ -71,6 +175,7 @@
   max-width: 700px;
   margin: 0 auto 2.5rem;
   line-height: 1.6;
+  animation: heroSlideUp 0.65s 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .home-hero-actions {
@@ -80,6 +185,7 @@
   gap: 1.2rem;
   flex-wrap: wrap;
   margin-bottom: 4rem;
+  animation: heroSlideUp 0.65s 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .home-btn-primary {
@@ -135,13 +241,20 @@
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
   flex-wrap: wrap;
   gap: 1.5rem;
+  animation: heroSlideUp 0.7s 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .stat-card {
   display: flex;
   flex-direction: column;
   align-items: center;
+  animation: statCardPop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
+
+.home-stats-ribbon .stat-card:nth-child(1) { animation-delay: 0.32s; }
+.home-stats-ribbon .stat-card:nth-child(3) { animation-delay: 0.38s; }
+.home-stats-ribbon .stat-card:nth-child(5) { animation-delay: 0.44s; }
+.home-stats-ribbon .stat-card:nth-child(7) { animation-delay: 0.50s; }
 
 .stat-number {
   font-size: 1.5rem;
@@ -159,6 +272,10 @@
   width: 1px;
   height: 35px;
   background: rgba(255, 255, 255, 0.1);
+}
+
+.home-vip-banner-section {
+  animation: vipBannerSlideIn 0.65s 0.15s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* SECTIONS COMMON */
@@ -193,6 +310,24 @@
   color: #aaa;
   font-size: 1rem;
 }
+
+/* FEATURED SECTION SLIDE IN */
+.featured-section .section-header-center {
+  animation: sectionSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.featured-section .product-card {
+  animation: homeProductCardSlideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+.featured-section .product-card:nth-child(1) { animation-delay: 0.05s; }
+.featured-section .product-card:nth-child(2) { animation-delay: 0.10s; }
+.featured-section .product-card:nth-child(3) { animation-delay: 0.15s; }
+.featured-section .product-card:nth-child(4) { animation-delay: 0.20s; }
+.featured-section .product-card:nth-child(5) { animation-delay: 0.25s; }
+.featured-section .product-card:nth-child(6) { animation-delay: 0.30s; }
+.featured-section .product-card:nth-child(7) { animation-delay: 0.35s; }
+.featured-section .product-card:nth-child(8) { animation-delay: 0.40s; }
 
 /* FEATURED PRODUCTS SPOTLIGHT */
 .featured-grid {
@@ -559,12 +694,17 @@
   margin-top: 6rem;
 }
 
+.video-showcase-section .section-header-center {
+  animation: sectionSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .video-showcase-container {
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  animation: videoShowcaseSlideIn 0.65s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .main-video-player-card {
@@ -577,6 +717,7 @@
   display: grid;
   grid-template-columns: 1.25fr 1fr;
   transition: all 0.3s ease;
+  animation: videoPlayerSwap 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .video-viewport-wrapper {
@@ -884,7 +1025,18 @@
   cursor: pointer;
   transition: all 0.3s ease;
   user-select: none;
+  animation: videoDeckCardSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
 }
+
+.video-deck-card:nth-child(1) { animation-delay: 0.05s; }
+.video-deck-card:nth-child(2) { animation-delay: 0.10s; }
+.video-deck-card:nth-child(3) { animation-delay: 0.15s; }
+.video-deck-card:nth-child(4) { animation-delay: 0.20s; }
+.video-deck-card:nth-child(5) { animation-delay: 0.25s; }
+.video-deck-card:nth-child(6) { animation-delay: 0.30s; }
+.video-deck-card:nth-child(7) { animation-delay: 0.35s; }
+.video-deck-card:nth-child(8) { animation-delay: 0.40s; }
 
 .video-deck-card:hover {
   background: rgba(18, 18, 22, 0.95);

@@ -307,7 +307,7 @@ const Products = () => {
           )}
         </div>
       ) : (
-        <div className="products-grid">
+        <div className="products-grid" key={`${selectedCategory}_${activeSearch || ''}_${currentPage}`}>
           {paginatedProducts.map((product) => {
             const downloadsCount = getProductDownloadCount(product.id, product.downloadCount);
             return (

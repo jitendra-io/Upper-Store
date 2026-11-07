@@ -379,7 +379,7 @@ const Home = () => {
             return (
               <>
                 {/* Main Active Video Player */}
-                <div className="main-video-player-card">
+                <div className="main-video-player-card" key={'player-' + currentVideo.id}>
                   <div className="video-viewport-wrapper">
                     {playerSrc.type === 'iframe' ? (
                       <iframe

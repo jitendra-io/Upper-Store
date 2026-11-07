@@ -120,24 +120,26 @@ function AppContent() {
     <div className="app-container">
       <BackgroundAnimation />
       <Navbar onOpenSearch={openSearch} />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/:id" element={<ProductDetail />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/faq" element={<Faq />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/press" element={<Press />} />
-        <Route path="/policies" element={<Policies />} />
-        <Route path="/admin" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/vip" element={<VipClub />} />
-        <Route path="/vip-club" element={<VipClub />} />
-        <Route path="/developer/:username" element={<DeveloperProfile />} />
-        <Route path="/developers/:username" element={<DeveloperProfile />} />
-        <Route path="/dev/:username" element={<DeveloperProfile />} />
-      </Routes>
+      <div key={location.pathname} className="route-page-container">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/faq" element={<Faq />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/press" element={<Press />} />
+          <Route path="/policies" element={<Policies />} />
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/vip" element={<VipClub />} />
+          <Route path="/vip-club" element={<VipClub />} />
+          <Route path="/developer/:username" element={<DeveloperProfile />} />
+          <Route path="/developers/:username" element={<DeveloperProfile />} />
+          <Route path="/dev/:username" element={<DeveloperProfile />} />
+        </Routes>
+      </div>
       {showFullFooter && <Footer />}
       <AuthModal />
       <GlobalSearchModal
