@@ -119,7 +119,7 @@ Traditional software distribution channels are fraught with invasive telemetry, 
 ### 3.3 Upper VIP Club & Monetization Engine
 Upper Store features a dual-tier VIP membership model engineered for sustainability and monetization:
 
-| Feature / Perk | Free Tier | Pro VIP (₹29 / $5 mo) | Elite VIP (₹299 / $45 yr) |
+| Feature / Perk | Free Tier | Pro VIP (₹99 / $5 mo) | Elite VIP (₹399 / $45 yr) |
 | :--- | :---: | :---: | :---: |
 | **Download Access** | Standard Speeds | Priority CDN Mirroring | Dedicated VIP Bandwidth |
 | **Prestige Badge** | None | Verified Golden Crown | Radiant Amethyst Diamond |
