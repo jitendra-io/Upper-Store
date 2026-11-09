@@ -129,7 +129,7 @@ Upper Store features a dual-tier VIP membership model engineered for sustainabil
 | **Platform Sales Fee**| N/A | Standard 10% | **0% Fees Waived** |
 | **Direct Developer Support**| Community FAQ | Standard Support | 1-on-1 Engineering Support |
 
-* **Real UPI QR Payment Engine:** Supports direct bank UPI transfers (`9692093386@naviaxis`) with dynamic QR code generation.
+* **Real UPI QR Payment Engine:** Supports direct bank UPI transfers (`96920xxxxx@naviaxis`) with dynamic QR code generation.
 * **12-Digit UTR Bank Reference Validation:** Validates authentic 12-digit numeric Unique Transaction Reference (UTR) numbers. Rejects duplicate submissions to prevent double-spending.
 * **Admin Verification Console:** Administrators inspect pending payments in [`AdminDashboard.jsx`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/frontend/src/pages/AdminDashboard.jsx) and approve/reject with one click, automatically upgrading the user's membership and sending an instant notification.
 * **Self-Service Subscription Cancellation:** Users can cancel anytime via [`CancelSubscriptionModal.jsx`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/frontend/src/components/CancelSubscriptionModal.jsx), retaining active benefits until the billing period concludes.
