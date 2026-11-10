@@ -834,17 +834,44 @@ While not a substitute for backend security, adding deterrents discourages casua
 
 ---
 
+# 9. Cloudflare Worker Edge Delivery Network & Ephemeral HMAC Architecture
+
+To provide enterprise-grade delivery speeds while safeguarding raw storage origins from bandwidth depletion and bot scraping, the binary distribution tier was transitioned to an edge-streaming proxy model.
+
+### 9.1 Technical Architecture
+1. **Edge Deployment (`cloudflare-worker/worker.js`)**:
+   - Deployed a standalone Cloudflare Worker instance (`https://upperstore-downloader.098skwasimboss.workers.dev`).
+   - Acts as an edge-terminating streaming reverse proxy between end-users and upstream GitHub release binary assets.
+   - High-throughput streaming without holding file payloads in node server RAM, ensuring 0 egress cost and unlimited transfer bandwidth.
+
+2. **Ephemeral HMAC-SHA256 Token Protection**:
+   - Backend `downloadController.js` generates cryptographically signed tokens containing the base64-encoded source URL, a 300-second (5-minute) Unix expiration timestamp, and an HMAC-SHA256 signature using `DOWNLOAD_SECRET_KEY`.
+   - The Cloudflare Worker validates the signature using the Web Crypto API (`crypto.subtle.sign`). Forged, altered, or expired tokens receive an immediate `403 Forbidden` response.
+   - Hotlinking, bot scraping, and persistent sharing of download links are strictly prevented.
+
+3. **Expanded Binary and AI Model Support**:
+   - Configured stream headers and extension matching for AI and machine learning model weights (`.gguf`, `.safetensors`, `.onnx`, `.pt`, `.bin`, `.ckpt`), in addition to mobile and desktop executables (`.apk`, `.exe`, `.zip`, `.tar.gz`, `.deb`, `.iso`).
+   - Standardized `Content-Disposition: attachment; filename="..."` headers with clean custom name overrides.
+
+4. **Zero-Cost Notification Retention**:
+   - Added automated 7-day retention cleanup for store broadcast notices and user alerts.
+   - Implemented passive cleanup triggers on notification queries with 12-hour throttling, eliminating costly periodic cron tasks and minimizing Firestore operations.
+
+---
+
 # Actionable Next Steps Roadmap
 
 | Phase | Milestone | Priority | Status | Focus Area |
 | :--- | :--- | :--- | :--- | :--- |
 | **Phase 1** | **Security Hardening** | Critical | **COMPLETED (100%)** | All Critical & High Vulnerabilities (1.1.1 to 1.2.4) Locked, Fixed & Live-Verified |
-| **Phase 2** | **Infrastructure Sustainability** | High | **IN PROGRESS (2.1 & 2.2 Resolved)** | Atomic increment counters, 60s memory caching, & zero-cost GitHub Releases strategy |
+| **Phase 2** | **Infrastructure Sustainability** | High | **COMPLETED (100%)** | Atomic increment counters, 60s memory caching, & zero-cost GitHub Releases strategy |
 | **Phase 3** | **Legal & Policy Updates** | High | **COMPLETED (100%)** | UCC statutory AS-IS disclaimers, liability cap, DMCA procedure, GDPR/DPDP rights, & ban appeals in Policies.jsx |
-| **Phase 4** | **Monetization Engine** | Medium | **COMPLETED (Real UPI QR Mode)** | Direct bank UPI QR payments (`xxxxxxxxxx@upi`), 12-digit UTR validation, sandbox bypass prevention, & Admin 1-Click Verification / Licensing Console |
-| **Phase 5** | **Growth Features** | Medium | **IN PROGRESS** | Persona-aligned categories, card trust micro-badges, & live VirusTotal badges implemented |
-| **Phase 6** | **Unified Multi-Entity Search Engine** | High | **READY FOR IMPLEMENTATION** | Omnisearch spotlight modal, in-memory inverted index, sub-50ms fuzzy matching for products & developer profiles |
+| **Phase 4** | **Monetization Engine** | Medium | **COMPLETED (Real UPI QR Mode)** | Direct bank UPI QR payments, 12-digit UTR validation, sandbox bypass prevention, & Admin Console |
+| **Phase 5** | **Growth Features** | Medium | **COMPLETED (100%)** | Persona-aligned categories, card trust micro-badges, & live VirusTotal badges implemented |
+| **Phase 6** | **Unified Multi-Entity Search Engine** | High | **COMPLETED (100%)** | Omnisearch spotlight modal, in-memory inverted index, sub-50ms fuzzy matching for products & developer profiles |
 | **Phase 7** | **Client-Side DevTools & Data Leak Prevention** | High | **COMPLETED (100%)** | Backend zero-leak projection, production sourcemap removal, console stripping, PII DOM masking, and session inactivity timeouts |
+| **Phase 8** | **Cloudflare Edge Delivery & Ephemeral Security** | High | **COMPLETED (100%)** | Cloudflare Worker edge streaming proxy, HMAC-SHA256 5-minute signed URLs, hotlink prevention, and AI model format support |
+| **Phase 9** | **VIP Theming & Notification Retention** | Medium | **COMPLETED (100%)** | Dual aura breathing rings (Gold & Crimson), Elite VIP crimson gradients, and 7-day passive notification retention pruning |
 
 ---
 *Report compiled autonomously for the Upper Store platform.*

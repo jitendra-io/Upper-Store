@@ -55,9 +55,33 @@ This document maintains a record of the major features implemented and outlines 
 - [x] **Universal Clickable Attribution**: Made developer usernames clickable across Product Cards (`Products.jsx`), Product Modals (`ProductDetailModal.jsx`), and Developer Studio (`DeveloperStudioModal.jsx`).
 - [x] **Mobile Responsive Design**: Fully responsive layout with mobile-first media queries, touch-friendly action buttons, and responsive grid layouts.
 
+### 9. Notification Lifecycle & Passive Retention Cleanup
+- [x] **Zero-Cost Retention Architecture**: Enforced 7-day automated pruning window for platform notifications to prevent unbounded Firestore storage growth.
+- [x] **Passive Trigger Optimization**: Hooked cleanup execution to `GET /api/notifications` read requests with a 12-hour throttling gate, eliminating background cron workers and continuous empty read queries.
+- [x] **Batch Deletion Efficiency**: Uses Firestore bulk commit batches to prune expired notices with minimal write units consumed.
+
+### 10. VIP Club Aura Rings & Elite Crimson Theming
+- [x] **Dual Aura Breathing Rings**: Implemented high-contrast conic gradient breathing borders: Gold/White (`#f59e0b` / `#ffffff`) for Pro VIP, Crimson/White (`#e11d48` / `#ffffff`) for Elite VIP.
+- [x] **Consistent Elite Color Palette**: Standardized Elite VIP action buttons and card accents with deep crimson gradients (`linear-gradient(135deg, #e11d48, #9f1239)`).
+- [x] **Visual Hierarchy Integration**: Applied aura ring styling uniformly across Hero cards, Profile modals, Developer Studio headers, and Public Developer portfolios.
+
+### 11. Cloudflare Worker Edge Delivery Network & Ephemeral HMAC Security
+- [x] **Global Edge Reverse Proxy**: Deployed high-speed streaming worker (`cloudflare-worker/worker.js`) at `https://upperstore-downloader.098skwasimboss.workers.dev` to handle binary distribution at the edge.
+- [x] **Cryptographic Link Signing**: Implemented HMAC-SHA256 URL signing in backend `downloadController.js` using shared `DOWNLOAD_SECRET_KEY`.
+- [x] **5-Minute Ephemeral Expiry**: Download links self-destruct 300 seconds after generation, preventing unauthorized link sharing, scraping, and hotlinking.
+- [x] **Zero-Egress Direct Streaming**: Worker proxies releases directly from GitHub release servers with stream chunking, bypasses backend bandwidth bottlenecks, and sets proper `Content-Disposition` and `Content-Type` headers.
+- [x] **Graceful Direct-to-Source Fallback**: Retains safe backend direct redirect logic if the Cloudflare Worker URL is unconfigured or unavailable.
+
+### 12. Expanded Binary & AI Model Support
+- [x] **AI / ML Model Extensions**: Added native support for `.gguf`, `.safetensors`, `.onnx`, `.pt`, `.bin`, and `.ckpt` formats across download trackers and delivery pipelines.
+- [x] **Extended MIME Registry**: Configured octet-stream and binary dispatch headers ensuring instant, uncorrupted browser downloads across Windows, macOS, Linux, and Android.
+
+### 13. High-Fidelity Audio Synthesis Asset
+- [x] **OmniVoice Audio Production**: Generated 53.84-second studio-quality Hindi voiceover promo asset (`upper_store_hindi_promo.wav`) for platform marketing and feature walkthroughs.
+
 ---
 
-## 🚧 Next Tasks to be Done
+## Next Tasks to be Done
 
 ### Deployment & Production Setup
 - [ ] Add real ImageKit credentials (`IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT`) in `backend/.env` for cloud binary hosting.

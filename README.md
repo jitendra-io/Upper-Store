@@ -119,14 +119,14 @@ Traditional software distribution channels are fraught with invasive telemetry, 
 ### 3.3 Upper VIP Club & Monetization Engine
 Upper Store features a dual-tier VIP membership model engineered for sustainability and monetization:
 
-| Feature / Perk | Free Tier | Pro VIP (₹99 / $5 mo) | Elite VIP (₹399 / $45 yr) |
+| Feature / Perk | Free Tier | Pro VIP (Rs 99 / $5 mo) | Elite VIP (Rs 399 / $45 yr) |
 | :--- | :---: | :---: | :---: |
 | **Download Access** | Standard Speeds | Priority CDN Mirroring | Dedicated VIP Bandwidth |
 | **Prestige Badge** | None | Verified Golden Crown | Radiant Amethyst Diamond |
-| **Custom @username** | ❌ Locked | ✅ Allowed (2x / year) | ✅ Allowed (2x / year) |
-| **Developer Studio** | ❌ Locked | ✅ Up to 3 Products | ✅ **Unlimited** Products |
+| **Custom @username** | Locked | Allowed (2x / year) | Allowed (2x / year) |
+| **Developer Studio** | Locked | Up to 3 Products | Unlimited Products |
 | **Broadcast Alerts** | Standard Alerts | Developer Broadcasts | Priority Push + Audio Chimes |
-| **Platform Sales Fee**| N/A | Standard 10% | **0% Fees Waived** |
+| **Platform Sales Fee**| N/A | Standard 10% | 0% Fees Waived |
 | **Direct Developer Support**| Community FAQ | Standard Support | 1-on-1 Engineering Support |
 
 * **Real UPI QR Payment Engine:** Supports direct bank UPI transfers (`96920xxxxx@naviaxis`) with dynamic QR code generation.
@@ -198,6 +198,15 @@ Upper Store features a dual-tier VIP membership model engineered for sustainabil
 * Validates production domains (`https://jitendra-io.github.io`, `https://upperstore.pages.dev`).
 * Validates wildcard development environments (`localhost`, `127.0.0.1`).
 * Dynamic regex support for Cloudflare Pages subdomains (`^https:\/\/([a-zA-Z0-9_.-]+)\.pages\.dev$`) and Vercel (`^https:\/\/([a-zA-Z0-9_.-]+)\.vercel\.app$`).
+
+### 4.7 Cloudflare Worker Edge Delivery & Ephemeral HMAC Tokens
+* **Edge Streaming Proxy:** Deployed a dedicated Cloudflare Worker (`cloudflare-worker/worker.js`) at `https://upperstore-downloader.098skwasimboss.workers.dev` to deliver binary downloads directly at the edge without putting transit loads on origin servers.
+* **Ephemeral HMAC-SHA256 Signing:** Backend generates 5-minute self-destructing signed download URLs verified via Web Crypto HMAC-SHA256. Expired and tampered links are rejected with `403 Forbidden`.
+* **Universal Binary & AI Model Support:** Native MIME mapping and streaming disposition for `.apk`, `.exe`, `.zip`, `.deb`, `.iso`, and AI model weights (`.gguf`, `.safetensors`, `.onnx`, `.pt`, `.bin`, `.ckpt`).
+
+### 4.8 Automated Notification Retention Pruning
+* **Zero-Cost Pruning:** Automatically purges store broadcast notifications older than 7 days, capping document counts and storage usage in Firestore.
+* **Passive Execution Hook:** Triggered lazily during notification queries with a 12-hour throttling check, avoiding periodic background worker compute costs.
 
 ---
 

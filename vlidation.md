@@ -78,6 +78,7 @@ The table below summarizes the working status of each validation subsystem acros
 | **Downloads & SSRF** | Consent withdrawal download block | [`downloadController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/downloadController.js), [`productController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/productController.js) | WORKING | Users who withdraw statutory consent are blocked with 403 Forbidden. |
 | **Downloads & SSRF** | Banned account download block | [`downloadController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/downloadController.js) | WORKING | Firestore `isBanned` check rejects downloads with 403 Forbidden. |
 | **Downloads & SSRF** | SSRF proxy download domain whitelist | [`downloadController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/downloadController.js) | WORKING | Only allows GitHub and ImageKit domains; blocks private/loopback IP ranges. |
+| **Downloads & HMAC** | Ephemeral 5-minute token & HMAC-SHA256 signature | [`worker.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/cloudflare-worker/worker.js), [`downloadController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/downloadController.js) | WORKING | Validates cryptographic signature and rejects expired or forged download requests with 403 Forbidden. |
 | **Product Reviews** | Star rating range (1 to 5) | [`reviewController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/reviewController.js) | WORKING | Rejects non-numbers or values outside 1-5. |
 | **Product Reviews** | Comment length bounds (3 to 1000 chars) | [`reviewController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/reviewController.js), [`ProductReviewsModal.jsx`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/frontend/src/components/ProductReviewsModal.jsx) | WORKING | Rejects reviews shorter than 3 or longer than 1000 characters. |
 | **Product Reviews** | Review author spoofing protection | [`reviewController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/reviewController.js) | WORKING | Overwrites body email with authenticated JWT token identity. |
@@ -129,6 +130,14 @@ The following validations were added and verified:
 - **Changes Applied:**
   - Added email regex format check and password upper bound (max 100 chars) on `registerUser`.
   - Replaced silent `.slice(...)` truncation in `updateFullProfile` with explicit 400 error returns when `displayName` exceeds 50 characters or `bio` exceeds 500 characters.
+
+### 6. Cloudflare Worker Edge Download Token Validation
+- **Files Modified:** [`worker.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/cloudflare-worker/worker.js), [`downloadController.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/downloadController.js).
+- **Changes Applied:**
+  - Enforced presence of `url` (base64 source), `exp` (expiration timestamp), and `sig` (cryptographic HMAC signature).
+  - Enforced 300-second (5-minute) self-destruct window: rejects requests with `exp < Math.floor(Date.now() / 1000)` with `403 Forbidden: Download link has expired`.
+  - Cryptographic validation via Web Crypto HMAC-SHA256: rejects tampered URLs or signatures with `403 Forbidden: Invalid or forged download signature`.
+  - Upstream domain validation: restricts upstream downloads to verified domains (`github.com`, `githubusercontent.com`, `ik.imagekit.io`), returning `403 Forbidden: Upstream host is not permitted`.
 
 ---
 
