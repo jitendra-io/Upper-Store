@@ -1,0 +1,7 @@
+name = "upperstore-downloader"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Environment Variables (Secrets should be added via: wrangler secret put DOWNLOAD_SECRET_KEY)
+[vars]
+ENVIRONMENT = "production"

@@ -222,7 +222,7 @@ export const isDirectDownloadFile = (url) => {
   if (clean.includes('/releases/tag/') || clean.endsWith('/releases') || clean.includes('/tree/') || clean.includes('/blob/')) {
     return false;
   }
-  return /\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf)$/i.test(clean) || clean.includes('/releases/download/');
+  return /\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf|gguf|safetensors|onnx|pt|pth|iso|deb|rpm|7z)$/i.test(clean) || clean.includes('/releases/download/');
 };
 
 export const getSecureDownloadUrl = (product) => {

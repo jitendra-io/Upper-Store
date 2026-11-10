@@ -1,4 +1,5 @@
 const { Readable } = require('stream');
+const crypto = require('crypto');
 const { db, FieldValue } = require('../config/firebase');
 const cacheService = require('../services/cacheService');
 
@@ -282,13 +283,27 @@ const proxyDownload = async (req, res) => {
                       cleanTarget.endsWith('/releases') || 
                       cleanTarget.includes('/tree/') || 
                       cleanTarget.includes('/blob/') ||
-                      (!cleanTarget.includes('/releases/download/') && !/\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf)$/i.test(cleanTarget));
+                      (!cleanTarget.includes('/releases/download/') && !/\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf|gguf|safetensors|onnx|pt|pth|iso|deb|rpm|7z)$/i.test(cleanTarget));
 
     if (req.query.mode === 'redirect' || isWebPage) {
       return res.redirect(targetUrl);
     }
 
-    // 3. Fetch from upstream GitHub release with redirect: follow
+    // High-Speed Edge Delivery: Check if Cloudflare Worker is configured
+    // If configured, delegate 100% of the download bandwidth to Cloudflare Edge with a 5-minute signed token
+    const cfWorkerUrl = process.env.CLOUDFLARE_WORKER_URL;
+    if (cfWorkerUrl && targetUrl.includes('/releases/download/')) {
+      const exp = Math.floor(Date.now() / 1000) + (5 * 60); // 5 minutes expiration
+      const secret = process.env.DOWNLOAD_SECRET_KEY || process.env.JWT_SECRET || 'upper_store_secure_edge_key';
+      const b64Url = Buffer.from(targetUrl).toString('base64');
+      const dataToSign = `${b64Url}:${exp}`;
+      const sig = crypto.createHmac('sha256', secret).update(dataToSign).digest('hex');
+      const encodedName = customName ? encodeURIComponent(customName) : '';
+      const edgeUrl = `${cfWorkerUrl.replace(/\/$/, '')}/dl?url=${encodeURIComponent(b64Url)}&exp=${exp}&sig=${sig}&name=${encodedName}`;
+      return res.redirect(edgeUrl);
+    }
+
+    // 3. Fallback: Fetch from upstream GitHub release with redirect: follow
     const upstreamRes = await fetch(targetUrl, {
       headers: {
         'User-Agent': 'UpperStore-Proxy/1.0',
@@ -320,10 +335,16 @@ const proxyDownload = async (req, res) => {
     const cleanLower = targetUrl.split('?')[0].toLowerCase();
     let detectedExt = '.apk';
     if (cleanLower.endsWith('.exe')) detectedExt = '.exe';
+    else if (cleanLower.endsWith('.msi')) detectedExt = '.msi';
     else if (cleanLower.endsWith('.zip')) detectedExt = '.zip';
+    else if (cleanLower.endsWith('.7z')) detectedExt = '.7z';
     else if (cleanLower.endsWith('.dmg')) detectedExt = '.dmg';
     else if (cleanLower.endsWith('.tar.gz')) detectedExt = '.tar.gz';
+    else if (cleanLower.endsWith('.iso')) detectedExt = '.iso';
     else if (cleanLower.endsWith('.pdf')) detectedExt = '.pdf';
+    else if (cleanLower.endsWith('.gguf')) detectedExt = '.gguf';
+    else if (cleanLower.endsWith('.safetensors')) detectedExt = '.safetensors';
+    else if (cleanLower.endsWith('.onnx')) detectedExt = '.onnx';
     else if (cleanLower.endsWith('.json')) detectedExt = '.json';
     else if (cleanLower.endsWith('.txt')) detectedExt = '.txt';
 
@@ -334,8 +355,11 @@ const proxyDownload = async (req, res) => {
 
     let contentType = upstreamRes.headers.get('content-type') || 'application/octet-stream';
     if (finalFileName.endsWith('.apk')) contentType = 'application/vnd.android.package-archive';
-    else if (finalFileName.endsWith('.exe')) contentType = 'application/x-msdownload';
+    else if (finalFileName.endsWith('.exe') || finalFileName.endsWith('.msi')) contentType = 'application/x-msdownload';
     else if (finalFileName.endsWith('.zip')) contentType = 'application/zip';
+    else if (finalFileName.endsWith('.7z')) contentType = 'application/x-7z-compressed';
+    else if (finalFileName.endsWith('.tar.gz')) contentType = 'application/gzip';
+    else if (finalFileName.endsWith('.dmg')) contentType = 'application/x-apple-diskimage';
 
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(finalFileName)}"`);
     res.setHeader('Content-Type', contentType);
