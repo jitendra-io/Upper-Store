@@ -225,6 +225,32 @@ export const isDirectDownloadFile = (url) => {
   return /\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf|gguf|safetensors|onnx|pt|pth|iso|deb|rpm|7z)$/i.test(clean) || clean.includes('/releases/download/');
 };
 
+// Extracts exact authentic file extension from a URL
+export const getFileExtensionFromUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const clean = url.split('?')[0].split('#')[0].toLowerCase();
+  const match = clean.match(/\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf|gguf|safetensors|onnx|pt|pth|iso|deb|rpm|7z)$/i);
+  return match ? match[0] : '';
+};
+
+// Generates the proper clean file name with authentic extension (.exe, .apk, .zip, etc.)
+export const getProductDownloadFilename = (product) => {
+  if (!product) return 'download.bin';
+  const rawUrl = product.apkFile || '';
+  const category = String(product.category || '').toLowerCase();
+  const ext =
+    getFileExtensionFromUrl(rawUrl) ||
+    (category.includes('android') || category.includes('mobile') ? '.apk' : '') ||
+    (category.includes('windows') || category.includes('desktop') ? '.exe' : '') ||
+    '.bin';
+
+  const safeTitle = (product.title || 'package').replace(/[^a-zA-Z0-9_-]/g, '_');
+  if (ext && !safeTitle.toLowerCase().endsWith(ext.toLowerCase())) {
+    return `${safeTitle}${ext}`;
+  }
+  return safeTitle;
+};
+
 export const getSecureDownloadUrl = (product) => {
   if (!product) return '#';
   const rawUrl = product.apkFile || '';
@@ -236,17 +262,16 @@ export const getSecureDownloadUrl = (product) => {
   }
 
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const filename = getProductDownloadFilename(product);
   
   if (product.id && product.id !== 'custom') {
-    const safeTitle = (product.title || 'package').replace(/[^a-zA-Z0-9_-]/g, '_');
-    return `${baseUrl}/api/download?id=${encodeURIComponent(product.id)}&name=${encodeURIComponent(safeTitle)}`;
+    return `${baseUrl}/api/download?id=${encodeURIComponent(product.id)}&name=${encodeURIComponent(filename)}`;
   }
   
   if (rawUrl && rawUrl !== '#' && rawUrl.startsWith('http')) {
     try {
       const b64 = btoa(rawUrl).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      const safeTitle = (product.title || 'package').replace(/[^a-zA-Z0-9_-]/g, '_');
-      return `${baseUrl}/api/download?file=${b64}&name=${encodeURIComponent(safeTitle)}`;
+      return `${baseUrl}/api/download?file=${b64}&name=${encodeURIComponent(filename)}`;
     } catch (e) {
       return rawUrl;
     }

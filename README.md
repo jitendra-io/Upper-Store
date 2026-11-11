@@ -60,18 +60,24 @@ Traditional software distribution channels are fraught with invasive telemetry, 
 │  CLIENT TIER (Cloudflare Pages Edge CDN - https://upperstore.pages.dev)│
 │  - React 19 + Vite 8 Single Page App                                  │
 │  - React Router v7 + HTML5 Canvas Particle Engine                     │
+│  - Pre-Flight Security Scanner (preflightScanner.js)                  │
 │  - CSS Glassmorphism + Responsive Touch UI (320px - 4K)                │
+├────────────────────────────────────────────────────────────────────────┤
+│  EDGE NETWORK (Cloudflare Worker - upperstore-downloader)              │
+│  - Streaming Proxy (/dl): Ephemeral HMAC-SHA256 Token Validation       │
+│  - Asset Inspection (/inspect): Range Requests + AXML String Pool      │
+│  - Whitelist: GitHub Releases, Hugging Face, ImageKit                  │
 ├────────────────────────────────────────────────────────────────────────┤
 │  API & BUSINESS LOGIC (Render Web Service - Node.js 24 + Express 5)   │
 │  - Role-Based Access Control (Admin / Publisher / User)                │
 │  - In-Memory Anti-Stampede Single-Flight Micro-Cache (cacheService)    │
 │  - Sliding-Window IP Rate Limiters (express-rate-limit)                │
-│  - Multer Streaming Disk Storage + ImageKit SDK                        │
+│  - Remote Range Asset Inspector (POST /api/products/inspect-remote)    │
 │  - SHA-256 Deterministic Security Verification Service                 │
 ├────────────────────────────────────────────────────────────────────────┤
 │  DATA PERSISTENCE & ASSET STORAGE                                      │
-│  - Database: Google Firebase Firestore (NoSQL, 10 Collections)         │
-│  - Binary Distribution: GitHub Releases API (Free Multi-GB Mirroring)  │
+│  - Database: Google Firebase Firestore (NoSQL Collections)             │
+│  - Binary Distribution: GitHub Releases API & Hugging Face             │
 │  - Media CDN: ImageKit.io & Google Photos Proxy                        │
 └────────────────────────────────────────────────────────────────────────┘
 ```
@@ -84,6 +90,7 @@ Traditional software distribution channels are fraught with invasive telemetry, 
 | **Build & Tooling** | Vite `^8.3.1`, ESBuild | Sub-second HMR and production bundle minification |
 | **Routing** | React Router DOM `^7.18.4` | Client-side routing, protected routes, deep-linking |
 | **Canvas Graphics** | HTML5 Canvas 2D Physics Engine | 150 magnetic golden particles with cursor repulsion |
+| **Edge Compute** | Cloudflare Workers (V8 Edge Runtime) | Streaming binary delivery, HMAC tokens, range inspection |
 | **Backend Runtime** | Node.js `v24.x`, Express `^5.2.1` | REST API engine, middleware pipelines, streaming |
 | **Database** | Firebase Admin SDK `^14.5.0` (Firestore) | Real-time NoSQL persistence, atomic field increments |
 | **Security & Auth** | JWT (`jsonwebtoken ^9.0.3`), `bcryptjs ^3.0.3` | Cryptographic Bearer token exchange, password hashing |
@@ -108,13 +115,17 @@ Traditional software distribution channels are fraught with invasive telemetry, 
   9. `Others` (Miscellaneous utilities and tools)
 * **Word-Level Full-Text Search:** Tokenizes query terms and searches across product titles, descriptions, categories, versions, and tag arrays in real-time.
 * **Pagination & Memory Management:** Strict 10-item-per-page pagination with smooth category-bar scroll-to-view navigation.
-* **Product Detail Modal:** Features release notes, version histories, developer profile flairs, platform fees, direct download triggers, and responsive multi-slide screenshot carousels.
+* **Product Detail Modal:** Features release notes, version histories, developer profile flairs, platform fees, direct download triggers, interactive permissions action bar, and responsive multi-slide screenshot carousels.
 * **Interactive Walkthroughs & Video Demoroom:** Embedded YouTube interactive walkthrough players with fallback messaging when no video demo is uploaded.
 
-### 3.2 Cryptographic Integrity & Anti-Tampering Engine
+### 3.2 Cryptographic Integrity & Pre-Flight Security Engine
 * **SHA-256 Checksum Calculation:** Every product release automatically computes an authentic 64-character SHA-256 hash using Node.js `crypto` via [`backend/services/securityScanService.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/services/securityScanService.js).
 * **VirusTotal Multi-Engine Inspection:** Generates direct verification links (`https://www.virustotal.com/gui/search/<sha256>`) proving software is clean across 70+ antivirus engines.
 * **In-Modal Security Verification Badge:** Users can inspect scan status and copy the cryptographic hash with a single click to verify installers locally via PowerShell `Get-FileHash` or terminal `sha256sum`.
+* **Client-Side Pre-Flight Security Scanner:** [`frontend/src/utils/preflightScanner.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/frontend/src/utils/preflightScanner.js) performs in-browser SHA-256 calculation via Web Crypto API, parses ZIP Central Directory headers in memory, and decompresses Android Binary XML string pools via native `DecompressionStream` before publishing.
+* **HTTP Range Asset Inspection & AXML String Pool Parser:** [`POST /api/products/inspect-remote`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/controllers/productController.js) and Cloudflare Worker `/inspect` fetch only byte ranges (< 150 KB egress for 200 MB+ APKs) to parse `0x001C0001` string pool chunks and extract 100% actual declared permissions with zero server disk or memory exhaustion.
+* **Declared App Permissions Modal & Responsive Bottom Sheet:** [`ProductPermissionsModal.jsx`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/frontend/src/components/ProductPermissionsModal.jsx) replaces static tables with an on-demand action button, inline 3-item preview drawer, live search filter on desktop, and touch-friendly sliding bottom sheet on mobile devices.
+* **Danger Tag Elimination:** All subjective, alarmist tags ("Sensitive", "Standard", "Dangerous") were removed in favor of transparent permission titles, exact Android manifest keys (`android.permission.*`), and factual functional explanations.
 
 ### 3.3 Upper VIP Club & Monetization Engine
 Upper Store features a dual-tier VIP membership model engineered for sustainability and monetization:
@@ -408,6 +419,7 @@ Upper Store features a dual-tier VIP membership model engineered for sustainabil
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/products` | Public (Cached) | Fetch all products with in-memory caching (60s TTL) |
 | `GET` | `/api/products/:id` | Public | Fetch single product by ID with VirusTotal inspection |
+| `POST` | `/api/products/inspect-remote` | Public (Rate Limited) | Remote HTTP Range binary inspection & AXML permission extraction |
 | `POST` | `/api/products` | Admin / Dev | Add new product with SHA-256 hash & VirusTotal link |
 | `PUT` | `/api/products/:id` | Admin / Dev | Update product metadata, screenshots, or changelog |
 | `DELETE`| `/api/products/:id` | Admin / Dev | Permanently delete product from catalog |
@@ -453,6 +465,17 @@ Upper Store features a dual-tier VIP membership model engineered for sustainabil
 | `DELETE`| `/api/notifications/:id` | Admin (`protectAdmin`) | Remove broadcast notification |
 | `GET` | `/api/health` | Public | Real-time CPU uptime, heap memory usage, & cache metrics |
 
+### 6.8 Multi-Entity Search Routes (`/api/search`)
+| Method | Endpoint | Auth Level | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/search` | Public (Cached) | Sub-50ms search query across products and verified developers |
+
+### 6.9 Cloudflare Worker Edge Delivery & Inspection Routes
+| Method | Endpoint | Auth Level | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/dl` | Ephemeral HMAC (5 min) | High-throughput streaming proxy for GitHub and Hugging Face releases |
+| `GET` | `/inspect` | Public (CORS Enabled) | Edge range asset inspection & Android XML string pool extraction |
+
 ---
 
 ## 7. Directory Structure & Codebase Map
@@ -467,14 +490,16 @@ Upper-Store/
 │   │   ├── authController.js    # Auth, @username validation, annual 2x limit, KYC
 │   │   ├── contactController.js # Contact inquiries and ban appeals with SMTP mailer
 │   │   ├── developerController.js # Developer Studio, KYC validation, publishing quotas
-│   │   ├── downloadController.js# Atomic download counter & user history vault
+│   │   ├── downloadController.js# Ephemeral HMAC signing, atomic counters, user history
 │   │   ├── notificationController.js # Broadcast engine (Update, Release, Notice)
 │   │   ├── paymentController.js # UPI QR payments, 12-digit UTR verification
-│   │   ├── productController.js # Catalog CRUD, 9 categories, cache invalidation
+│   │   ├── productController.js # Catalog CRUD, range asset inspection, cache invalidation
 │   │   ├── reviewController.js  # Product star reviews, anti-spoofing ownership
+│   │   ├── searchController.js  # Multi-entity catalog and developer search
 │   │   └── settingsController.js# Platform configuration & feature toggles
 │   ├── middleware/
-│   │   ├── authMiddleware.js    # protect, protectAdmin, protectPublisher RBAC
+│   │   ├── authMiddleware.js    # protect, protectAdmin RBAC guards
+│   │   ├── publisherMiddleware.js # protectPublisher VIP developer gate
 │   │   └── rateLimiter.js       # Sliding-window IP rate limiters
 │   ├── routes/
 │   │   ├── authRoutes.js        # Auth, @username routes, admin moderation
@@ -483,17 +508,27 @@ Upper-Store/
 │   │   ├── downloadRoutes.js    # Download recording & history routes
 │   │   ├── notificationRoutes.js# Notification routes
 │   │   ├── paymentRoutes.js     # Payment submission and admin verification
-│   │   ├── productRoutes.js     # Product catalog routes
-│   │   └── reviewRoutes.js      # Review submission and rating routes
+│   │   ├── productRoutes.js     # Product catalog & remote inspection routes
+│   │   ├── reviewRoutes.js      # Review submission and rating routes
+│   │   ├── searchRoutes.js      # Omnisearch query routes
+│   │   └── settingsRoutes.js    # Platform settings routes
 │   ├── services/
+│   │   ├── bloomFilter.js       # Probabilistic existence filtering
 │   │   ├── cacheService.js      # Anti-stampede single-flight coalescing cache
 │   │   ├── emailService.js      # Nodemailer SMTP transport service
 │   │   ├── githubReleaseService.js # GitHub Releases API integration
+│   │   ├── imagekitService.js   # ImageKit media integration
 │   │   ├── licenseService.js    # Cryptographic offline license key generator
+│   │   ├── notificationCleanupService.js # Passive 7-day notification retention cleanup
+│   │   ├── searchService.js     # In-memory inverted index fuzzy matching
 │   │   └── securityScanService.js # SHA-256 checksum & VirusTotal verification
 │   ├── seed-admin.js            # Initial admin bootstrap script
 │   ├── server.js                # Express app initialization, CORS, middleware, keep-alive
 │   └── package.json             # Backend dependencies & run scripts
+│
+├── cloudflare-worker/
+│   ├── worker.js                # Edge streaming proxy & range request AXML inspector
+│   └── README.md                # Cloudflare Worker deployment and setup guide
 │
 ├── frontend/
 │   ├── public/                  # Static assets and favicons
@@ -502,41 +537,63 @@ Upper-Store/
 │   │   ├── components/
 │   │   │   ├── AuthModal.jsx / .css          # Login/Register modal with live handle check
 │   │   │   ├── CancelSubscriptionModal.jsx   # Self-service VIP cancellation modal
-│   │   │   ├── DeveloperStudioModal.jsx/.css # VIP Developer Studio with swipeable tabs
+│   │   │   ├── CheckoutModal.jsx / .css      # Cart and checkout modal
+│   │   │   ├── CrystalCore3D.jsx / .css      # 3D interactive accent component
+│   │   │   ├── DeveloperDownloadsModal.jsx / .css # Developer download analytics modal
+│   │   │   ├── DeveloperStudioModal.jsx/.css # VIP Developer Studio with pre-flight scanner
 │   │   │   ├── DownloadHistoryModal.jsx/.css # Personal download history modal
+│   │   │   ├── EditProfileModal.jsx / .css   # Profile display name and bio modal
+│   │   │   ├── Footer.jsx / .css             # Comprehensive footer with quick links
+│   │   │   ├── GlobalSearchModal.jsx / .css  # Omnisearch modal with fuzzy matching
+│   │   │   ├── Icons.jsx                     # Lightweight SVG icon collection
+│   │   │   ├── MiniFooter.jsx / .css         # Compact subpage footer
 │   │   │   ├── Navbar.jsx / .css             # Glassmorphic Navbar with audio chimes & profile
-│   │   │   ├── ProductDetailModal.jsx / .css # Product details, video demoroom, SHA-256
+│   │   │   ├── ProductDetailModal.jsx / .css # Product details, video demoroom, permissions button
+│   │   │   ├── ProductPermissionsModal.jsx / .css # Interactive permissions sheet (modal / bottom sheet)
 │   │   │   ├── ProductReviewsModal.jsx / .css# Star rating and feedback modal
+│   │   │   ├── TermsAcceptanceModal.jsx / .css# Statutory DPDP / GDPR consent modal
 │   │   │   ├── UserLicensesModal.jsx / .css  # License key vault modal
 │   │   │   ├── VipAvatar.jsx / .css          # Dynamic avatar with crown/diamond flairs
 │   │   │   ├── VipClubModal.jsx / .css       # VIP Club plans, UPI QR, and UTR input
+│   │   │   ├── VipPromoBanner.jsx / .css     # Promotional banner for membership perks
 │   │   │   └── VipUsernameModal.jsx / .css   # VIP handle editor (2 changes/year limit)
 │   │   ├── config/
 │   │   │   └── firebase.js                   # Client-side Firebase App initialization
 │   │   ├── context/
-│   │   │   └── AuthContext.jsx               # Auth state, token persistence, status polling
+│   │   │   └── AuthContext.jsx               # Auth state, token persistence, 30m idle logout
 │   │   ├── pages/
 │   │   │   ├── About.jsx / .css              # Responsive platform about page
 │   │   │   ├── AdminDashboard.jsx / .css     # Master admin control dashboard
 │   │   │   ├── AdminLogin.jsx / .css         # Admin login screen
+│   │   │   ├── Blog.jsx / .css               # Release news and platform articles
 │   │   │   ├── Contact.jsx / .css            # Contact inquiry & ban appeal portal
+│   │   │   ├── DeveloperProfile.jsx / .css   # Public developer portfolio & aura ring
+│   │   │   ├── Faq.jsx / .css                # Frequently asked questions
 │   │   │   ├── Home.jsx / .css               # Hero landing page, feature highlights
 │   │   │   ├── Policies.jsx / .css           # Statutory UCC AS-IS terms & GDPR policies
+│   │   │   ├── Press.jsx / .css              # Media and press coverage page
+│   │   │   ├── ProductDetail.jsx / .css      # Standalone direct product view
 │   │   │   ├── Products.jsx / .css           # Catalog grid, 9 category filters, search
 │   │   │   └── VipClub.jsx / .css            # Dedicated VIP membership landing page
 │   │   ├── utils/
+│   │   │   ├── countries.js                  # International dialing codes
 │   │   │   ├── downloadTracker.js            # Download event tracker & localStorage sync
+│   │   │   ├── preflightScanner.js           # Client-side Web Crypto & AXML parser
 │   │   │   └── vipValidator.js               # Centralized VIP membership validator
 │   │   ├── App.jsx / .css                    # Root application component & routes
 │   │   ├── BackgroundAnimation.jsx / .css    # HTML5 Canvas magnetic particle system
-│   │   └── main.jsx                          # React 19 entry point
+│   │   ├── index.css                         # Global CSS resets & variables
+│   │   └── main.jsx                          # React 19 entry point with anti-tamper banner
 │   ├── index.html                            # HTML5 root with Outfit typography
 │   ├── vite.config.js                        # Vite bundler configuration
+│   ├── README.md                             # Frontend documentation
 │   └── package.json                          # Frontend dependencies & build scripts
 │
-├── PROGRESS.md                  # Development progress tracker
-├── UPDATE.md                    # Strategic audit and vulnerability report
-└── README.md                    # Master comprehensive documentation
+├── PROGRESS.md                               # Development progress tracker
+├── UPDATE.md                                 # Strategic audit and vulnerability report
+├── vlidation.md                              # Validation audit & implementation report
+└── README.md                                 # Master comprehensive documentation
+```
 ```
 
 ---

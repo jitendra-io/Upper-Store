@@ -41,6 +41,8 @@ const searchGlobal = async (req, res) => {
       limit,
     });
 
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
+    res.setHeader('Cloudflare-CDN-Cache-Control', 'max-age=60, stale-while-revalidate=120');
     res.json(payload);
   } catch (error) {
     console.error('Global search error:', error);

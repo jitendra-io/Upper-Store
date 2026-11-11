@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, clearUserDownloadHistory, recordUserDownload, getSecureDownloadUrl } from '../utils/downloadTracker';
+import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, clearUserDownloadHistory, recordUserDownload, getSecureDownloadUrl, getProductDownloadFilename } from '../utils/downloadTracker';
 import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import { getUserVipTier } from '../utils/vipValidator';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
@@ -227,7 +227,7 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
                       href={!isConsentWithdrawn && hasUserAcceptedTerms() ? getSecureDownloadUrl(item) : '#'}
                       target="_self"
                       rel="noopener noreferrer"
-                      download
+                      download={getProductDownloadFilename(item)}
                       className="history-redownload-btn"
                       onClick={(e) => handleRedownloadClick(e, item)}
                     >

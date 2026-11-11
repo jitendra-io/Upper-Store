@@ -867,6 +867,8 @@ const getPublicDeveloperProfile = async (req, res) => {
       } catch (_) {}
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
+    res.setHeader('Cloudflare-CDN-Cache-Control', 'max-age=60, stale-while-revalidate=120');
     res.json({
       developer: publicProfile,
       stats: {

@@ -1,48 +1,102 @@
-# Upper Store - Cloudflare Edge Download Delivery Worker
+# Upper Store - Cloudflare Edge Delivery & Remote Inspection Worker
 
-This Cloudflare Worker provides **100% free, unlimited-speed edge delivery** for all software, APKs, and AI models hosted on GitHub Releases, while keeping GitHub completely hidden and taking zero bandwidth from your Node.js server.
-
----
-
-### Step 1: Create a Free Cloudflare Account (1 Minute)
-1. Go to [https://dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up) and create a free account (no credit card required).
-2. On the left sidebar, click **Compute (Workers & Pages)** -> **Overview**.
-3. Click the blue **Create application** button, then select **Create Worker**.
-4. Give your worker a name (e.g. `upperstore-downloader`), and click **Deploy**.
+This Cloudflare Worker provides edge delivery and pre-flight binary inspection for software, APKs, desktop applications, and AI models hosted on GitHub Releases and Hugging Face, keeping origin storage hidden and offloading bandwidth from the Node.js backend.
 
 ---
 
-### Step 2: Paste the Worker Code
-1. On your newly created worker's page, click **Edit code** (or **Quick Edit**).
-2. Delete whatever template code is inside, and paste the entire code from [`worker.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/cloudflare-worker/worker.js).
-3. Click **Deploy** in the top right corner.
+## 1. Overview & Capabilities
+
+The worker exposes two specialized endpoints:
+
+1. **Streaming Download Delivery (`/dl`)**:
+   - High-throughput streaming proxy for GitHub Releases, GitHub User Content, ImageKit, and Hugging Face.
+   - HMAC-SHA256 signature verification preventing URL tampering.
+   - 5-minute ephemeral token expiry preventing link sharing and scraping.
+   - Automatic `Content-Disposition: attachment; filename="..."` and MIME type header resolution.
+   - Direct-to-client chunked streaming with zero server memory buffering.
+
+2. **Pre-Flight Asset Inspection (`/inspect`)**:
+   - HTTP Range request engine querying remote headers without downloading full files.
+   - For APK files: extracts Android Binary XML (`AndroidManifest.xml`) string pools (`0x001C0001`) by reading only the first 64 KB and ZIP Central Directory end records (< 150 KB total egress for a 200 MB+ APK).
+   - For Windows EXEs: inspects DOS/PE headers, COFF optional headers, ASLR, and DEP characteristics.
+   - For AI Models (`.safetensors`, `.gguf`): reads 8-byte JSON header offsets to verify model architecture and metadata without downloading model weights.
+   - CORS-enabled for direct frontend pre-flight validation.
 
 ---
 
-### Step 3: Add Your Secret Key (1 Minute)
-1. Go back to your Worker's settings by clicking the worker name.
-2. Click the **Settings** tab -> **Variables and Secrets**.
-3. Under **Secrets**, click **Add**.
+## 2. Deployment Instructions
+
+### Step 1: Create a Cloudflare Account
+1. Visit [https://dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up) and create an account.
+2. In the sidebar, navigate to **Compute (Workers & Pages)** -> **Overview**.
+3. Click **Create application**, then **Create Worker**.
+4. Set a name (e.g. `upperstore-downloader`) and click **Deploy**.
+
+---
+
+### Step 2: Deploy the Worker Script
+1. On the worker detail page, click **Edit code**.
+2. Replace all template contents with the code from [`worker.js`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/cloudflare-worker/worker.js).
+3. Click **Deploy**.
+
+---
+
+### Step 3: Configure Worker Environment Secret
+1. Navigate to **Settings** -> **Variables and Secrets**.
+2. Under **Secrets**, click **Add**.
    - **Variable name**: `DOWNLOAD_SECRET_KEY`
-   - **Value**: Any long random password (e.g. `upper_store_secret_2026_xyz`).
-4. Click **Deploy**.
+   - **Value**: A secure secret string matching the `DOWNLOAD_SECRET_KEY` in `backend/.env`.
+3. Click **Deploy**.
 
 ---
 
-### Step 4: Add to Your Upper Store Backend `.env`
-Open your `backend/.env` file and add these two lines:
+### Step 4: Configure Backend Environment
+In [`backend/.env`](file:///c:/Users/jiten/OneDrive/Desktop/MY%20FOLDERS/PROJECTS/My%20site/backend/.env), configure the worker URL and secret:
 
 ```env
 CLOUDFLARE_WORKER_URL=https://upperstore-downloader.<your-subdomain>.workers.dev
-DOWNLOAD_SECRET_KEY=upper_store_secret_2026_xyz
+DOWNLOAD_SECRET_KEY=your_secure_secret_key_here
 ```
-*(Replace `<your-subdomain>` with the actual URL shown on your Cloudflare Worker page, and make sure `DOWNLOAD_SECRET_KEY` matches the secret you entered in Step 3).*
 
 ---
 
-### Optional: Bind Your Custom Domain (e.g. `download.upperstore.io`)
-If you have a custom domain on Cloudflare:
-1. In your Worker dashboard, click **Settings** -> **Domains & Routes**.
-2. Click **Add** -> **Custom Domain**.
-3. Enter `download.yourdomain.com` and click **Add Custom Domain**.
-4. Update `CLOUDFLARE_WORKER_URL=https://download.yourdomain.com` in `backend/.env`.
+## 3. API Reference
+
+### 3.1 Download Endpoint (`GET /dl`)
+- **Query Parameters**:
+  - `url` (Required): Base64-encoded upstream asset URL.
+  - `exp` (Required): Unix timestamp integer (seconds) when the link expires.
+  - `sig` (Required): Hex-encoded HMAC-SHA256 signature generated by the backend.
+  - `name` (Optional): Sanitized file name for `Content-Disposition`.
+- **Allowed Hosts**: `github.com`, `githubusercontent.com`, `ik.imagekit.io`, `huggingface.co`.
+- **Responses**:
+  - `200 OK`: Binary stream.
+  - `400 Bad Request`: Missing parameters.
+  - `403 Forbidden`: Expired link, invalid signature, or disallowed upstream host.
+
+### 3.2 Inspection Endpoint (`GET /inspect`)
+- **Query Parameters**:
+  - `url` (Required): Remote URL to inspect.
+  - `type` (Optional): Asset type hint (`apk`, `exe`, `safetensors`, `gguf`).
+- **Response Format**:
+  ```json
+  {
+    "success": true,
+    "sourceUrl": "https://github.com/...",
+    "fileName": "UpperPlayer_v4.0.apk",
+    "fileSize": 220200960,
+    "fileSizeFormatted": "210.00 MB",
+    "contentType": "application/vnd.android.package-archive",
+    "apkDetails": {
+      "hasManifest": true,
+      "permissionsCount": 7,
+      "permissions": [
+        {
+          "name": "Full Network Access",
+          "raw": "android.permission.INTERNET",
+          "description": "Allows the app to create network sockets and use custom network protocols."
+        }
+      ]
+    }
+  }
+  ```

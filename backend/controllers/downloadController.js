@@ -200,6 +200,28 @@ const getAllDownloadHistoryAdmin = async (req, res) => {
 };
 
 
+// Helper to detect authentic package extension from target release URL
+const detectExtension = (targetUrl) => {
+  if (!targetUrl) return '.apk';
+  const cleanLower = targetUrl.split('?')[0].toLowerCase();
+  if (cleanLower.endsWith('.exe')) return '.exe';
+  if (cleanLower.endsWith('.msi')) return '.msi';
+  if (cleanLower.endsWith('.zip')) return '.zip';
+  if (cleanLower.endsWith('.7z')) return '.7z';
+  if (cleanLower.endsWith('.dmg')) return '.dmg';
+  if (cleanLower.endsWith('.pkg')) return '.pkg';
+  if (cleanLower.endsWith('.tar.gz')) return '.tar.gz';
+  if (cleanLower.endsWith('.tgz')) return '.tgz';
+  if (cleanLower.endsWith('.iso')) return '.iso';
+  if (cleanLower.endsWith('.pdf')) return '.pdf';
+  if (cleanLower.endsWith('.gguf')) return '.gguf';
+  if (cleanLower.endsWith('.safetensors')) return '.safetensors';
+  if (cleanLower.endsWith('.onnx')) return '.onnx';
+  if (cleanLower.endsWith('.bin')) return '.bin';
+  if (cleanLower.endsWith('.apk')) return '.apk';
+  return '.apk';
+};
+
 // @desc    Secure proxy stream for binary downloads (hides raw GitHub releases from user)
 // @route   GET /api/downloads/proxy or GET /api/download
 // @access  Public
@@ -208,6 +230,7 @@ const proxyDownload = async (req, res) => {
     const { id, file, name } = req.query;
     let targetUrl = '';
     let customName = name || '';
+    let productTitle = '';
 
     // 1. Resolve product from database
     if (id) {
@@ -215,12 +238,8 @@ const proxyDownload = async (req, res) => {
         const prodDoc = await db.collection('products').doc(String(id)).get();
         if (prodDoc.exists) {
           const pData = prodDoc.data();
-          targetUrl = pData.apkFile;
-          if (!customName && pData.title) {
-            const rawExt = targetUrl ? targetUrl.split('?')[0].toLowerCase() : '';
-            const ext = rawExt.endsWith('.exe') ? '.exe' : (rawExt.endsWith('.zip') ? '.zip' : '.apk');
-            customName = `${pData.title.replace(/[^a-zA-Z0-9_-]/g, '_')}${ext}`;
-          }
+          targetUrl = pData.apkFile || '';
+          productTitle = pData.title || '';
         }
       } catch (dbErr) {
         console.error('Error fetching product for download proxy:', dbErr);
@@ -240,6 +259,29 @@ const proxyDownload = async (req, res) => {
 
     if (!targetUrl || targetUrl === '#' || !targetUrl.startsWith('http')) {
       return res.status(404).json({ message: 'Valid download target not found.' });
+    }
+
+    const detectedExt = detectExtension(targetUrl);
+
+    // Ensure customName has proper file extension matching target asset
+    if (!customName && productTitle) {
+      customName = `${productTitle.replace(/[^a-zA-Z0-9._-]/g, '_')}${detectedExt}`;
+    } else if (customName) {
+      // Decode if encoded
+      try {
+        customName = decodeURIComponent(customName);
+      } catch (_) {}
+      // If extension missing or incorrect generic placeholder, normalize with detected extension
+      if (!/\.[a-zA-Z0-9]{2,10}$/i.test(customName)) {
+        customName = `${customName}${detectedExt}`;
+      }
+    } else {
+      try {
+        const pathname = new URL(targetUrl).pathname;
+        customName = pathname.substring(pathname.lastIndexOf('/') + 1) || (`package${detectedExt}`);
+      } catch (_) {
+        customName = `package${detectedExt}`;
+      }
     }
 
     // SSRF & Open Proxy Prevention: Strictly validate host and prevent internal loopback/metadata probing
@@ -268,6 +310,8 @@ const proxyDownload = async (req, res) => {
         host.endsWith('.github.com') ||
         host === 'githubusercontent.com' ||
         host.endsWith('.githubusercontent.com') ||
+        host === 'huggingface.co' ||
+        host.endsWith('.huggingface.co') ||
         host === 'ik.imagekit.io' ||
         host.endsWith('.imagekit.io');
 
@@ -326,42 +370,30 @@ const proxyDownload = async (req, res) => {
     if (!finalFileName) {
       try {
         const pathname = new URL(targetUrl).pathname;
-        finalFileName = pathname.substring(pathname.lastIndexOf('/') + 1) || 'package.apk';
+        finalFileName = pathname.substring(pathname.lastIndexOf('/') + 1) || (`package${detectedExt}`);
       } catch (e) {
-        finalFileName = 'package.apk';
+        finalFileName = `package${detectedExt}`;
       }
     }
 
-    const cleanLower = targetUrl.split('?')[0].toLowerCase();
-    let detectedExt = '.apk';
-    if (cleanLower.endsWith('.exe')) detectedExt = '.exe';
-    else if (cleanLower.endsWith('.msi')) detectedExt = '.msi';
-    else if (cleanLower.endsWith('.zip')) detectedExt = '.zip';
-    else if (cleanLower.endsWith('.7z')) detectedExt = '.7z';
-    else if (cleanLower.endsWith('.dmg')) detectedExt = '.dmg';
-    else if (cleanLower.endsWith('.tar.gz')) detectedExt = '.tar.gz';
-    else if (cleanLower.endsWith('.iso')) detectedExt = '.iso';
-    else if (cleanLower.endsWith('.pdf')) detectedExt = '.pdf';
-    else if (cleanLower.endsWith('.gguf')) detectedExt = '.gguf';
-    else if (cleanLower.endsWith('.safetensors')) detectedExt = '.safetensors';
-    else if (cleanLower.endsWith('.onnx')) detectedExt = '.onnx';
-    else if (cleanLower.endsWith('.json')) detectedExt = '.json';
-    else if (cleanLower.endsWith('.txt')) detectedExt = '.txt';
-
-    // If filename has no extension, append detected extension
-    if (!/\.[a-zA-Z0-9]{2,5}$/.test(finalFileName)) {
+    // Ensure finalFileName has a valid extension
+    if (!/\.[a-zA-Z0-9]{2,10}$/i.test(finalFileName)) {
       finalFileName += detectedExt;
     }
 
+    const cleanFileLower = finalFileName.toLowerCase();
     let contentType = upstreamRes.headers.get('content-type') || 'application/octet-stream';
-    if (finalFileName.endsWith('.apk')) contentType = 'application/vnd.android.package-archive';
-    else if (finalFileName.endsWith('.exe') || finalFileName.endsWith('.msi')) contentType = 'application/x-msdownload';
-    else if (finalFileName.endsWith('.zip')) contentType = 'application/zip';
-    else if (finalFileName.endsWith('.7z')) contentType = 'application/x-7z-compressed';
-    else if (finalFileName.endsWith('.tar.gz')) contentType = 'application/gzip';
-    else if (finalFileName.endsWith('.dmg')) contentType = 'application/x-apple-diskimage';
+    if (cleanFileLower.endsWith('.apk')) contentType = 'application/vnd.android.package-archive';
+    else if (cleanFileLower.endsWith('.exe') || cleanFileLower.endsWith('.msi')) contentType = 'application/x-msdownload';
+    else if (cleanFileLower.endsWith('.zip')) contentType = 'application/zip';
+    else if (cleanFileLower.endsWith('.7z')) contentType = 'application/x-7z-compressed';
+    else if (cleanFileLower.endsWith('.tar.gz') || cleanFileLower.endsWith('.tgz')) contentType = 'application/gzip';
+    else if (cleanFileLower.endsWith('.dmg')) contentType = 'application/x-apple-diskimage';
+    else if (cleanFileLower.endsWith('.pdf')) contentType = 'application/pdf';
+    else if (cleanFileLower.endsWith('.gguf') || cleanFileLower.endsWith('.safetensors') || cleanFileLower.endsWith('.onnx')) contentType = 'application/octet-stream';
 
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(finalFileName)}"`);
+    const safeAsciiFilename = finalFileName.replace(/["\r\n\\]/g, '_');
+    res.setHeader('Content-Disposition', `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(finalFileName)}`);
     res.setHeader('Content-Type', contentType);
 
     const cl = upstreamRes.headers.get('content-length');

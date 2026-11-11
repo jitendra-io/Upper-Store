@@ -723,6 +723,414 @@
   overflow-x: hidden;
 }
 
+.modal-sec-profile-wrapper {
+  margin-bottom: 0.55rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.modal-sec-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #10b981;
+}
+
+.modal-sec-score-pill {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.12rem 0.5rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.modal-sec-specs-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.modal-sec-spec-tag {
+  background: rgba(0, 0, 0, 0.4);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+}
+
+.modal-sec-spec-tag.verified-badge {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.modal-sec-badges-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.modal-sec-badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.67rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.12rem 0.45rem;
+  border-radius: 5px;
+}
+
+.modal-sec-mitigations-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+}
+
+.modal-sec-mitigation-pill {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.12rem 0.45rem;
+  border-radius: 5px;
+}
+
+.modal-sec-mitigation-pill strong {
+  color: #e2e8f0;
+}
+
+/* Declared App Permissions Section (Button & Expandable Drawer) */
+.modal-sec-perms-container {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.modal-sec-perms-btn-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.modal-sec-perms-toggle-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 0;
+  text-align: left;
+}
+
+.modal-sec-perms-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(230, 25, 25, 0.35);
+}
+
+.modal-sec-perms-toggle-btn.is-expanded {
+  background: rgba(230, 25, 25, 0.08);
+  border-color: rgba(230, 25, 25, 0.45);
+}
+
+.perms-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.perms-toggle-icon {
+  color: #ff4d4d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.perms-toggle-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.perms-toggle-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.06rem 0.35rem;
+  border-radius: 4px;
+}
+
+.perms-toggle-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.perms-toggle-summary {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.perms-toggle-action {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #ff4d4d;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.perms-toggle-chevron {
+  transition: transform 0.2s ease;
+}
+
+.perms-toggle-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+.modal-sec-perms-dialog-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.modal-sec-perms-dialog-btn:hover {
+  background: rgba(230, 25, 25, 0.15);
+  color: #ffffff;
+  border-color: rgba(230, 25, 25, 0.4);
+}
+
+/* Expandable Drawer */
+.modal-sec-perms-drawer {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  animation: permsDrawerOpen 0.22s ease-out;
+}
+
+@keyframes permsDrawerOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.perms-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.perms-drawer-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.perms-popout-btn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.perms-popout-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f1f5f9;
+}
+
+.modal-sec-perms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.35rem;
+  max-height: 200px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.modal-sec-perms-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.modal-sec-perms-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.modal-perm-item {
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: all 0.15s ease;
+}
+
+.modal-perm-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.modal-perm-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.modal-perm-item-name {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.modal-perm-raw {
+  font-family: monospace;
+  font-size: 0.62rem;
+  color: #94a3b8;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.08rem 0.3rem;
+  border-radius: 3px;
+  word-break: break-all;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.modal-perm-item-desc {
+  font-size: 0.66rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.perms-drawer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.perms-drawer-hint {
+  font-size: 0.63rem;
+  color: #64748b;
+}
+
+.perms-drawer-collapse-btn {
+  background: none;
+  border: none;
+  color: #ff4d4d;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0.1rem 0.3rem;
+  transition: color 0.15s ease;
+  white-space: nowrap;
+}
+
+.perms-drawer-collapse-btn:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .modal-sec-perms-toggle-btn {
+    padding: 0.4rem 0.55rem;
+  }
+
+  .perms-toggle-summary {
+    display: none;
+  }
+
+  .modal-sec-perms-grid {
+    grid-template-columns: 1fr;
+    max-height: 220px;
+  }
+
+  .perms-drawer-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .perms-drawer-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    text-align: center;
+  }
+
+  .perms-drawer-collapse-btn {
+    width: 100%;
+    padding: 0.35rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 5px;
+  }
+}
+
 .security-checksum-row {
   display: flex;
   align-items: center;

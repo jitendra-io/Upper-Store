@@ -2,10 +2,11 @@ import { Link } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
-import { recordUserDownload, getProductDownloadCount, formatDownloadCount, getSecureDownloadUrl, isDirectDownloadFile } from '../utils/downloadTracker';
+import { recordUserDownload, getProductDownloadCount, formatDownloadCount, getSecureDownloadUrl, isDirectDownloadFile, getProductDownloadFilename } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
 import StarRatingBadge from './StarRatingBadge';
 import ProductReviewsModal from './ProductReviewsModal';
+import ProductPermissionsModal from './ProductPermissionsModal';
 import CheckoutModal from './CheckoutModal';
 import VipClubModal from './VipClubModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, LockIcon, CheckIcon, ArrowRightIcon, CloseIcon } from './Icons';
@@ -50,6 +51,8 @@ const ProductDetailModal = ({ product, onClose }) => {
   });
   const [feePaid, setFeePaid] = useState(() => localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
   const [copiedSha, setCopiedSha] = useState(false);
+  const [showPermissions, setShowPermissions] = useState(false);
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
 
   const getProductDevTier = (prod) => {
     if (!prod) return 'free';
@@ -471,7 +474,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                         href={isLoggedIn && hasUserAcceptedTerms() && !isConsentWithdrawn ? getSecureDownloadUrl(product) : '#'}
                         target={isDirectDownloadFile(product?.apkFile) ? '_self' : '_blank'}
                         rel="noopener noreferrer"
-                        download={isDirectDownloadFile(product?.apkFile)}
+                        download={isDirectDownloadFile(product?.apkFile) ? getProductDownloadFilename(product) : undefined}
                         className="modal-download-link"
                         onClick={handleDownloadClick}
                       >
@@ -578,38 +581,215 @@ const ProductDetailModal = ({ product, onClose }) => {
               );
             })()}
 
-            {/* Cryptographic SHA-256 Checksum Box */}
-            {product.sha256Checksum && (
+            {/* Cryptographic SHA-256 & Pre-Flight Security Profile Box */}
+            {(product.sha256Checksum || product.securityDetails) && (
               <div className="modal-security-box">
-                <div className="security-checksum-row">
-                  <span className="checksum-label">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    </svg>
-                    SHA-256:
-                  </span>
-                  <code className="checksum-code" title={product.sha256Checksum}>
-                    {product.sha256Checksum.substring(0, 16)}...{product.sha256Checksum.substring(product.sha256Checksum.length - 8)}
-                  </code>
-                  <button
-                    type="button"
-                    className="copy-checksum-btn"
-                    onClick={() => {
-                      navigator.clipboard.writeText(product.sha256Checksum);
-                      setCopiedSha(true);
-                      setTimeout(() => setCopiedSha(false), 2000);
-                    }}
-                    title="Copy full cryptographic SHA-256 hash"
-                  >
-                    {copiedSha ? (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                        Copied <CheckIcon size={12} />
+                {product.securityDetails ? (
+                  <div className="modal-sec-profile-wrapper">
+                    <div className="modal-sec-header-row">
+                      <div className="modal-sec-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '4px' }}>
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        </svg>
+                        <span>Verified Pre-Flight Integrity</span>
+                      </div>
+                      <span className="modal-sec-score-pill">
+                        {product.securityDetails.securityScore || 100}/100 Clean
                       </span>
-                    ) : (
-                      'Copy'
+                    </div>
+
+                    <div className="modal-sec-specs-row">
+                      {product.securityDetails.fileSize && (
+                        <span className="modal-sec-spec-tag">
+                          Size: {product.securityDetails.fileSize}
+                        </span>
+                      )}
+                      {product.securityDetails.platform && (
+                        <span className="modal-sec-spec-tag">
+                          {product.securityDetails.platform}
+                        </span>
+                      )}
+                      {product.securityDetails.verifiedMethod && (
+                        <span className="modal-sec-spec-tag verified-badge">
+                          {product.securityDetails.verifiedMethod}
+                        </span>
+                      )}
+                    </div>
+
+                    {Array.isArray(product.securityDetails.badges) && product.securityDetails.badges.length > 0 && (
+                      <div className="modal-sec-badges-list">
+                        {product.securityDetails.badges.map((b, idx) => (
+                          <span key={idx} className="modal-sec-badge-item">
+                            <CheckIcon size={11} />
+                            {b}
+                          </span>
+                        ))}
+                      </div>
                     )}
-                  </button>
-                </div>
+
+                    {/* Verified Security Mitigations (ASLR, DEP, SafeTensors Immunity, UAC) */}
+                    {Array.isArray(product.securityDetails.mitigations) && product.securityDetails.mitigations.length > 0 && (
+                      <div className="modal-sec-mitigations-row">
+                        {product.securityDetails.mitigations.map((m, idx) => (
+                          <span key={idx} className="modal-sec-mitigation-pill" title={m.desc}>
+                            <strong>{m.name}:</strong> {m.value}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Declared App Permissions Button & Expandable Viewer (Responsive for Desktop & Phone) */}
+                    {Array.isArray(product.securityDetails.permissions) && product.securityDetails.permissions.length > 0 && (() => {
+                      const allPerms = product.securityDetails.permissions;
+
+                      return (
+                        <div className="modal-sec-perms-container">
+                          {/* Interactive Permissions Button */}
+                          <div className="modal-sec-perms-btn-bar">
+                            <button
+                              type="button"
+                              className={`modal-sec-perms-toggle-btn ${showPermissions ? 'is-expanded' : ''}`}
+                              onClick={() => setShowPermissions((prev) => !prev)}
+                              aria-expanded={showPermissions}
+                              title="Toggle application runtime permissions"
+                            >
+                              <div className="perms-toggle-left">
+                                <span className="perms-toggle-icon">
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                  </svg>
+                                </span>
+                                <span className="perms-toggle-title">Permissions</span>
+                                <span className="perms-toggle-badge">{allPerms.length}</span>
+                              </div>
+
+                              <div className="perms-toggle-right">
+                                <span className="perms-toggle-summary">
+                                  {allPerms.length} Declared
+                                </span>
+                                <span className="perms-toggle-action">
+                                  {showPermissions ? 'Hide' : 'View'}
+                                  <svg
+                                    className={`perms-toggle-chevron ${showPermissions ? 'rotated' : ''}`}
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                  </svg>
+                                </span>
+                              </div>
+                            </button>
+
+                            {/* Direct Dialog View Action Button */}
+                            <button
+                              type="button"
+                              className="modal-sec-perms-dialog-btn"
+                              onClick={() => setPermissionsModalOpen(true)}
+                              title="Open dedicated permissions modal"
+                            >
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M15 3h6v6"></path>
+                                <path d="M10 14L21 3"></path>
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                              </svg>
+                              <span>Modal</span>
+                            </button>
+                          </div>
+
+                          {/* Expandable Permissions Viewer (Revealed upon clicking "Permissions") */}
+                          {showPermissions && (
+                            <div className="modal-sec-perms-drawer">
+                              <div className="perms-drawer-header">
+                                <span className="perms-drawer-title">
+                                  Declared Permissions ({allPerms.length})
+                                </span>
+
+                                <button
+                                  type="button"
+                                  className="perms-popout-btn"
+                                  onClick={() => setPermissionsModalOpen(true)}
+                                  title="Open full permissions dialog"
+                                >
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+                                    <path d="M15 3h6v6"></path>
+                                    <path d="M10 14L21 3"></path>
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                  </svg>
+                                  Dialog
+                                </button>
+                              </div>
+
+                              <div className="modal-sec-perms-grid">
+                                {allPerms.map((perm, idx) => (
+                                  <div key={idx} className="modal-perm-item">
+                                    <div className="modal-perm-item-top">
+                                      <span className="modal-perm-item-name">{perm.name}</span>
+                                    </div>
+                                    {perm.raw && <code className="modal-perm-raw">{perm.raw}</code>}
+                                    <span className="modal-perm-item-desc">{perm.desc}</span>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="perms-drawer-footer">
+                                <span className="perms-drawer-hint">
+                                  Actual declarations extracted from binary AndroidManifest.xml
+                                </span>
+                                <button
+                                  type="button"
+                                  className="perms-drawer-collapse-btn"
+                                  onClick={() => setShowPermissions(false)}
+                                >
+                                  Hide Permissions
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : null}
+
+                {/* Cryptographic SHA-256 Checksum Row */}
+                {product.sha256Checksum && (
+                  <div className="security-checksum-row">
+                    <span className="checksum-label">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                      SHA-256:
+                    </span>
+                    <code className="checksum-code" title={product.sha256Checksum}>
+                      {product.sha256Checksum.substring(0, 16)}...{product.sha256Checksum.substring(product.sha256Checksum.length - 8)}
+                    </code>
+                    <button
+                      type="button"
+                      className="copy-checksum-btn"
+                      onClick={() => {
+                        navigator.clipboard.writeText(product.sha256Checksum);
+                        setCopiedSha(true);
+                        setTimeout(() => setCopiedSha(false), 2000);
+                      }}
+                      title="Copy full cryptographic SHA-256 hash"
+                    >
+                      {copiedSha ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          Copied <CheckIcon size={12} />
+                        </span>
+                      ) : (
+                        'Copy'
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -646,6 +826,15 @@ const ProductDetailModal = ({ product, onClose }) => {
           product={product}
           isOpen={reviewModalOpen}
           onClose={() => setReviewModalOpen(false)}
+        />
+      )}
+
+      {/* PRODUCT DECLARED PERMISSIONS POPUP FROM DETAILS */}
+      {permissionsModalOpen && (
+        <ProductPermissionsModal
+          product={product}
+          isOpen={permissionsModalOpen}
+          onClose={() => setPermissionsModalOpen(false)}
         />
       )}
 

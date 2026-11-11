@@ -4,6 +4,8 @@ const compression = require('compression');
 const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
+const cluster = require('node:cluster');
+const os = require('node:os');
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config();
@@ -25,12 +27,33 @@ const app = express();
 // Disable Express fingerprint header to prevent server profiling
 app.disable('x-powered-by');
 
+// Cluster Mode Configuration:
+// When CLUSTER_MODE=true or running in production on multi-core environments,
+// worker processes are forked to utilize all available CPU cores.
+const totalCpus = os.cpus().length;
+const isClusterEnabled = process.env.CLUSTER_MODE === 'true' ||
+  (process.env.NODE_ENV === 'production' && totalCpus > 1 && process.env.CLUSTER_MODE !== 'false');
+const maxConfiguredWorkers = parseInt(process.env.MAX_WORKERS || process.env.WEB_CONCURRENCY, 10);
+const workerCount = Math.max(1, Math.min(maxConfiguredWorkers || totalCpus, 8));
+
 // Enforce standard baseline HTTP security headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '0');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
+// Baseline Cache-Control Policy for Edge & Browser Load Balancing:
+// Mutating operations and private routes default to no-store to prevent CDN/browser cache contamination.
+// Public read endpoints (products, search, developer profile) explicitly opt-in with edge cache headers.
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
   next();
 });
 
@@ -134,6 +157,14 @@ app.get('/api/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),
+    cluster: {
+      enabled: Boolean(isClusterEnabled),
+      isWorker: Boolean(cluster.isWorker),
+      workerId: cluster.worker ? cluster.worker.id : 'standalone',
+      pid: process.pid,
+      totalCPUs: totalCpus,
+      activeWorkers: isClusterEnabled && cluster.isPrimary ? Object.keys(cluster.workers || {}).length : undefined,
+    },
     memory: {
       rssMB: (mem.rss / (1024 * 1024)).toFixed(1),
       heapUsedMB: (mem.heapUsed / (1024 * 1024)).toFixed(1),
@@ -189,7 +220,8 @@ const startServer = () => {
   server = app.listen(PORT);
 
   server.once('listening', () => {
-    console.log(`[INFO] Server running on http://localhost:${PORT}`);
+    const workerTag = cluster.isWorker ? `[Worker ${cluster.worker.id} / PID ${process.pid}]` : '[Standalone]';
+    console.log(`[INFO] ${workerTag} Server running on http://localhost:${PORT}`);
 
     // Only reset retryCount once the server has been running stably without error
     if (stableTimer) clearTimeout(stableTimer);
@@ -198,7 +230,7 @@ const startServer = () => {
     }, 4000);
     stableTimer.unref();
 
-    if (!cleanupJobStarted) {
+    if (!isClusterEnabled && !cleanupJobStarted) {
       cleanupJobStarted = true;
       startNotificationCleanupJob();
     }
@@ -244,7 +276,56 @@ const startServer = () => {
   });
 };
 
-startServer();
+// Process Execution: Cluster Primary vs Worker / Standalone
+if (isClusterEnabled && cluster.isPrimary) {
+  console.log(`[CLUSTER] Master process ${process.pid} orchestrating ${workerCount} worker(s) across ${totalCpus} CPU core(s)...`);
+
+  // Master starts single background tasks to avoid duplicate crons across workers
+  startNotificationCleanupJob();
+
+  let isMasterShuttingDown = false;
+
+  for (let i = 0; i < workerCount; i++) {
+    cluster.fork();
+  }
+
+  cluster.on('online', (worker) => {
+    console.log(`[CLUSTER] Worker ${worker.id} (PID: ${worker.process.pid}) is online and accepting connections.`);
+  });
+
+  cluster.on('exit', (worker, code, signal) => {
+    if (isMasterShuttingDown) return;
+    console.warn(`[CLUSTER] Worker ${worker.id} (PID: ${worker.process.pid}) exited (${signal || code}). Respawning in 1s...`);
+    setTimeout(() => {
+      if (!isMasterShuttingDown) cluster.fork();
+    }, 1000);
+  });
+
+  const handleMasterShutdown = (signal) => {
+    if (isMasterShuttingDown) return;
+    isMasterShuttingDown = true;
+    console.log(`[CLUSTER] Master received ${signal}. Forwarding shutdown to all workers...`);
+    stopNotificationCleanupJob();
+
+    for (const id in cluster.workers) {
+      try {
+        cluster.workers[id].process.kill(signal);
+      } catch (_) {}
+    }
+
+    const forceExitTimer = setTimeout(() => {
+      console.warn('[CLUSTER] Force exiting master process after timeout.');
+      process.exit(0);
+    }, 5000);
+    forceExitTimer.unref();
+  };
+
+  process.on('SIGINT', () => handleMasterShutdown('SIGINT'));
+  process.on('SIGTERM', () => handleMasterShutdown('SIGTERM'));
+} else {
+  // Worker process or standalone single-process mode
+  startServer();
+}
 
 // Forceful Cleanup and Zero-Orphan Shutdown
 const closeConnectionsAndServer = () => {
@@ -291,14 +372,16 @@ const gracefulShutdown = (signal) => {
     });
 };
 
-// Listen for termination signals
-process.once('SIGUSR2', async () => {
-  try {
-    await closeConnectionsAndServer();
-  } catch (_) {}
-  process.kill(process.pid, 'SIGUSR2');
-});
+// Listen for termination signals in worker or standalone processes
+if (!isClusterEnabled || !cluster.isPrimary) {
+  process.once('SIGUSR2', async () => {
+    try {
+      await closeConnectionsAndServer();
+    } catch (_) {}
+    process.kill(process.pid, 'SIGUSR2');
+  });
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+}
 

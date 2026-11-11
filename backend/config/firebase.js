@@ -30,6 +30,11 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL) {
 
     db = getFirestore();
     try {
+      db.settings({ ignoreUndefinedProperties: true });
+    } catch (settingsErr) {
+      console.warn('[WARN] Could not set ignoreUndefinedProperties on Firestore:', settingsErr.message);
+    }
+    try {
       authAdmin = getAuth();
     } catch (authErr) {
       console.warn('[WARN] Firebase Admin Auth initialization failed:', authErr.message);
