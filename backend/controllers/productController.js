@@ -392,6 +392,13 @@ const createProduct = async (req, res) => {
       });
     }
 
+    // Enforce mandatory developer asset verification before publishing to store
+    if (!req.body?.securityDetails || !req.body?.sha256Checksum) {
+      return res.status(400).json({
+        message: 'Mandatory Asset Verification: You must verify your release asset via Pre-Flight Security Audit before uploading to the store.',
+      });
+    }
+
     // Collect Screenshot image links (Google Photos / Web image links)
     let rawUrls = [];
     if (imageUrl1 && imageUrl1.trim()) rawUrls.push(imageUrl1.trim());
@@ -659,6 +666,12 @@ const updateProduct = async (req, res) => {
         });
       }
       updatedData.apkFile = apkUrl;
+      const docData = doc.data() || {};
+      if (docData.apkFile !== apkUrl && !req.body?.securityDetails) {
+        return res.status(400).json({
+          message: 'Mandatory Asset Verification: You must verify the updated release asset via Pre-Flight Security Audit before saving changes.',
+        });
+      }
     }
 
     if (videoUrl !== undefined) {

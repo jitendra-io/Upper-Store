@@ -78,6 +78,10 @@ function AppContent() {
   // Phone & Browser Back button listener (popstate)
   useEffect(() => {
     const handlePopState = () => {
+      if (window.__upperIgnoreNextPopState) {
+        window.__upperIgnoreNextPopState = false;
+        return;
+      }
       if (isHandlingPopStateRef.current) {
         isHandlingPopStateRef.current = false;
         return;

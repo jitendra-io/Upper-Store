@@ -2003,6 +2003,75 @@
   line-height: 1.4;
 }
 
+/* Mandatory Verification Indicators */
+.preflight-mandate-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+
+.preflight-mandate-badge.required {
+  background: rgba(230, 25, 25, 0.2);
+  border: 1px solid rgba(230, 25, 25, 0.5);
+  color: #ff4d4d;
+  box-shadow: 0 0 10px rgba(230, 25, 25, 0.25);
+}
+
+.preflight-mandate-badge.verified {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  color: #34d399;
+}
+
+.dev-preflight-card.preflight-pending-required {
+  border-color: rgba(230, 25, 25, 0.32);
+}
+
+.dev-preflight-card.preflight-verified {
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.footer-asset-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.footer-asset-pill.verified {
+  background: rgba(16, 185, 129, 0.16);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.footer-asset-pill.pending {
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+.btn-verify-action {
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.9) 0%, rgba(180, 15, 15, 0.95) 100%) !important;
+  border: 1px solid rgba(255, 60, 60, 0.5) !important;
+  box-shadow: 0 0 16px rgba(230, 25, 25, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.btn-verify-action:hover {
+  background: linear-gradient(135deg, rgba(255, 35, 35, 1) 0%, rgba(200, 20, 20, 1) 100%) !important;
+  box-shadow: 0 0 22px rgba(230, 25, 25, 0.5) !important;
+}
+
 /* Mobile Responsiveness for Pre-Flight Card */
 @media (max-width: 640px) {
   .preflight-card-header {

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { LayersIcon, StarIcon, ActivityIcon } from './Icons';
+import { LayersIcon, StarIcon, ActivityIcon, ShieldCheckIcon } from './Icons';
 import './CrystalCore3D.css';
 
 const CrystalCore3D = () => {
@@ -246,6 +246,16 @@ const CrystalCore3D = () => {
         title="Drag to rotate the Crimson Neural Core"
       />
 
+      {/* Pre-Publish Testing & Security Audit Tag on Rotating Core */}
+      <div
+        className="crystal-core-audit-tag"
+        title="Zero-Trust Testing: Every release undergoes pre-flight security auditing and sandbox testing before store publishing."
+      >
+        <span className="audit-tag-dot" />
+        <ShieldCheckIcon size={14} className="audit-tag-icon" />
+        <span className="audit-tag-text">Pre-Publish Tested &bull; 100% Sandbox Audited Before Release</span>
+      </div>
+
       {/* Floating Top-Left Telemetry Badge */}
       <div className="floating-badge badge-top-left">
         <div className="badge-icon-box">
@@ -261,6 +271,17 @@ const CrystalCore3D = () => {
       <div className="floating-badge badge-top-right">
         <span className="uptime-status-dot" />
         <span className="uptime-text">99.05% System Uptime</span>
+      </div>
+
+      {/* Floating Bottom-Left Pre-Publish Verification Badge */}
+      <div className="floating-badge badge-bottom-left">
+        <div className="badge-icon-box shield-badge-box">
+          <ShieldCheckIcon size={18} />
+        </div>
+        <div className="badge-text-col">
+          <span className="badge-title">Pre-Publish Tested</span>
+          <span className="badge-subtitle">Zero-Trust Sandbox Audit</span>
+        </div>
       </div>
 
       {/* Floating Bottom-Right Telemetry Card */}

@@ -93,7 +93,9 @@ const Products = () => {
   const [activeSection, setActiveSection] = useState(initialSection); // 'products' | 'videos'
   const [viewMode, setViewMode] = useState(getInitialViewMode); // 'grid' | 'list'
   const [activeVideoId, setActiveVideoId] = useState(null);
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   const deckTrackRef = useRef(null);
+  const filterDropdownRef = useRef(null);
 
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
@@ -101,6 +103,33 @@ const Products = () => {
       localStorage.setItem('upper_products_view_mode', mode);
     } catch (_) {}
   };
+
+  const handleCloseProductModal = () => {
+    setSelectedProduct(null);
+    if (searchParams.get('product') || searchParams.get('productId')) {
+      const newParams = new URLSearchParams(location.search);
+      newParams.delete('product');
+      newParams.delete('productId');
+      const newQuery = newParams.toString();
+      const newUrl = `${location.pathname}${newQuery ? `?${newQuery}` : ''}${location.hash}`;
+      window.history.replaceState(null, '', newUrl);
+    }
+  };
+
+  useEffect(() => {
+    if (!mobileFilterOpen) return;
+    const handleClickOutside = (e) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target)) {
+        setMobileFilterOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [mobileFilterOpen]);
 
   useEffect(() => {
     const prodId = searchParams.get('product') || searchParams.get('productId');
@@ -392,7 +421,7 @@ const Products = () => {
           ======================================================== */}
       {activeSection === 'products' && (
         <section className="catalog-main-section">
-          {/* Category Filter Tabs */}
+          {/* Category Filter Tabs (Desktop) */}
           <div className="catalog-category-bar">
             {CATEGORIES.map((cat) => (
               <button
@@ -403,6 +432,98 @@ const Products = () => {
                 {cat}
               </button>
             ))}
+          </div>
+
+          {/* Combined Category Filter Button (Phone Screen Only) */}
+          <div className="mobile-filter-container" ref={filterDropdownRef}>
+            <button
+              type="button"
+              className={`mobile-filter-btn ${mobileFilterOpen ? 'active' : ''} ${selectedCategory !== 'All' ? 'has-active-filter' : ''}`}
+              onClick={() => setMobileFilterOpen((prev) => !prev)}
+              aria-expanded={mobileFilterOpen}
+              aria-label="Filter products by category"
+            >
+              <div className="mobile-filter-btn-left">
+                <span className="mobile-filter-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                  </svg>
+                </span>
+                <span className="mobile-filter-label">Filter</span>
+                <span className="mobile-filter-selected-pill">
+                  {selectedCategory === 'All' ? 'All' : selectedCategory}
+                </span>
+              </div>
+              <div className="mobile-filter-btn-right">
+                {selectedCategory !== 'All' && (
+                  <span
+                    className="mobile-filter-reset-icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCategory('All');
+                      setCurrentPage(1);
+                    }}
+                    title="Reset to All"
+                    aria-label="Reset Filter"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </span>
+                )}
+                <svg
+                  className={`mobile-filter-chevron ${mobileFilterOpen ? 'rotated' : ''}`}
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+            </button>
+
+            {/* Filter Selection Dropdown Menu */}
+            {mobileFilterOpen && (
+              <div className="mobile-filter-dropdown" role="menu">
+                <div className="mobile-filter-dropdown-header">
+                  <span>Select Category</span>
+                  <span className="mobile-filter-count-label">{CATEGORIES.length} categories</span>
+                </div>
+                <div className="mobile-filter-options-grid">
+                  {CATEGORIES.map((cat) => {
+                    const isSelected = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        role="menuitem"
+                        className={`mobile-filter-option ${isSelected ? 'selected' : ''}`}
+                        onClick={() => {
+                          setSelectedCategory(cat);
+                          setCurrentPage(1);
+                          setMobileFilterOpen(false);
+                        }}
+                      >
+                        <span className="mobile-filter-option-name">{cat}</span>
+                        {isSelected && (
+                          <span className="mobile-filter-check">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -767,7 +888,7 @@ const Products = () => {
       {selectedProduct && (
         <ProductDetailModal
           product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
+          onClose={handleCloseProductModal}
         />
       )}
 

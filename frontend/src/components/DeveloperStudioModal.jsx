@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { VipAvatar, VipFlairBadge } from './VipAvatar';
 import { getUserVipTier } from '../utils/vipValidator';
-import { CrownIcon, DiamondIcon, CloseIcon, ArrowRightIcon, CheckIcon, AlertTriangleIcon } from './Icons';
+import { CrownIcon, DiamondIcon, CloseIcon, ArrowRightIcon, CheckIcon, AlertTriangleIcon, ShieldCheckIcon } from './Icons';
 import {
   parseGitHubReleaseUrl,
   fetchGitHubAssetMeta,
@@ -92,6 +92,10 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
     data: null,
     localFileHashing: false,
   });
+
+  // Track the exact URL or local filename that was verified by pre-flight inspection
+  const verifiedAssetUrlRef = useRef('');
+  const isAssetVerified = preflightState.status === 'verified' && Boolean(productForm.securityDetails);
 
   // Broadcast Form State
   const [broadcastForm, setBroadcastForm] = useState({
@@ -333,6 +337,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       securityDetails: product.securityDetails || null,
     });
     if (product.securityDetails) {
+      verifiedAssetUrlRef.current = (product.directApkUrl || product.apkUrl || '').trim();
       setPreflightState({
         status: 'verified',
         message: 'Pre-Flight Verified Profile Active',
@@ -340,6 +345,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
         localFileHashing: false,
       });
     } else {
+      verifiedAssetUrlRef.current = '';
       setPreflightState({
         status: 'idle',
         message: '',
@@ -354,6 +360,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
   // Cancel editing mode
   const cancelEditProduct = () => {
     setEditingProductId(null);
+    verifiedAssetUrlRef.current = '';
     setProductForm({
       title: '',
       category: 'Mobile App',
@@ -484,6 +491,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       const permsCount = Array.isArray(secProfile.permissions) ? secProfile.permissions.length : 0;
       const permNotice = permsCount > 0 ? ` & ${permsCount} Actual Permissions Extracted` : '';
 
+      verifiedAssetUrlRef.current = targetUrl;
       setPreflightState({
         status: 'verified',
         message: `Asset Verified (${fileSizeFormatted})${permNotice}`,
@@ -545,6 +553,7 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       const permsCount = Array.isArray(secProfile.permissions) ? secProfile.permissions.length : 0;
       const permMsg = permsCount > 0 ? ` & ${permsCount} Permissions Extracted` : '';
 
+      verifiedAssetUrlRef.current = `local:${file.name}`;
       setPreflightState({
         status: 'verified',
         message: `Local Binary "${file.name}" Verified (${fileSizeFormatted})${permMsg}`,
@@ -629,6 +638,28 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       setFeedback({
         type: 'error',
         message: 'A valid GitHub Release or Hugging Face download URL is required.',
+      });
+      return;
+    }
+
+    // Mandatory Pre-Flight Asset Verification Enforcement
+    if (!productForm.securityDetails || preflightState.status !== 'verified') {
+      setFeedback({
+        type: 'error',
+        message: 'Mandatory Asset Verification: You must verify your release package before uploading to Upper Store. Running Pre-Flight Security Audit now...',
+      });
+      runPreflightInspection(apk);
+      const preflightEl = document.querySelector('.dev-preflight-card');
+      if (preflightEl) {
+        preflightEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    if (preflightState.status === 'scanning' || preflightState.localFileHashing) {
+      setFeedback({
+        type: 'error',
+        message: 'Asset verification is currently running. Please wait for the pre-flight audit to complete before publishing.',
       });
       return;
     }
@@ -1104,10 +1135,23 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                         value={productForm.directApkUrl}
                         onChange={(e) => {
                           const val = e.target.value;
-                          setProductForm({ ...productForm, directApkUrl: val });
+                          const hasChanged = val.trim() !== verifiedAssetUrlRef.current;
+                          setProductForm((prev) => ({
+                            ...prev,
+                            directApkUrl: val,
+                            ...(hasChanged ? { securityDetails: null, sha256Checksum: '' } : {}),
+                          }));
+                          if (hasChanged && preflightState.status === 'verified') {
+                            setPreflightState({
+                              status: 'idle',
+                              message: '',
+                              data: null,
+                              localFileHashing: false,
+                            });
+                          }
                         }}
                         onBlur={() => {
-                          if (productForm.directApkUrl && preflightState.status === 'idle') {
+                          if (productForm.directApkUrl && productForm.directApkUrl.trim() !== verifiedAssetUrlRef.current && preflightState.status === 'idle') {
                             runPreflightInspection(productForm.directApkUrl);
                           }
                         }}
@@ -1120,13 +1164,20 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   </div>
 
                   {/* PRE-FLIGHT VERIFICATION & SECURITY PROFILE CARD */}
-                  <div className="dev-preflight-card">
+                  <div className={`dev-preflight-card ${isAssetVerified ? 'preflight-verified' : 'preflight-pending-required'}`}>
                     <div className="preflight-card-header">
                       <div className="preflight-header-title">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="preflight-shield-icon">
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
+                        <ShieldCheckIcon size={18} className="preflight-shield-icon" />
                         <span>Pre-Flight Security &amp; Architecture Audit</span>
+                        {isAssetVerified ? (
+                          <span className="preflight-mandate-badge verified">
+                            <CheckIcon size={11} /> Verified
+                          </span>
+                        ) : (
+                          <span className="preflight-mandate-badge required">
+                            Mandatory Before Publishing
+                          </span>
+                        )}
                       </div>
                       <div className="preflight-header-actions">
                         <input
@@ -1971,6 +2022,17 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
               {devProfile ? 'Verified Developer' : 'Verification Required'}
             </span>
             <span className="footer-user-email">{user?.email}</span>
+            {activeTab === 'upload' && (
+              isAssetVerified ? (
+                <span className="footer-asset-pill verified">
+                  <CheckIcon size={12} /> Asset Verified
+                </span>
+              ) : (
+                <span className="footer-asset-pill pending">
+                  <AlertTriangleIcon size={12} /> Verification Required
+                </span>
+              )
+            )}
           </div>
 
           <div className="footer-right-actions">
@@ -1987,14 +2049,40 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
 
             {activeTab === 'upload' && (
               <button
-                type="submit"
-                form="dev-product-form"
-                className="dev-primary-btn"
-                disabled={submittingProduct || devProfile?.isSuspended || (!editingProductId && isProAtLimit)}
-                title={!editingProductId && isProAtLimit ? 'Pro VIP limit reached (3/3 products). Upgrade to Elite VIP for unlimited uploads.' : ''}
+                type={isAssetVerified ? 'submit' : 'button'}
+                form={isAssetVerified ? 'dev-product-form' : undefined}
+                className={`dev-primary-btn ${!isAssetVerified ? 'btn-verify-action' : ''}`}
+                onClick={!isAssetVerified ? () => {
+                  if (!productForm.directApkUrl.trim()) {
+                    setFeedback({
+                      type: 'error',
+                      message: 'Download Link Required: Please enter your GitHub Release package URL before verifying.',
+                    });
+                    const inputEl = document.querySelector('input[type="url"]');
+                    if (inputEl) inputEl.focus();
+                  } else {
+                    setFeedback({
+                      type: 'info',
+                      message: 'Running Pre-Flight Security Audit on release package...',
+                    });
+                    runPreflightInspection(productForm.directApkUrl);
+                  }
+                } : undefined}
+                disabled={submittingProduct || devProfile?.isSuspended || (!editingProductId && isProAtLimit) || preflightState.status === 'scanning'}
+                title={
+                  !isAssetVerified
+                    ? 'Mandatory: Run Pre-Flight Security Audit to verify release asset before publishing'
+                    : !editingProductId && isProAtLimit
+                    ? 'Pro VIP limit reached (3/3 products). Upgrade to Elite VIP for unlimited uploads.'
+                    : ''
+                }
               >
                 {submittingProduct
                   ? (editingProductId ? 'Saving Changes...' : 'Publishing Release...')
+                  : preflightState.status === 'scanning'
+                  ? 'Verifying Asset...'
+                  : !isAssetVerified
+                  ? 'Verify Asset Before Publishing'
                   : (editingProductId ? 'Save Product Changes' : isProAtLimit ? 'Publishing Limit Reached (3/3)' : 'Publish Product to Store')}
               </button>
             )}

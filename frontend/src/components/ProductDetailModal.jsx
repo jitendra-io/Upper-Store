@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { recordUserDownload, getProductDownloadCount, formatDownloadCount, getSecureDownloadUrl, isDirectDownloadFile, getProductDownloadFilename } from '../utils/downloadTracker';
@@ -52,6 +52,13 @@ const ProductDetailModal = ({ product, onClose }) => {
   const [feePaid, setFeePaid] = useState(() => localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
   const [copiedSha, setCopiedSha] = useState(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+
+  // Phone and PC browser Back button support and history synchronization
+  const modalHistoryKeyRef = useRef(`upper-product-${product?.id || 'modal'}-${Date.now()}`);
+  const closedByPopstateRef = useRef(false);
+  const submodalPushedRef = useRef(false);
+  const activeSubmodalRef = useRef(null);
+  const savedScrollYRef = useRef(0);
 
   const getProductDevTier = (prod) => {
     if (!prod) return 'free';
@@ -246,21 +253,128 @@ const ProductDetailModal = ({ product, onClose }) => {
     };
   }, []);
 
+  const isAnySubmodalOpen = Boolean(permissionsModalOpen || reviewModalOpen || termsModalOpen || checkoutOpen || vipModalOpen);
+
+  // Keep active submodal ref in sync for event listeners
+  useEffect(() => {
+    activeSubmodalRef.current = {
+      permissions: permissionsModalOpen,
+      reviews: reviewModalOpen,
+      terms: termsModalOpen,
+      checkout: checkoutOpen,
+      vip: vipModalOpen,
+    };
+  }, [permissionsModalOpen, reviewModalOpen, termsModalOpen, checkoutOpen, vipModalOpen]);
+
+  // Manage nested sub-modal history entries so back button closes top-most sub-modal first
+  useEffect(() => {
+    if (isAnySubmodalOpen && !submodalPushedRef.current) {
+      submodalPushedRef.current = true;
+      window.history.pushState(
+        { upperModal: 'product-submodal', parentKey: modalHistoryKeyRef.current },
+        ''
+      );
+    } else if (!isAnySubmodalOpen && submodalPushedRef.current) {
+      submodalPushedRef.current = false;
+      if (window.history.state?.upperModal === 'product-submodal') {
+        window.__upperIgnoreNextPopState = true;
+        window.history.back();
+        setTimeout(() => {
+          window.__upperIgnoreNextPopState = false;
+        }, 150);
+      }
+    }
+  }, [isAnySubmodalOpen]);
+
+  // Main modal history entry, phone/PC popstate listener, and page scroll preservation
+  useEffect(() => {
+    const currentY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
+    savedScrollYRef.current = currentY;
+
+    window.history.pushState(
+      { upperModal: 'product-detail', key: modalHistoryKeyRef.current, productId: product?.id },
+      ''
+    );
+
+    const handlePopState = () => {
+      if (window.__upperIgnoreNextPopState) {
+        window.__upperIgnoreNextPopState = false;
+        return;
+      }
+
+      const activeSubs = activeSubmodalRef.current;
+      if (activeSubs && (activeSubs.permissions || activeSubs.reviews || activeSubs.terms || activeSubs.checkout || activeSubs.vip)) {
+        submodalPushedRef.current = false;
+        if (activeSubs.terms) setTermsModalOpen(false);
+        else if (activeSubs.permissions) setPermissionsModalOpen(false);
+        else if (activeSubs.reviews) setReviewModalOpen(false);
+        else if (activeSubs.checkout) setCheckoutOpen(false);
+        else if (activeSubs.vip) setVipModalOpen(false);
+        return;
+      }
+
+      closedByPopstateRef.current = true;
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+
+      if (!closedByPopstateRef.current && window.history.state?.key === modalHistoryKeyRef.current) {
+        window.__upperIgnoreNextPopState = true;
+        window.history.back();
+        setTimeout(() => {
+          window.__upperIgnoreNextPopState = false;
+        }, 150);
+      }
+
+      if (typeof window !== 'undefined' && typeof savedScrollYRef.current === 'number') {
+        window.scrollTo(0, savedScrollYRef.current);
+      }
+    };
+  }, [onClose]);
+
+  // Keyboard navigation (Escape key closes sub-modal first, or closes main modal if no sub-modal open)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        if (termsModalOpen) {
+          setTermsModalOpen(false);
+        } else if (permissionsModalOpen) {
+          setPermissionsModalOpen(false);
+        } else if (reviewModalOpen) {
+          setReviewModalOpen(false);
+        } else if (checkoutOpen) {
+          setCheckoutOpen(false);
+        } else if (vipModalOpen) {
+          setVipModalOpen(false);
+        } else {
+          onClose();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [termsModalOpen, permissionsModalOpen, reviewModalOpen, checkoutOpen, vipModalOpen, onClose]);
+
+  // Smooth scroll lock without resetting scroll position
+  useEffect(() => {
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevTouchAction = document.body.style.touchAction;
+
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
     document.body.style.touchAction = 'none';
+
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.touchAction = '';
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.touchAction = prevTouchAction;
     };
-  }, [onClose]);
+  }, []);
 
   if (!product) return null;
 
@@ -274,7 +388,7 @@ const ProductDetailModal = ({ product, onClose }) => {
     <div className="modal-backdrop-overlay" onClick={handleBackdropClick}>
       <div className="modal-card-container">
         {/* Mobile Drag Indicator */}
-        <div className="modal-mobile-drag-bar" />
+        <div className="modal-mobile-drag-bar" onClick={onClose} role="button" tabIndex={0} aria-label="Dismiss modal" />
 
         {/* Close Icon */}
         <button className="modal-close-icon" onClick={onClose} aria-label="Close modal">

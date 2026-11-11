@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, recordUserDownload } from '../utils/downloadTracker';
@@ -52,6 +52,11 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   const [formMsg, setFormMsg] = useState({ type: '', text: '' });
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [isBanned, setIsBanned] = useState(Boolean(user?.isBanned));
+
+  // Phone and PC Back button history tracking
+  const reviewsKeyRef = useRef(`upper-reviews-${product?.id || 'item'}-${Date.now()}`);
+  const closedByPopstateRef = useRef(false);
+  const pushedStandaloneRef = useRef(false);
 
   // Sync ban status safely on modal open
   useEffect(() => {
@@ -149,6 +154,50 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
       };
     }
   }, [isOpen]);
+
+  // Push history entry for standalone modal usage so phone/PC back button closes modal
+  useEffect(() => {
+    if (!isOpen) return;
+    if (window.history.state?.upperModal === 'product-submodal') return;
+
+    pushedStandaloneRef.current = true;
+    window.history.pushState(
+      { upperModal: 'product-reviews', key: reviewsKeyRef.current, productId: product?.id },
+      ''
+    );
+
+    const handlePopState = () => {
+      if (window.__upperIgnoreNextPopState) {
+        window.__upperIgnoreNextPopState = false;
+        return;
+      }
+      closedByPopstateRef.current = true;
+      onClose();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      if (pushedStandaloneRef.current && !closedByPopstateRef.current && window.history.state?.key === reviewsKeyRef.current) {
+        window.__upperIgnoreNextPopState = true;
+        window.history.back();
+        setTimeout(() => {
+          window.__upperIgnoreNextPopState = false;
+        }, 150);
+      }
+    };
+  }, [isOpen, product?.id, onClose]);
+
+  // Keyboard navigation support for ESC key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen || !product) return null;
 

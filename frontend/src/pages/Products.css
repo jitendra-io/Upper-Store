@@ -268,6 +268,11 @@
   margin-bottom: 2.5rem;
 }
 
+/* Mobile Category Filter Button (Hidden on Desktop) */
+.mobile-filter-container {
+  display: none;
+}
+
 .catalog-tab {
   background: rgba(20, 20, 28, 0.7);
   backdrop-filter: blur(10px);
@@ -1013,6 +1018,233 @@
   }
   .products-title {
     font-size: 2rem;
+  }
+
+  /* Remove VIP subscription banner for phone screens only */
+  .catalog-vip-banner-wrap {
+    display: none !important;
+  }
+
+  /* Hide Desktop Category Bar on phone screens */
+  .catalog-category-bar {
+    display: none !important;
+  }
+
+  /* Combined Category Filter Button on phone screens */
+  .mobile-filter-container {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    margin: 0 0 1.25rem 0 !important;
+    box-sizing: border-box !important;
+    z-index: 35 !important;
+  }
+
+  .mobile-filter-btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.65rem 0.95rem !important;
+    background: rgba(20, 20, 28, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 10px !important;
+    color: #f1f5f9 !important;
+    font-family: var(--font-body), sans-serif !important;
+    cursor: pointer !important;
+    backdrop-filter: blur(10px) !important;
+    transition: all 0.2s ease !important;
+    box-sizing: border-box !important;
+  }
+
+  .mobile-filter-btn:hover,
+  .mobile-filter-btn:active {
+    border-color: rgba(230, 25, 25, 0.45) !important;
+    background: rgba(25, 25, 35, 0.95) !important;
+  }
+
+  .mobile-filter-btn.active {
+    border-color: #ff2a2a !important;
+    box-shadow: 0 0 15px rgba(230, 25, 25, 0.25) !important;
+  }
+
+  .mobile-filter-btn.has-active-filter {
+    border-color: rgba(230, 25, 25, 0.5) !important;
+    background: rgba(230, 25, 25, 0.08) !important;
+  }
+
+  .mobile-filter-btn-left {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    min-width: 0 !important;
+  }
+
+  .mobile-filter-icon {
+    display: flex !important;
+    align-items: center !important;
+    color: #ff4a4a !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mobile-filter-label {
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.2px !important;
+  }
+
+  .mobile-filter-selected-pill {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    color: #ff4a4a !important;
+    background: rgba(230, 25, 25, 0.15) !important;
+    border: 1px solid rgba(230, 25, 25, 0.3) !important;
+    padding: 0.12rem 0.5rem !important;
+    border-radius: 6px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 140px !important;
+  }
+
+  .mobile-filter-btn-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .mobile-filter-reset-icon {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .mobile-filter-reset-icon:hover {
+    background: #e61919 !important;
+    color: #ffffff !important;
+  }
+
+  .mobile-filter-chevron {
+    color: #94a3b8 !important;
+    transition: transform 0.2s ease !important;
+  }
+
+  .mobile-filter-chevron.rotated {
+    transform: rotate(180deg) !important;
+    color: #ff2a2a !important;
+  }
+
+  /* Dropdown Menu Container */
+  .mobile-filter-dropdown {
+    position: absolute !important;
+    top: calc(100% + 6px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: rgba(14, 14, 20, 0.98) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+    padding: 0.75rem !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(230, 25, 25, 0.15) !important;
+    backdrop-filter: blur(16px) !important;
+    z-index: 100 !important;
+    animation: mobileFilterDropdownSlide 0.2s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+    box-sizing: border-box !important;
+  }
+
+  @keyframes mobileFilterDropdownSlide {
+    0% {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  .mobile-filter-dropdown-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0 0.25rem 0.55rem 0.25rem !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    margin-bottom: 0.55rem !important;
+    font-size: 0.76rem !important;
+    font-weight: 700 !important;
+    color: #94a3b8 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.4px !important;
+  }
+
+  .mobile-filter-count-label {
+    font-size: 0.68rem !important;
+    color: #64748b !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+  }
+
+  .mobile-filter-options-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.35rem !important;
+    max-height: 280px !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-right: 0.15rem !important;
+  }
+
+  .mobile-filter-option {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 0.6rem 0.85rem !important;
+    background: rgba(255, 255, 255, 0.025) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 8px !important;
+    color: #cbd5e1 !important;
+    font-family: var(--font-body), sans-serif !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    text-align: left !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+  }
+
+  .mobile-filter-option:hover,
+  .mobile-filter-option:active {
+    background: rgba(230, 25, 25, 0.12) !important;
+    border-color: rgba(230, 25, 25, 0.35) !important;
+    color: #ffffff !important;
+  }
+
+  .mobile-filter-option.selected {
+    background: linear-gradient(135deg, rgba(230, 25, 25, 0.25) 0%, rgba(180, 20, 20, 0.15) 100%) !important;
+    border-color: #ff2a2a !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(230, 25, 25, 0.2) !important;
+  }
+
+  .mobile-filter-option-name {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .mobile-filter-check {
+    display: flex !important;
+    align-items: center !important;
+    color: #ff4a4a !important;
+    margin-left: 0.5rem !important;
   }
 
   /* Phone Search Bar: Prevent search button from overflowing search bar */

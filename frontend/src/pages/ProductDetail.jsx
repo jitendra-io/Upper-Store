@@ -35,7 +35,7 @@ const ProductDetail = () => {
       {product && (
         <ProductDetailModal
           product={product}
-          onClose={() => navigate('/products')}
+          onClose={() => navigate('/products', { replace: true })}
         />
       )}
     </>
