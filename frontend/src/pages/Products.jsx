@@ -71,7 +71,16 @@ const Products = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const initialSection = searchParams.get('tab') === 'videos' || location.hash === '#videos' ? 'videos' : 'products';
-  const initialViewMode = searchParams.get('view') === 'list' ? 'list' : 'grid';
+
+  const getInitialViewMode = () => {
+    const urlView = searchParams.get('view');
+    if (urlView === 'list' || urlView === 'grid') return urlView;
+    try {
+      const saved = localStorage.getItem('upper_products_view_mode');
+      if (saved === 'list' || saved === 'grid') return saved;
+    } catch (_) {}
+    return 'grid';
+  };
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,9 +91,16 @@ const Products = () => {
   const [activeSearch, setActiveSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [activeSection, setActiveSection] = useState(initialSection); // 'products' | 'videos'
-  const [viewMode, setViewMode] = useState(initialViewMode); // 'grid' | 'list'
+  const [viewMode, setViewMode] = useState(getInitialViewMode); // 'grid' | 'list'
   const [activeVideoId, setActiveVideoId] = useState(null);
   const deckTrackRef = useRef(null);
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('upper_products_view_mode', mode);
+    } catch (_) {}
+  };
 
   useEffect(() => {
     const prodId = searchParams.get('product') || searchParams.get('productId');
@@ -94,6 +110,13 @@ const Products = () => {
     }
     if (searchParams.get('tab') === 'videos' || location.hash === '#videos') {
       setActiveSection('videos');
+    }
+    const urlView = searchParams.get('view');
+    if (urlView === 'list' || urlView === 'grid') {
+      setViewMode(urlView);
+      try {
+        localStorage.setItem('upper_products_view_mode', urlView);
+      } catch (_) {}
     }
   }, [products, location.search, location.hash]);
 
@@ -299,7 +322,7 @@ const Products = () => {
               <button
                 type="button"
                 className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode('grid')}
+                onClick={() => handleViewModeChange('grid')}
                 title="Cards View"
                 aria-label="Cards View"
               >
@@ -314,7 +337,7 @@ const Products = () => {
               <button
                 type="button"
                 className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
-                onClick={() => setViewMode('list')}
+                onClick={() => handleViewModeChange('list')}
                 title="List View"
                 aria-label="List View"
               >

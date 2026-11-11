@@ -1,18 +1,16 @@
 /* =========================================================================
    PRODUCT DETAIL MODAL STYLES (Upper Store)
-   Fully responsive across Desktop (wide 2-column) and Mobile (sleek sheet).
-   Zero horizontal overflow / scrolling guaranteed on all viewports.
+   Obsidian & Crimson Brand Theme.
+   Balanced 2-Column Desktop Grid & High-End Mobile Bottom Sheet.
+   Zero horizontal overflow guaranteed on all device viewports.
    ========================================================================= */
 
 .modal-backdrop-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   width: 100vw;
   max-width: 100vw;
-  background: rgba(5, 5, 7, 0.88);
+  background: rgba(5, 5, 8, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   z-index: 1000000;
@@ -21,7 +19,7 @@
   justify-content: center;
   padding: 1.5rem;
   font-family: var(--font-body), sans-serif;
-  color: #e0e0e0;
+  color: #e2e8f0;
   overscroll-behavior: contain;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -30,7 +28,7 @@
 .modal-card-container {
   position: relative;
   width: 100%;
-  max-width: 900px;
+  max-width: 940px;
   max-height: calc(100vh - 3rem);
   overflow-y: auto;
   overflow-x: hidden;
@@ -38,13 +36,13 @@
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  background: rgba(18, 18, 24, 0.98);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  background: rgba(15, 15, 22, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.95), 0 0 35px rgba(230, 25, 25, 0.2);
-  animation: modalPopUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.95), 0 0 35px rgba(230, 25, 25, 0.2);
+  animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .modal-card-container::-webkit-scrollbar {
@@ -56,12 +54,17 @@
 @keyframes modalPopUp {
   0% {
     opacity: 0;
-    transform: scale(0.95) translateY(24px);
+    transform: scale(0.96) translateY(20px);
   }
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+/* Mobile Drag Indicator (Hidden on Desktop) */
+.modal-mobile-drag-bar {
+  display: none;
 }
 
 /* Close Icon Button */
@@ -74,32 +77,37 @@
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.65);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 20;
+  z-index: 25;
   transition: all 0.2s ease;
   box-sizing: border-box;
 }
 
 .modal-close-icon:hover {
-  background: rgba(239, 68, 68, 0.85);
-  border-color: #ef4444;
-  transform: scale(1.1);
+  background: rgba(230, 25, 25, 0.85);
+  border-color: #ff2a2a;
+  color: #ffffff;
+  transform: scale(1.08);
 }
 
 /* -------------------------------------------------------------------------
-   DESKTOP DEFAULT LAYOUT (2-Column Grid)
+   DESKTOP 2-COLUMN BALANCED GRID
+   Left: Media Showcase (Top) + Pre-Flight Security Audit (Bottom)
+   Right: Identity Header + Download CTA + Description + Release Notes
    ------------------------------------------------------------------------- */
 .modal-content-grid {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 360px 1fr;
+  grid-template-areas:
+    "media   details"
+    "security details";
   gap: 1.5rem;
-  padding: 1.5rem;
+  padding: 1.75rem;
   align-items: start;
   width: 100%;
   max-width: 100%;
@@ -107,11 +115,12 @@
   overflow-x: hidden;
 }
 
-/* Left Media Column */
+/* LEFT COLUMN AREA 1: MEDIA PREVIEW */
 .modal-media-column {
+  grid-area: media;
   display: flex;
   flex-direction: column;
-  gap: 0.85rem;
+  gap: 0.75rem;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
@@ -121,9 +130,8 @@
 .modal-cover-frame {
   position: relative;
   width: 100%;
-  max-width: 100%;
   height: 220px;
-  background: #09090b;
+  background: #09090d;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -133,11 +141,10 @@
   box-sizing: border-box;
 }
 
-/* Embedded YouTube Video Showcase Frame */
 .modal-cover-frame.modal-video-frame {
   height: 220px;
-  background: #000;
-  border-color: rgba(56, 189, 248, 0.35);
+  background: #000000;
+  border-color: rgba(230, 25, 25, 0.35);
 }
 
 .modal-cover-video-iframe {
@@ -147,71 +154,58 @@
   border-radius: 12px;
 }
 
-.modal-category-badge.video-badge {
-  color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.45);
-}
-
 .modal-cover-img {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
 }
 
 .modal-category-badge {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
-  background: rgba(12, 12, 14, 0.85);
+  background: rgba(10, 10, 15, 0.85);
   backdrop-filter: blur(6px);
-  padding: 0.2rem 0.65rem;
-  border-radius: 14px;
-  font-size: 0.72rem;
-  color: #e61919;
-  font-weight: 600;
   border: 1px solid rgba(230, 25, 25, 0.4);
-  box-sizing: border-box;
+  color: #ff4a4a;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
 }
 
-/* Multi-screenshot gallery thumbnails */
+.modal-category-badge.video-badge {
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ff6b6b;
+}
+
+/* Thumbnails row */
 .modal-thumbs-row {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.25rem 0;
+  align-items: center;
+  gap: 0.45rem;
   overflow-x: auto;
-  max-width: 100%;
+  padding-bottom: 0.2rem;
   box-sizing: border-box;
-  scrollbar-width: none;
-}
-
-.modal-thumbs-row::-webkit-scrollbar {
-  display: none;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .thumb-btn {
+  position: relative;
   width: 52px;
   height: 38px;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: #000;
-  padding: 0;
   overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #09090d;
   cursor: pointer;
-  opacity: 0.65;
-  transition: all 0.2s ease;
+  padding: 0;
   flex-shrink: 0;
-  box-sizing: border-box;
-}
-
-.thumb-btn.active,
-.thumb-btn:hover {
-  opacity: 1;
-  border-color: #e61919;
-  transform: translateY(-2px);
-  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.3);
+  transition: all 0.2s ease;
 }
 
 .thumb-btn img {
@@ -220,205 +214,334 @@
   object-fit: cover;
 }
 
-.thumb-btn.video-thumb-btn {
-  position: relative;
-  border-color: rgba(56, 189, 248, 0.4);
-}
-
-.thumb-btn.video-thumb-btn.active {
-  border-color: #38bdf8;
-  opacity: 1;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.45);
-}
-
-.video-thumb-play-icon {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  color: #38bdf8;
-  transition: all 0.2s ease;
-}
-
-.thumb-btn.video-thumb-btn:hover .video-thumb-play-icon {
-  background: rgba(0, 0, 0, 0.25);
-  color: #ffffff;
-  transform: scale(1.15);
-}
-
-/* Persona Trust Highlights */
-.modal-persona-trust-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin-top: 0.25rem;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.persona-trust-pill {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 0.6rem 0.8rem;
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  transition: all 0.25s ease;
-  box-sizing: border-box;
-}
-
-.persona-trust-pill:hover {
-  background: rgba(230, 25, 25, 0.06);
-  border-color: rgba(230, 25, 25, 0.25);
+.thumb-btn:hover {
+  border-color: rgba(230, 25, 25, 0.5);
   transform: translateY(-1px);
 }
 
-.trust-pill-icon {
+.thumb-btn.active {
+  border-color: #ff2a2a;
+  box-shadow: 0 0 10px rgba(230, 25, 25, 0.45);
+}
+
+.thumb-btn.video-thumb-btn .video-thumb-play-icon {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #ffffff;
+}
+
+/* -------------------------------------------------------------------------
+   LEFT COLUMN AREA 2: PRE-FLIGHT SECURITY & ARCHITECTURE AUDIT CARD
+   ------------------------------------------------------------------------- */
+.modal-security-card {
+  grid-area: security;
+  background: rgba(20, 20, 28, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  backdrop-filter: blur(10px);
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease;
+}
+
+.modal-security-card:hover {
+  border-color: rgba(230, 25, 25, 0.25);
+}
+
+.sec-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sec-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #f1f5f9;
+}
+
+.sec-card-score {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+/* 3-Column Quick Specs Grid */
+.sec-specs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+}
+
+.sec-spec-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  padding: 0.35rem 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.sec-spec-label {
+  font-size: 0.62rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.sec-spec-val {
+  font-size: 0.72rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Guardrails & Trust Checks */
+.sec-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sec-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0.18rem 0.45rem;
+  border-radius: 5px;
+}
+
+.sec-badge-chip svg {
+  color: #10b981;
+}
+
+/* Dedicated Permissions Trigger Button */
+.modal-sec-permissions-trigger-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  background: rgba(230, 25, 25, 0.08);
+  border: 1px solid rgba(230, 25, 25, 0.28);
+  border-radius: 8px;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.modal-sec-permissions-trigger-btn:hover {
+  background: rgba(230, 25, 25, 0.16);
+  border-color: #ff2a2a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.25);
+}
+
+.perm-trigger-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.perm-trigger-icon-wrap {
+  display: flex;
+  align-items: center;
+  color: #ff4a4a;
+}
+
+.perm-trigger-text {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.perm-trigger-count-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  background: rgba(230, 25, 25, 0.25);
+  border: 1px solid rgba(230, 25, 25, 0.45);
+  color: #ff6b6b;
+  padding: 0.05rem 0.4rem;
+  border-radius: 10px;
+}
+
+.perm-trigger-right {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #ff4a4a;
+}
+
+/* SHA-256 Checksum Row */
+.sec-checksum-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  padding: 0.4rem 0.6rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  font-size: 0.72rem;
+}
+
+.sec-checksum-left {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.sec-checksum-label {
+  color: #64748b;
+  font-weight: 700;
+  font-size: 0.68rem;
   flex-shrink: 0;
 }
 
-.trust-pill-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.sec-checksum-code {
+  font-family: var(--font-mono, monospace);
+  color: #cbd5e1;
+  font-size: 0.68rem;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 
-.trust-pill-text strong {
-  font-size: 0.78rem;
-  color: #f1f5f9;
+.sec-checksum-copy-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.68rem;
   font-weight: 600;
-  line-height: 1.25;
+  padding: 0.2rem 0.55rem;
+  border-radius: 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
 }
 
-.trust-pill-text span {
-  font-size: 0.7rem;
-  color: #94a3b8;
-  line-height: 1.3;
-  margin-top: 0.1rem;
+.sec-checksum-copy-btn:hover {
+  background: rgba(230, 25, 25, 0.2);
+  border-color: #ff2a2a;
+  color: #ffffff;
 }
 
-/* Right Details Body */
+/* -------------------------------------------------------------------------
+   RIGHT COLUMN: DETAILS BODY
+   ------------------------------------------------------------------------- */
 .modal-details-body {
+  grid-area: details;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   min-width: 0;
   max-width: 100%;
-  padding: 0;
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
+/* Header Row */
 .modal-header-row {
   display: flex;
   align-items: flex-start;
-  gap: 0.85rem;
+  gap: 0.95rem;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
-  min-width: 0;
-}
-
-.modal-header-row > div {
-  min-width: 0;
-  flex: 1;
-  max-width: 100%;
 }
 
 .modal-app-logo {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 10px;
   object-fit: cover;
   border: 1px solid rgba(230, 25, 25, 0.4);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
   flex-shrink: 0;
-  margin-top: 0.15rem;
   box-sizing: border-box;
 }
 
 .modal-logo-placeholder {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(230, 25, 25, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 0.15rem;
   box-sizing: border-box;
+}
+
+.modal-header-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .modal-product-title {
   margin: 0 0 0.35rem;
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 700;
-  color: #fff;
+  color: #ffffff;
   letter-spacing: -0.3px;
   line-height: 1.25;
   word-break: break-word;
   overflow-wrap: anywhere;
-  max-width: 100%;
 }
 
-.modal-meta-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  align-items: center;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.pill-item {
-  font-size: 0.74rem;
-  padding: 0.18rem 0.5rem;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  color: #ccc;
-  display: inline-flex;
-  align-items: center;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.download-count-pill {
-  background: rgba(46, 204, 113, 0.12);
-  color: #2ecc71;
-  font-weight: 600;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-}
-
-.price-pill {
-  background: rgba(230, 25, 25, 0.15);
-  color: #e61919;
-  font-weight: 700;
-  border: 1px solid rgba(230, 25, 25, 0.3);
-}
-
-/* Modal Developer Attribution Link (@username only) */
+/* Developer Attribution Link */
 .modal-developer-attribution {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.3rem 0.7rem;
-  background: rgba(20, 20, 27, 0.7);
+  padding: 0.28rem 0.65rem;
+  background: rgba(20, 20, 28, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
   text-decoration: none;
   color: #f1f5f9;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.45rem;
   transition: all 0.2s ease;
   width: fit-content;
 }
@@ -426,84 +549,143 @@
 .modal-developer-attribution:hover {
   border-color: rgba(230, 25, 25, 0.5);
   background: rgba(230, 25, 25, 0.12);
-  box-shadow: 0 0 14px rgba(230, 25, 25, 0.2);
+  box-shadow: 0 0 14px rgba(230, 25, 25, 0.25);
 }
 
 .modal-dev-handle-text {
   color: #ff4a4a;
   font-family: var(--font-mono, monospace);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
 }
 
-/* Product Description Box */
-.modal-description-box {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 9px;
-  padding: 0.65rem 0.85rem;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
+.dev-redirect-icon {
+  margin-left: 3px;
 }
 
-.modal-description-box p {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.48;
+/* Meta Pills Row */
+.modal-meta-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.pill-item {
+  font-size: 0.72rem;
+  padding: 0.18rem 0.5rem;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
   color: #cbd5e1;
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
-/* HIGH-PERFORMANCE ANIMATED DOWNLOAD BUTTON */
+.download-count-pill {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  font-weight: 600;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.price-pill {
+  background: rgba(230, 25, 25, 0.15);
+  color: #ff4d4d;
+  font-weight: 700;
+  border: 1px solid rgba(230, 25, 25, 0.3);
+}
+
+/* -------------------------------------------------------------------------
+   PRIMARY ACTION BUTTONS (UPPER STORE CRIMSON THEME)
+   ------------------------------------------------------------------------- */
 .modal-actions {
-  margin-top: 0.15rem;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
+}
+
+.modal-actions-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
 .modal-download-link {
   text-decoration: none;
   display: block;
   width: 100%;
-  max-width: 100%;
   box-sizing: border-box;
 }
 
+/* Primary Crimson Download Button */
 .animated-download-btn {
   position: relative;
   width: 100%;
-  max-width: 100%;
-  padding: 0.9rem 1.4rem;
+  padding: 0.85rem 1.4rem;
   font-size: 0.95rem;
   font-weight: 700;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(135deg, #e61919 0%, #b81414 100%);
   color: #ffffff;
   cursor: pointer;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.45);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  gap: 0.55rem;
+  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   animation: btnGlowPulse 3s infinite ease-in-out;
   box-sizing: border-box;
-  min-width: 0;
+}
+
+.animated-download-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(230, 25, 25, 0.6), 0 0 16px rgba(230, 25, 25, 0.35);
+  background: linear-gradient(135deg, #ff2a2a 0%, #cf1717 100%);
+}
+
+.animated-download-btn:active {
+  transform: translateY(0) scale(0.99);
+}
+
+/* VIP / Fee Cleared State: Premium Crimson with Gold / Diamond Accent Trim */
+.animated-download-btn.vip-cleared-btn {
+  background: linear-gradient(135deg, #e61919 0%, #991b1b 100%);
+  border: 1px solid rgba(250, 204, 21, 0.4);
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.animated-download-btn.vip-cleared-btn:hover {
+  background: linear-gradient(135deg, #ff2a2a 0%, #b91c1c 100%);
+  border-color: rgba(250, 204, 21, 0.7);
+  box-shadow: 0 8px 28px rgba(230, 25, 25, 0.65), 0 0 18px rgba(250, 204, 21, 0.25);
+}
+
+/* Fee Required (Non-VIP) State */
+.animated-download-btn.fee-pay-btn {
+  background: linear-gradient(135deg, #1e1e28 0%, #14141e 100%);
+  border: 1px solid rgba(230, 25, 25, 0.5);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+
+.animated-download-btn.fee-pay-btn:hover {
+  background: linear-gradient(135deg, #2a2a38 0%, #1e1e2c 100%);
+  border-color: #ff2a2a;
+  box-shadow: 0 6px 22px rgba(230, 25, 25, 0.35);
 }
 
 .btn-icon {
-  font-size: 1.1rem;
   display: inline-flex;
   align-items: center;
-  transition: transform 0.3s ease;
   flex-shrink: 0;
+}
+
+.btn-icon svg {
+  color: #facc15;
 }
 
 .btn-text {
@@ -513,20 +695,7 @@
   white-space: nowrap;
 }
 
-.animated-download-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(230, 25, 25, 0.55), 0 0 15px rgba(230, 25, 25, 0.4);
-}
-
-.animated-download-btn:hover .btn-icon {
-  transform: translateY(2px);
-}
-
-.animated-download-btn:active {
-  transform: translateY(0) scale(0.99);
-}
-
-/* Sheen sweep animation effect */
+/* Shimmer shine animation effect */
 .btn-shine {
   position: absolute;
   top: 0;
@@ -536,23 +705,17 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.35) 50%,
     transparent 100%
   );
   transform: skewX(-25deg);
-  animation: shineSweep 4s infinite ease-in-out;
+  animation: shineSweep 4.5s infinite ease-in-out;
 }
 
 @keyframes shineSweep {
-  0% {
-    left: -100%;
-  }
-  30% {
-    left: 200%;
-  }
-  100% {
-    left: 200%;
-  }
+  0% { left: -100%; }
+  25% { left: 200%; }
+  100% { left: 200%; }
 }
 
 @keyframes btnGlowPulse {
@@ -560,29 +723,19 @@
     box-shadow: 0 4px 18px rgba(230, 25, 25, 0.35);
   }
   50% {
-    box-shadow: 0 6px 25px rgba(230, 25, 25, 0.55);
+    box-shadow: 0 6px 26px rgba(230, 25, 25, 0.55), 0 0 14px rgba(230, 25, 25, 0.3);
   }
 }
 
-/* ACTION BUTTONS GROUP: DOWNLOAD BASE + BUY PRO LICENSE */
-.modal-actions-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.65rem;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
+/* Buy Pro License Button */
 .buy-pro-license-btn {
   position: relative;
   width: 100%;
-  max-width: 100%;
-  padding: 0.8rem 1.25rem;
-  font-size: 0.92rem;
+  padding: 0.75rem 1.2rem;
+  font-size: 0.9rem;
   font-weight: 700;
   border-radius: 10px;
-  background: rgba(20, 20, 27, 0.85);
+  background: rgba(20, 20, 28, 0.85);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
   cursor: pointer;
@@ -610,7 +763,7 @@
 }
 
 .pro-btn-text {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #ffffff;
 }
@@ -619,57 +772,35 @@
   background: rgba(230, 25, 25, 0.2);
   border: 1px solid rgba(230, 25, 25, 0.4);
   color: #facc15;
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   font-weight: 800;
-  padding: 0.2rem 0.6rem;
-  border-radius: 8px;
-}
-
-/* Fee Cleared State (Green/Gold Gradient) */
-.animated-download-btn.vip-cleared-btn {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
-}
-
-.animated-download-btn.vip-cleared-btn:hover {
-  box-shadow: 0 8px 26px rgba(16, 185, 129, 0.6);
-}
-
-/* Fee Pay Button (Blue/Purple Gradient) */
-.animated-download-btn.fee-pay-btn {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 18px rgba(59, 130, 246, 0.35);
-}
-
-.animated-download-btn.fee-pay-btn:hover {
-  box-shadow: 0 8px 26px rgba(59, 130, 246, 0.55);
+  padding: 0.18rem 0.55rem;
+  border-radius: 6px;
 }
 
 /* VIP Upsell Box inside Product Details */
 .fee-vip-upsell-box {
-  background: linear-gradient(135deg, rgba(147, 51, 234, 0.12) 0%, rgba(230, 25, 25, 0.1) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.35);
-  border-radius: 12px;
-  padding: 0.65rem 0.9rem;
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.1) 0%, rgba(20, 20, 28, 0.9) 100%);
+  border: 1px solid rgba(230, 25, 25, 0.3);
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
   cursor: pointer;
   transition: all 0.25s ease;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
   box-sizing: border-box;
 }
 
 .fee-vip-upsell-box:hover {
-  background: linear-gradient(135deg, rgba(230, 25, 25, 0.22) 0%, rgba(20, 20, 27, 0.95) 100%);
+  background: linear-gradient(135deg, rgba(230, 25, 25, 0.18) 0%, rgba(20, 20, 28, 0.95) 100%);
   border-color: #ff2a2a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(230, 25, 25, 0.3);
+  box-shadow: 0 4px 16px rgba(230, 25, 25, 0.25);
 }
 
 .upsell-badge {
-  font-size: 0.65rem;
+  font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   color: #ff4d4d;
@@ -705,855 +836,332 @@
 }
 
 .upsell-desc {
-  font-size: 0.72rem;
-  color: #94a3b8;
-}
-
-/* Security & Cryptographic Integrity Box */
-.modal-security-box {
-  background: rgba(20, 20, 27, 0.75);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 0.65rem 0.85rem;
-  font-size: 0.8rem;
-  backdrop-filter: blur(8px);
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-.modal-sec-profile-wrapper {
-  margin-bottom: 0.55rem;
-  padding-bottom: 0.55rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.modal-sec-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.modal-sec-title {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  color: #10b981;
-}
-
-.modal-sec-score-pill {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 0.12rem 0.5rem;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
-.modal-sec-specs-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.modal-sec-spec-tag {
-  background: rgba(0, 0, 0, 0.4);
-  color: #e2e8f0;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 0.15rem 0.45rem;
-  border-radius: 5px;
-}
-
-.modal-sec-spec-tag.verified-badge {
-  color: #38bdf8;
-  border-color: rgba(56, 189, 248, 0.3);
-  background: rgba(56, 189, 248, 0.08);
-}
-
-.modal-sec-badges-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.modal-sec-badge-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-size: 0.67rem;
-  font-weight: 600;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0.12rem 0.45rem;
-  border-radius: 5px;
-}
-
-.modal-sec-mitigations-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.35rem;
-}
-
-.modal-sec-mitigation-pill {
-  font-size: 0.68rem;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0.12rem 0.45rem;
-  border-radius: 5px;
-}
-
-.modal-sec-mitigation-pill strong {
-  color: #e2e8f0;
-}
-
-/* Declared App Permissions Section (Button & Expandable Drawer) */
-.modal-sec-perms-container {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  width: 100%;
-}
-
-.modal-sec-perms-btn-bar {
-  display: flex;
-  align-items: stretch;
-  gap: 0.4rem;
-  width: 100%;
-}
-
-.modal-sec-perms-toggle-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.45rem 0.8rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  min-width: 0;
-  text-align: left;
-}
-
-.modal-sec-perms-toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(230, 25, 25, 0.35);
-}
-
-.modal-sec-perms-toggle-btn.is-expanded {
-  background: rgba(230, 25, 25, 0.08);
-  border-color: rgba(230, 25, 25, 0.45);
-}
-
-.perms-toggle-left {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-width: 0;
-}
-
-.perms-toggle-icon {
-  color: #ff4d4d;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.perms-toggle-title {
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: #f1f5f9;
-}
-
-.perms-toggle-badge {
-  font-size: 0.65rem;
-  font-weight: 800;
-  color: #cbd5e1;
-  background: rgba(255, 255, 255, 0.08);
-  padding: 0.06rem 0.35rem;
-  border-radius: 4px;
-}
-
-.perms-toggle-right {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-shrink: 0;
-}
-
-.perms-toggle-summary {
-  font-size: 0.68rem;
-  color: #94a3b8;
-  white-space: nowrap;
-}
-
-.perms-toggle-action {
   font-size: 0.7rem;
-  font-weight: 700;
-  color: #ff4d4d;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.perms-toggle-chevron {
-  transition: transform 0.2s ease;
-}
-
-.perms-toggle-chevron.rotated {
-  transform: rotate(180deg);
-}
-
-.modal-sec-perms-dialog-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.75rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: 700;
   color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
 }
 
-.modal-sec-perms-dialog-btn:hover {
-  background: rgba(230, 25, 25, 0.15);
-  color: #ffffff;
-  border-color: rgba(230, 25, 25, 0.4);
-}
-
-/* Expandable Drawer */
-.modal-sec-perms-drawer {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 10px;
-  padding: 0.65rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  animation: permsDrawerOpen 0.22s ease-out;
-}
-
-@keyframes permsDrawerOpen {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.perms-drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.perms-drawer-title {
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: #f1f5f9;
-}
-
-.perms-popout-btn {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  font-size: 0.66rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  transition: all 0.15s ease;
-}
-
-.perms-popout-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f1f5f9;
-}
-
-.modal-sec-perms-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 0.35rem;
-  max-height: 200px;
-  overflow-y: auto;
-  padding-right: 3px;
-}
-
-.modal-sec-perms-grid::-webkit-scrollbar {
-  width: 4px;
-}
-
-.modal-sec-perms-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.modal-perm-item {
-  padding: 0.45rem 0.65rem;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+/* -------------------------------------------------------------------------
+   CONTENT CARDS: DESCRIPTION & RELEASE NOTES
+   ------------------------------------------------------------------------- */
+.modal-section-card {
+  background: rgba(255, 255, 255, 0.025);
   border: 1px solid rgba(255, 255, 255, 0.07);
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  transition: all 0.15s ease;
-}
-
-.modal-perm-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.modal-perm-item-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.modal-perm-item-name {
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #f8fafc;
-}
-
-.modal-perm-raw {
-  font-family: monospace;
-  font-size: 0.62rem;
-  color: #94a3b8;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 0.08rem 0.3rem;
-  border-radius: 3px;
-  word-break: break-all;
-  display: inline-block;
-  align-self: flex-start;
-}
-
-.modal-perm-item-desc {
-  font-size: 0.66rem;
-  color: #94a3b8;
-  line-height: 1.3;
-}
-
-.perms-drawer-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding-top: 0.35rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.perms-drawer-hint {
-  font-size: 0.63rem;
-  color: #64748b;
-}
-
-.perms-drawer-collapse-btn {
-  background: none;
-  border: none;
-  color: #ff4d4d;
-  font-size: 0.68rem;
-  font-weight: 700;
-  cursor: pointer;
-  padding: 0.1rem 0.3rem;
-  transition: color 0.15s ease;
-  white-space: nowrap;
-}
-
-.perms-drawer-collapse-btn:hover {
-  color: #ffffff;
-}
-
-@media (max-width: 640px) {
-  .modal-sec-perms-toggle-btn {
-    padding: 0.4rem 0.55rem;
-  }
-
-  .perms-toggle-summary {
-    display: none;
-  }
-
-  .modal-sec-perms-grid {
-    grid-template-columns: 1fr;
-    max-height: 220px;
-  }
-
-  .perms-drawer-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.35rem;
-  }
-
-  .perms-drawer-footer {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.35rem;
-    text-align: center;
-  }
-
-  .perms-drawer-collapse-btn {
-    width: 100%;
-    padding: 0.35rem;
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 5px;
-  }
-}
-
-.security-checksum-row {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-family: monospace;
-  background: rgba(0, 0, 0, 0.35);
-  padding: 0.35rem 0.55rem;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.checksum-label {
-  color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.checksum-code {
-  color: #f1f5f9;
-  font-size: 0.73rem;
-  letter-spacing: 0.02em;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.copy-checksum-btn {
-  background: rgba(230, 25, 25, 0.15);
-  color: #e61919;
-  border: 1px solid rgba(230, 25, 25, 0.35);
-  border-radius: 4px;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.7rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-  box-sizing: border-box;
-}
-
-.copy-checksum-btn:hover {
-  background: rgba(230, 25, 25, 0.3);
-  color: #fff;
-}
-
-/* Release notes */
-.modal-release-notes {
-  background: rgba(10, 10, 12, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
-  padding: 0.75rem 0.85rem;
-  width: 100%;
-  max-width: 100%;
+  padding: 0.75rem 0.95rem;
   box-sizing: border-box;
-  overflow-x: hidden;
+  width: 100%;
 }
 
-.modal-release-notes h4 {
-  margin: 0 0 0.35rem;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: #e61919;
-  letter-spacing: 0.5px;
+.section-card-header {
   display: flex;
   align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #f1f5f9;
 }
 
-.modal-release-notes p {
+.modal-section-card p {
   margin: 0;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: #aaa;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: #cbd5e1;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* =========================================================================
-   RESPONSIVE DESIGN: MOBILE VIEWPORT (< 820px)
-   All details packed tightly into the box without any scrolling on 338 x 868 screens.
-   Zero horizontal overflow.
+   RESPONSIVE DESIGN: TABLETS (< 880px)
    ========================================================================= */
-@media (max-width: 820px) {
+@media (max-width: 880px) {
   .modal-backdrop-overlay {
-    padding: 0.35rem;
-    align-items: center;
-    overflow-x: hidden;
-    max-width: 100vw;
+    padding: 0.75rem;
   }
 
   .modal-card-container {
-    max-width: 380px;
-    width: 100%;
-    max-height: 94vh;
-    border-radius: 14px;
-    overflow-y: auto;
-    overflow-x: hidden;
-    box-sizing: border-box;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    max-width: 600px;
+    max-height: calc(100vh - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+    border-radius: 16px;
   }
 
   .modal-close-icon {
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 26px;
-    height: 26px;
-    font-size: 0.75rem;
+    top: 0.75rem;
+    right: 0.75rem;
   }
 
-  /* Dissolve media column wrapper so its children participate in flex order */
   .modal-content-grid {
     display: flex;
     flex-direction: column;
-    padding: 0;
-    gap: 0;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
+    padding: 1.25rem;
+    gap: 1.15rem;
   }
 
   .modal-media-column {
-    display: contents;
-  }
-
-  /* 1. Cover Frame at top of sheet */
-  .modal-cover-frame {
     order: 1;
     width: 100%;
-    max-width: 100%;
-    height: 125px;
-    border-radius: 14px 14px 0 0;
-    border: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin: 0;
-    box-sizing: border-box;
   }
 
-  .modal-category-badge {
-    top: 0.5rem;
-    left: 0.5rem;
-    padding: 0.12rem 0.45rem;
-    font-size: 0.62rem;
+  .modal-cover-frame {
+    height: 200px;
   }
 
-  /* 2. Gallery Thumbs row */
-  .modal-thumbs-row {
+  .modal-details-body {
     order: 2;
-    padding: 0.3rem 0.75rem 0;
-    gap: 0.3rem;
-    background: rgba(10, 10, 12, 0.4);
+    width: 100%;
+    gap: 0.95rem;
+  }
+
+  .modal-security-card {
+    order: 3;
+    width: 100%;
+  }
+}
+
+/* =========================================================================
+   RESPONSIVE DESIGN: SMARTPHONES (< 640px)
+   - Bottom sheet design with smooth slide-up
+   - High-contrast 48px touch targets
+   - Zero horizontal overflow
+   - Safe-area inset support for modern mobile browsers
+   ========================================================================= */
+@media (max-width: 640px) {
+  .modal-backdrop-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-card-container {
     max-width: 100%;
-    box-sizing: border-box;
-    overflow-x: auto;
+    width: 100%;
+    max-height: 90vh;
+    max-height: 90dvh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+    animation: modalSheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @keyframes modalSheetSlideUp {
+    from {
+      transform: translateY(100%);
+      opacity: 0.4;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-mobile-drag-bar {
+    display: block;
+    width: 44px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 2px;
+    margin: 0.65rem auto 0.25rem auto;
+  }
+
+  .modal-close-icon {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 30px;
+    height: 30px;
+  }
+
+  .modal-content-grid {
+    padding: 0.85rem 1rem 1.25rem 1rem;
+    gap: 1rem;
+  }
+
+  /* 1. Media Area */
+  .modal-cover-frame {
+    height: 180px;
+    border-radius: 12px;
+  }
+
+  .modal-cover-frame.modal-video-frame {
+    height: 180px;
+  }
+
+  .modal-thumbs-row {
+    gap: 0.35rem;
+    padding-bottom: 0.15rem;
   }
 
   .thumb-btn {
-    width: 38px;
-    height: 26px;
+    width: 48px;
+    height: 34px;
   }
 
-  /* 3. Product Details Body - packed tightly */
-  .modal-details-body {
-    order: 3;
-    padding: 0.65rem 0.8rem 0.35rem;
-    gap: 0.55rem;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
-
+  /* 2. Header & Identity */
   .modal-header-row {
-    gap: 0.5rem;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
-  }
-
-  .modal-header-row > div {
-    min-width: 0;
-    flex: 1;
-    max-width: 100%;
+    gap: 0.75rem;
+    align-items: center;
   }
 
   .modal-app-logo,
   .modal-logo-placeholder {
-    width: 32px;
-    height: 32px;
-    border-radius: 7px;
+    width: 42px;
+    height: 42px;
+    border-radius: 9px;
+  }
+
+  .modal-product-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .modal-developer-attribution {
+    font-size: 0.74rem;
+    padding: 0.22rem 0.55rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .modal-meta-pills {
+    gap: 0.3rem;
+  }
+
+  .pill-item {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.42rem;
+  }
+
+  /* 3. Primary CTA Download Button (48px Touch Target) */
+  .animated-download-btn {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    min-height: 48px;
+    border-radius: 10px;
+  }
+
+  .buy-pro-license-btn {
+    padding: 0.75rem 1rem;
+    min-height: 44px;
+    border-radius: 10px;
+  }
+
+  /* 4. Pre-Flight Security Card */
+  .modal-security-card {
+    padding: 0.75rem;
+    gap: 0.55rem;
+    border-radius: 10px;
+  }
+
+  .sec-card-title {
+    font-size: 0.7rem;
+  }
+
+  .sec-card-score {
+    font-size: 0.65rem;
+    padding: 0.12rem 0.45rem;
+  }
+
+  .sec-specs-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+  }
+
+  .sec-spec-item {
+    padding: 0.3rem 0.35rem;
+  }
+
+  .sec-spec-label {
+    font-size: 0.58rem;
+  }
+
+  .sec-spec-val {
+    font-size: 0.68rem;
+  }
+
+  .sec-badge-chip {
+    font-size: 0.64rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .modal-sec-permissions-trigger-btn {
+    min-height: 44px;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .perm-trigger-text {
+    font-size: 0.75rem;
+  }
+
+  .sec-checksum-row {
+    padding: 0.35rem 0.5rem;
+  }
+
+  .sec-checksum-code {
+    font-size: 0.64rem;
+  }
+
+  .sec-checksum-copy-btn {
+    font-size: 0.64rem;
+    padding: 0.2rem 0.5rem;
+    min-height: 26px;
+  }
+}
+
+/* =========================================================================
+   EXTRA-NARROW / COMPACT PHONES (< 380px)
+   e.g. iPhone SE (375px), Galaxy Fold Outer Cover (320px - 340px)
+   ========================================================================= */
+@media (max-width: 380px) {
+  .modal-content-grid {
+    padding: 0.75rem 0.75rem 1rem 0.75rem;
+    gap: 0.75rem;
+  }
+
+  .modal-cover-frame {
+    height: 140px;
+  }
+
+  .modal-app-logo,
+  .modal-logo-placeholder {
+    width: 36px;
+    height: 36px;
   }
 
   .modal-product-title {
     font-size: 1.05rem;
-    margin-bottom: 0.15rem;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-  }
-
-  .modal-meta-pills {
-    gap: 0.25rem;
-    max-width: 100%;
   }
 
   .pill-item {
-    font-size: 0.64rem;
-    padding: 0.1rem 0.35rem;
-    max-width: 100%;
-  }
-
-  .modal-description-box {
-    padding: 0.5rem 0.65rem;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
-
-  .modal-description-box p {
-    font-size: 0.75rem;
-    line-height: 1.36;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-  }
-
-  .animated-download-btn {
-    padding: 0.65rem 0.85rem;
-    font-size: 0.82rem;
-    border-radius: 9px;
-    gap: 0.4rem;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
-  .btn-text {
-    font-size: 0.8rem;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .security-checksum-row {
-    padding: 0.22rem 0.45rem;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .checksum-label,
-  .checksum-code {
-    font-size: 0.65rem;
-  }
-
-  .checksum-code {
-    min-width: 0;
-    flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .copy-checksum-btn {
-    padding: 0.1rem 0.38rem;
     font-size: 0.62rem;
-  }
-
-  /* 4. Trust Badges: Compact 3-item horizontal bar with strict flex shrink */
-  .modal-persona-trust-grid {
-    order: 4;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    gap: 0.25rem;
-    padding: 0.25rem 0.8rem 0.65rem;
-    margin-top: 0;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .persona-trust-pill {
-    flex: 1 1 0;
-    min-width: 0;
-    box-sizing: border-box;
-    padding: 0.3rem 0.25rem;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    overflow: hidden;
-  }
-
-  .trust-pill-icon svg {
-    width: 13px;
-    height: 13px;
-    flex-shrink: 0;
-  }
-
-  .trust-pill-text {
-    min-width: 0;
-    overflow: hidden;
-  }
-
-  .trust-pill-text strong {
-    font-size: 0.6rem;
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .trust-pill-text span {
-    display: none;
-  }
-}
-
-/* Extra-narrow mobile phones (338 x 868 and < 480px) */
-@media (max-width: 480px) {
-  .modal-backdrop-overlay {
-    padding: 0.25rem;
-    overflow-x: hidden;
-  }
-
-  .modal-card-container {
-    max-width: calc(100vw - 0.5rem);
-    width: 100%;
-    max-height: 94vh;
-    border-radius: 12px;
-    overflow-x: hidden;
-    box-sizing: border-box;
-  }
-
-  .modal-cover-frame {
-    height: 110px;
-    border-radius: 12px 12px 0 0;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .modal-details-body {
-    padding: 0.55rem 0.65rem 0.25rem;
-    gap: 0.45rem;
-    width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
-
-  .modal-app-logo,
-  .modal-logo-placeholder {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-  }
-
-  .modal-product-title {
-    font-size: 0.98rem;
-  }
-
-  .modal-meta-pills {
-    gap: 0.2rem;
-  }
-
-  .pill-item {
-    font-size: 0.6rem;
-    padding: 0.08rem 0.32rem;
-  }
-
-  .modal-description-box {
-    padding: 0.42rem 0.55rem;
-    width: 100%;
-    box-sizing: border-box;
-    overflow-x: hidden;
-  }
-
-  .modal-description-box p {
-    font-size: 0.72rem;
-    line-height: 1.32;
+    padding: 0.12rem 0.35rem;
   }
 
   .animated-download-btn {
-    padding: 0.58rem 0.72rem;
-    font-size: 0.78rem;
-    border-radius: 8px;
-    width: 100%;
-    box-sizing: border-box;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.82rem;
+    min-height: 44px;
   }
 
   .btn-text {
-    font-size: 0.76rem;
+    font-size: 0.78rem;
   }
 
-  .modal-persona-trust-grid {
-    padding: 0.2rem 0.65rem 0.55rem;
-    gap: 0.2rem;
-    width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
+  .sec-specs-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .persona-trust-pill {
-    padding: 0.22rem 0.2rem;
+  .sec-specs-grid .sec-spec-item:nth-child(3) {
+    grid-column: span 2;
   }
 
-  .trust-pill-text strong {
-    font-size: 0.56rem;
+  .modal-sec-permissions-trigger-btn {
+    padding: 0.45rem 0.65rem;
+  }
+
+  .perm-trigger-action-text {
+    display: none;
   }
 }

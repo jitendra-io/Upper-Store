@@ -51,7 +51,6 @@ const ProductDetailModal = ({ product, onClose }) => {
   });
   const [feePaid, setFeePaid] = useState(() => localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
   const [copiedSha, setCopiedSha] = useState(false);
-  const [showPermissions, setShowPermissions] = useState(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
 
   const getProductDevTier = (prod) => {
@@ -274,6 +273,9 @@ const ProductDetailModal = ({ product, onClose }) => {
   const modalContent = (
     <div className="modal-backdrop-overlay" onClick={handleBackdropClick}>
       <div className="modal-card-container">
+        {/* Mobile Drag Indicator */}
+        <div className="modal-mobile-drag-bar" />
+
         {/* Close Icon */}
         <button className="modal-close-icon" onClick={onClose} aria-label="Close modal">
           <CloseIcon size={16} />
@@ -359,7 +361,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                   </svg>
                 </div>
               )}
-              <div>
+              <div className="modal-header-info">
                 <h2 className="modal-product-title">{product.title}</h2>
                 <div className="modal-meta-pills">
                   <span className="pill-item">v{product.version || '1.0.0'}</span>
@@ -444,13 +446,6 @@ const ProductDetailModal = ({ product, onClose }) => {
                   <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
                 </svg>
                 <span><strong>Account Restricted (Banned):</strong> You cannot download software or submit product reviews while your account is banned. Please submit an appeal on the Contact page.</span>
-              </div>
-            )}
-
-            {/* Product Description */}
-            {product.description && (
-              <div className="modal-description-box">
-                <p>{product.description}</p>
               </div>
             )}
 
@@ -581,233 +576,140 @@ const ProductDetailModal = ({ product, onClose }) => {
               );
             })()}
 
-            {/* Cryptographic SHA-256 & Pre-Flight Security Profile Box */}
-            {(product.sha256Checksum || product.securityDetails) && (
-              <div className="modal-security-box">
-                {product.securityDetails ? (
-                  <div className="modal-sec-profile-wrapper">
-                    <div className="modal-sec-header-row">
-                      <div className="modal-sec-title">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '4px' }}>
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
-                        <span>Verified Pre-Flight Integrity</span>
-                      </div>
-                      <span className="modal-sec-score-pill">
-                        {product.securityDetails.securityScore || 100}/100 Clean
-                      </span>
-                    </div>
-
-                    <div className="modal-sec-specs-row">
-                      {product.securityDetails.fileSize && (
-                        <span className="modal-sec-spec-tag">
-                          Size: {product.securityDetails.fileSize}
-                        </span>
-                      )}
-                      {product.securityDetails.platform && (
-                        <span className="modal-sec-spec-tag">
-                          {product.securityDetails.platform}
-                        </span>
-                      )}
-                      {product.securityDetails.verifiedMethod && (
-                        <span className="modal-sec-spec-tag verified-badge">
-                          {product.securityDetails.verifiedMethod}
-                        </span>
-                      )}
-                    </div>
-
-                    {Array.isArray(product.securityDetails.badges) && product.securityDetails.badges.length > 0 && (
-                      <div className="modal-sec-badges-list">
-                        {product.securityDetails.badges.map((b, idx) => (
-                          <span key={idx} className="modal-sec-badge-item">
-                            <CheckIcon size={11} />
-                            {b}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Verified Security Mitigations (ASLR, DEP, SafeTensors Immunity, UAC) */}
-                    {Array.isArray(product.securityDetails.mitigations) && product.securityDetails.mitigations.length > 0 && (
-                      <div className="modal-sec-mitigations-row">
-                        {product.securityDetails.mitigations.map((m, idx) => (
-                          <span key={idx} className="modal-sec-mitigation-pill" title={m.desc}>
-                            <strong>{m.name}:</strong> {m.value}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Declared App Permissions Button & Expandable Viewer (Responsive for Desktop & Phone) */}
-                    {Array.isArray(product.securityDetails.permissions) && product.securityDetails.permissions.length > 0 && (() => {
-                      const allPerms = product.securityDetails.permissions;
-
-                      return (
-                        <div className="modal-sec-perms-container">
-                          {/* Interactive Permissions Button */}
-                          <div className="modal-sec-perms-btn-bar">
-                            <button
-                              type="button"
-                              className={`modal-sec-perms-toggle-btn ${showPermissions ? 'is-expanded' : ''}`}
-                              onClick={() => setShowPermissions((prev) => !prev)}
-                              aria-expanded={showPermissions}
-                              title="Toggle application runtime permissions"
-                            >
-                              <div className="perms-toggle-left">
-                                <span className="perms-toggle-icon">
-                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                  </svg>
-                                </span>
-                                <span className="perms-toggle-title">Permissions</span>
-                                <span className="perms-toggle-badge">{allPerms.length}</span>
-                              </div>
-
-                              <div className="perms-toggle-right">
-                                <span className="perms-toggle-summary">
-                                  {allPerms.length} Declared
-                                </span>
-                                <span className="perms-toggle-action">
-                                  {showPermissions ? 'Hide' : 'View'}
-                                  <svg
-                                    className={`perms-toggle-chevron ${showPermissions ? 'rotated' : ''}`}
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <polyline points="6 9 12 15 18 9"></polyline>
-                                  </svg>
-                                </span>
-                              </div>
-                            </button>
-
-                            {/* Direct Dialog View Action Button */}
-                            <button
-                              type="button"
-                              className="modal-sec-perms-dialog-btn"
-                              onClick={() => setPermissionsModalOpen(true)}
-                              title="Open dedicated permissions modal"
-                            >
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M15 3h6v6"></path>
-                                <path d="M10 14L21 3"></path>
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                              </svg>
-                              <span>Modal</span>
-                            </button>
-                          </div>
-
-                          {/* Expandable Permissions Viewer (Revealed upon clicking "Permissions") */}
-                          {showPermissions && (
-                            <div className="modal-sec-perms-drawer">
-                              <div className="perms-drawer-header">
-                                <span className="perms-drawer-title">
-                                  Declared Permissions ({allPerms.length})
-                                </span>
-
-                                <button
-                                  type="button"
-                                  className="perms-popout-btn"
-                                  onClick={() => setPermissionsModalOpen(true)}
-                                  title="Open full permissions dialog"
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
-                                    <path d="M15 3h6v6"></path>
-                                    <path d="M10 14L21 3"></path>
-                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                  </svg>
-                                  Dialog
-                                </button>
-                              </div>
-
-                              <div className="modal-sec-perms-grid">
-                                {allPerms.map((perm, idx) => (
-                                  <div key={idx} className="modal-perm-item">
-                                    <div className="modal-perm-item-top">
-                                      <span className="modal-perm-item-name">{perm.name}</span>
-                                    </div>
-                                    {perm.raw && <code className="modal-perm-raw">{perm.raw}</code>}
-                                    <span className="modal-perm-item-desc">{perm.desc}</span>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="perms-drawer-footer">
-                                <span className="perms-drawer-hint">
-                                  Actual declarations extracted from binary AndroidManifest.xml
-                                </span>
-                                <button
-                                  type="button"
-                                  className="perms-drawer-collapse-btn"
-                                  onClick={() => setShowPermissions(false)}
-                                >
-                                  Hide Permissions
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                ) : null}
-
-                {/* Cryptographic SHA-256 Checksum Row */}
-                {product.sha256Checksum && (
-                  <div className="security-checksum-row">
-                    <span className="checksum-label">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                      </svg>
-                      SHA-256:
-                    </span>
-                    <code className="checksum-code" title={product.sha256Checksum}>
-                      {product.sha256Checksum.substring(0, 16)}...{product.sha256Checksum.substring(product.sha256Checksum.length - 8)}
-                    </code>
-                    <button
-                      type="button"
-                      className="copy-checksum-btn"
-                      onClick={() => {
-                        navigator.clipboard.writeText(product.sha256Checksum);
-                        setCopiedSha(true);
-                        setTimeout(() => setCopiedSha(false), 2000);
-                      }}
-                      title="Copy full cryptographic SHA-256 hash"
-                    >
-                      {copiedSha ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          Copied <CheckIcon size={12} />
-                        </span>
-                      ) : (
-                        'Copy'
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {product.releaseNotes && (
-              <div className="modal-release-notes">
-                <h4>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '0.4rem', verticalAlign: 'middle' }}>
+            {/* Product Description */}
+            {product.description && (
+              <div className="modal-section-card modal-description-box">
+                <div className="section-card-header">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>
                     <line x1="16" y1="13" x2="8" y2="13"></line>
                     <line x1="16" y1="17" x2="8" y2="17"></line>
                   </svg>
-                  Release Notes & Specs
-                </h4>
+                  <span>Overview</span>
+                </div>
+                <p>{product.description}</p>
+              </div>
+            )}
+
+            {/* Release Notes & Specs */}
+            {product.releaseNotes && (
+              <div className="modal-section-card modal-release-notes">
+                <div className="section-card-header">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                  <span>Release Notes & Specs</span>
+                </div>
                 <p>{product.releaseNotes}</p>
               </div>
             )}
           </div>
+
+          {/* PRE-FLIGHT SECURITY & ARCHITECTURE AUDIT CARD */}
+          {(product.sha256Checksum || product.securityDetails) && (
+            <div className="modal-security-card">
+              {product.securityDetails && (
+                <>
+                  <div className="sec-card-header">
+                    <div className="sec-card-title">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                      <span>Pre-Flight Security Audit</span>
+                    </div>
+                    <span className="sec-card-score">
+                      {product.securityDetails.securityScore || 100}/100 Clean
+                    </span>
+                  </div>
+
+                  <div className="sec-specs-grid">
+                    <div className="sec-spec-item">
+                      <span className="sec-spec-label">File Size</span>
+                      <span className="sec-spec-val">{product.securityDetails.fileSize || 'Verified'}</span>
+                    </div>
+                    <div className="sec-spec-item">
+                      <span className="sec-spec-label">Target OS</span>
+                      <span className="sec-spec-val">{product.securityDetails.platform || 'Native'}</span>
+                    </div>
+                    <div className="sec-spec-item">
+                      <span className="sec-spec-label">Inspection</span>
+                      <span className="sec-spec-val" title={product.securityDetails.verifiedMethod || 'Upper Store Edge'}>
+                        {product.securityDetails.verifiedMethod || 'Edge Range'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {Array.isArray(product.securityDetails.badges) && product.securityDetails.badges.length > 0 && (
+                    <div className="sec-badges-row">
+                      {product.securityDetails.badges.map((b, idx) => (
+                        <span key={idx} className="sec-badge-chip">
+                          <CheckIcon size={11} />
+                          {b}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Declared Permissions Button */}
+                  {Array.isArray(product.securityDetails.permissions) && product.securityDetails.permissions.length > 0 && (
+                    <button
+                      type="button"
+                      className="modal-sec-permissions-trigger-btn"
+                      onClick={() => setPermissionsModalOpen(true)}
+                      title="Open declared runtime permissions"
+                    >
+                      <div className="perm-trigger-left">
+                        <div className="perm-trigger-icon-wrap">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                          </svg>
+                        </div>
+                        <span className="perm-trigger-text">Declared Permissions</span>
+                        <span className="perm-trigger-count-badge">
+                          {product.securityDetails.permissions.length}
+                        </span>
+                      </div>
+                      <div className="perm-trigger-right">
+                        <span className="perm-trigger-action-text">Review</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                      </div>
+                    </button>
+                  )}
+                </>
+              )}
+
+              {/* Cryptographic SHA-256 Checksum Row */}
+              {product.sha256Checksum && (
+                <div className="sec-checksum-row">
+                  <div className="sec-checksum-left">
+                    <span className="sec-checksum-label">SHA-256</span>
+                    <code className="sec-checksum-code" title={product.sha256Checksum}>
+                      {product.sha256Checksum.substring(0, 12)}...{product.sha256Checksum.substring(product.sha256Checksum.length - 8)}
+                    </code>
+                  </div>
+                  <button
+                    type="button"
+                    className="sec-checksum-copy-btn"
+                    onClick={() => {
+                      navigator.clipboard.writeText(product.sha256Checksum);
+                      setCopiedSha(true);
+                      setTimeout(() => setCopiedSha(false), 2000);
+                    }}
+                    title="Copy full cryptographic SHA-256 hash"
+                  >
+                    {copiedSha ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
