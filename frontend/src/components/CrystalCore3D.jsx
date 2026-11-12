@@ -246,16 +246,6 @@ const CrystalCore3D = () => {
         title="Drag to rotate the Crimson Neural Core"
       />
 
-      {/* Pre-Publish Testing & Security Audit Tag on Rotating Core */}
-      <div
-        className="crystal-core-audit-tag"
-        title="Zero-Trust Testing: Every release undergoes pre-flight security auditing and sandbox testing before store publishing."
-      >
-        <span className="audit-tag-dot" />
-        <ShieldCheckIcon size={14} className="audit-tag-icon" />
-        <span className="audit-tag-text">Pre-Publish Tested &bull; 100% Sandbox Audited Before Release</span>
-      </div>
-
       {/* Floating Top-Left Telemetry Badge */}
       <div className="floating-badge badge-top-left">
         <div className="badge-icon-box">
