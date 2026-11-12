@@ -74,6 +74,9 @@ const BackgroundAnimation = () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
       needsRender = true;
+      if (isMobile) {
+        drawFrame();
+      }
     };
 
     const handleMouseMove = (e) => {
@@ -94,43 +97,45 @@ const BackgroundAnimation = () => {
     window.addEventListener('resize', handleResize);
     if (!isMobile) {
       window.addEventListener('mousemove', handleMouseMove, { passive: true });
+      window.addEventListener('scroll', handleScroll, { passive: true });
     }
-    window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('modalToggle', handleModalToggle);
 
     // Initial render
     drawFrame();
 
-    // Render loop: on mobile only re-renders when scroll or resize occurs.
-    // On desktop, only re-renders when cursor is moving or scrolling.
+    // Render loop: on mobile, initial frame is drawn statically and does not run continuous RAF loops.
+    // On desktop, runs RAF to smoothly track cursor.
     const render = () => {
       if (!isPaused && needsRender) {
-        if (!isMobile) {
-          const dx = Math.abs(mouse.targetX - mouse.x);
-          const dy = Math.abs(mouse.targetY - mouse.y);
-          if (dx > 0.5 || dy > 0.5) {
-            mouse.x += (mouse.targetX - mouse.x) * 0.06;
-            mouse.y += (mouse.targetY - mouse.y) * 0.06;
-          } else {
-            needsRender = false;
-          }
+        const dx = Math.abs(mouse.targetX - mouse.x);
+        const dy = Math.abs(mouse.targetY - mouse.y);
+        if (dx > 0.5 || dy > 0.5) {
+          mouse.x += (mouse.targetX - mouse.x) * 0.06;
+          mouse.y += (mouse.targetY - mouse.y) * 0.06;
         } else {
           needsRender = false;
         }
         drawFrame();
       }
-      animationFrameId = requestAnimationFrame(render);
+      if (!isMobile) {
+        animationFrameId = requestAnimationFrame(render);
+      }
     };
 
-    render();
+    if (!isMobile) {
+      render();
+    }
 
     return () => {
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
       window.removeEventListener('resize', handleResize);
       if (!isMobile) {
         window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('scroll', handleScroll);
       }
-      window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('modalToggle', handleModalToggle);
     };
   }, []);

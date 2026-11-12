@@ -563,6 +563,8 @@ const Products = () => {
                           alt=""
                           className="product-list-logo"
                           referrerPolicy="no-referrer"
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
                             const sibling = e.currentTarget.parentElement?.querySelector('.product-list-logo-fallback');
@@ -622,6 +624,8 @@ const Products = () => {
                         src={product.image || FALLBACK_POSTER}
                         alt={product.title}
                         referrerPolicy="no-referrer"
+                        loading="lazy"
+                        decoding="async"
                       />
                       <div className="bento-card-badge-row">
                         <span className="bento-category-tag">{product.category}</span>
@@ -633,7 +637,7 @@ const Products = () => {
                     <div className="bento-card-body">
                       <div className="bento-card-header">
                         {product.logo ? (
-                          <img src={product.logo} alt="" className="bento-app-logo" referrerPolicy="no-referrer" />
+                          <img src={product.logo} alt="" className="bento-app-logo" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                         ) : (
                           <div className="bento-logo-fallback">
                             <LayersIcon size={16} />
@@ -857,6 +861,8 @@ const Products = () => {
                               src={vid.poster || FALLBACK_POSTER}
                               alt={vid.title}
                               referrerPolicy="no-referrer"
+                              loading="lazy"
+                              decoding="async"
                             />
                             <div className="deck-play-overlay">
                               <span className="play-triangle">&#9658;</span>

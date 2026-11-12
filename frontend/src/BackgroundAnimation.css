@@ -33,3 +33,12 @@
   height: 100%;
   pointer-events: none;
 }
+
+/* Mobile GPU Performance Optimization: Remove expensive mask-image composition */
+@media (max-width: 768px) {
+  .bg-grid-overlay {
+    mask-image: none;
+    -webkit-mask-image: none;
+    opacity: 0.35;
+  }
+}

@@ -367,19 +367,20 @@ const ProductDetailModal = ({ product, onClose }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [termsModalOpen, permissionsModalOpen, reviewModalOpen, checkoutOpen, vipModalOpen]);
 
-  // Smooth scroll lock without resetting scroll position
+  // Smooth scroll lock without resetting scroll position or triggering immediate layout thrash
   useEffect(() => {
     const prevBodyOverflow = document.body.style.overflow;
-    const prevHtmlOverflow = document.documentElement.style.overflow;
     const prevTouchAction = document.body.style.touchAction;
 
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
+    // Use requestAnimationFrame so the opening slide-up animation begins before forced layout recalculation
+    const rafId = requestAnimationFrame(() => {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    });
 
     return () => {
+      cancelAnimationFrame(rafId);
       document.body.style.overflow = prevBodyOverflow;
-      document.documentElement.style.overflow = prevHtmlOverflow;
       document.body.style.touchAction = prevTouchAction;
     };
   }, []);
@@ -425,6 +426,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                   alt={product.title}
                   className="modal-cover-img"
                   referrerPolicy="no-referrer"
+                  decoding="async"
                 />
                 <span className="modal-category-badge">{product.category}</span>
               </div>
@@ -444,6 +446,8 @@ const ProductDetailModal = ({ product, onClose }) => {
                       src={`https://img.youtube.com/vi/${ytVideoId}/hqdefault.jpg`}
                       alt="Demo Video"
                       referrerPolicy="no-referrer"
+                      loading="lazy"
+                      decoding="async"
                     />
                     <span className="video-thumb-play-icon">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -462,7 +466,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                       setActiveImage(imgUrl);
                     }}
                   >
-                    <img src={imgUrl} alt={`Screenshot ${idx + 1}`} referrerPolicy="no-referrer" />
+                    <img src={imgUrl} alt={`Screenshot ${idx + 1}`} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
                   </button>
                 ))}
               </div>
@@ -473,7 +477,7 @@ const ProductDetailModal = ({ product, onClose }) => {
           <div className="modal-details-body">
             <div className="modal-header-row">
               {product.logo ? (
-                <img src={product.logo} alt="" className="modal-app-logo" referrerPolicy="no-referrer" />
+                <img src={product.logo} alt="" className="modal-app-logo" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
               ) : (
                 <div className="modal-logo-placeholder">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
