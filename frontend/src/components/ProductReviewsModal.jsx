@@ -57,6 +57,11 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   const reviewsKeyRef = useRef(`upper-reviews-${product?.id || 'item'}-${Date.now()}`);
   const closedByPopstateRef = useRef(false);
   const pushedStandaloneRef = useRef(false);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // Sync ban status safely on modal open
   useEffect(() => {
@@ -168,11 +173,10 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
 
     const handlePopState = () => {
       if (window.__upperIgnoreNextPopState) {
-        window.__upperIgnoreNextPopState = false;
         return;
       }
       closedByPopstateRef.current = true;
-      onClose();
+      onCloseRef.current?.();
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -187,17 +191,17 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
         }, 150);
       }
     };
-  }, [isOpen, product?.id, onClose]);
+  }, [isOpen]);
 
   // Keyboard navigation support for ESC key
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onCloseRef.current?.();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen]);
 
   if (!isOpen || !product) return null;
 

@@ -79,7 +79,6 @@ function AppContent() {
   useEffect(() => {
     const handlePopState = () => {
       if (window.__upperIgnoreNextPopState) {
-        window.__upperIgnoreNextPopState = false;
         return;
       }
       if (isHandlingPopStateRef.current) {

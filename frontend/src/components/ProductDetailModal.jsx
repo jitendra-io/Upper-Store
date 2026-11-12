@@ -59,6 +59,11 @@ const ProductDetailModal = ({ product, onClose }) => {
   const submodalPushedRef = useRef(false);
   const activeSubmodalRef = useRef(null);
   const savedScrollYRef = useRef(0);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   const getProductDevTier = (prod) => {
     if (!prod) return 'free';
@@ -298,7 +303,6 @@ const ProductDetailModal = ({ product, onClose }) => {
 
     const handlePopState = () => {
       if (window.__upperIgnoreNextPopState) {
-        window.__upperIgnoreNextPopState = false;
         return;
       }
 
@@ -314,7 +318,9 @@ const ProductDetailModal = ({ product, onClose }) => {
       }
 
       closedByPopstateRef.current = true;
-      onClose();
+      if (onCloseRef.current) {
+        onCloseRef.current();
+      }
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -334,7 +340,7 @@ const ProductDetailModal = ({ product, onClose }) => {
         window.scrollTo(0, savedScrollYRef.current);
       }
     };
-  }, [onClose]);
+  }, []);
 
   // Keyboard navigation (Escape key closes sub-modal first, or closes main modal if no sub-modal open)
   useEffect(() => {
@@ -351,13 +357,15 @@ const ProductDetailModal = ({ product, onClose }) => {
         } else if (vipModalOpen) {
           setVipModalOpen(false);
         } else {
-          onClose();
+          if (onCloseRef.current) {
+            onCloseRef.current();
+          }
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [termsModalOpen, permissionsModalOpen, reviewModalOpen, checkoutOpen, vipModalOpen, onClose]);
+  }, [termsModalOpen, permissionsModalOpen, reviewModalOpen, checkoutOpen, vipModalOpen]);
 
   // Smooth scroll lock without resetting scroll position
   useEffect(() => {

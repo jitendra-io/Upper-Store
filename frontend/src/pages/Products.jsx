@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ProductDetailModal from '../components/ProductDetailModal';
 import ProductReviewsModal from '../components/ProductReviewsModal';
@@ -104,17 +104,19 @@ const Products = () => {
     } catch (_) {}
   };
 
-  const handleCloseProductModal = () => {
+  const handleCloseProductModal = useCallback(() => {
     setSelectedProduct(null);
-    if (searchParams.get('product') || searchParams.get('productId')) {
-      const newParams = new URLSearchParams(location.search);
-      newParams.delete('product');
-      newParams.delete('productId');
-      const newQuery = newParams.toString();
-      const newUrl = `${location.pathname}${newQuery ? `?${newQuery}` : ''}${location.hash}`;
-      window.history.replaceState(null, '', newUrl);
-    }
-  };
+    try {
+      const currentParams = new URLSearchParams(window.location.search);
+      if (currentParams.get('product') || currentParams.get('productId')) {
+        currentParams.delete('product');
+        currentParams.delete('productId');
+        const newQuery = currentParams.toString();
+        const newUrl = `${window.location.pathname}${newQuery ? `?${newQuery}` : ''}${window.location.hash}`;
+        window.history.replaceState(null, '', newUrl);
+      }
+    } catch (_) {}
+  }, []);
 
   useEffect(() => {
     if (!mobileFilterOpen) return;
