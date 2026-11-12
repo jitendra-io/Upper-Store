@@ -44,6 +44,13 @@ html, body {
   width: 100%;
   max-width: 100%;
   position: relative;
+  -webkit-touch-callout: none;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 body {

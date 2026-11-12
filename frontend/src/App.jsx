@@ -43,6 +43,15 @@ function AppContent() {
     window.scrollTo(0, 0);
   }, [location.pathname, location.hash, location.search]);
 
+  // Disable right-click context menu globally across all devices
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+    document.addEventListener('contextmenu', handleContextMenu);
+    return () => document.removeEventListener('contextmenu', handleContextMenu);
+  }, []);
+
   useEffect(() => {
     const handleModalToggle = (e) => {
       setModalOpen(!!e.detail);
