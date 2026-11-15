@@ -139,7 +139,7 @@
 .section-tab-btn.active {
   background: linear-gradient(135deg, #e61919 0%, #b30f0f 100%);
   color: #ffffff;
-  box-shadow: 0 0 20px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* Products View Toggle (Cards vs List) */
@@ -180,7 +180,7 @@
 .view-toggle-btn.active {
   background: linear-gradient(135deg, #e61919 0%, #b30f0f 100%);
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18);
 }
 
 .view-toggle-btn svg {
@@ -296,7 +296,7 @@
   background: linear-gradient(135deg, rgba(230, 25, 25, 0.25) 0%, rgba(140, 10, 10, 0.35) 100%);
   border-color: rgba(255, 42, 42, 0.6);
   color: #ffffff;
-  box-shadow: 0 0 15px rgba(230, 25, 25, 0.3);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.15);
 }
 
 /* ========================================================
@@ -417,7 +417,7 @@
   background: #e61919;
   border-color: #ff2a2a;
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18);
 }
 
 /* ========================================================
@@ -638,13 +638,13 @@
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 0 15px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 2px 6px rgba(230, 25, 25, 0.16), 0 1px 3px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
 }
 
 .bento-action-btn:hover {
   background: linear-gradient(135deg, #ff2a2a 0%, #cc1414 100%);
-  box-shadow: 0 0 25px rgba(230, 25, 25, 0.55);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.24), 0 2px 6px rgba(0, 0, 0, 0.4);
   transform: translateY(-1px);
 }
 
@@ -955,7 +955,7 @@
   border-color: #ff2a2a;
   color: #ffffff;
   font-weight: 700;
-  box-shadow: 0 0 15px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18);
 }
 
 /* Empty / Loading States */
@@ -1066,7 +1066,7 @@
 
   .mobile-filter-btn.active {
     border-color: #ff2a2a !important;
-    box-shadow: 0 0 15px rgba(230, 25, 25, 0.25) !important;
+    box-shadow: 0 2px 8px rgba(230, 25, 25, 0.15) !important;
   }
 
   .mobile-filter-btn.has-active-filter {

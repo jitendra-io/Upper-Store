@@ -87,12 +87,12 @@ button.asset-btn:disabled {
   font-size: 0.98rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .press-primary-dl-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 30px rgba(230, 25, 25, 0.55);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.25), 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
 /* Shared Press Sections */
@@ -722,13 +722,13 @@ button.asset-btn:disabled {
   font-weight: 700;
   font-size: 0.98rem;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18);
   white-space: nowrap;
 }
 
 .pr-contact-action-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(230, 25, 25, 0.55);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25);
   background: #e5be3b;
 }
 

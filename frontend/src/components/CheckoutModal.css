@@ -337,14 +337,14 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 4px 12px rgba(0, 0, 0, 0.35);
   transition: all 0.2s ease;
   margin-top: 0.25rem;
 }
 
 .checkout-pay-cta-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(230, 25, 25, 0.5);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25), 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 .checkout-pay-cta-btn:disabled {

@@ -245,7 +245,7 @@
   border-color: rgba(230, 25, 25, 0.5);
   color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(230, 25, 25, 0.25);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.15);
 }
 
 .dev-ref-action-pill-btn.share-btn.copied {
@@ -264,7 +264,7 @@
   background: #e61919;
   border-color: #ff2a2a;
   color: #ffffff;
-  box-shadow: 0 4px 18px rgba(230, 25, 25, 0.45);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.2);
 }
 
 /* --------------------------------------------------------------------------
@@ -854,7 +854,7 @@
 .dev-action-btn.primary-crimson:hover {
   background: #ff2a2a;
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.2);
 }
 
 .dev-action-btn.secondary-ghost {

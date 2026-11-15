@@ -111,7 +111,7 @@
   color: #0d0d0f;
   border-color: #e61919;
   font-weight: 700;
-  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.3);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18);
 }
 
 .tab-badge {
@@ -274,12 +274,12 @@
 .admin-btn.primary {
   background: linear-gradient(135deg, #e61919, #aa820a);
   color: #0d0d0f;
-  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.25);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.16);
 }
 
 .admin-btn.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.24);
 }
 
 .admin-btn.secondary {
@@ -442,7 +442,7 @@
   background: #dc2626;
   color: #ffffff;
   border-color: #dc2626;
-  box-shadow: 0 0 10px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.2);
 }
 
 .admin-remove-user-btn:disabled {
@@ -1260,7 +1260,7 @@
   background: linear-gradient(135deg, #e61919, #b8860b);
   border-color: #ff2a2a;
   color: #0b0f19;
-  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.3);
+  box-shadow: 0 2px 6px rgba(230, 25, 25, 0.18);
 }
 
 /* Form Actions */
@@ -1376,7 +1376,7 @@
   background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
   border: 1px solid #ff2a2a;
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.2);
 }
 
 .simulated-upsell-box {

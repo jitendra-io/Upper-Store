@@ -99,14 +99,14 @@
   width: 100%;
   margin-top: 0.6rem;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 25px rgba(230, 25, 25, 0.45);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 4px 12px rgba(0, 0, 0, 0.35);
   cursor: pointer;
 }
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   background: linear-gradient(135deg, #ff2a2a 0%, #cc1414 100%);
-  box-shadow: 0 0 35px rgba(230, 25, 25, 0.65);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.25), 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
 .login-btn:disabled {

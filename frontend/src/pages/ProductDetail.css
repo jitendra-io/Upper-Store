@@ -143,23 +143,23 @@
 .download-btn {
   background: var(--color-accent-primary);
   color: var(--color-bg-primary);
-  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.16);
 }
 
 .download-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.22);
 }
 
 .purchase-btn {
   background: var(--color-accent-primary);
   color: var(--color-bg-primary);
-  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.16);
 }
 
 .purchase-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.22);
 }
 
 .release-notes {

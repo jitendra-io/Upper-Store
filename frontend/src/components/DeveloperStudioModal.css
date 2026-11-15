@@ -378,7 +378,7 @@
 
 .gate-action-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.2);
 }
 
 /* 8. Form Architecture */
@@ -1002,7 +1002,7 @@
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 15px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 4px 10px rgba(0, 0, 0, 0.35);
   font-family: inherit;
   display: inline-flex;
   align-items: center;
@@ -1011,7 +1011,7 @@
 
 .dev-primary-btn:hover:not(:disabled) {
   transform: translateY(-1.5px);
-  box-shadow: 0 6px 22px rgba(230, 25, 25, 0.5);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25), 0 6px 14px rgba(0, 0, 0, 0.45);
   background: linear-gradient(135deg, #ffe033 0%, #e6b800 100%);
 }
 
@@ -1366,12 +1366,12 @@
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18);
 }
 
 .limit-upgrade-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(230, 25, 25, 0.5);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25);
 }
 
 .dev-allowance-strip {
@@ -2063,13 +2063,13 @@
 .btn-verify-action {
   background: linear-gradient(135deg, rgba(230, 25, 25, 0.9) 0%, rgba(180, 15, 15, 0.95) 100%) !important;
   border: 1px solid rgba(255, 60, 60, 0.5) !important;
-  box-shadow: 0 0 16px rgba(230, 25, 25, 0.35) !important;
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.2) !important;
   color: #ffffff !important;
 }
 
 .btn-verify-action:hover {
   background: linear-gradient(135deg, rgba(255, 35, 35, 1) 0%, rgba(200, 20, 20, 1) 100%) !important;
-  box-shadow: 0 0 22px rgba(230, 25, 25, 0.5) !important;
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25) !important;
 }
 
 /* Mobile Responsiveness for Pre-Flight Card */

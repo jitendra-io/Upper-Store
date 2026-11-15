@@ -121,14 +121,14 @@
   border: 1px solid rgba(255, 60, 60, 0.45);
   cursor: pointer;
   transition: all 0.25s ease;
-  box-shadow: 0 0 20px rgba(230, 25, 25, 0.4);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.16), 0 2px 6px rgba(0, 0, 0, 0.3);
   font-family: var(--font-body);
 }
 
 .nav-signin-btn:hover {
   background: linear-gradient(135deg, #ff2a2a 0%, #cc1414 100%);
   transform: translateY(-2px);
-  box-shadow: 0 0 28px rgba(230, 25, 25, 0.6);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.24), 0 4px 10px rgba(0, 0, 0, 0.4);
   border-color: rgba(255, 120, 120, 0.7);
 }
 
@@ -155,7 +155,7 @@
 .nav-user-pill:hover {
   background: rgba(30, 30, 42, 0.95);
   border-color: rgba(230, 25, 25, 0.5);
-  box-shadow: 0 0 16px rgba(230, 25, 25, 0.25);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.12);
 }
 
 .nav-user-avatar {
@@ -638,7 +638,7 @@
   color: #ffffff;
   border-color: rgba(239, 68, 68, 0.5);
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.12);
 }
 
 /* Mobile Toggle Hamburger Icon */
@@ -1308,7 +1308,7 @@
     border-radius: 20px;
     background: linear-gradient(135deg, #e61919, #f59e0b);
     color: #0b0c10;
-    box-shadow: 0 0 10px rgba(230, 25, 25, 0.4);
+    box-shadow: 0 2px 6px rgba(230, 25, 25, 0.2);
   }
 
   .nav-notif-dropdown {

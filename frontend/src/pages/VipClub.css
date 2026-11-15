@@ -119,12 +119,12 @@
 .vip-hero-btn.elite {
   background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
   color: #ffffff;
-  box-shadow: 0 6px 24px rgba(230, 25, 25, 0.45);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.2), 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .vip-hero-btn.elite:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 32px rgba(230, 25, 25, 0.65);
+  box-shadow: 0 4px 14px rgba(230, 25, 25, 0.28), 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
 .vip-hero-btn.pro {
@@ -429,12 +429,12 @@
 .card-cta-btn.elite {
   background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
   color: #ffffff;
-  box-shadow: 0 4px 18px rgba(230, 25, 25, 0.45);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
 .card-cta-btn.elite:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(230, 25, 25, 0.65);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25), 0 6px 14px rgba(0, 0, 0, 0.45);
 }
 
 .card-cta-btn.pro {
@@ -698,12 +698,12 @@
 .tier-btn.elite {
   background: linear-gradient(135deg, #e61919 0%, #ff2a2a 100%);
   color: #ffffff;
-  box-shadow: 0 4px 20px rgba(230, 25, 25, 0.45);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
 .tier-btn.elite:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 26px rgba(230, 25, 25, 0.65);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25), 0 6px 14px rgba(0, 0, 0, 0.45);
 }
 
 /* ========================================================

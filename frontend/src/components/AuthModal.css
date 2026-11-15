@@ -482,7 +482,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   margin-top: 0.2rem;
-  box-shadow: 0 4px 16px rgba(230, 25, 25, 0.35);
+  box-shadow: 0 2px 8px rgba(230, 25, 25, 0.18), 0 4px 10px rgba(0, 0, 0, 0.35);
   font-family: inherit;
   flex-shrink: 0;
 }
@@ -490,7 +490,7 @@
 .auth-submit-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #ff2a2a 0%, #ff4d4d 100%);
   transform: translateY(-1px);
-  box-shadow: 0 8px 22px rgba(230, 25, 25, 0.5);
+  box-shadow: 0 4px 12px rgba(230, 25, 25, 0.25), 0 6px 14px rgba(0, 0, 0, 0.45);
 }
 
 .auth-submit-btn:disabled {
