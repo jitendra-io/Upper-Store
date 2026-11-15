@@ -32,29 +32,77 @@ const getNotifications = async (req, res) => {
       ...doc.data(),
     }));
 
-    // Filter by privacy boundary
-    if (currentUser && currentUser.role === 'admin') {
-      // Admin sees all broadcast & user notification records
+    // Strict privacy boundary enforcement:
+    // A follow notification or targeted notification MUST ONLY be visible to the exact targeted user.
+    const isAdminBroadcastScope = currentUser && currentUser.role === 'admin' && req.query.scope === 'admin';
+
+    if (isAdminBroadcastScope) {
+      // Admin managing broadcast announcements in Admin Dashboard:
+      // Return ONLY untargeted site-wide broadcast announcements. NEVER leak private follow notifications!
+      notifications = notifications.filter((n) => {
+        const isPrivate = Boolean(n.type === 'follow' || n.category === 'Follower' || n.targetEmail || n.targetUserId || n.targetUsername);
+        return !isPrivate;
+      });
     } else if (currentUser) {
-      // Authenticated user: sees general broadcast notices + their own targeted notifications
-      const userEmail = (currentUser.email || '').trim().toLowerCase();
+      // Authenticated user (personal notification feed in Navbar / profile):
+      let userEmail = (currentUser.email || '').trim().toLowerCase();
       const userId = currentUser.uid || currentUser.id;
-      const userUsername = (currentUser.username || '').trim().toLowerCase();
+      let userUsername = (currentUser.username || '').trim().toLowerCase();
+
+      // Ensure userUsername and userEmail are resolved even if missing from token payload
+      if (userId && (!userUsername || !userEmail)) {
+        try {
+          const userSnap = await db.collection('users').doc(userId).get();
+          if (userSnap.exists) {
+            const uData = userSnap.data();
+            if (!userUsername && uData.username) userUsername = uData.username.trim().toLowerCase();
+            if (!userEmail && uData.email) userEmail = uData.email.trim().toLowerCase();
+          }
+          if (!userUsername) {
+            const dSnap = await db.collection('developers').where('userId', '==', userId).limit(1).get();
+            if (!dSnap.empty && dSnap.docs[0].data().username) {
+              userUsername = dSnap.docs[0].data().username.trim().toLowerCase();
+            }
+          }
+        } catch (_) {}
+      }
+
+      const emailPrefix = userEmail ? userEmail.split('@')[0] : '';
+      const isOfficialAccount = currentUser.role === 'admin' || userEmail === 'upper.official.in@gmail.com' || userId === 'GOhjkTTW9ZPqPS9I7Oa1';
 
       notifications = notifications.filter((n) => {
-        const isTargeted = Boolean(n.targetEmail || n.targetUserId || n.targetUsername);
-        if (!isTargeted) return true;
+        const isFollow = n.type === 'follow' || n.category === 'Follower';
+        const isTargeted = Boolean(n.targetEmail || n.targetUserId || n.targetUsername || isFollow);
 
-        if (n.targetEmail && userEmail && n.targetEmail.trim().toLowerCase() === userEmail) return true;
-        if (n.targetUserId && userId && String(n.targetUserId) === String(userId)) return true;
-        if (n.targetUsername && userUsername && n.targetUsername.trim().toLowerCase() === userUsername) return true;
+        if (isTargeted) {
+          // STRICT PRIVATE TARGET CHECK: ONLY THE TARGETED USER CAN SEE THIS
+          const targetUserId = n.targetUserId ? String(n.targetUserId) : null;
+          const targetEmail = n.targetEmail ? String(n.targetEmail).trim().toLowerCase() : null;
+          const targetUsername = n.targetUsername ? String(n.targetUsername).trim().toLowerCase() : null;
 
-        return false;
+          if (targetUserId && userId && targetUserId === String(userId)) return true;
+          if (targetEmail && userEmail && targetEmail === userEmail) return true;
+          if (targetUsername && userUsername && targetUsername === userUsername) return true;
+          if (targetUsername && emailPrefix && targetUsername === emailPrefix) return true;
+
+          // Official store administrator check (only for official upperstore targets)
+          if (isOfficialAccount && targetUsername && ['upperstore', 'upper-store', 'upper_store', 'upperofficial'].includes(targetUsername)) {
+            return true;
+          }
+
+          // Strictly hidden from everyone else
+          return false;
+        }
+
+        // Untargeted site-wide broadcast announcements are visible
+        return true;
       });
     } else {
-      // Unauthenticated public: only general broadcasts without targetEmail, targetUserId, or targetUsername
+      // Unauthenticated public visitor:
+      // STRICTLY ONLY untargeted general broadcasts. Absolutely NO follow or targeted notifications!
       notifications = notifications.filter((n) => {
-        return !n.targetEmail && !n.targetUserId && !n.targetUsername;
+        const isPrivate = Boolean(n.type === 'follow' || n.category === 'Follower' || n.targetEmail || n.targetUserId || n.targetUsername);
+        return !isPrivate;
       });
     }
 

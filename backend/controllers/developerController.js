@@ -1292,6 +1292,17 @@ const toggleFollowDeveloper = async (req, res) => {
           const u = uSnap.docs[0].data();
           targetUserId = uSnap.docs[0].id;
           targetEmail = u.email || null;
+        } else {
+          // Fallback: check by email prefix (e.g. handle before '@')
+          const emailSnap = await db.collection('users')
+            .where('email', '>=', cleanUsername + '@')
+            .where('email', '<=', cleanUsername + '@\uf8ff')
+            .limit(1)
+            .get();
+          if (!emailSnap.empty) {
+            targetUserId = emailSnap.docs[0].id;
+            targetEmail = emailSnap.docs[0].data().email || null;
+          }
         }
       }
     }
@@ -1384,6 +1395,16 @@ const toggleFollowDeveloper = async (req, res) => {
               type: 'follow',
               createdAt: new Date().toISOString(),
             });
+          } else {
+            await existingNotifs.docs[0].ref.update({
+              createdAt: new Date().toISOString(),
+              authorName: followerDisplayName,
+              authorAvatar: followerAvatar,
+              authorTier: followerVipTier,
+              targetEmail: targetEmail ? targetEmail.toLowerCase().trim() : null,
+              targetUserId: targetUserId || null,
+              message: `@${cleanFollowerUsername} started following you.`,
+            }).catch(() => {});
           }
         } catch (notifErr) {
           console.warn('Failed to dispatch follow notification:', notifErr.message);

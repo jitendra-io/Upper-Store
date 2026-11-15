@@ -623,7 +623,7 @@ const AdminDashboard = () => {
     const activeTok = currentToken || token || localStorage.getItem('adminToken');
     setLoadingNotifications(true);
     try {
-      const res = await fetch(`${API_BASE}/api/notifications`, {
+      const res = await fetch(`${API_BASE}/api/notifications?scope=admin`, {
         headers: activeTok ? { Authorization: `Bearer ${activeTok}` } : {},
       });
       if (res.ok) {

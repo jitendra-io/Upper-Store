@@ -277,19 +277,26 @@ const Navbar = ({ onOpenSearch }) => {
 
         if (newNotifs.length > 0) {
           const latest = newNotifs[0];
-          const toastedIds = JSON.parse(sessionStorage.getItem('upper_toasted_notifications') || '[]');
+          const isFollow = latest.type === 'follow' || latest.category === 'Follower';
 
-          if (!toastedIds.includes(latest.id)) {
-            toastedIds.push(latest.id);
-            sessionStorage.setItem('upper_toasted_notifications', JSON.stringify(toastedIds));
+          // Strictly guard: never show follow toast to an unauthenticated visitor
+          if (isFollow && !activeToken) {
+            // Suppress toast for unauthenticated
+          } else {
+            const toastedIds = JSON.parse(sessionStorage.getItem('upper_toasted_notifications') || '[]');
 
-            const isRecent = (Date.now() - new Date(latest.createdAt || Date.now()).getTime()) < 5 * 60 * 1000;
+            if (!toastedIds.includes(latest.id)) {
+              toastedIds.push(latest.id);
+              sessionStorage.setItem('upper_toasted_notifications', JSON.stringify(toastedIds));
 
-            if (!initialFetchRef.current || isRecent) {
-              setFlashToast(latest);
-              setTimeout(() => {
-                setFlashToast(null);
-              }, 5000);
+              const isRecent = (Date.now() - new Date(latest.createdAt || Date.now()).getTime()) < 5 * 60 * 1000;
+
+              if (!initialFetchRef.current || isRecent) {
+                setFlashToast(latest);
+                setTimeout(() => {
+                  setFlashToast(null);
+                }, 5000);
+              }
             }
           }
         }
@@ -330,7 +337,7 @@ const Navbar = ({ onOpenSearch }) => {
     setIsBanned(Boolean(user.isBanned));
     const checkBanStatus = async () => {
       try {
-        const activeToken = token || localStorage.getItem('upper_user_token');
+        const activeToken = token || localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
         const res = await fetch(`${API_BASE}/api/auth/user/status/${encodeURIComponent(user.email)}`, {
           headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
         });
@@ -474,7 +481,7 @@ const Navbar = ({ onOpenSearch }) => {
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                       <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    <h4>Broadcasts & Updates</h4>
+                    <h4>Notifications</h4>
                   </div>
                   {unreadCount > 0 && (
                     <button className="notif-mark-read-btn" onClick={markAllAsRead}>
@@ -601,9 +608,30 @@ const Navbar = ({ onOpenSearch }) => {
                           <p className="notif-item-msg">{n.message}</p>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.45rem', flexWrap: 'wrap', gap: '6px' }}>
                             {n.link ? (
-                              <a href={n.link} target="_blank" rel="noopener noreferrer" className="notif-item-link" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                Open Link <ArrowRightIcon size={12} />
-                              </a>
+                              n.link.startsWith('/') ? (
+                                <Link
+                                  to={n.link}
+                                  className="notif-item-link"
+                                  onClick={() => {
+                                    setNotifDropdownOpen(false);
+                                    closeMenu();
+                                  }}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                  {n.type === 'follow' || n.category === 'Follower' ? 'View Profile' : 'Open Link'}{' '}
+                                  <ArrowRightIcon size={12} />
+                                </Link>
+                              ) : (
+                                <a
+                                  href={n.link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="notif-item-link"
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                >
+                                  Open Link <ArrowRightIcon size={12} />
+                                </a>
+                              )
                             ) : <span />}
                             <span className="notif-time">
                               {new Date(n.createdAt || Date.now()).toLocaleString(undefined, {
@@ -856,7 +884,7 @@ const Navbar = ({ onOpenSearch }) => {
                         onClick={async () => {
                           if (window.confirm('Delete Account & Erase Data: Are you sure you want to permanently delete your account and erase all associated personal data from Upper Store? This action is irreversible.')) {
                             try {
-                              const activeToken = token || localStorage.getItem('upper_user_token');
+                              const activeToken = token || localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
                               const res = await fetch(`${API_BASE}/api/auth/user/delete-account`, {
                                 method: 'DELETE',
                                 headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
