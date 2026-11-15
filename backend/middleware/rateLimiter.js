@@ -84,10 +84,26 @@ const paymentLimiter = rateLimit({
   },
 });
 
+/**
+ * Follow & Social Interaction Limiter:
+ * Protects server from burst follow requests, automated bot swarms, and spam.
+ */
+const followLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: 60, // 60 follow/unfollow requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => isLocalhost(req),
+  message: {
+    message: 'Too many follow requests. Please wait a moment before trying again.',
+  },
+});
+
 module.exports = {
   apiLimiter,
   authLimiter,
   contactLimiter,
   downloadLimiter,
   paymentLimiter,
+  followLimiter,
 };

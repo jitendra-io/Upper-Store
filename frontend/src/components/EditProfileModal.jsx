@@ -6,6 +6,37 @@ import './EditProfileModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+const parseBannerSettings = (url, fallbackUsername = '') => {
+  let posY = 50;
+  let zoom = 1.0;
+  let fit = 'contain';
+
+  if (url) {
+    const posMatch = url.match(/[#?&]vpos=([0-9.]+)/);
+    if (posMatch) posY = Math.max(0, Math.min(100, Number(posMatch[1])));
+
+    const zoomMatch = url.match(/[#?&]zoom=([0-9.]+)/);
+    if (zoomMatch) zoom = Math.max(1.0, Math.min(2.0, Number(zoomMatch[1])));
+
+    const fitMatch = url.match(/[#?&]fit=([a-z]+)/);
+    if (fitMatch && ['cover', 'contain'].includes(fitMatch[1])) fit = fitMatch[1];
+  }
+
+  if (fallbackUsername && typeof window !== 'undefined') {
+    try {
+      const stored = localStorage.getItem(`upper_banner_pos_${fallbackUsername.toLowerCase()}`);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (!url?.includes('vpos=') && parsed.posY !== undefined) posY = parsed.posY;
+        if (!url?.includes('zoom=') && parsed.zoom !== undefined) zoom = parsed.zoom;
+        if (!url?.includes('fit=') && parsed.fit !== undefined) fit = parsed.fit;
+      }
+    } catch (_) {}
+  }
+
+  return { posY, zoom, fit };
+};
+
 export const EditProfileModal = ({
   isOpen,
   onClose,
@@ -28,6 +59,30 @@ export const EditProfileModal = ({
   const [dragActive, setDragActive] = useState(false);
   const [location, setLocation] = useState('None');
   const [isLocationLocked, setIsLocationLocked] = useState(false);
+
+  // Cover Banner Positioning & Scale Adjustment State
+  const [bannerPosY, setBannerPosY] = useState(50);
+  const [bannerZoom, setBannerZoom] = useState(1.0);
+  const [bannerFit, setBannerFit] = useState('contain');
+  const dragStartYRef = useRef(null);
+  const dragStartPosRef = useRef(50);
+
+  const handleDragStart = (clientY) => {
+    dragStartYRef.current = clientY;
+    dragStartPosRef.current = bannerPosY;
+  };
+
+  const handleDragMove = (clientY) => {
+    if (dragStartYRef.current === null) return;
+    const deltaY = clientY - dragStartYRef.current;
+    const sensitivity = 0.55;
+    const newPos = Math.max(0, Math.min(100, Math.round(dragStartPosRef.current - deltaY * sensitivity)));
+    setBannerPosY(newPos);
+  };
+
+  const handleDragEnd = () => {
+    dragStartYRef.current = null;
+  };
 
   // Form State
   const [saving, setSaving] = useState(false);
@@ -67,6 +122,10 @@ export const EditProfileModal = ({
       const existingBg = developer.coverImage || developer.banner || user?.coverImage || user?.banner || '';
       setCoverImage(existingBg);
       setCoverPreview(existingBg);
+      const parsedSettings = parseBannerSettings(existingBg, developer.username || user?.username || '');
+      setBannerPosY(parsedSettings.posY);
+      setBannerZoom(parsedSettings.zoom);
+      setBannerFit(parsedSettings.fit);
       setUploadingCover(false);
       setDragActive(false);
 
@@ -181,12 +240,13 @@ export const EditProfileModal = ({
       }
 
       const cdnUrl = data.coverImage || localUrl;
-      setCoverImage(cdnUrl);
+      const finalCoverWithSettings = `${cdnUrl.split('#')[0]}#vpos=${bannerPosY}&zoom=${bannerZoom}&fit=${bannerFit}`;
+      setCoverImage(finalCoverWithSettings);
       setCoverPreview(cdnUrl);
-      setSuccessMessage('Background image uploaded to ImageKit CDN successfully!');
+      setSuccessMessage('Background image uploaded to ImageKit CDN successfully! You can adjust its alignment, zoom, or fit below.');
 
       if (!isOfficial && updateUserProfile) {
-        updateUserProfile({ coverImage: cdnUrl, banner: cdnUrl });
+        updateUserProfile({ coverImage: finalCoverWithSettings, banner: finalCoverWithSettings });
       }
 
       if (onProfileUpdated) {
@@ -194,8 +254,8 @@ export const EditProfileModal = ({
           displayName: isOfficial ? (displayName || 'Upper Store Official') : displayName,
           username: isOfficial ? 'upperstore' : username,
           bio,
-          coverImage: cdnUrl,
-          banner: cdnUrl,
+          coverImage: finalCoverWithSettings,
+          banner: finalCoverWithSettings,
           location,
           locationLocked: isLocationLocked,
         });
@@ -218,6 +278,12 @@ export const EditProfileModal = ({
     setSuccessMessage('');
     setCoverImage('');
     setCoverPreview('');
+    setBannerPosY(50);
+    setBannerZoom(1.0);
+    setBannerFit('contain');
+    try {
+      localStorage.removeItem(`upper_banner_pos_${(developer?.username || user?.username || '').toLowerCase()}`);
+    } catch (_) {}
 
     try {
       const deleteUrl = isOfficial
@@ -291,12 +357,23 @@ export const EditProfileModal = ({
 
     const cleanBio = bio.trim().slice(0, 500) || 'None';
     const resolvedCover = (coverImage || '').trim();
+    const finalCover = resolvedCover
+      ? `${resolvedCover.split('#')[0]}#vpos=${bannerPosY}&zoom=${bannerZoom}&fit=${bannerFit}`
+      : '';
+
+    try {
+      localStorage.setItem(`upper_banner_pos_${cleanUser}`, JSON.stringify({
+        posY: bannerPosY,
+        zoom: bannerZoom,
+        fit: bannerFit,
+      }));
+    } catch (_) {}
 
     const payload = {
       displayName: cleanName,
       username: cleanUser,
       bio: cleanBio,
-      coverImage: resolvedCover,
+      coverImage: finalCover,
     };
 
     if (!isLocationLocked) {
@@ -344,8 +421,8 @@ export const EditProfileModal = ({
           displayName: isOfficial ? (displayName || 'Upper Store Official') : cleanName,
           username: isOfficial ? 'upperstore' : cleanUser,
           bio: cleanBio,
-          coverImage: resolvedCover,
-          banner: resolvedCover,
+          coverImage: finalCover,
+          banner: finalCover,
           location: isOfficial ? location : (data.user?.location || (isLocationLocked ? location : (payload.location || 'None'))),
           locationLocked: isOfficial ? isLocationLocked : Boolean(data.user?.locationLocked || isLocationLocked || (payload.location && payload.location.toLowerCase() !== 'none')),
         });
@@ -618,51 +695,213 @@ export const EditProfileModal = ({
                 disabled={uploadingCover}
               />
 
-              {/* Uploading Progress Box */}
-              {uploadingCover ? (
-                <div className="edit-cover-uploading-card">
-                  <div className="edit-spinner-ring"></div>
-                  <div className="edit-uploading-info">
-                    <span className="edit-uploading-title">Uploading to ImageKit CDN</span>
-                    <span className="edit-uploading-sub">Optimizing resolution and streaming banner from computer...</span>
-                  </div>
-                </div>
-              ) : coverPreview ? (
-                /* Preview Card with Image and Replace / Remove actions */
-                <div className="edit-cover-preview-card">
-                  <img
-                    src={coverPreview}
-                    alt="Cover preview"
-                    className="edit-cover-preview-banner"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
+              {/* Preview Card with Image, Drag-to-Reposition, and Adjustments Panel (Adjustable while uploading) */}
+              {coverPreview ? (
+                <div className="edit-cover-preview-wrapper">
+                  <div
+                    className="edit-cover-preview-card"
+                    onMouseDown={(e) => handleDragStart(e.clientY)}
+                    onMouseMove={(e) => {
+                      if (e.buttons === 1) handleDragMove(e.clientY);
                     }}
-                  />
-                  <div className="edit-cover-preview-overlay">
-                    <div className="edit-cover-preview-actions">
-                      <button
-                        type="button"
-                        className="edit-cover-action-btn replace"
-                        onClick={() => fileInputRef.current?.click()}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="17 8 12 3 7 8"></polyline>
-                          <line x1="12" y1="3" x2="12" y2="15"></line>
+                    onMouseUp={handleDragEnd}
+                    onMouseLeave={handleDragEnd}
+                    onTouchStart={(e) => {
+                      if (e.touches?.[0]) handleDragStart(e.touches[0].clientY);
+                    }}
+                    onTouchMove={(e) => {
+                      if (e.touches?.[0]) handleDragMove(e.touches[0].clientY);
+                    }}
+                    onTouchEnd={handleDragEnd}
+                    title="Click and drag up or down to reposition the visible banner area"
+                  >
+                    {/* Ambient blurred backdrop for contained/scaled mode */}
+                    <div
+                      className="edit-cover-ambient-blur"
+                      style={{
+                        backgroundImage: `url(${coverPreview.split('#')[0]})`,
+                      }}
+                      aria-hidden="true"
+                    />
+                    <img
+                      src={coverPreview.split('#')[0]}
+                      alt="Cover preview"
+                      className="edit-cover-preview-banner"
+                      style={{
+                        objectFit: bannerFit,
+                        objectPosition: `center ${bannerPosY}%`,
+                        transform: bannerZoom > 1 ? `scale(${bannerZoom})` : undefined,
+                        transformOrigin: `center ${bannerPosY}%`,
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    <div className="edit-cover-preview-overlay">
+                      <div className="edit-cover-status-badges">
+                        <div className="edit-cover-drag-badge">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                            <line x1="12" y1="9" x2="12" y2="21"></line>
+                            <polyline points="7 14 12 9 17 14"></polyline>
+                          </svg>
+                          <span>Drag to reposition</span>
+                        </div>
+                        {uploadingCover && (
+                          <div className="edit-cover-uploading-live-badge">
+                            <span className="edit-spinner-ring sm"></span>
+                            <span>Uploading to CDN... (Adjustable now)</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="edit-cover-preview-actions">
+                        <button
+                          type="button"
+                          className="edit-cover-action-btn replace"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            fileInputRef.current?.click();
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                          </svg>
+                          <span>Replace</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="edit-cover-action-btn remove"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveCover();
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                          </svg>
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Adjustment Controls Panel */}
+                  <div className="edit-cover-adjust-panel">
+                    <div className="edit-adjust-header">
+                      <span className="edit-adjust-title">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="3"></circle>
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
-                        <span>Replace from computer</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="edit-cover-action-btn remove"
-                        onClick={handleRemoveCover}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                        <span>Remove</span>
-                      </button>
+                        Adjust Banner Position &amp; Scale
+                      </span>
+
+                      {/* Fit Mode Toggle */}
+                      <div className="edit-fit-toggle">
+                        <button
+                          type="button"
+                          className={`edit-fit-btn ${bannerFit === 'cover' ? 'active' : ''}`}
+                          onClick={() => setBannerFit('cover')}
+                          title="Fill entire fixed frame"
+                        >
+                          Cover (Fill)
+                        </button>
+                        <button
+                          type="button"
+                          className={`edit-fit-btn ${bannerFit === 'contain' ? 'active' : ''}`}
+                          onClick={() => setBannerFit('contain')}
+                          title="Show full original image without cropping"
+                        >
+                          Contain (Fit)
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Vertical Alignment Slider */}
+                    <div className="edit-adjust-row">
+                      <div className="edit-adjust-label-row">
+                        <span className="edit-adjust-label">Vertical Position (Y-Axis)</span>
+                        <span className="edit-adjust-val-badge">
+                          {bannerPosY === 0 ? 'Top (0%)' : bannerPosY === 50 ? 'Center (50%)' : bannerPosY === 100 ? 'Bottom (100%)' : `${bannerPosY}%`}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={bannerPosY}
+                        onChange={(e) => setBannerPosY(Number(e.target.value))}
+                        className="edit-adjust-slider"
+                        aria-label="Adjust banner vertical position"
+                      />
+                      <div className="edit-adjust-presets">
+                        <button
+                          type="button"
+                          className={`edit-preset-btn ${bannerPosY === 0 ? 'active' : ''}`}
+                          onClick={() => setBannerPosY(0)}
+                        >
+                          Top
+                        </button>
+                        <button
+                          type="button"
+                          className={`edit-preset-btn ${bannerPosY === 50 ? 'active' : ''}`}
+                          onClick={() => setBannerPosY(50)}
+                        >
+                          Center
+                        </button>
+                        <button
+                          type="button"
+                          className={`edit-preset-btn ${bannerPosY === 100 ? 'active' : ''}`}
+                          onClick={() => setBannerPosY(100)}
+                        >
+                          Bottom
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Zoom / Scale Slider */}
+                    <div className="edit-adjust-row">
+                      <div className="edit-adjust-label-row">
+                        <span className="edit-adjust-label">Zoom Scale</span>
+                        <span className="edit-adjust-val-badge">{bannerZoom.toFixed(2)}x</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1.0"
+                        max="2.0"
+                        step="0.05"
+                        value={bannerZoom}
+                        onChange={(e) => setBannerZoom(Number(e.target.value))}
+                        className="edit-adjust-slider"
+                        aria-label="Adjust banner zoom scale"
+                      />
+                      <div className="edit-adjust-presets">
+                        <button
+                          type="button"
+                          className={`edit-preset-btn ${bannerZoom === 1.0 ? 'active' : ''}`}
+                          onClick={() => setBannerZoom(1.0)}
+                        >
+                          Reset 1.0x
+                        </button>
+                        <button
+                          type="button"
+                          className={`edit-preset-btn ${bannerZoom === 1.25 ? 'active' : ''}`}
+                          onClick={() => setBannerZoom(1.25)}
+                        >
+                          1.25x
+                        </button>
+                        <button
+                          type="button"
+                          className={`edit-preset-btn ${bannerZoom === 1.5 ? 'active' : ''}`}
+                          onClick={() => setBannerZoom(1.5)}
+                        >
+                          1.5x
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

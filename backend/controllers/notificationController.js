@@ -35,17 +35,26 @@ const getNotifications = async (req, res) => {
     // Filter by privacy boundary
     if (currentUser && currentUser.role === 'admin') {
       // Admin sees all broadcast & user notification records
-    } else if (currentUser && currentUser.email) {
+    } else if (currentUser) {
       // Authenticated user: sees general broadcast notices + their own targeted notifications
-      const userEmail = currentUser.email.trim().toLowerCase();
+      const userEmail = (currentUser.email || '').trim().toLowerCase();
+      const userId = currentUser.uid || currentUser.id;
+      const userUsername = (currentUser.username || '').trim().toLowerCase();
+
       notifications = notifications.filter((n) => {
-        if (!n.targetEmail) return true;
-        return n.targetEmail.trim().toLowerCase() === userEmail;
+        const isTargeted = Boolean(n.targetEmail || n.targetUserId || n.targetUsername);
+        if (!isTargeted) return true;
+
+        if (n.targetEmail && userEmail && n.targetEmail.trim().toLowerCase() === userEmail) return true;
+        if (n.targetUserId && userId && String(n.targetUserId) === String(userId)) return true;
+        if (n.targetUsername && userUsername && n.targetUsername.trim().toLowerCase() === userUsername) return true;
+
+        return false;
       });
     } else {
-      // Unauthenticated public: only general broadcasts without targetEmail
+      // Unauthenticated public: only general broadcasts without targetEmail, targetUserId, or targetUsername
       notifications = notifications.filter((n) => {
-        return !n.targetEmail;
+        return !n.targetEmail && !n.targetUserId && !n.targetUsername;
       });
     }
 

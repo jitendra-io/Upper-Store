@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB, recordUserDownload } from '../utils/downloadTracker';
 import TermsAcceptanceModal from './TermsAcceptanceModal';
 import { CrownIcon, DiamondIcon, StarIcon } from './Icons';
-import { VipAvatar, VipFlairBadge } from './VipAvatar';
+import { VipAvatar } from './VipAvatar';
 import './ProductReviewsModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -551,28 +551,6 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                   </div>
                 )}
 
-                {/* VIP REVIEWING STATUS PILL */}
-                {(() => {
-                  const isUserVipActive = (user?.membership?.plan === 'pro' || user?.membership?.plan === 'elite') &&
-                    user?.membership?.validUntil &&
-                    new Date(user.membership.validUntil) > new Date();
-
-                  if (!isUserVipActive) return null;
-                  return user?.membership?.plan === 'elite' ? (
-                    <div className="review-posting-tier elite">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <DiamondIcon size={14} /> Posting as <strong>Elite VIP</strong> &bull; Pinned at top of reviews
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="review-posting-tier pro">
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <CrownIcon size={14} /> Posting as <strong>Pro VIP</strong> &bull; Priority Golden badge
-                      </span>
-                    </div>
-                  );
-                })()}
-
                 {/* STAR RATING INTERACTIVE SELECTOR */}
                 <div className="rating-picker-row">
                   <span className="picker-label">Your Rating:</span>
@@ -644,7 +622,7 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                       {isElite && (
                         <div className="pinned-elite-ribbon">
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                            <StarIcon size={12} fill="currentColor" /> PINNED ELITE VIP REVIEW
+                            <StarIcon size={12} fill="currentColor" /> PINNED REVIEW
                           </span>
                         </div>
                       )}
@@ -661,11 +639,6 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
                             <span className="review-user-name" title={rev.userName || rev.userEmail?.split('@')[0]}>
                               {rev.userName || rev.userEmail?.split('@')[0]}
                             </span>
-                            {isElite ? (
-                                <VipFlairBadge plan="elite" compact={true} />
-                              ) : isPro ? (
-                                <VipFlairBadge plan="pro" compact={true} />
-                              ) : null}
                             <div className="review-card-stars">
                               {[1, 2, 3, 4, 5].map((s) => {
                                 const isFilled = s <= rev.rating;

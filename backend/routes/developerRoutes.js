@@ -4,6 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { protect, protectAdmin } = require('../middleware/authMiddleware');
+const { followLimiter } = require('../middleware/rateLimiter');
 const {
   getMyDeveloperProfile,
   registerDeveloperKyc,
@@ -16,6 +17,11 @@ const {
   updateOfficialProfile,
   uploadOfficialCoverImage,
   removeOfficialCoverImage,
+  toggleFollowDeveloper,
+  getFollowStatus,
+  getDeveloperFollowers,
+  getDeveloperFollowing,
+  removeDeveloperFollower,
 } = require('../controllers/developerController');
 
 // Multer storage for profile background / cover images
@@ -64,6 +70,19 @@ const handleCoverUpload = (req, res, next) => {
 
 // Public Developer Profile & Published Products (No Auth required)
 router.get('/profile/:username', getPublicDeveloperProfile);
+
+// Real Followers & Following Lists (Public, Rate Limited)
+router.get('/:username/followers', followLimiter, getDeveloperFollowers);
+router.get('/:username/following', followLimiter, getDeveloperFollowing);
+
+// Remove Follower (Authenticated, Owner/Admin Only, Rate Limited)
+router.delete('/:username/followers/:followerUsername', followLimiter, protect, removeDeveloperFollower);
+router.post('/:username/followers/remove', followLimiter, protect, removeDeveloperFollower);
+
+// Follow / Unfollow Developer Routes (Authenticated, Rate Limited, Concurrency Protected)
+router.post('/follow/:username', followLimiter, protect, toggleFollowDeveloper);
+router.delete('/follow/:username', followLimiter, protect, toggleFollowDeveloper);
+router.get('/follow-status/:username', followLimiter, protect, getFollowStatus);
 
 // Upper Store Official Profile Management (Strict Admin Access)
 router.get('/official/profile', getOfficialProfile);

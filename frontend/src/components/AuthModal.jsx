@@ -28,32 +28,38 @@ const AuthModal = () => {
   const [isDpdpConsentGiven, setIsDpdpConsentGiven] = useState(false);
   const [showPrivacyNotice, setShowPrivacyNotice] = useState(false);
 
-  // Lock background scroll & reset fields
+  // Lock background scroll, reset fields & listen to Escape key
   useEffect(() => {
-    if (authModalOpen) {
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-      setErrorMsg('');
-      setEmail('');
-      setPassword('');
-      setDisplayName('');
-      setUsername('');
-      setUsernameError('');
-      setIsAdultConfirmed(false);
-      setIsDpdpConsentGiven(false);
-      setShowPrivacyNotice(false);
-    } else {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.touchAction = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      document.body.style.touchAction = '';
+    if (!authModalOpen) return;
+
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    setErrorMsg('');
+    setEmail('');
+    setPassword('');
+    setDisplayName('');
+    setUsername('');
+    setUsernameError('');
+    setIsAdultConfirmed(false);
+    setIsDpdpConsentGiven(false);
+    setShowPrivacyNotice(false);
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        closeAuthModal();
+      }
     };
-  }, [authModalOpen]);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [authModalOpen, closeAuthModal]);
 
   // Listen for Google OAuth popup messages fallback
   useEffect(() => {
@@ -230,24 +236,24 @@ const AuthModal = () => {
           </button>
         </div>
 
-        {/* ERROR BADGE */}
-        {errorMsg && (
-          <div className="auth-error-alert">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', flexShrink: 0 }}>
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-              <line x1="12" y1="9" x2="12" y2="13"></line>
-              <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
         {/* REGULAR EMAIL & PASSWORD FORM (AUTOFILL DISABLED) */}
         <form className="auth-form" onSubmit={handleSubmit} autoComplete="off">
           
           {/* Dummy hidden inputs to prevent browser password manager autofill */}
           <input type="text" style={{ display: 'none' }} aria-hidden="true" tabIndex={-1} />
           <input type="password" style={{ display: 'none' }} aria-hidden="true" tabIndex={-1} />
+
+          {/* ERROR BADGE (SCROLLS WITH FORM CONTENT) */}
+          {errorMsg && (
+            <div className="auth-error-alert">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', flexShrink: 0 }}>
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <span>{errorMsg}</span>
+            </div>
+          )}
 
           {/* GOOGLE OAUTH BUTTON (EXTERNAL POPUP WINDOW) */}
           <button type="button" className="auth-google-btn" onClick={handleGoogleClick} disabled={loading}>
@@ -358,51 +364,49 @@ const AuthModal = () => {
           </div>
 
           {authModalTab === 'register' && (
-            <div className="dpdp-consent-box" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '0.85rem', marginBottom: '1.25rem', fontSize: '0.82rem', color: '#cbd5e1' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '0.65rem' }}>
+            <div className="auth-dpdp-box">
+              <div className="auth-checkbox-row">
                 <input
                   type="checkbox"
                   id="auth-adult-check"
                   checked={isAdultConfirmed}
                   onChange={(e) => setIsAdultConfirmed(e.target.checked)}
-                  style={{ marginTop: '3px', cursor: 'pointer', accentColor: '#ffd700' }}
                   required
                 />
-                <label htmlFor="auth-adult-check" style={{ cursor: 'pointer', lineHeight: 1.4 }}>
+                <label htmlFor="auth-adult-check">
                   I confirm that I am <strong>18 years of age or older</strong>.
                 </label>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '0.5rem' }}>
+              <div className="auth-checkbox-row">
                 <input
                   type="checkbox"
                   id="auth-dpdp-check"
                   checked={isDpdpConsentGiven}
                   onChange={(e) => setIsDpdpConsentGiven(e.target.checked)}
-                  style={{ marginTop: '3px', cursor: 'pointer', accentColor: '#ffd700' }}
                   required
                 />
-                <label htmlFor="auth-dpdp-check" style={{ cursor: 'pointer', lineHeight: 1.4 }}>
+                <label htmlFor="auth-dpdp-check">
                   I agree to the collection and processing of my personal data under the{' '}
-                  <a href="/policies#privacy" target="_blank" rel="noopener noreferrer" style={{ color: '#ffd700', textDecoration: 'underline' }}>Privacy Policy</a> and agree to the{' '}
-                  <a href="/policies#terms" target="_blank" rel="noopener noreferrer" style={{ color: '#ffd700', textDecoration: 'underline' }}>Terms of Service</a>.
+                  <a href="/policies#privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and agree to the{' '}
+                  <a href="/policies#terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.
                 </label>
               </div>
 
               <button
                 type="button"
+                className="auth-privacy-toggle-btn"
                 onClick={() => setShowPrivacyNotice(!showPrivacyNotice)}
-                style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '0.78rem', padding: '0', cursor: 'pointer', textDecoration: 'underline', marginTop: '4px' }}
               >
                 {showPrivacyNotice ? 'Hide Privacy Notice' : 'View Data Privacy Notice ▾'}
               </button>
 
               {showPrivacyNotice && (
-                <div style={{ marginTop: '0.6rem', padding: '0.6rem', background: 'rgba(0,0,0,0.4)', borderRadius: '6px', fontSize: '0.76rem', color: '#94a3b8', lineHeight: 1.5 }}>
-                  <p style={{ margin: '0 0 4px 0' }}><strong>Personal Data Collected:</strong> Email, username, profile name, IP address, download logs.</p>
-                  <p style={{ margin: '0 0 4px 0' }}><strong>Processing Purpose:</strong> Authentication, software licensing, anti-abuse security.</p>
-                  <p style={{ margin: '0 0 4px 0' }}><strong>Your Rights:</strong> Right to access, correct, erase data, and withdraw consent at any time.</p>
-                  <p style={{ margin: 0 }}><strong>Grievance Officer:</strong> upper.official.in@gmail.com | SLA: 24–48h response, 15 days resolution.</p>
+                <div className="auth-privacy-details">
+                  <p><strong>Personal Data Collected:</strong> Email, username, profile name, IP address, download logs.</p>
+                  <p><strong>Processing Purpose:</strong> Authentication, software licensing, anti-abuse security.</p>
+                  <p><strong>Your Rights:</strong> Right to access, correct, erase data, and withdraw consent at any time.</p>
+                  <p><strong>Grievance Officer:</strong> upper.official.in@gmail.com | SLA: 24–48h response, 15 days resolution.</p>
                 </div>
               )}
             </div>

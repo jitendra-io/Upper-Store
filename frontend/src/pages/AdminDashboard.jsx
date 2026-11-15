@@ -39,6 +39,30 @@ const AdminDashboard = () => {
   const [officialCoverPreview, setOfficialCoverPreview] = useState('');
   const officialFileInputRef = useRef(null);
 
+  // Official Cover Banner Adjustments (Y-axis position, zoom scale, fit mode, drag-to-reposition)
+  const [officialBannerPosY, setOfficialBannerPosY] = useState(50);
+  const [officialBannerZoom, setOfficialBannerZoom] = useState(1.0);
+  const [officialBannerFit, setOfficialBannerFit] = useState('cover');
+  const officialDragStartYRef = useRef(null);
+  const officialDragStartPosRef = useRef(50);
+
+  const handleOfficialDragStart = (clientY) => {
+    officialDragStartYRef.current = clientY;
+    officialDragStartPosRef.current = officialBannerPosY;
+  };
+
+  const handleOfficialDragMove = (clientY) => {
+    if (officialDragStartYRef.current === null) return;
+    const deltaY = clientY - officialDragStartYRef.current;
+    const sensitivity = 0.55;
+    const newPos = Math.max(0, Math.min(100, Math.round(officialDragStartPosRef.current - deltaY * sensitivity)));
+    setOfficialBannerPosY(newPos);
+  };
+
+  const handleOfficialDragEnd = () => {
+    officialDragStartYRef.current = null;
+  };
+
   // Products State
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -251,6 +275,36 @@ const AdminDashboard = () => {
         const bg = data.developer.coverImage || data.developer.banner || '';
         setOfficialCoverImage(bg);
         setOfficialCoverPreview(bg);
+
+        // Parse official banner adjustment parameters
+        let posY = data.developer.bannerPosY !== undefined ? Number(data.developer.bannerPosY) : 50;
+        let zoom = data.developer.bannerZoom !== undefined ? Number(data.developer.bannerZoom) : 1.0;
+        let fit = (data.developer.bannerFit && ['cover', 'contain'].includes(data.developer.bannerFit)) ? data.developer.bannerFit : 'cover';
+
+        if (bg) {
+          const posMatch = bg.match(/[#?&]vpos=([0-9.]+)/);
+          if (posMatch) posY = Math.max(0, Math.min(100, Number(posMatch[1])));
+          const zoomMatch = bg.match(/[#?&]zoom=([0-9.]+)/);
+          if (zoomMatch) zoom = Math.max(1.0, Math.min(2.5, Number(zoomMatch[1])));
+          const fitMatch = bg.match(/[#?&]fit=([a-z]+)/);
+          if (fitMatch && ['cover', 'contain'].includes(fitMatch[1])) fit = fitMatch[1];
+        }
+
+        if (typeof window !== 'undefined') {
+          try {
+            const stored = localStorage.getItem('upper_banner_pos_upperstore');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              if (!bg.includes('vpos=') && data.developer.bannerPosY === undefined && parsed.posY !== undefined) posY = parsed.posY;
+              if (!bg.includes('zoom=') && data.developer.bannerZoom === undefined && parsed.zoom !== undefined) zoom = parsed.zoom;
+              if (!bg.includes('fit=') && data.developer.bannerFit === undefined && parsed.fit !== undefined) fit = parsed.fit;
+            }
+          } catch (_) {}
+        }
+
+        setOfficialBannerPosY(posY);
+        setOfficialBannerZoom(zoom);
+        setOfficialBannerFit(fit);
       }
     } catch (err) {
       console.warn('Error fetching official store profile in admin dashboard:', err);
@@ -298,7 +352,8 @@ const AdminDashboard = () => {
       }
 
       const cdnUrl = data.coverImage || localUrl;
-      setOfficialCoverImage(cdnUrl);
+      const fullUrl = `${cdnUrl.split('#')[0]}#vpos=${officialBannerPosY}&zoom=${officialBannerZoom}&fit=${officialBannerFit}`;
+      setOfficialCoverImage(fullUrl);
       setOfficialCoverPreview(cdnUrl);
       showMessage('Official store background image uploaded to ImageKit CDN successfully!', 'success');
     } catch (err) {
@@ -317,6 +372,9 @@ const AdminDashboard = () => {
   const handleRemoveOfficialCover = async () => {
     setOfficialCoverImage('');
     setOfficialCoverPreview('');
+    setOfficialBannerPosY(50);
+    setOfficialBannerZoom(1.0);
+    setOfficialBannerFit('cover');
     try {
       const res = await fetch(`${API_BASE}/api/developers/official/cover-image`, {
         method: 'DELETE',
@@ -326,6 +384,9 @@ const AdminDashboard = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Failed to remove cover image.');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('upper_banner_pos_upperstore');
+      }
       showMessage('Official background image removed. Reverted to default mesh.', 'success');
     } catch (err) {
       console.warn('Remove official cover error:', err);
@@ -335,16 +396,34 @@ const AdminDashboard = () => {
 
   // Save Official Store Profile Details
   const handleSaveOfficialProfile = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setSavingOfficialProfile(true);
 
     try {
+      const cleanCover = officialCoverImage ? officialCoverImage.split('#')[0] : '';
+      const finalCover = cleanCover
+        ? `${cleanCover}#vpos=${officialBannerPosY}&zoom=${officialBannerZoom}&fit=${officialBannerFit}`
+        : '';
+
       const payload = {
         displayName: officialDisplayName.trim() || 'Upper Store Official',
         bio: officialBio.trim().slice(0, 500),
         location: (officialLocation || 'None').trim().slice(0, 80),
-        coverImage: (officialCoverImage || '').trim(),
+        coverImage: finalCover,
+        bannerPosY: officialBannerPosY,
+        bannerZoom: officialBannerZoom,
+        bannerFit: officialBannerFit,
       };
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('upper_banner_pos_upperstore', JSON.stringify({
+            posY: officialBannerPosY,
+            zoom: officialBannerZoom,
+            fit: officialBannerFit,
+          }));
+        } catch (_) {}
+      }
 
       const res = await fetch(`${API_BASE}/api/developers/official/profile`, {
         method: 'PUT',
@@ -3226,24 +3305,212 @@ const AdminDashboard = () => {
                 disabled={uploadingOfficialCover}
               />
 
-              {/* Cover Preview Card */}
-              <div className="official-banner-preview-box">
+              {/* Cover Preview Card with Drag-to-Reposition */}
+              <div
+                className={`official-banner-preview-box ${officialCoverPreview ? 'is-draggable' : ''}`}
+                onMouseDown={(e) => {
+                  if (officialCoverPreview) handleOfficialDragStart(e.clientY);
+                }}
+                onMouseMove={(e) => {
+                  if (officialCoverPreview && e.buttons === 1) handleOfficialDragMove(e.clientY);
+                }}
+                onMouseUp={handleOfficialDragEnd}
+                onMouseLeave={handleOfficialDragEnd}
+                onTouchStart={(e) => {
+                  if (officialCoverPreview && e.touches?.[0]) handleOfficialDragStart(e.touches[0].clientY);
+                }}
+                onTouchMove={(e) => {
+                  if (officialCoverPreview && e.touches?.[0]) handleOfficialDragMove(e.touches[0].clientY);
+                }}
+                onTouchEnd={handleOfficialDragEnd}
+                title={officialCoverPreview ? 'Click and drag up or down to reposition the visible banner area' : undefined}
+              >
                 {officialCoverPreview ? (
-                  <img
-                    src={officialCoverPreview}
-                    alt="Upper Store Official Cover Banner"
-                    className="official-banner-img"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
+                  <>
+                    <div
+                      className="official-banner-ambient-blur"
+                      style={{
+                        backgroundImage: `url(${officialCoverPreview.split('#')[0]})`,
+                      }}
+                      aria-hidden="true"
+                    />
+                    <img
+                      src={officialCoverPreview.split('#')[0]}
+                      alt="Upper Store Official Cover Banner"
+                      className="official-banner-img"
+                      style={{
+                        objectFit: officialBannerFit,
+                        objectPosition: `center ${officialBannerPosY}%`,
+                        transform: officialBannerZoom > 1 ? `scale(${officialBannerZoom})` : undefined,
+                        transformOrigin: `center ${officialBannerPosY}%`,
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    <div className="official-banner-overlay"></div>
+                    <div className="official-banner-status-badges">
+                      <div className="official-banner-drag-badge">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                          <line x1="12" y1="9" x2="12" y2="21"></line>
+                          <polyline points="7 14 12 9 17 14"></polyline>
+                        </svg>
+                        <span>Drag to reposition</span>
+                      </div>
+                      <div className="official-banner-coords-badge">
+                        <span>Y: {officialBannerPosY}% | Zoom: {officialBannerZoom.toFixed(2)}x | {officialBannerFit}</span>
+                      </div>
+                    </div>
+                  </>
                 ) : (
-                  <div className="official-banner-default-mesh">
-                    <span className="official-mesh-label">Default Luxury Dark Mesh Cover</span>
-                  </div>
+                  <>
+                    <div className="official-banner-default-mesh">
+                      <span className="official-mesh-label">Default Luxury Dark Mesh Cover</span>
+                    </div>
+                    <div className="official-banner-overlay"></div>
+                  </>
                 )}
-                <div className="official-banner-overlay"></div>
               </div>
+
+              {/* Adjustment Controls Panel (Available when a custom banner is loaded) */}
+              {officialCoverPreview && (
+                <div className="official-banner-adjust-panel">
+                  <div className="official-adjust-header">
+                    <span className="official-adjust-title">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      </svg>
+                      Adjust Official Banner Position & Scale
+                    </span>
+
+                    {/* Fit Mode Toggle */}
+                    <div className="official-fit-toggle">
+                      <button
+                        type="button"
+                        className={`official-fit-btn ${officialBannerFit === 'cover' ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerFit('cover')}
+                        title="Fill entire fixed frame"
+                      >
+                        Cover (Fill)
+                      </button>
+                      <button
+                        type="button"
+                        className={`official-fit-btn ${officialBannerFit === 'contain' ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerFit('contain')}
+                        title="Show full original image without cropping"
+                      >
+                        Contain (Fit)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Vertical Position Slider */}
+                  <div className="official-adjust-row">
+                    <div className="official-adjust-label-row">
+                      <span className="official-adjust-label">Vertical Position (Y-Axis)</span>
+                      <span className="official-adjust-val-badge">
+                        {officialBannerPosY === 0 ? 'Top (0%)' : officialBannerPosY === 50 ? 'Center (50%)' : officialBannerPosY === 100 ? 'Bottom (100%)' : `${officialBannerPosY}%`}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={officialBannerPosY}
+                      onChange={(e) => setOfficialBannerPosY(Number(e.target.value))}
+                      className="official-adjust-slider"
+                      aria-label="Adjust official banner vertical position"
+                    />
+                    <div className="official-adjust-presets">
+                      <button
+                        type="button"
+                        className={`official-preset-btn ${officialBannerPosY === 0 ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerPosY(0)}
+                      >
+                        Top
+                      </button>
+                      <button
+                        type="button"
+                        className={`official-preset-btn ${officialBannerPosY === 50 ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerPosY(50)}
+                      >
+                        Center
+                      </button>
+                      <button
+                        type="button"
+                        className={`official-preset-btn ${officialBannerPosY === 100 ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerPosY(100)}
+                      >
+                        Bottom
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Zoom Scale Slider */}
+                  <div className="official-adjust-row">
+                    <div className="official-adjust-label-row">
+                      <span className="official-adjust-label">Zoom Scale</span>
+                      <span className="official-adjust-val-badge">{officialBannerZoom.toFixed(2)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="2.5"
+                      step="0.05"
+                      value={officialBannerZoom}
+                      onChange={(e) => setOfficialBannerZoom(Number(e.target.value))}
+                      className="official-adjust-slider"
+                      aria-label="Adjust official banner zoom scale"
+                    />
+                    <div className="official-adjust-presets">
+                      <button
+                        type="button"
+                        className={`official-preset-btn ${officialBannerZoom === 1.0 ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerZoom(1.0)}
+                      >
+                        Reset 1.0x
+                      </button>
+                      <button
+                        type="button"
+                        className={`official-preset-btn ${officialBannerZoom === 1.25 ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerZoom(1.25)}
+                      >
+                        1.25x
+                      </button>
+                      <button
+                        type="button"
+                        className={`official-preset-btn ${officialBannerZoom === 1.5 ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerZoom(1.5)}
+                      >
+                        1.5x
+                      </button>
+                      <button
+                        type="button"
+                        className={`official-preset-btn ${officialBannerZoom === 2.0 ? 'active' : ''}`}
+                        onClick={() => setOfficialBannerZoom(2.0)}
+                      >
+                        2.0x
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Direct Save Banner Adjustments Button */}
+                  <div className="official-adjust-actions">
+                    <button
+                      type="button"
+                      className="admin-btn primary sm"
+                      onClick={handleSaveOfficialProfile}
+                      disabled={savingOfficialProfile}
+                      style={{ fontSize: '0.78rem', padding: '0.45rem 1rem' }}
+                    >
+                      {savingOfficialProfile ? 'Saving Banner Adjustments...' : 'Save Banner Adjustments'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Upload Controls */}
               {uploadingOfficialCover ? (

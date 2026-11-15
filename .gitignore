@@ -14,10 +14,13 @@ frontend/.env
 !**/.env.example
 
 
-# Logs & Editor
+# Logs, Editor & Temporary Scratch Files
 logs/
 *.log
 .DS_Store
 .vscode/
 .idea/
 .agents/
+scratch/
+
+scratch/

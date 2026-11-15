@@ -10,7 +10,7 @@ import DeveloperStudioModal from './DeveloperStudioModal';
 import { VipUsernameModal } from './VipUsernameModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, AlertTriangleIcon, ArrowRightIcon, CloseIcon, ShieldOffIcon } from './Icons';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
-import { VipAvatar, VipFlairBadge } from './VipAvatar';
+import { VipAvatar } from './VipAvatar';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import './Navbar.css';
 
@@ -529,7 +529,6 @@ const Navbar = ({ onOpenSearch }) => {
                                 <div className="notif-author-meta-col">
                                   <div className="notif-author-row-top">
                                     <span className="notif-author-title">{authorTitle}</span>
-                                    <VipFlairBadge plan={isEliteAuthor ? 'elite' : 'pro'} compact={true} />
                                   </div>
                                   <span className="notif-author-handle">@{authorHandle}</span>
                                 </div>
@@ -643,9 +642,6 @@ const Navbar = ({ onOpenSearch }) => {
                   fallbackSeed={user?.email || 'user'}
                 />
                 <span className="nav-user-name">{user?.displayName || user?.email?.split('@')[0]}</span>
-                {isUserVipActive(user) && (
-                  <VipFlairBadge plan={getUserVipTier(user)} compact={true} />
-                )}
                 {isBanned && <span className="nav-banned-tag">BANNED</span>}
                 <span className="dropdown-caret">▾</span>
               </button>

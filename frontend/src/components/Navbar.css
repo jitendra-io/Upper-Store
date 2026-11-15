@@ -910,6 +910,7 @@
 .notif-cat-tag.release { background: rgba(16, 185, 129, 0.15); color: #10b981; }
 .notif-cat-tag.notice { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
 .notif-cat-tag.announcement { background: rgba(230, 25, 25, 0.15); color: #e61919; }
+.notif-cat-tag.follower { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
 
 .notif-time {
   font-size: 0.72rem;

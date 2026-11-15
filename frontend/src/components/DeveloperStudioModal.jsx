@@ -1485,7 +1485,6 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       <div className="brand-preview-meta">
                         <span className="brand-dev-name">{devProfile?.displayName || user?.displayName || 'VIP Developer'}</span>
                         <a href={'/developer/' + (kycForm.username || devProfile?.username || user?.username || 'upperstore')} target="_blank" rel="noopener noreferrer" className="brand-dev-handle dev-profile-preview-link" title="Open your public developer profile in new tab">@{kycForm.username || devProfile?.username || user?.username || 'handle'} ↗</a>
-                        <VipFlairBadge plan={vipTier} compact={true} />
                       </div>
                     </div>
                   </div>
@@ -1699,7 +1698,6 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                       <div className="live-author-meta">
                         <span className="live-name">{devProfile?.displayName || user?.displayName || 'VIP Developer'}</span>
                         <a href={'/developer/' + (kycForm.username || devProfile?.username || user?.username || 'upperstore')} target="_blank" rel="noopener noreferrer" className="brand-dev-handle dev-profile-preview-link" title="Open your public developer profile in new tab">@{kycForm.username || devProfile?.username || user?.username || 'handle'} ↗</a>
-                        <VipFlairBadge plan={vipTier} compact={true} />
                       </div>
                       <span className={`live-cat-badge ${vipTier}`}>
                         {broadcastForm.category || 'Release'}

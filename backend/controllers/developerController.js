@@ -2,6 +2,8 @@ const crypto = require('crypto');
 const { db } = require('../config/firebase');
 const path = require('path');
 const fs = require('fs');
+const jwt = require('jsonwebtoken');
+const { getJwtSecret } = require('../config/jwtConfig');
 const { uploadFileToCloudOrLocal } = require('../services/imagekitService');
 const { invalidateSearchCache } = require('../services/searchService');
 
@@ -616,15 +618,54 @@ const getPublicDeveloperProfile = async (req, res) => {
       const officialDoc = await db.collection('system_settings').doc('official_profile').get();
       const officialData = officialDoc.exists ? officialDoc.data() : {};
 
+      // Real followers and following counts for Upper Store
+      let followersCount = 0;
+      let followingCount = 0;
+      let isFollowing = false;
+
+      try {
+        const followersCountSnap = await db.collection('developer_follows')
+          .where('developerUsername', 'in', ['upperstore', 'upper-store', 'upper_store', 'upperofficial'])
+          .count()
+          .get();
+        followersCount = followersCountSnap.data().count || 0;
+
+        const followingCountSnap = await db.collection('developer_follows')
+          .where('followerUsername', 'in', ['upperstore', 'upper-store', 'upper_store', 'upperofficial'])
+          .count()
+          .get();
+        followingCount = followingCountSnap.data().count || 0;
+
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          try {
+            const token = authHeader.split(' ')[1];
+            const decoded = jwt.verify(token, getJwtSecret());
+            const reqUid = decoded.uid || decoded.id || decoded.userId;
+            if (reqUid) {
+              const followDoc1 = await db.collection('developer_follows').doc(`${reqUid}_upperstore`).get();
+              const followDoc2 = await db.collection('developer_follows').doc(`${reqUid}_upperofficial`).get();
+              isFollowing = followDoc1.exists || followDoc2.exists;
+            }
+          } catch (_) {}
+        }
+      } catch (fErr) {
+        console.warn('Error fetching upperstore follow counts:', fErr.message);
+      }
+
       return res.json({
         developer: {
           id: 'upper-store-official',
+          userId: 'GOhjkTTW9ZPqPS9I7Oa1',
           username: 'upperstore',
           displayName: officialData.displayName || 'Upper Store Official',
           bio: (officialData.bio && officialData.bio.trim()) ? officialData.bio : 'None',
           avatar: officialData.avatar || '/logo.png',
           coverImage: officialData.coverImage || officialData.banner || '',
           banner: officialData.coverImage || officialData.banner || '',
+          bannerPosY: officialData.bannerPosY !== undefined ? officialData.bannerPosY : 50,
+          bannerZoom: officialData.bannerZoom !== undefined ? officialData.bannerZoom : 1.0,
+          bannerFit: officialData.bannerFit || 'cover',
           location: officialData.location || 'None',
           vipPlan: 'official', // Conic Emerald Green Official Ring
           isVerified: true,
@@ -632,11 +673,16 @@ const getPublicDeveloperProfile = async (req, res) => {
           isDeveloper: true,
           isSuspended: false,
           joinedAt: officialData.joinedAt || 'January 2026',
+          followersCount,
+          followingCount,
+          isFollowing,
         },
         stats: {
           productsCount: officialProducts.length,
           totalDownloads,
           averageRating: Number(avgRating),
+          followersCount,
+          followingCount,
         },
         products: officialProducts,
       });
@@ -791,17 +837,91 @@ const getPublicDeveloperProfile = async (req, res) => {
       }
     }
 
-    // 4. Compute dynamic stats
+    // 4. Compute dynamic stats and real reviews from database
     const totalDownloads = matchedProducts.reduce(
       (sum, p) => sum + (Number(p.downloadCount) || 0),
       0
     );
-    const avgRating =
-      matchedProducts.length > 0
-        ? (
-            matchedProducts.reduce((sum, p) => sum + (Number(p.rating) || 5), 0) / matchedProducts.length
-          ).toFixed(1)
-        : '5.0';
+
+    // Fetch real reviews from 'reviews' collection for developer products
+    const productIds = matchedProducts.map((p) => p.id).filter(Boolean);
+    let totalReviewsCount = 0;
+    let totalReviewRatingSum = 0;
+    const productReviewStats = {};
+
+    if (productIds.length > 0) {
+      try {
+        const chunks = [];
+        for (let i = 0; i < productIds.length; i += 30) {
+          chunks.push(productIds.slice(i, i + 30));
+        }
+        for (const chunk of chunks) {
+          const revSnap = await db.collection('reviews').where('productId', 'in', chunk).get();
+          revSnap.docs.forEach((doc) => {
+            const r = doc.data();
+            const num = Number(r.rating);
+            if (!isNaN(num) && num >= 1 && num <= 5) {
+              totalReviewRatingSum += num;
+              totalReviewsCount++;
+              if (!productReviewStats[r.productId]) {
+                productReviewStats[r.productId] = { sum: 0, count: 0 };
+              }
+              productReviewStats[r.productId].sum += num;
+              productReviewStats[r.productId].count++;
+            }
+          });
+        }
+      } catch (revErr) {
+        console.warn('Error fetching real reviews for developer products:', revErr.message);
+      }
+    }
+
+    // Attach real rating and review counts to each matched product
+    matchedProducts = matchedProducts.map((p) => {
+      const stats = productReviewStats[p.id];
+      const pAvg = stats && stats.count > 0 ? Number((stats.sum / stats.count).toFixed(1)) : 5.0;
+      const pCount = stats ? stats.count : 0;
+      return {
+        ...p,
+        averageRating: pAvg,
+        reviewsCount: pCount,
+      };
+    });
+
+    const avgRating = totalReviewsCount > 0
+      ? Number((totalReviewRatingSum / totalReviewsCount).toFixed(1))
+      : (matchedProducts.length > 0 ? 5.0 : 0.0);
+
+    // Real Followers and Following Counts from 'developer_follows' collection (O(1) server-side index count)
+    let followersCount = 0;
+    let followingCount = 0;
+    let isFollowing = false;
+
+    try {
+      const followersCountSnap = await db.collection('developer_follows').where('developerUsername', '==', cleanUsername).count().get();
+      followersCount = followersCountSnap.data().count || 0;
+
+      const devTargetUid = devData?.userId || userDoc?.id;
+      if (devTargetUid) {
+        const followingCountSnap = await db.collection('developer_follows').where('followerId', '==', devTargetUid).count().get();
+        followingCount = followingCountSnap.data().count || 0;
+      }
+
+      // Check if requesting user is following (if auth token provided)
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+          const token = authHeader.split(' ')[1];
+          const decoded = jwt.verify(token, getJwtSecret());
+          if (decoded && decoded.uid) {
+            const followDoc = await db.collection('developer_follows').doc(`${decoded.uid}_${cleanUsername}`).get();
+            isFollowing = followDoc.exists;
+          }
+        } catch (_) {}
+      }
+    } catch (fErr) {
+      console.warn('Error fetching developer follow counts:', fErr.message);
+    }
 
     // 5. Safe Public Profile (Zero exposure of private Aadhaar, phone, or email)
     const publicProfile = {
@@ -847,6 +967,9 @@ const getPublicDeveloperProfile = async (req, res) => {
         new Date()
       ),
       createdAt: devData?.createdAt || userData?.createdAt || null,
+      followersCount,
+      followingCount,
+      isFollowing,
     };
 
     // Auto-sync products developerTier to match current active VIP tier
@@ -875,6 +998,9 @@ const getPublicDeveloperProfile = async (req, res) => {
         productsCount: matchedProducts.length,
         totalDownloads,
         averageRating: Number(avgRating),
+        totalReviews: totalReviewsCount,
+        followersCount,
+        followingCount,
       },
       products: matchedProducts.map((p) => {
         const safe = { ...p };
@@ -957,6 +1083,9 @@ const getOfficialProfile = async (req, res) => {
         avatar: officialData.avatar || '/logo.png',
         coverImage: officialData.coverImage || officialData.banner || '',
         banner: officialData.coverImage || officialData.banner || '',
+        bannerPosY: officialData.bannerPosY !== undefined ? officialData.bannerPosY : 50,
+        bannerZoom: officialData.bannerZoom !== undefined ? officialData.bannerZoom : 1.0,
+        bannerFit: officialData.bannerFit || 'cover',
         location: officialData.location || 'None',
         vipPlan: 'official', // Conic Emerald Green Official Ring
         isVerified: true,
@@ -980,13 +1109,16 @@ const updateOfficialProfile = async (req, res) => {
       return res.status(403).json({ message: 'Forbidden: Only Upper Store administrators can edit the official profile.' });
     }
 
-    const { displayName, bio, coverImage, banner, location } = req.body;
+    const { displayName, bio, coverImage, banner, location, bannerPosY, bannerZoom, bannerFit } = req.body;
     const updates = {
       updatedAt: new Date().toISOString(),
     };
     if (displayName) updates.displayName = String(displayName).slice(0, 60);
     if (bio !== undefined) updates.bio = String(bio).slice(0, 500);
     if (location !== undefined) updates.location = String(location).slice(0, 80);
+    if (bannerPosY !== undefined) updates.bannerPosY = Math.max(0, Math.min(100, Number(bannerPosY)));
+    if (bannerZoom !== undefined) updates.bannerZoom = Math.max(1.0, Math.min(2.5, Number(bannerZoom)));
+    if (bannerFit !== undefined && ['cover', 'contain'].includes(bannerFit)) updates.bannerFit = bannerFit;
     const rawCover = coverImage !== undefined ? coverImage : banner;
     if (rawCover !== undefined) {
       updates.coverImage = String(rawCover).trim();
@@ -1087,6 +1219,646 @@ const removeOfficialCoverImage = async (req, res) => {
 };
 
 
+// In-memory concurrency locks to prevent server freeze from rapid spam/burst follow requests
+const activeFollowLocks = new Set();
+
+// Helper to determine VIP ring plan for a user/developer record
+const computeVipRingPlan = (userData = {}, devData = {}) => {
+  const membership = userData.membership || devData.membership || null;
+  const validUntil = membership?.validUntil || null;
+  const isExpired = Boolean(validUntil && new Date(validUntil) < new Date());
+  const isCancelled = Boolean(membership?.isCancelled);
+
+  if (membership && (membership.plan === 'elite' || membership.plan === 'pro') && !isExpired && !isCancelled) {
+    return membership.plan;
+  }
+  if (devData.vipPlan === 'elite' || devData.vipPlan === 'pro') {
+    if (!devData.subscriptionEnded && !devData.isSuspended) {
+      return devData.vipPlan;
+    }
+  }
+  const handle = (userData.username || devData.username || '').toLowerCase();
+  if (devData.isOfficial || devData.vipPlan === 'official' || ['upperstore', 'upper-store', 'upper_store'].includes(handle)) {
+    return 'official';
+  }
+  return 'free';
+};
+
+// @desc    Toggle follow / unfollow developer
+// @route   POST /api/developers/follow/:username
+// @access  Private (Authenticated User)
+const toggleFollowDeveloper = async (req, res) => {
+  const followerId = req.user?.uid;
+  const rawUsername = (req.params.username || '').trim();
+  const cleanUsername = rawUsername.replace(/^@/, '').trim().toLowerCase();
+
+  if (!followerId) {
+    return res.status(401).json({ message: 'Authentication required.' });
+  }
+
+  if (!cleanUsername) {
+    return res.status(400).json({ message: 'Developer username is required.' });
+  }
+
+  // Non-blocking concurrency lock to eliminate double-clicks and server freeze under concurrent spam
+  const lockKey = `${followerId}_${cleanUsername}`;
+  if (activeFollowLocks.has(lockKey)) {
+    return res.status(429).json({
+      success: false,
+      message: 'Follow request already processing. Please wait a moment.',
+    });
+  }
+  activeFollowLocks.add(lockKey);
+
+  try {
+    // Locate target developer
+    let targetUserId = null;
+    let targetEmail = null;
+    const isOfficialTarget = ['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'].includes(cleanUsername);
+    let devSnap = { empty: true, docs: [] };
+
+    if (isOfficialTarget) {
+      targetUserId = 'GOhjkTTW9ZPqPS9I7Oa1';
+      targetEmail = 'upper.official.in@gmail.com';
+    } else {
+      devSnap = await db.collection('developers').where('username', '==', cleanUsername).limit(1).get();
+      if (!devSnap.empty) {
+        const d = devSnap.docs[0].data();
+        targetUserId = d.userId;
+        targetEmail = d.email || null;
+      } else {
+        const uSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
+        if (!uSnap.empty) {
+          const u = uSnap.docs[0].data();
+          targetUserId = uSnap.docs[0].id;
+          targetEmail = u.email || null;
+        }
+      }
+    }
+
+    if (targetUserId && !targetEmail) {
+      try {
+        const uDoc = await db.collection('users').doc(targetUserId).get();
+        if (uDoc.exists) targetEmail = uDoc.data().email || null;
+      } catch (_) {}
+    }
+
+    if (targetUserId && (targetUserId === followerId || (req.user?.email && targetEmail && req.user.email.toLowerCase().trim() === targetEmail.toLowerCase().trim()))) {
+      return res.status(400).json({ message: 'You cannot follow yourself.' });
+    }
+
+    // Fetch follower user & dev data for profile picture & VIP ring
+    let followerUserData = {};
+    let followerDevData = {};
+    try {
+      const uDoc = await db.collection('users').doc(followerId).get();
+      if (uDoc.exists) followerUserData = uDoc.data();
+      const dSnap = await db.collection('developers').where('userId', '==', followerId).limit(1).get();
+      if (!dSnap.empty) followerDevData = dSnap.docs[0].data();
+    } catch (_) {}
+
+    const followerUsername = followerUserData.username || followerDevData.username || req.user.username || (req.user.email ? req.user.email.split('@')[0] : 'user');
+    const cleanFollowerUsername = followerUsername.toLowerCase().trim();
+    const followerDisplayName = followerDevData.displayName || followerUserData.displayName || req.user.displayName || req.user.name || followerUsername;
+    const followerAvatar = followerDevData.avatar || followerUserData.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(cleanFollowerUsername)}`;
+    const followerVipTier = computeVipRingPlan(followerUserData, followerDevData);
+
+    const followDocRef = db.collection('developer_follows').doc(`${followerId}_${cleanUsername}`);
+    const followDoc = await followDocRef.get();
+
+    const forceUnfollow = req.method === 'DELETE' || req.body?.action === 'unfollow';
+    let nextIsFollowing = false;
+
+    if (forceUnfollow || followDoc.exists) {
+      if (followDoc.exists) {
+        await followDocRef.delete();
+      }
+      nextIsFollowing = false;
+
+      // Delete any follow notifications from this follower to this developer
+      try {
+        const notifQuery = await db.collection('notifications')
+          .where('type', '==', 'follow')
+          .where('authorUsername', '==', cleanFollowerUsername)
+          .where('targetUsername', '==', cleanUsername)
+          .get();
+        for (const doc of notifQuery.docs) {
+          await doc.ref.delete().catch(() => {});
+        }
+      } catch (_) {}
+    } else {
+      await followDocRef.set({
+        followerId,
+        followerUsername: cleanFollowerUsername,
+        followerEmail: (req.user.email || followerUserData.email || '').toLowerCase().trim(),
+        followerName: followerDisplayName,
+        developerUsername: cleanUsername,
+        developerUserId: targetUserId || null,
+        createdAt: new Date().toISOString(),
+      });
+      nextIsFollowing = true;
+
+      // Create notification for target developer (if not following self)
+      if (targetUserId !== followerId) {
+        try {
+          const existingNotifs = await db.collection('notifications')
+            .where('type', '==', 'follow')
+            .where('authorUsername', '==', cleanFollowerUsername)
+            .where('targetUsername', '==', cleanUsername)
+            .limit(1)
+            .get();
+
+          if (existingNotifs.empty) {
+            await db.collection('notifications').add({
+              title: 'New Follower',
+              message: `@${cleanFollowerUsername} started following you.`,
+              category: 'Follower',
+              authorName: followerDisplayName,
+              authorUsername: cleanFollowerUsername,
+              authorAvatar: followerAvatar,
+              authorTier: followerVipTier,
+              targetEmail: targetEmail ? targetEmail.toLowerCase().trim() : null,
+              targetUserId: targetUserId || null,
+              targetUsername: cleanUsername,
+              link: `/developer/${cleanFollowerUsername}`,
+              type: 'follow',
+              createdAt: new Date().toISOString(),
+            });
+          }
+        } catch (notifErr) {
+          console.warn('Failed to dispatch follow notification:', notifErr.message);
+        }
+      }
+    }
+
+    // O(1) Firestore native aggregation query (0 document memory overhead)
+    let followersCount = 0;
+    if (isOfficialTarget) {
+      const countSnap = await db.collection('developer_follows')
+        .where('developerUsername', 'in', ['upperstore', 'upper-store', 'upper_store', 'upperofficial'])
+        .count()
+        .get();
+      followersCount = countSnap.data().count || 0;
+    } else {
+      const countSnap = await db.collection('developer_follows').where('developerUsername', '==', cleanUsername).count().get();
+      followersCount = countSnap.data().count || 0;
+    }
+
+    if (!devSnap.empty) {
+      devSnap.docs[0].ref.update({
+        followersCount,
+        updatedAt: new Date().toISOString(),
+      }).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      isFollowing: nextIsFollowing,
+      followersCount,
+      message: nextIsFollowing ? `Now following @${cleanUsername}` : `Unfollowed @${cleanUsername}`,
+    });
+  } catch (error) {
+    console.error('Error toggling developer follow:', error);
+    return res.status(500).json({ message: 'Failed to update follow status.' });
+  } finally {
+    activeFollowLocks.delete(lockKey);
+  }
+};
+
+// @desc    Get follow status for current user
+// @route   GET /api/developers/follow-status/:username
+// @access  Private (Authenticated User)
+const getFollowStatus = async (req, res) => {
+  try {
+    const followerId = req.user?.uid;
+    const rawUsername = (req.params.username || '').trim();
+    const cleanUsername = rawUsername.replace(/^@/, '').trim().toLowerCase();
+
+    if (!cleanUsername) {
+      return res.status(400).json({ message: 'Username is required.' });
+    }
+
+    const isOfficialTarget = ['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'].includes(cleanUsername);
+
+    let isFollowing = false;
+    if (followerId) {
+      if (isOfficialTarget) {
+        const followDoc1 = await db.collection('developer_follows').doc(`${followerId}_upperstore`).get();
+        const followDoc2 = await db.collection('developer_follows').doc(`${followerId}_upperofficial`).get();
+        isFollowing = followDoc1.exists || followDoc2.exists;
+      } else {
+        const followDoc = await db.collection('developer_follows').doc(`${followerId}_${cleanUsername}`).get();
+        isFollowing = followDoc.exists;
+      }
+    }
+
+    // O(1) Firestore native aggregation query
+    let followersCount = 0;
+    if (isOfficialTarget) {
+      const countSnap = await db.collection('developer_follows')
+        .where('developerUsername', 'in', ['upperstore', 'upper-store', 'upper_store', 'upperofficial'])
+        .count()
+        .get();
+      followersCount = countSnap.data().count || 0;
+    } else {
+      const countSnap = await db.collection('developer_follows').where('developerUsername', '==', cleanUsername).count().get();
+      followersCount = countSnap.data().count || 0;
+    }
+
+    return res.json({
+      isFollowing,
+      followersCount,
+    });
+  } catch (error) {
+    console.error('Error getting follow status:', error);
+    return res.status(500).json({ message: 'Failed to get follow status.' });
+  }
+};
+
+// @desc    Get real followers list for a developer/user
+// @route   GET /api/developers/:username/followers
+// @access  Public
+const getDeveloperFollowers = async (req, res) => {
+  try {
+    const rawUsername = (req.params.username || '').trim();
+    const cleanUsername = rawUsername.replace(/^@/, '').trim().toLowerCase();
+
+    if (!cleanUsername) {
+      return res.status(400).json({ message: 'Username is required.' });
+    }
+
+    const isOfficialTarget = ['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'].includes(cleanUsername);
+
+    // 1. Fetch follower records (capped at 100 for safety and fast sub-100ms response)
+    const followsQuery = isOfficialTarget
+      ? db.collection('developer_follows').where('developerUsername', 'in', ['upperstore', 'upper-store', 'upper_store', 'upperofficial']).limit(100)
+      : db.collection('developer_follows').where('developerUsername', '==', cleanUsername).limit(100);
+    const followsSnap = await followsQuery.get();
+
+    let totalCount = followsSnap.size;
+    if (followsSnap.size === 100) {
+      try {
+        const countSnap = isOfficialTarget
+          ? await db.collection('developer_follows').where('developerUsername', 'in', ['upperstore', 'upper-store', 'upper_store', 'upperofficial']).count().get()
+          : await db.collection('developer_follows').where('developerUsername', '==', cleanUsername).count().get();
+        totalCount = countSnap.data().count || followsSnap.size;
+      } catch (_) {}
+    }
+
+    if (followsSnap.empty) {
+      return res.json({
+        success: true,
+        count: totalCount,
+        followers: [],
+      });
+    }
+
+    const followDocs = followsSnap.docs.map((d) => d.data());
+    const followerIds = [...new Set(followDocs.map((d) => d.followerId).filter(Boolean))];
+
+    // 3. Batch fetch user documents for live profile picture & VIP ring calculation
+    const userMap = {};
+    if (followerIds.length > 0) {
+      for (let i = 0; i < followerIds.length; i += 30) {
+        const chunk = followerIds.slice(i, i + 30);
+        const refs = chunk.map((id) => db.collection('users').doc(id));
+        const snapshots = await db.getAll(...refs);
+        snapshots.forEach((docSnap) => {
+          if (docSnap.exists) {
+            userMap[docSnap.id] = { id: docSnap.id, ...docSnap.data() };
+          }
+        });
+      }
+    }
+
+    // 4. Batch fetch developer docs (to know if they are verified developers / official house)
+    const devMap = {};
+    if (followerIds.length > 0) {
+      for (let i = 0; i < followerIds.length; i += 30) {
+        const chunk = followerIds.slice(i, i + 30);
+        const devSnaps = await db.collection('developers').where('userId', 'in', chunk).get();
+        devSnaps.docs.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d.userId) {
+            devMap[d.userId] = { id: docSnap.id, ...d };
+          }
+        });
+      }
+    }
+
+    // 5. Assemble enriched follower list
+    // Strictly contains: avatar (with premium ring plan), clickable username, displayName.
+    // Explicitly NO "pro VIP" or "Elite VIP" tags or badges.
+    const enrichedFollowers = followDocs.map((f) => {
+      const u = userMap[f.followerId] || {};
+      const dev = devMap[f.followerId] || {};
+
+      const username = u.username || dev.username || f.followerUsername || (f.followerName || 'user').toLowerCase().replace(/\s+/g, '');
+      const displayName = dev.displayName || u.displayName || f.followerName || username;
+      const avatar = dev.avatar || u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`;
+      const vipPlan = computeVipRingPlan(u, dev);
+
+      return {
+        id: f.followerId,
+        username,
+        displayName,
+        avatar,
+        vipPlan, // 'elite' | 'pro' | 'official' | 'free' (renders the glowing ring around avatar)
+        followedAt: f.createdAt || null,
+      };
+    });
+
+    return res.json({
+      success: true,
+      count: totalCount,
+      followers: enrichedFollowers,
+    });
+  } catch (error) {
+    console.error('Error fetching developer followers:', error);
+    return res.status(500).json({ message: 'Failed to fetch followers list.' });
+  }
+};
+
+// @desc    Get real following list for a developer/user
+// @route   GET /api/developers/:username/following
+// @access  Public
+const getDeveloperFollowing = async (req, res) => {
+  try {
+    const rawUsername = (req.params.username || '').trim();
+    const cleanUsername = rawUsername.replace(/^@/, '').trim().toLowerCase();
+
+    if (!cleanUsername) {
+      return res.status(400).json({ message: 'Username is required.' });
+    }
+
+    // 1. Locate the target user ID
+    let targetUserId = null;
+    const isOfficialTarget = ['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'].includes(cleanUsername);
+    if (isOfficialTarget) {
+      targetUserId = 'GOhjkTTW9ZPqPS9I7Oa1';
+    } else {
+      const devSnap = await db.collection('developers').where('username', '==', cleanUsername).limit(1).get();
+      if (!devSnap.empty) {
+        targetUserId = devSnap.docs[0].data().userId;
+      } else {
+        const uSnap = await db.collection('users').where('username', '==', cleanUsername).limit(1).get();
+        if (!uSnap.empty) {
+          targetUserId = uSnap.docs[0].id;
+        }
+      }
+    }
+
+    // 2. Query developer_follows (capped at 100)
+    let followDocs = [];
+    let totalCount = 0;
+
+    if (targetUserId) {
+      const followsSnap = await db.collection('developer_follows')
+        .where('followerId', '==', targetUserId)
+        .limit(100)
+        .get();
+      followDocs = followsSnap.docs.map((d) => d.data());
+      totalCount = followsSnap.size;
+      if (followsSnap.size === 100) {
+        try {
+          const countSnap = await db.collection('developer_follows')
+            .where('followerId', '==', targetUserId)
+            .count()
+            .get();
+          totalCount = countSnap.data().count || followsSnap.size;
+        } catch (_) {}
+      }
+    } else {
+      const followsSnap = await db.collection('developer_follows')
+        .where('followerUsername', '==', cleanUsername)
+        .limit(100)
+        .get();
+      followDocs = followsSnap.docs.map((d) => d.data());
+      totalCount = followsSnap.size;
+      if (followsSnap.size === 100) {
+        try {
+          const countSnap = await db.collection('developer_follows')
+            .where('followerUsername', '==', cleanUsername)
+            .count()
+            .get();
+          totalCount = countSnap.data().count || followsSnap.size;
+        } catch (_) {}
+      }
+    }
+
+    if (followDocs.length === 0) {
+      return res.json({
+        success: true,
+        count: totalCount,
+        following: [],
+      });
+    }
+
+    const followedUsernames = [...new Set(followDocs.map((d) => d.developerUsername).filter(Boolean))];
+
+    // 3. Batch fetch developer information for the followed accounts
+    const devMap = {};
+    if (followedUsernames.length > 0) {
+      for (let i = 0; i < followedUsernames.length; i += 30) {
+        const chunk = followedUsernames.slice(i, i + 30);
+        const snaps = await db.collection('developers').where('username', 'in', chunk).get();
+        snaps.docs.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d.username) {
+            devMap[d.username.toLowerCase()] = { id: docSnap.id, ...d };
+          }
+        });
+      }
+    }
+
+    // 4. Batch fetch users info if any followed accounts are not developers
+    const missingUsernames = followedUsernames.filter((u) => !devMap[u.toLowerCase()]);
+    const userMap = {};
+    if (missingUsernames.length > 0) {
+      for (let i = 0; i < missingUsernames.length; i += 30) {
+        const chunk = missingUsernames.slice(i, i + 30);
+        const uSnaps = await db.collection('users').where('username', 'in', chunk).get();
+        uSnaps.docs.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d.username) {
+            userMap[d.username.toLowerCase()] = { id: docSnap.id, ...d };
+          }
+        });
+      }
+    }
+
+    // 5. Assemble enriched following list
+    const enrichedFollowing = followDocs.map((f) => {
+      const devHandle = (f.developerUsername || '').toLowerCase();
+      const dev = devMap[devHandle] || {};
+      const u = userMap[devHandle] || {};
+
+      const username = dev.username || u.username || f.developerUsername;
+      const displayName = dev.displayName || u.displayName || username;
+      const avatar = dev.avatar || u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`;
+      const vipPlan = computeVipRingPlan(u, dev);
+
+      return {
+        id: dev.userId || dev.id || u.id || username,
+        username,
+        displayName,
+        avatar,
+        vipPlan, // 'elite' | 'pro' | 'official' | 'free' (renders the glowing ring around avatar)
+        followedAt: f.createdAt || null,
+      };
+    });
+
+    return res.json({
+      success: true,
+      count: totalCount,
+      following: enrichedFollowing,
+    });
+  } catch (error) {
+    console.error('Error fetching developer following:', error);
+    return res.status(500).json({ message: 'Failed to fetch following list.' });
+  }
+};
+
+// @desc    Remove a follower from a developer/user profile
+// @route   DELETE /api/developers/:username/followers/:followerUsername
+// @route   POST /api/developers/:username/followers/remove
+// @access  Private (Authenticated User - Profile Owner or Admin)
+const removeDeveloperFollower = async (req, res) => {
+  const currentUserId = req.user?.uid;
+  const rawUsername = (req.params.username || '').trim();
+  const cleanUsername = rawUsername.replace(/^@/, '').trim().toLowerCase();
+  const rawFollowerUsername = (req.params.followerUsername || req.body?.followerUsername || '').trim();
+  const cleanFollowerUsername = rawFollowerUsername.replace(/^@/, '').trim().toLowerCase();
+  const followerId = (req.body?.followerId || '').trim();
+
+  if (!currentUserId) {
+    return res.status(401).json({ message: 'Authentication required.' });
+  }
+
+  if (!cleanUsername || (!cleanFollowerUsername && !followerId)) {
+    return res.status(400).json({ message: 'Developer username and follower identifier are required.' });
+  }
+
+  try {
+    // 1. Verify profile ownership
+    let isOwner = false;
+    const isOfficialDev = ['upperstore', 'upper-store', 'upper_store'].includes(cleanUsername);
+    if (isOfficialDev) {
+      if (req.user?.role === 'admin') isOwner = true;
+    }
+
+    if (!isOwner) {
+      const devSnap = await db.collection('developers').where('username', '==', cleanUsername).limit(1).get();
+      if (!devSnap.empty) {
+        const dData = devSnap.docs[0].data();
+        if (dData.userId === currentUserId || (dData.email && dData.email.toLowerCase() === req.user?.email?.toLowerCase())) {
+          isOwner = true;
+        }
+      }
+    }
+
+    if (!isOwner) {
+      const uSnap = await db.collection('users').doc(currentUserId).get();
+      if (uSnap.exists) {
+        const uData = uSnap.data();
+        if ((uData.username || '').toLowerCase() === cleanUsername || (uData.email || '').toLowerCase() === req.user?.email?.toLowerCase()) {
+          isOwner = true;
+        }
+      }
+    }
+
+    if (!isOwner && req.user?.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You can only remove followers from your own profile.',
+      });
+    }
+
+    // 2. Identify the follow doc in developer_follows
+    let deleted = false;
+
+    // Strategy A: If followerId known or can be matched via doc ID `${followerId}_${cleanUsername}`
+    if (followerId) {
+      const directRef = db.collection('developer_follows').doc(`${followerId}_${cleanUsername}`);
+      const directDoc = await directRef.get();
+      if (directDoc.exists) {
+        await directRef.delete();
+        deleted = true;
+      }
+    }
+
+    // Strategy B: Query by developerUsername and followerUsername
+    if (!deleted && cleanFollowerUsername) {
+      const qSnap = await db.collection('developer_follows')
+        .where('developerUsername', '==', cleanUsername)
+        .where('followerUsername', '==', cleanFollowerUsername)
+        .limit(5)
+        .get();
+
+      if (!qSnap.empty) {
+        for (const doc of qSnap.docs) {
+          await doc.ref.delete();
+        }
+        deleted = true;
+      }
+    }
+
+    // Strategy C: Query by developerUsername and match follower user id by looking up username
+    if (!deleted && cleanFollowerUsername) {
+      const userLookup = await db.collection('users').where('username', '==', cleanFollowerUsername).limit(1).get();
+      if (!userLookup.empty) {
+        const uId = userLookup.docs[0].id;
+        const ref = db.collection('developer_follows').doc(`${uId}_${cleanUsername}`);
+        const doc = await ref.get();
+        if (doc.exists) {
+          await ref.delete();
+          deleted = true;
+        }
+      }
+    }
+
+    // 3. Remove follow notification from this follower if exists
+    try {
+      if (cleanFollowerUsername) {
+        const notifSnap = await db.collection('notifications')
+          .where('type', '==', 'follow')
+          .where('authorUsername', '==', cleanFollowerUsername)
+          .where('targetUsername', '==', cleanUsername)
+          .get();
+        for (const d of notifSnap.docs) {
+          await d.ref.delete().catch(() => {});
+        }
+      }
+    } catch (_) {}
+
+    // 4. Recount followers
+    const countSnap = await db.collection('developer_follows')
+      .where('developerUsername', '==', cleanUsername)
+      .count()
+      .get();
+    const followersCount = countSnap.data().count || 0;
+
+    // Update developer record
+    const devSnap = await db.collection('developers').where('username', '==', cleanUsername).limit(1).get();
+    if (!devSnap.empty) {
+      await devSnap.docs[0].ref.update({
+        followersCount,
+        updatedAt: new Date().toISOString(),
+      }).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      message: `Follower @${cleanFollowerUsername || 'user'} has been removed.`,
+      followersCount,
+      removedFollowerUsername: cleanFollowerUsername,
+    });
+  } catch (error) {
+    console.error('Error removing follower:', error);
+    return res.status(500).json({ message: 'Failed to remove follower.' });
+  }
+};
+
 module.exports = {
   getMyDeveloperProfile,
   registerDeveloperKyc,
@@ -1099,5 +1871,10 @@ module.exports = {
   updateOfficialProfile,
   uploadOfficialCoverImage,
   removeOfficialCoverImage,
+  toggleFollowDeveloper,
+  getFollowStatus,
+  getDeveloperFollowers,
+  getDeveloperFollowing,
+  removeDeveloperFollower,
 };
 
