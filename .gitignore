@@ -22,5 +22,5 @@ logs/
 .idea/
 .agents/
 scratch/
-
-scratch/
+SECURITY.md
+AUDIT.md
