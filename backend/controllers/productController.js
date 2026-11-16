@@ -379,17 +379,39 @@ const createProduct = async (req, res) => {
       }
     }
 
-    // Enforce GitHub Release / Hugging Face download link requirement
-    const apkUrl = (directApkUrl || '').trim();
-    const isPermittedDownloadHost =
-      apkUrl.toLowerCase().includes('github.com') ||
-      apkUrl.toLowerCase().includes('githubusercontent.com') ||
-      apkUrl.toLowerCase().includes('huggingface.co');
+    // Process package file upload or external GitHub/HuggingFace release link
+    let apkUrl = (directApkUrl || '').trim();
+    let originalFilename = '';
 
-    if (!apkUrl || !isPermittedDownloadHost) {
-      return res.status(400).json({
-        message: 'Download link must reside on GitHub Releases (e.g. https://github.com/owner/repo/releases/download/v1.0.0/app.apk) or Hugging Face.',
-      });
+    if (req.files?.apk?.[0]) {
+      const uploadedFile = req.files.apk[0];
+      originalFilename = uploadedFile.originalname || uploadedFile.filename;
+      apkUrl = await handlePackageFileUpload(uploadedFile, cleanTitle, cleanVersion, cleanDescription, req);
+    } else {
+      const isPermittedDownloadHost =
+        apkUrl.toLowerCase().includes('github.com') ||
+        apkUrl.toLowerCase().includes('githubusercontent.com') ||
+        apkUrl.toLowerCase().includes('huggingface.co') ||
+        apkUrl.includes('/uploads/');
+
+      if (!apkUrl || !isPermittedDownloadHost) {
+        return res.status(400).json({
+          message: 'Download link must reside on GitHub Releases (e.g. https://github.com/owner/repo/releases/download/v1.0.0/app.vsix) or Hugging Face.',
+        });
+      }
+    }
+
+    if (!originalFilename && apkUrl) {
+      if (req.body?.securityDetails?.fileName) {
+        originalFilename = req.body.securityDetails.fileName;
+      } else {
+        try {
+          const p = new URL(apkUrl).pathname;
+          originalFilename = decodeURIComponent(p.substring(p.lastIndexOf('/') + 1));
+        } catch (_) {
+          originalFilename = apkUrl.split('?')[0].split('#')[0].split('/').pop() || '';
+        }
+      }
     }
 
     // Enforce mandatory developer asset verification before publishing to store
@@ -500,6 +522,7 @@ const createProduct = async (req, res) => {
       videoUrl: finalVideoUrl,
       videoPoster: finalVideoPosterUrl,
       apkFile: apkUrl,
+      originalFilename: originalFilename || null,
       downloadCount: 0,
       createdAt: new Date().toISOString(),
       ...securityMeta,
@@ -653,12 +676,23 @@ const updateProduct = async (req, res) => {
       }
     }
 
-    if (directApkUrl !== undefined && directApkUrl.trim() !== '') {
+    if (req.files?.apk?.[0]) {
+      const uploadedFile = req.files.apk[0];
+      updatedData.originalFilename = uploadedFile.originalname || uploadedFile.filename;
+      updatedData.apkFile = await handlePackageFileUpload(
+        uploadedFile,
+        updatedData.title || existingData.title,
+        updatedData.version || existingData.version,
+        updatedData.description || existingData.description,
+        req
+      );
+    } else if (directApkUrl !== undefined && directApkUrl.trim() !== '') {
       const apkUrl = directApkUrl.trim();
       const isPermittedDownloadHost =
         apkUrl.toLowerCase().includes('github.com') ||
         apkUrl.toLowerCase().includes('githubusercontent.com') ||
-        apkUrl.toLowerCase().includes('huggingface.co');
+        apkUrl.toLowerCase().includes('huggingface.co') ||
+        apkUrl.includes('/uploads/');
 
       if (!isPermittedDownloadHost) {
         return res.status(400).json({
@@ -666,6 +700,16 @@ const updateProduct = async (req, res) => {
         });
       }
       updatedData.apkFile = apkUrl;
+      if (req.body?.securityDetails?.fileName) {
+        updatedData.originalFilename = req.body.securityDetails.fileName;
+      } else {
+        try {
+          const p = new URL(apkUrl).pathname;
+          updatedData.originalFilename = decodeURIComponent(p.substring(p.lastIndexOf('/') + 1));
+        } catch (_) {
+          updatedData.originalFilename = apkUrl.split('?')[0].split('#')[0].split('/').pop() || '';
+        }
+      }
       const docData = doc.data() || {};
       if (docData.apkFile !== apkUrl && !req.body?.securityDetails) {
         return res.status(400).json({

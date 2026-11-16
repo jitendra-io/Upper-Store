@@ -2,7 +2,7 @@
 // DOWNLOAD TRACKER UTILITY (DATABASE SYNC & REAL USER HISTORY)
 // =========================================================
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || 'http://localhost:5000';
 
 // Retrieve all local product download increments from localStorage
 export const getProductDownloadCountMap = () => {
@@ -215,57 +215,147 @@ export const clearUserDownloadHistory = async (userEmail) => {
 // CLOUDFLARE EDGE SECURE DOWNLOAD PROXY
 // Hides original GitHub URL completely - Chrome shows "upperstore.pages.dev"
 // =========================================================
-// Detect if a URL is a direct downloadable binary (.apk, .exe, .zip) vs a GitHub release/web page
+
+// Extract filename from URL (stripping query string and hash)
+export const getFilenameFromUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  try {
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    const p = cleanUrl.includes('://') ? new URL(cleanUrl).pathname : cleanUrl;
+    const last = p.substring(p.lastIndexOf('/') + 1);
+    return decodeURIComponent(last).trim();
+  } catch (_) {
+    const cleanUrl = url.split('?')[0].split('#')[0];
+    const last = cleanUrl.substring(cleanUrl.lastIndexOf('/') + 1);
+    return last.trim();
+  }
+};
+
+// Check if an extension is a known non-package web page format
+const isWebPageExtension = (ext) => {
+  const cleanExt = (ext || '').toLowerCase().replace(/^\./, '');
+  return ['html', 'htm', 'php', 'asp', 'aspx', 'jsp', 'cgi'].includes(cleanExt);
+};
+
+// Extracts exact authentic file extension from a URL, filename, or path
+export const getFileExtensionFromUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  const fn = getFilenameFromUrl(url) || url.split('?')[0].split('#')[0];
+  const clean = fn.trim().toLowerCase();
+
+  // Compound extensions check (e.g. .tar.gz, .tar.bz2, .tar.xz)
+  const compoundMatch = clean.match(/\.tar\.(gz|bz2|xz|zst|br)$/i);
+  if (compoundMatch) {
+    return compoundMatch[0].toLowerCase();
+  }
+
+  // General extension check: 1 to 15 alphanumeric characters with dash/underscore
+  const match = clean.match(/\.([a-zA-Z0-9_-]{1,15})$/i);
+  if (match) {
+    const ext = match[0].toLowerCase();
+    if (!isWebPageExtension(ext)) {
+      return ext;
+    }
+  }
+  return '';
+};
+
+// Detect if a URL is a direct downloadable binary vs a GitHub release/web page
 export const isDirectDownloadFile = (url) => {
-  if (!url || url === '#' || !url.startsWith('http')) return false;
+  if (!url || url === '#') return false;
+  if (url.startsWith('/uploads/') || url.startsWith('/')) return true;
+  if (!url.startsWith('http')) return false;
   const clean = url.split('?')[0].toLowerCase();
   if (clean.includes('/releases/tag/') || clean.endsWith('/releases') || clean.includes('/tree/') || clean.includes('/blob/')) {
     return false;
   }
-  return /\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf|gguf|safetensors|onnx|pt|pth|iso|deb|rpm|7z)$/i.test(clean) || clean.includes('/releases/download/');
+  const ext = getFileExtensionFromUrl(clean);
+  if (ext && !isWebPageExtension(ext)) {
+    return true;
+  }
+  return clean.includes('/releases/download/');
 };
 
-// Extracts exact authentic file extension from a URL
-export const getFileExtensionFromUrl = (url) => {
-  if (!url || typeof url !== 'string') return '';
-  const clean = url.split('?')[0].split('#')[0].toLowerCase();
-  const match = clean.match(/\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf|gguf|safetensors|onnx|pt|pth|iso|deb|rpm|7z)$/i);
-  return match ? match[0] : '';
-};
-
-// Generates the proper clean file name with authentic extension (.exe, .apk, .zip, etc.)
+// Generates the proper clean file name with authentic extension (.vsix, .apk, .exe, .zip, etc.)
 export const getProductDownloadFilename = (product) => {
   if (!product) return 'download.bin';
   const rawUrl = product.apkFile || '';
+  const metaFileName = (
+    product.originalFilename ||
+    product.securityDetails?.fileName ||
+    product.downloadName ||
+    product.fileName ||
+    ''
+  ).trim();
+
+  // 1. If product metadata has the exact uploaded filename from developer, preserve it exactly!
+  if (metaFileName && getFileExtensionFromUrl(metaFileName)) {
+    const sanitizedMeta = metaFileName.replace(/["\r\n\\]/g, '_').trim();
+    if (sanitizedMeta.length > 2) {
+      return sanitizedMeta;
+    }
+  }
+
+  // 2. If the URL has an authentic package filename from developer's release, preserve it exactly!
+  const urlFilename = getFilenameFromUrl(rawUrl);
+  if (urlFilename && getFileExtensionFromUrl(urlFilename)) {
+    const sanitizedUrlFn = urlFilename.replace(/["\r\n\\]/g, '_').trim();
+    if (sanitizedUrlFn.length > 2) {
+      return sanitizedUrlFn;
+    }
+  }
+
+  // 3. Extract authentic extension from URL, metadata, or title
+  const extFromUrl = getFileExtensionFromUrl(rawUrl);
+  const extFromMeta = getFileExtensionFromUrl(metaFileName);
+  const extFromTitle = getFileExtensionFromUrl(product.title || '');
+
   const category = String(product.category || '').toLowerCase();
   const ext =
-    getFileExtensionFromUrl(rawUrl) ||
+    extFromUrl ||
+    extFromMeta ||
+    extFromTitle ||
     (category.includes('android') || category.includes('mobile') ? '.apk' : '') ||
     (category.includes('windows') || category.includes('desktop') ? '.exe' : '') ||
-    '.bin';
+    (category.includes('mac') || category.includes('apple') ? '.dmg' : '') ||
+    (category.includes('linux') ? '.tar.gz' : '') ||
+    (category.includes('extension') || category.includes('plugin') ? '.vsix' : '') ||
+    '';
 
-  const safeTitle = (product.title || 'package').replace(/[^a-zA-Z0-9_-]/g, '_');
-  if (ext && !safeTitle.toLowerCase().endsWith(ext.toLowerCase())) {
-    return `${safeTitle}${ext}`;
+  // 4. Construct from product title with authentic extension
+  let safeTitle = (product.title || 'package').replace(/[^a-zA-Z0-9._-]/g, '_');
+  if (ext) {
+    if (!safeTitle.toLowerCase().endsWith(ext.toLowerCase())) {
+      safeTitle = safeTitle.replace(/\.[a-zA-Z0-9_-]{1,10}$/i, '');
+      return `${safeTitle}${ext}`;
+    }
+    return safeTitle;
   }
-  return safeTitle;
+
+  // 5. Absolute fallback only if no extension can be detected anywhere
+  return safeTitle.includes('.') ? safeTitle : `${safeTitle}.bin`;
 };
 
 export const getSecureDownloadUrl = (product) => {
   if (!product) return '#';
   const rawUrl = product.apkFile || '';
-
-  // If the product link is simply a GitHub release page or web tool (not a direct file),
-  // return direct link so browser navigates directly without forcing an APK download!
-  if (rawUrl && !isDirectDownloadFile(rawUrl)) {
-    return rawUrl;
-  }
-
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
   const filename = getProductDownloadFilename(product);
   
-  if (product.id && product.id !== 'custom') {
-    return `${baseUrl}/api/download?id=${encodeURIComponent(product.id)}&name=${encodeURIComponent(filename)}`;
+  const targetId = (product.productId && product.productId !== 'custom')
+    ? product.productId
+    : (product.id && product.id !== 'custom' ? product.id : '');
+
+  // If the product is stored in the database, always route through the secure download endpoint.
+  // This guarantees the original upstream storage or release link is 100% hidden from the user.
+  if (targetId) {
+    return `${baseUrl}/api/download?id=${encodeURIComponent(targetId)}&name=${encodeURIComponent(filename)}`;
+  }
+
+  // If the link is simply a GitHub release page or web tool (not a direct file),
+  // return direct link so browser navigates directly without forcing an asset download.
+  if (rawUrl && !isDirectDownloadFile(rawUrl)) {
+    return rawUrl;
   }
   
   if (rawUrl && rawUrl !== '#' && rawUrl.startsWith('http')) {

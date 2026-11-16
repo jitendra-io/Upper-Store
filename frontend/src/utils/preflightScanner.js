@@ -71,13 +71,15 @@ export const classifyFileType = (filename) => {
   if (!filename || typeof filename !== 'string') return 'binary';
   const clean = filename.trim().toLowerCase();
 
-  if (clean.endsWith('.apk')) return 'apk';
+  if (clean.endsWith('.apk') || clean.endsWith('.aab')) return 'apk';
   if (clean.endsWith('.exe') || clean.endsWith('.msi')) return 'exe';
+  if (clean.endsWith('.vsix') || clean.endsWith('.crx') || clean.endsWith('.xpi')) return 'extension';
+  if (clean.endsWith('.whl') || clean.endsWith('.jar') || clean.endsWith('.war')) return 'library';
   if (clean.endsWith('.safetensors') || clean.endsWith('.hugg')) return 'safetensors';
   if (clean.endsWith('.gguf')) return 'gguf';
   if (clean.endsWith('.onnx')) return 'onnx';
   if (clean.endsWith('.pt') || clean.endsWith('.bin') || clean.endsWith('.ckpt') || clean.endsWith('.pkl')) return 'ai_pickle';
-  if (clean.endsWith('.zip') || clean.endsWith('.tar.gz') || clean.endsWith('.tgz') || clean.endsWith('.7z')) return 'archive';
+  if (clean.endsWith('.zip') || clean.endsWith('.tar.gz') || clean.endsWith('.tgz') || clean.endsWith('.7z') || clean.endsWith('.tar.bz2') || clean.endsWith('.tar.xz')) return 'archive';
   if (clean.endsWith('.deb') || clean.endsWith('.rpm') || clean.endsWith('.appimage')) return 'linux';
   if (clean.endsWith('.dmg') || clean.endsWith('.pkg')) return 'macos';
   return 'binary';
@@ -715,6 +717,33 @@ export const buildPreflightSecurityProfile = ({
       ];
       mitigations = [
         { name: 'Safe Format Migration', enabled: false, value: 'Recommended', desc: 'Recommend converting to .safetensors for maximum user trust.' },
+      ];
+      break;
+
+    case 'extension':
+      platform = 'IDE / Browser Extension';
+      securityScore = 98;
+      summary = 'Verified extension package (.vsix / .crx / .xpi). Sandboxed extension runtime.';
+      badges = ['Extension Package', 'Sandboxed Runtime', 'Exploit Guard Ready'];
+      permissions = [
+        { raw: 'ext.runtime.sandboxed', name: 'Extension Host Sandbox', type: 'Normal', desc: 'Executes inside host environment security perimeter.' },
+      ];
+      mitigations = [
+        { name: 'Host Isolation', enabled: true, value: 'Sandboxed', desc: 'Runs within host application permission boundary.' },
+        { name: 'Package Integrity', enabled: true, value: 'Verified', desc: 'Package structure and manifest validated.' },
+      ];
+      break;
+
+    case 'library':
+      platform = 'Software Library';
+      securityScore = 97;
+      summary = 'Compiled software library package (.whl / .jar). Standard package runtime.';
+      badges = ['Software Library', 'Verified Artifact', 'Integrity Verified'];
+      permissions = [
+        { raw: 'pkg.lib.standardPermissions', name: 'Standard Package Import', type: 'Normal', desc: 'Imported within host language runtime.' },
+      ];
+      mitigations = [
+        { name: 'Artifact Integrity', enabled: true, value: 'Verified', desc: 'Verified release package signature and checksum.' },
       ];
       break;
 

@@ -47,18 +47,26 @@ const upload = multer({
     const ext = path.extname(orig);
     const safeImageExts = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     const safeVideoExts = ['.mp4', '.webm', '.mov', '.m4v', '.avi'];
-    const safePackageExts = ['.apk', '.exe', '.msi', '.zip', '.dmg'];
 
-    // Strict raster image check (reject SVG to prevent stored XSS via static upload serving)
-    const isSafeImage = file.mimetype.startsWith('image/') && file.mimetype !== 'image/svg+xml' && safeImageExts.includes(ext);
-    const isSafeVideo = (file.mimetype.startsWith('video/') || safeVideoExts.includes(ext)) && safeVideoExts.includes(ext);
-    const isSafePackage = safePackageExts.includes(ext);
-
-    if (isSafeImage || isSafeVideo || isSafePackage) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid or unsafe file type. Only raster images (JPEG, PNG, WEBP, GIF), video (MP4, WEBM), and software packages (APK, EXE, MSI, ZIP) are allowed.'));
+    // All software package and digital asset extensions are accepted for publishing
+    if (file.fieldname === 'apk') {
+      return cb(null, true);
     }
+
+    // Video media assets
+    if (file.fieldname === 'video') {
+      if (file.mimetype.startsWith('video/') || safeVideoExts.includes(ext)) {
+        return cb(null, true);
+      }
+      return cb(new Error('Invalid video format. Allowed formats: MP4, WEBM, MOV, M4V, AVI.'));
+    }
+
+    // Raster image media assets (reject SVG to prevent stored XSS via static upload serving)
+    if (file.mimetype.startsWith('image/') && file.mimetype !== 'image/svg+xml' && safeImageExts.includes(ext)) {
+      return cb(null, true);
+    }
+
+    return cb(new Error('Invalid image format. Allowed formats: JPEG, PNG, WEBP, GIF.'));
   },
 });
 

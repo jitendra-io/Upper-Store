@@ -200,26 +200,79 @@ const getAllDownloadHistoryAdmin = async (req, res) => {
 };
 
 
-// Helper to detect authentic package extension from target release URL
+// Helper to extract authentic package filename from URL
+const getUrlFilename = (targetUrl) => {
+  if (!targetUrl || typeof targetUrl !== 'string') return '';
+  try {
+    const pathname = new URL(targetUrl).pathname;
+    const last = pathname.substring(pathname.lastIndexOf('/') + 1);
+    return decodeURIComponent(last).trim();
+  } catch (_) {
+    const clean = targetUrl.split('?')[0].split('#')[0];
+    const last = clean.substring(clean.lastIndexOf('/') + 1);
+    return last.trim();
+  }
+};
+
+// Helper to detect authentic package extension from target release URL or filename
 const detectExtension = (targetUrl) => {
-  if (!targetUrl) return '.apk';
-  const cleanLower = targetUrl.split('?')[0].toLowerCase();
-  if (cleanLower.endsWith('.exe')) return '.exe';
-  if (cleanLower.endsWith('.msi')) return '.msi';
-  if (cleanLower.endsWith('.zip')) return '.zip';
-  if (cleanLower.endsWith('.7z')) return '.7z';
-  if (cleanLower.endsWith('.dmg')) return '.dmg';
-  if (cleanLower.endsWith('.pkg')) return '.pkg';
-  if (cleanLower.endsWith('.tar.gz')) return '.tar.gz';
-  if (cleanLower.endsWith('.tgz')) return '.tgz';
-  if (cleanLower.endsWith('.iso')) return '.iso';
-  if (cleanLower.endsWith('.pdf')) return '.pdf';
-  if (cleanLower.endsWith('.gguf')) return '.gguf';
-  if (cleanLower.endsWith('.safetensors')) return '.safetensors';
-  if (cleanLower.endsWith('.onnx')) return '.onnx';
-  if (cleanLower.endsWith('.bin')) return '.bin';
-  if (cleanLower.endsWith('.apk')) return '.apk';
-  return '.apk';
+  if (!targetUrl || typeof targetUrl !== 'string') return '';
+  const clean = targetUrl.split('?')[0].split('#')[0].toLowerCase();
+  
+  // Compound extensions check (e.g. .tar.gz, .tar.bz2, .tar.xz)
+  const compoundMatch = clean.match(/\.tar\.(gz|bz2|xz|zst|br)$/i);
+  if (compoundMatch) {
+    return compoundMatch[0].toLowerCase();
+  }
+
+  // General extension check: 1 to 15 alphanumeric characters with dash/underscore
+  const match = clean.match(/\.([a-zA-Z0-9_-]{1,15})$/i);
+  if (match) {
+    const ext = match[0].toLowerCase();
+    const webExts = ['.html', '.htm', '.php', '.asp', '.aspx', '.jsp', '.cgi'];
+    if (!webExts.includes(ext)) {
+      return ext;
+    }
+  }
+  return '';
+};
+
+// Map package extension to proper MIME Content-Type
+const getMimeTypeForExtension = (ext) => {
+  const e = (ext || '').toLowerCase().replace(/^\./, '');
+  const mimeMap = {
+    apk: 'application/vnd.android.package-archive',
+    aab: 'application/octet-stream',
+    vsix: 'application/vnd.visx',
+    crx: 'application/x-chrome-extension',
+    xpi: 'application/x-xpinstall',
+    whl: 'application/x-wheel+zip',
+    jar: 'application/java-archive',
+    war: 'application/java-archive',
+    exe: 'application/x-msdownload',
+    msi: 'application/x-msdownload',
+    zip: 'application/zip',
+    '7z': 'application/x-7z-compressed',
+    tar: 'application/x-tar',
+    gz: 'application/gzip',
+    'tar.gz': 'application/gzip',
+    tgz: 'application/gzip',
+    bz2: 'application/x-bzip2',
+    xz: 'application/x-xz',
+    dmg: 'application/x-apple-diskimage',
+    pkg: 'application/octet-stream',
+    deb: 'application/vnd.debian.binary-package',
+    rpm: 'application/x-rpm',
+    appimage: 'application/octet-stream',
+    iso: 'application/x-iso9660-image',
+    pdf: 'application/pdf',
+    json: 'application/json',
+    gguf: 'application/octet-stream',
+    safetensors: 'application/octet-stream',
+    onnx: 'application/octet-stream',
+    bin: 'application/octet-stream',
+  };
+  return mimeMap[e] || 'application/octet-stream';
 };
 
 // @desc    Secure proxy stream for binary downloads (hides raw GitHub releases from user)
@@ -231,6 +284,7 @@ const proxyDownload = async (req, res) => {
     let targetUrl = '';
     let customName = name || '';
     let productTitle = '';
+    let exactDevFilename = '';
 
     // 1. Resolve product from database
     if (id) {
@@ -240,6 +294,7 @@ const proxyDownload = async (req, res) => {
           const pData = prodDoc.data();
           targetUrl = pData.apkFile || '';
           productTitle = pData.title || '';
+          exactDevFilename = pData.originalFilename || pData.securityDetails?.fileName || '';
         }
       } catch (dbErr) {
         console.error('Error fetching product for download proxy:', dbErr);
@@ -257,31 +312,68 @@ const proxyDownload = async (req, res) => {
       }
     }
 
-    if (!targetUrl || targetUrl === '#' || !targetUrl.startsWith('http')) {
+    if (!targetUrl || targetUrl === '#' || (!targetUrl.startsWith('http') && !targetUrl.startsWith('/uploads/') && !targetUrl.startsWith('/'))) {
       return res.status(404).json({ message: 'Valid download target not found.' });
     }
 
-    const detectedExt = detectExtension(targetUrl);
+    const detectedExt = detectExtension(targetUrl) || (exactDevFilename ? detectExtension(exactDevFilename) : '');
+    const urlFilename = getUrlFilename(targetUrl);
 
-    // Ensure customName has proper file extension matching target asset
-    if (!customName && productTitle) {
-      customName = `${productTitle.replace(/[^a-zA-Z0-9._-]/g, '_')}${detectedExt}`;
-    } else if (customName) {
-      // Decode if encoded
+    // Direct local uploaded file serving (supports any extension without SSRF or network proxy bottlenecks)
+    if (targetUrl.includes('/uploads/')) {
+      const rawRel = targetUrl.split('/uploads/')[1].split('?')[0].split('#')[0];
+      const safeRel = path.normalize(rawRel).replace(/^(\.\.[\/\\])+/, '');
+      const localFilePath = path.resolve(__dirname, '..', 'uploads', safeRel);
+      const uploadsDir = path.resolve(__dirname, '..', 'uploads');
+
+      if (localFilePath.startsWith(uploadsDir) && fs.existsSync(localFilePath)) {
+        let finalFileName = exactDevFilename || urlFilename || customName || path.basename(localFilePath);
+        if (detectedExt && !finalFileName.toLowerCase().endsWith(detectedExt.toLowerCase())) {
+          finalFileName = finalFileName.replace(/\.[a-zA-Z0-9_-]{1,10}$/i, '') + detectedExt;
+        }
+
+        const safeAsciiFilename = finalFileName.replace(/["\r\n\\]/g, '_');
+        const contentType = getMimeTypeForExtension(detectedExt || path.extname(localFilePath));
+        const stat = fs.statSync(localFilePath);
+
+        res.setHeader('Content-Disposition', `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(finalFileName)}`);
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Length', stat.size);
+
+        return fs.createReadStream(localFilePath).pipe(res);
+      }
+    }
+
+    if (targetUrl.startsWith('/')) {
+      const serverBase = (process.env.BACKEND_URL || 'https://upper-store.onrender.com').replace(/\/$/, '');
+      targetUrl = `${serverBase}${targetUrl}`;
+    }
+
+    // Derive or normalize customName with authentic package extension
+    if (customName) {
       try {
         customName = decodeURIComponent(customName);
       } catch (_) {}
-      // If extension missing or incorrect generic placeholder, normalize with detected extension
-      if (!/\.[a-zA-Z0-9]{2,10}$/i.test(customName)) {
-        customName = `${customName}${detectedExt}`;
+
+      // If customName ends with generic placeholder (.bin or .apk) while targetUrl has a distinct extension, replace it
+      if (detectedExt && detectedExt !== '.bin') {
+        if (customName.toLowerCase().endsWith('.bin') || customName.toLowerCase().endsWith('.apk')) {
+          customName = customName.replace(/\.(bin|apk)$/i, '') + detectedExt;
+        }
       }
+      
+      // If customName lacks an extension entirely, append detected extension
+      if (!/\.[a-zA-Z0-9_-]{1,15}$/i.test(customName)) {
+        customName = `${customName}${detectedExt || '.bin'}`;
+      }
+    } else if (exactDevFilename && detectExtension(exactDevFilename)) {
+      customName = exactDevFilename;
+    } else if (urlFilename && detectExtension(urlFilename)) {
+      customName = urlFilename;
+    } else if (productTitle) {
+      customName = `${productTitle.replace(/[^a-zA-Z0-9._-]/g, '_')}${detectedExt || '.bin'}`;
     } else {
-      try {
-        const pathname = new URL(targetUrl).pathname;
-        customName = pathname.substring(pathname.lastIndexOf('/') + 1) || (`package${detectedExt}`);
-      } catch (_) {
-        customName = `package${detectedExt}`;
-      }
+      customName = `package${detectedExt || '.bin'}`;
     }
 
     // SSRF & Open Proxy Prevention: Strictly validate host and prevent internal loopback/metadata probing
@@ -313,7 +405,13 @@ const proxyDownload = async (req, res) => {
         host === 'huggingface.co' ||
         host.endsWith('.huggingface.co') ||
         host === 'ik.imagekit.io' ||
-        host.endsWith('.imagekit.io');
+        host.endsWith('.imagekit.io') ||
+        host.endsWith('.r2.dev') ||
+        host.endsWith('.s3.amazonaws.com') ||
+        host === 'storage.googleapis.com' ||
+        host.endsWith('.storage.googleapis.com') ||
+        host.endsWith('.blob.core.windows.net') ||
+        host.endsWith('.onrender.com');
 
       if (!isAllowedHost) {
         return res.status(403).json({ message: 'Forbidden download host. Only verified release mirrors are permitted.' });
@@ -323,11 +421,13 @@ const proxyDownload = async (req, res) => {
     }
 
     const cleanTarget = targetUrl.split('?')[0].toLowerCase();
+    const hasReleaseDownload = cleanTarget.includes('/releases/download/');
+    const hasDetectedExt = Boolean(detectedExt);
     const isWebPage = cleanTarget.includes('/releases/tag/') || 
                       cleanTarget.endsWith('/releases') || 
                       cleanTarget.includes('/tree/') || 
                       cleanTarget.includes('/blob/') ||
-                      (!cleanTarget.includes('/releases/download/') && !/\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf|gguf|safetensors|onnx|pt|pth|iso|deb|rpm|7z)$/i.test(cleanTarget));
+                      (!hasReleaseDownload && !hasDetectedExt);
 
     if (req.query.mode === 'redirect' || isWebPage) {
       return res.redirect(targetUrl);
@@ -362,35 +462,41 @@ const proxyDownload = async (req, res) => {
 
     const upContentType = upstreamRes.headers.get('content-type') || '';
     if (upContentType.includes('text/html')) {
-      return res.redirect(targetUrl);
+      return res.status(404).json({ message: 'Upstream release asset not found or inaccessible.' });
     }
 
-    // 4. Derive clean filename & extension
-    let finalFileName = customName;
-    if (!finalFileName) {
-      try {
-        const pathname = new URL(targetUrl).pathname;
-        finalFileName = pathname.substring(pathname.lastIndexOf('/') + 1) || (`package${detectedExt}`);
-      } catch (e) {
-        finalFileName = `package${detectedExt}`;
+    // 4. Derive clean, exact developer filename & authentic extension
+    let finalFileName = '';
+    if (exactDevFilename && detectExtension(exactDevFilename)) {
+      finalFileName = exactDevFilename;
+    } else if (urlFilename && detectExtension(urlFilename)) {
+      finalFileName = urlFilename;
+    } else if (customName) {
+      finalFileName = customName;
+    } else if (productTitle) {
+      finalFileName = `${productTitle.replace(/[^a-zA-Z0-9._-]/g, '_')}${detectedExt || '.bin'}`;
+    } else {
+      finalFileName = `package${detectedExt || '.bin'}`;
+    }
+
+    // Ensure finalFileName ends with detected authentic extension
+    if (detectedExt && !finalFileName.toLowerCase().endsWith(detectedExt.toLowerCase())) {
+      if (finalFileName.toLowerCase().endsWith('.bin') || finalFileName.toLowerCase().endsWith('.apk')) {
+        finalFileName = finalFileName.replace(/\.(bin|apk)$/i, '') + detectedExt;
+      } else if (!/\.[a-zA-Z0-9_-]{1,15}$/i.test(finalFileName)) {
+        finalFileName += detectedExt;
       }
     }
 
-    // Ensure finalFileName has a valid extension
-    if (!/\.[a-zA-Z0-9]{2,10}$/i.test(finalFileName)) {
-      finalFileName += detectedExt;
-    }
-
     const cleanFileLower = finalFileName.toLowerCase();
-    let contentType = upstreamRes.headers.get('content-type') || 'application/octet-stream';
-    if (cleanFileLower.endsWith('.apk')) contentType = 'application/vnd.android.package-archive';
-    else if (cleanFileLower.endsWith('.exe') || cleanFileLower.endsWith('.msi')) contentType = 'application/x-msdownload';
-    else if (cleanFileLower.endsWith('.zip')) contentType = 'application/zip';
-    else if (cleanFileLower.endsWith('.7z')) contentType = 'application/x-7z-compressed';
-    else if (cleanFileLower.endsWith('.tar.gz') || cleanFileLower.endsWith('.tgz')) contentType = 'application/gzip';
-    else if (cleanFileLower.endsWith('.dmg')) contentType = 'application/x-apple-diskimage';
-    else if (cleanFileLower.endsWith('.pdf')) contentType = 'application/pdf';
-    else if (cleanFileLower.endsWith('.gguf') || cleanFileLower.endsWith('.safetensors') || cleanFileLower.endsWith('.onnx')) contentType = 'application/octet-stream';
+    let contentType = upstreamRes.headers.get('content-type') || '';
+    if (!contentType || contentType.includes('text/plain') || contentType.includes('application/octet-stream')) {
+      contentType = getMimeTypeForExtension(detectedExt || cleanFileLower.match(/\.[a-zA-Z0-9_-]+$/)?.[0] || '');
+    } else if (cleanFileLower.endsWith('.vsix')) {
+      contentType = 'application/vnd.visx';
+    } else if (cleanFileLower.endsWith('.apk')) {
+      contentType = 'application/vnd.android.package-archive';
+    }
 
     const safeAsciiFilename = finalFileName.replace(/["\r\n\\]/g, '_');
     res.setHeader('Content-Disposition', `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(finalFileName)}`);
@@ -421,4 +527,7 @@ module.exports = {
   clearUserDownloadHistory,
   getAllDownloadHistoryAdmin,
   proxyDownload,
+  detectExtension,
+  getMimeTypeForExtension,
+  getUrlFilename,
 };

@@ -135,39 +135,53 @@ export default {
       });
     }
 
-    // Detect authentic package extension from target release URL
+    const upContentType = upstreamRes.headers.get('content-type') || '';
+    if (upContentType.includes('text/html')) {
+      return new Response('Upstream release asset not found or inaccessible.', {
+        status: 404,
+        headers: { 'Content-Type': 'text/plain' }
+      });
+    }
+
+    // Detect authentic package extension dynamically from target release URL
     const targetPath = new URL(targetUrl).pathname.toLowerCase();
     let detectedExt = '';
-    if (targetPath.endsWith('.exe')) detectedExt = '.exe';
-    else if (targetPath.endsWith('.msi')) detectedExt = '.msi';
-    else if (targetPath.endsWith('.apk')) detectedExt = '.apk';
-    else if (targetPath.endsWith('.zip')) detectedExt = '.zip';
-    else if (targetPath.endsWith('.7z')) detectedExt = '.7z';
-    else if (targetPath.endsWith('.tar.gz')) detectedExt = '.tar.gz';
-    else if (targetPath.endsWith('.tgz')) detectedExt = '.tgz';
-    else if (targetPath.endsWith('.dmg')) detectedExt = '.dmg';
-    else if (targetPath.endsWith('.pkg')) detectedExt = '.pkg';
-    else if (targetPath.endsWith('.iso')) detectedExt = '.iso';
-    else if (targetPath.endsWith('.pdf')) detectedExt = '.pdf';
-    else if (targetPath.endsWith('.gguf')) detectedExt = '.gguf';
-    else if (targetPath.endsWith('.safetensors')) detectedExt = '.safetensors';
-    else if (targetPath.endsWith('.onnx')) detectedExt = '.onnx';
-    else if (targetPath.endsWith('.bin')) detectedExt = '.bin';
+    const compoundMatch = targetPath.match(/\.tar\.(gz|bz2|xz|zst|br)$/i);
+    if (compoundMatch) {
+      detectedExt = compoundMatch[0].toLowerCase();
+    } else {
+      const match = targetPath.match(/\.([a-zA-Z0-9_-]{1,15})$/i);
+      if (match) {
+        const ext = match[0].toLowerCase();
+        const webExts = ['.html', '.htm', '.php', '.asp', '.aspx', '.jsp', '.cgi'];
+        if (!webExts.includes(ext)) {
+          detectedExt = ext;
+        }
+      }
+    }
 
     // Derive clean filename and Content-Type
     let filename = customName ? decodeURIComponent(customName) : '';
-    if (!filename) {
-      try {
-        const p = new URL(targetUrl).pathname;
-        filename = p.substring(p.lastIndexOf('/') + 1) || ('download' + (detectedExt || '.bin'));
-      } catch {
-        filename = 'download' + (detectedExt || '.bin');
+    let urlFilename = '';
+    try {
+      const p = new URL(targetUrl).pathname;
+      urlFilename = decodeURIComponent(p.substring(p.lastIndexOf('/') + 1));
+    } catch (_) {}
+
+    if (!filename || (filename.toLowerCase().endsWith('.bin') && urlFilename && detectedExt && detectedExt !== '.bin')) {
+      filename = urlFilename || ('download' + (detectedExt || '.bin'));
+    }
+
+    // If filename ends with generic placeholder (.bin or .apk) while targetUrl has distinct extension, replace it
+    if (detectedExt && detectedExt !== '.bin') {
+      if (filename.toLowerCase().endsWith('.bin') || filename.toLowerCase().endsWith('.apk')) {
+        filename = filename.replace(/\.(bin|apk)$/i, '') + detectedExt;
       }
     }
 
     // Ensure filename ends with detected extension if missing or truncated
-    if (detectedExt && !filename.toLowerCase().endsWith(detectedExt)) {
-      if (!/\.[a-zA-Z0-9]{2,10}$/i.test(filename)) {
+    if (detectedExt && !filename.toLowerCase().endsWith(detectedExt.toLowerCase())) {
+      if (!/\.[a-zA-Z0-9_-]{1,15}$/i.test(filename)) {
         filename = `${filename}${detectedExt}`;
       }
     }
@@ -175,6 +189,13 @@ export default {
     const cleanLower = filename.toLowerCase();
     let contentType = 'application/octet-stream';
     if (cleanLower.endsWith('.apk')) contentType = 'application/vnd.android.package-archive';
+    else if (cleanLower.endsWith('.vsix')) contentType = 'application/vnd.visx';
+    else if (cleanLower.endsWith('.crx')) contentType = 'application/x-chrome-extension';
+    else if (cleanLower.endsWith('.xpi')) contentType = 'application/x-xpinstall';
+    else if (cleanLower.endsWith('.deb')) contentType = 'application/vnd.debian.binary-package';
+    else if (cleanLower.endsWith('.rpm')) contentType = 'application/x-rpm';
+    else if (cleanLower.endsWith('.whl')) contentType = 'application/x-wheel+zip';
+    else if (cleanLower.endsWith('.jar')) contentType = 'application/java-archive';
     else if (cleanLower.endsWith('.exe') || cleanLower.endsWith('.msi')) contentType = 'application/x-msdownload';
     else if (cleanLower.endsWith('.zip')) contentType = 'application/zip';
     else if (cleanLower.endsWith('.7z')) contentType = 'application/x-7z-compressed';

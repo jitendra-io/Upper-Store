@@ -60,8 +60,18 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
     const ext = path.extname(filePath).toLowerCase();
     let contentType = 'application/octet-stream';
     if (ext === '.apk') contentType = 'application/vnd.android.package-archive';
+    else if (ext === '.vsix') contentType = 'application/vnd.visx';
+    else if (ext === '.crx') contentType = 'application/x-chrome-extension';
+    else if (ext === '.xpi') contentType = 'application/x-xpinstall';
+    else if (ext === '.deb') contentType = 'application/vnd.debian.binary-package';
+    else if (ext === '.rpm') contentType = 'application/x-rpm';
+    else if (ext === '.whl') contentType = 'application/x-wheel+zip';
+    else if (ext === '.jar') contentType = 'application/java-archive';
     else if (ext === '.exe' || ext === '.msi') contentType = 'application/x-msdownload';
     else if (ext === '.zip') contentType = 'application/zip';
+    else if (ext === '.7z') contentType = 'application/x-7z-compressed';
+    else if (ext === '.gz' || ext === '.tgz') contentType = 'application/gzip';
+    else if (ext === '.dmg') contentType = 'application/x-apple-diskimage';
 
     const uploadAssetRes = await fetch(uploadUrl, {
       method: 'POST',

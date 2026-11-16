@@ -11,6 +11,62 @@
  * 3. Gigabit global CDN streaming with edge caching
  */
 
+// Dynamic helper to extract extension from URL or filename
+const detectExtension = (targetUrl) => {
+  if (!targetUrl || typeof targetUrl !== 'string') return '';
+  const clean = targetUrl.split('?')[0].split('#')[0].toLowerCase();
+  
+  // Compound extensions
+  const compoundMatch = clean.match(/\.tar\.(gz|bz2|xz|zst|br)$/i);
+  if (compoundMatch) return compoundMatch[0].toLowerCase();
+
+  // General extension
+  const match = clean.match(/\.([a-zA-Z0-9_-]{1,15})$/i);
+  if (match) {
+    const ext = match[0].toLowerCase();
+    const webExts = ['.html', '.htm', '.php', '.asp', '.aspx', '.jsp', '.cgi'];
+    if (!webExts.includes(ext)) return ext;
+  }
+  return '';
+};
+
+// Map package extension to proper MIME Content-Type
+const getMimeTypeForExtension = (ext) => {
+  const e = (ext || '').toLowerCase().replace(/^\./, '');
+  const mimeMap = {
+    apk: 'application/vnd.android.package-archive',
+    aab: 'application/octet-stream',
+    vsix: 'application/vnd.visx',
+    crx: 'application/x-chrome-extension',
+    xpi: 'application/x-xpinstall',
+    whl: 'application/x-wheel+zip',
+    jar: 'application/java-archive',
+    exe: 'application/x-msdownload',
+    msi: 'application/x-msdownload',
+    zip: 'application/zip',
+    '7z': 'application/x-7z-compressed',
+    tar: 'application/x-tar',
+    gz: 'application/gzip',
+    'tar.gz': 'application/gzip',
+    tgz: 'application/gzip',
+    bz2: 'application/x-bzip2',
+    xz: 'application/x-xz',
+    dmg: 'application/x-apple-diskimage',
+    pkg: 'application/octet-stream',
+    deb: 'application/vnd.debian.binary-package',
+    rpm: 'application/x-rpm',
+    appimage: 'application/octet-stream',
+    iso: 'application/x-iso9660-image',
+    pdf: 'application/pdf',
+    json: 'application/json',
+    gguf: 'application/octet-stream',
+    safetensors: 'application/octet-stream',
+    onnx: 'application/octet-stream',
+    bin: 'application/octet-stream',
+  };
+  return mimeMap[e] || 'application/octet-stream';
+};
+
 export async function onRequest(context) {
   const { request } = context;
   const url = new URL(request.url);
@@ -51,10 +107,12 @@ export async function onRequest(context) {
       if (prodRes.ok) {
         const product = await prodRes.json();
         targetUrl = product.apkFile;
-        if (!customName && product.title) {
-          const rawExt = targetUrl ? targetUrl.split('?')[0].toLowerCase() : '';
-          const ext = rawExt.endsWith('.exe') ? '.exe' : (rawExt.endsWith('.zip') ? '.zip' : '.apk');
-          customName = `${product.title.replace(/[^a-zA-Z0-9_-]/g, '_')}${ext}`;
+        const exactDevFn = product.originalFilename || product.securityDetails?.fileName || '';
+        if (exactDevFn && detectExtension(exactDevFn)) {
+          customName = exactDevFn;
+        } else if (!customName && product.title) {
+          const ext = detectExtension(targetUrl) || '.bin';
+          customName = `${product.title.replace(/[^a-zA-Z0-9._-]/g, '_')}${ext}`;
         }
       }
     } catch (err) {
@@ -73,6 +131,10 @@ export async function onRequest(context) {
     }
   }
 
+  if (targetUrl && targetUrl.startsWith('/')) {
+    targetUrl = `https://upper-store.onrender.com${targetUrl}`;
+  }
+
   if (!targetUrl || targetUrl === '#' || !targetUrl.startsWith('http')) {
     return new Response(
       JSON.stringify({ error: 'Download file not found or invalid URL.' }),
@@ -83,13 +145,17 @@ export async function onRequest(context) {
     );
   }
 
+  const detectedExt = detectExtension(targetUrl);
+
   // If user requested direct redirect mode, or if target is a GitHub release/tag/repo webpage
   const cleanTarget = targetUrl.split('?')[0].toLowerCase();
+  const hasReleaseDownload = cleanTarget.includes('/releases/download/');
+  const hasDetectedExt = Boolean(detectedExt);
   const isWebPage = cleanTarget.includes('/releases/tag/') || 
                     cleanTarget.endsWith('/releases') || 
                     cleanTarget.includes('/tree/') || 
                     cleanTarget.includes('/blob/') ||
-                    (!cleanTarget.includes('/releases/download/') && !/\.(apk|exe|zip|dmg|tar\.gz|msi|pkg|bin|pdf)$/i.test(cleanTarget));
+                    (!hasReleaseDownload && !hasDetectedExt);
 
   if (url.searchParams.get('mode') === 'redirect' || isWebPage) {
     return Response.redirect(targetUrl, 302);
@@ -112,52 +178,53 @@ export async function onRequest(context) {
       });
     }
 
-    // If upstream returns an HTML webpage instead of a binary file, redirect directly to GitHub
+    // If upstream returns an HTML error/webpage instead of a binary file, return error without leaking upstream URL
     const upContentType = upstreamRes.headers.get('content-type') || '';
     if (upContentType.includes('text/html')) {
-      return Response.redirect(targetUrl, 302);
+      return new Response(JSON.stringify({ error: 'Upstream release asset not found or inaccessible.' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
-    // 4. Derive clean, safe filename
+    // 4. Derive clean, safe filename with authentic extension
     let finalFileName = customName;
     if (!finalFileName) {
       try {
         const pathname = new URL(targetUrl).pathname;
-        finalFileName = pathname.substring(pathname.lastIndexOf('/') + 1) || 'package.apk';
+        finalFileName = decodeURIComponent(pathname.substring(pathname.lastIndexOf('/') + 1)) || `package${detectedExt || '.bin'}`;
       } catch (e) {
-        finalFileName = 'package.apk';
+        finalFileName = `package${detectedExt || '.bin'}`;
       }
     }
 
-    // Ensure correct extension
-    const cleanLower = targetUrl.split('?')[0].toLowerCase();
-    let detectedExt = '.apk';
-    if (cleanLower.endsWith('.exe')) detectedExt = '.exe';
-    else if (cleanLower.endsWith('.zip')) detectedExt = '.zip';
-    else if (cleanLower.endsWith('.dmg')) detectedExt = '.dmg';
-    else if (cleanLower.endsWith('.tar.gz')) detectedExt = '.tar.gz';
-    else if (cleanLower.endsWith('.pdf')) detectedExt = '.pdf';
-    else if (cleanLower.endsWith('.json')) detectedExt = '.json';
-    else if (cleanLower.endsWith('.txt')) detectedExt = '.txt';
+    // If finalFileName ends with placeholder (.bin or .apk) while targetUrl has distinct authentic extension, replace it
+    if (detectedExt && detectedExt !== '.bin') {
+      if (finalFileName.toLowerCase().endsWith('.bin') || finalFileName.toLowerCase().endsWith('.apk')) {
+        finalFileName = finalFileName.replace(/\.(bin|apk)$/i, '') + detectedExt;
+      }
+    }
 
     // If filename has no extension, append detected extension
-    if (!/\.[a-zA-Z0-9]{2,5}$/.test(finalFileName)) {
-      finalFileName += detectedExt;
+    if (!/\.[a-zA-Z0-9_-]{1,15}$/.test(finalFileName)) {
+      finalFileName += (detectedExt || '.bin');
     }
 
     // 5. Derive Content-Type
-    let contentType = upstreamRes.headers.get('content-type') || 'application/octet-stream';
-    if (finalFileName.endsWith('.apk')) {
+    const cleanFileLower = finalFileName.toLowerCase();
+    let contentType = upstreamRes.headers.get('content-type') || '';
+    if (!contentType || contentType.includes('text/plain') || contentType.includes('application/octet-stream')) {
+      contentType = getMimeTypeForExtension(detectedExt || cleanFileLower.match(/\.[a-zA-Z0-9_-]+$/)?.[0] || '');
+    } else if (cleanFileLower.endsWith('.vsix')) {
+      contentType = 'application/vnd.visx';
+    } else if (cleanFileLower.endsWith('.apk')) {
       contentType = 'application/vnd.android.package-archive';
-    } else if (finalFileName.endsWith('.exe')) {
-      contentType = 'application/x-msdownload';
-    } else if (finalFileName.endsWith('.zip')) {
-      contentType = 'application/zip';
     }
 
-    // 6. Build headers to force file download dialog in browser
+    // 6. Build headers to force file download dialog in browser with RFC 6266 compliance
     const responseHeaders = new Headers();
-    responseHeaders.set('Content-Disposition', `attachment; filename="${encodeURIComponent(finalFileName)}"`);
+    const safeAsciiFilename = finalFileName.replace(/["\r\n\\]/g, '_');
+    responseHeaders.set('Content-Disposition', `attachment; filename="${safeAsciiFilename}"; filename*=UTF-8''${encodeURIComponent(finalFileName)}`);
     responseHeaders.set('Content-Type', contentType);
 
     const contentLength = upstreamRes.headers.get('content-length');
