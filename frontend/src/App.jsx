@@ -15,6 +15,8 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import VipClub from './pages/VipClub';
 import DeveloperProfile from './pages/DeveloperProfile';
+import NotFound from './pages/NotFound';
+import Forbidden from './pages/Forbidden';
 import Footer from './components/Footer';
 import MiniFooter from './components/MiniFooter';
 import { AuthProvider } from './context/AuthContext';
@@ -131,7 +133,23 @@ function AppContent() {
   }, [isSearchOpen, openSearch, closeSearch]);
 
   const isAdmin = location.pathname.startsWith('/admin');
-  const showFullFooter = !isAdmin && !modalOpen;
+  const exactKnownPaths = ['/', '/about', '/contact', '/faq', '/blog', '/press', '/policies', '/vip', '/vip-club'];
+  const isKnownRoute =
+    exactKnownPaths.includes(location.pathname) ||
+    location.pathname === '/products' ||
+    location.pathname.startsWith('/products/') ||
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/developer/') ||
+    location.pathname.startsWith('/developers/') ||
+    location.pathname.startsWith('/dev/');
+
+  const isErrorRoute =
+    !isKnownRoute ||
+    location.pathname === '/404' ||
+    location.pathname === '/403' ||
+    location.pathname === '/forbidden';
+
+  const showFullFooter = !isAdmin && !modalOpen && !isErrorRoute;
 
   return (
     <div className="app-container">
@@ -155,6 +173,10 @@ function AppContent() {
           <Route path="/developer/:username" element={<DeveloperProfile />} />
           <Route path="/developers/:username" element={<DeveloperProfile />} />
           <Route path="/dev/:username" element={<DeveloperProfile />} />
+          <Route path="/404" element={<NotFound />} />
+          <Route path="/403" element={<Forbidden />} />
+          <Route path="/forbidden" element={<Forbidden />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       {showFullFooter && <Footer />}

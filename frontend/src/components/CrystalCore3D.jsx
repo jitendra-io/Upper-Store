@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { LayersIcon, StarIcon, ActivityIcon, ShieldCheckIcon } from './Icons';
 import './CrystalCore3D.css';
 
-const CrystalCore3D = () => {
+const CrystalCore3D = ({ minimal = false }) => {
   const mountRef = useRef(null);
 
   useEffect(() => {
@@ -234,7 +234,7 @@ const CrystalCore3D = () => {
   }, []);
 
   return (
-    <div className="crystal-core-wrapper">
+    <div className={`crystal-core-wrapper ${minimal ? 'crystal-core-minimal' : ''}`}>
       {/* Background Pulse Rings */}
       <div className="crystal-ring-outer animate-pulse-slow" />
       <div className="crystal-ring-inner" />
@@ -243,57 +243,61 @@ const CrystalCore3D = () => {
       <div
         ref={mountRef}
         className="crystal-canvas-container"
-        title="Drag to rotate the Crimson Neural Core"
+        title="Interactive 3D Crimson Core"
       />
 
-      {/* Floating Top-Left Telemetry Badge */}
-      <div className="floating-badge badge-top-left">
-        <div className="badge-icon-box">
-          <LayersIcon size={18} />
-        </div>
-        <div className="badge-text-col">
-          <span className="badge-title">High-Speed CDN</span>
-          <span className="badge-subtitle">Global ImageKit Edge Mesh</span>
-        </div>
-      </div>
+      {!minimal && (
+        <>
+          {/* Floating Top-Left Telemetry Badge */}
+          <div className="floating-badge badge-top-left">
+            <div className="badge-icon-box">
+              <LayersIcon size={18} />
+            </div>
+            <div className="badge-text-col">
+              <span className="badge-title">High-Speed CDN</span>
+              <span className="badge-subtitle">Global ImageKit Edge Mesh</span>
+            </div>
+          </div>
 
-      {/* Floating Top-Right Uptime Pill */}
-      <div className="floating-badge badge-top-right">
-        <span className="uptime-status-dot" />
-        <span className="uptime-text">99.05% System Uptime</span>
-      </div>
+          {/* Floating Top-Right Uptime Pill */}
+          <div className="floating-badge badge-top-right">
+            <span className="uptime-status-dot" />
+            <span className="uptime-text">99.05% System Uptime</span>
+          </div>
 
-      {/* Floating Bottom-Left Pre-Publish Verification Badge */}
-      <div className="floating-badge badge-bottom-left">
-        <div className="badge-icon-box shield-badge-box">
-          <ShieldCheckIcon size={18} />
-        </div>
-        <div className="badge-text-col">
-          <span className="badge-title">Pre-Publish Tested</span>
-          <span className="badge-subtitle">Zero-Trust Sandbox Audit</span>
-        </div>
-      </div>
+          {/* Floating Bottom-Left Pre-Publish Verification Badge */}
+          <div className="floating-badge badge-bottom-left">
+            <div className="badge-icon-box shield-badge-box">
+              <ShieldCheckIcon size={18} />
+            </div>
+            <div className="badge-text-col">
+              <span className="badge-title">Pre-Publish Tested</span>
+              <span className="badge-subtitle">Zero-Trust Sandbox Audit</span>
+            </div>
+          </div>
 
-      {/* Floating Bottom-Right Telemetry Card */}
-      <div className="floating-badge badge-bottom-right">
-        <div className="telemetry-stat">
-          <span className="telemetry-value">5+</span>
-          <span className="telemetry-label">Curated Products</span>
-        </div>
-        <div className="telemetry-divider" />
-        <div className="telemetry-stat">
-          <span className="telemetry-value-flex">
-            100% <StarIcon size={14} className="crimson-star" />
-          </span>
-          <span className="telemetry-label">SHA-256 Verified</span>
-        </div>
-      </div>
+          {/* Floating Bottom-Right Telemetry Card */}
+          <div className="floating-badge badge-bottom-right">
+            <div className="telemetry-stat">
+              <span className="telemetry-value">5+</span>
+              <span className="telemetry-label">Curated Products</span>
+            </div>
+            <div className="telemetry-divider" />
+            <div className="telemetry-stat">
+              <span className="telemetry-value-flex">
+                100% <StarIcon size={14} className="crimson-star" />
+              </span>
+              <span className="telemetry-label">SHA-256 Verified</span>
+            </div>
+          </div>
 
-      {/* Drag to Inspect Instruction */}
-      <div className="crystal-drag-hint">
-        <ActivityIcon size={12} className="drag-hint-icon" />
-        <span>Interactive 3D Core &bull; Drag to Inspect</span>
-      </div>
+          {/* Drag to Inspect Instruction */}
+          <div className="crystal-drag-hint">
+            <ActivityIcon size={12} className="drag-hint-icon" />
+            <span>Interactive 3D Core &bull; Drag to Inspect</span>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -338,3 +338,38 @@
   }
 }
 
+/* Minimalist Mode for Error Pages (404 / 403) */
+.crystal-core-wrapper.crystal-core-minimal {
+  max-width: 420px;
+  height: 380px;
+  margin: 0 auto;
+}
+
+.crystal-core-wrapper.crystal-core-minimal .crystal-ring-outer {
+  width: 320px;
+  height: 320px;
+}
+
+.crystal-core-wrapper.crystal-core-minimal .crystal-ring-inner {
+  width: 370px;
+  height: 370px;
+}
+
+@media (max-width: 768px) {
+  .crystal-core-wrapper.crystal-core-minimal {
+    max-width: 300px;
+    height: 300px;
+  }
+
+  .crystal-core-wrapper.crystal-core-minimal .crystal-ring-outer {
+    width: 250px;
+    height: 250px;
+  }
+
+  .crystal-core-wrapper.crystal-core-minimal .crystal-ring-inner {
+    width: 290px;
+    height: 290px;
+  }
+}
+
+
