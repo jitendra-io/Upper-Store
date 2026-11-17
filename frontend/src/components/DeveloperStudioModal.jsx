@@ -15,6 +15,7 @@ import {
   generateFallbackHash,
   formatBytes,
 } from '../utils/preflightScanner';
+import MarkdownReleaseNotesField from './MarkdownReleaseNotesField';
 import './DeveloperStudioModal.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -623,8 +624,8 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       return;
     }
 
-    if (productForm.releaseNotes && productForm.releaseNotes.trim().length > 2000) {
-      setFeedback({ type: 'error', message: 'Release notes cannot exceed 2000 characters.' });
+    if (productForm.releaseNotes && productForm.releaseNotes.trim().length > 25000) {
+      setFeedback({ type: 'error', message: 'Release notes cannot exceed 25000 characters.' });
       return;
     }
 
@@ -1085,13 +1086,13 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
                   </div>
 
                   <div className="dev-field-group">
-                    <label>Release Notes / What's New</label>
-                    <textarea
-                      rows={2}
-                      placeholder="Highlight changes, improvements, or new features in this version..."
+                    <MarkdownReleaseNotesField
                       value={productForm.releaseNotes}
-                      onChange={(e) => setProductForm({ ...productForm, releaseNotes: e.target.value })}
-                      maxLength={2000}
+                      onChange={(newNotes) => setProductForm({ ...productForm, releaseNotes: newNotes })}
+                      label="Release Notes / What's New"
+                      placeholder="Write in Markdown or upload a .md file (e.g. # What's New in v1.0.0...)"
+                      maxLength={25000}
+                      id="dev-release-notes"
                     />
                   </div>
                 </div>

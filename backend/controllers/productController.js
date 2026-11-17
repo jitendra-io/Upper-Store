@@ -331,8 +331,8 @@ const createProduct = async (req, res) => {
     }
 
     const cleanReleaseNotes = releaseNotes ? String(releaseNotes).trim() : '';
-    if (cleanReleaseNotes.length > 2000) {
-      return res.status(400).json({ message: 'Release notes cannot exceed 2000 characters.' });
+    if (cleanReleaseNotes.length > 25000) {
+      return res.status(400).json({ message: 'Release notes cannot exceed 25000 characters.' });
     }
 
     const cleanPrice = price ? String(price).trim() : 'Free';
@@ -636,8 +636,8 @@ const updateProduct = async (req, res) => {
 
     if (releaseNotes !== undefined) {
       const cleanNotes = String(releaseNotes).trim();
-      if (cleanNotes.length > 2000) {
-        return res.status(400).json({ message: 'Release notes cannot exceed 2000 characters.' });
+      if (cleanNotes.length > 25000) {
+        return res.status(400).json({ message: 'Release notes cannot exceed 25000 characters.' });
       }
       updatedData.releaseNotes = cleanNotes;
     }

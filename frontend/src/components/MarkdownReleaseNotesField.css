@@ -1,0 +1,404 @@
+/* Markdown Release Notes Field Styles */
+.md-field-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Header Row: Label & Actions */
+.md-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.md-field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+}
+
+.md-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Upload .md Button */
+.md-action-btn.md-upload-btn {
+  background: rgba(230, 25, 25, 0.08);
+  border: 1px solid rgba(230, 25, 25, 0.3);
+  color: #f87171;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.md-action-btn.md-upload-btn:hover {
+  background: rgba(230, 25, 25, 0.16);
+  border-color: rgba(230, 25, 25, 0.55);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Tabs: Write & Preview Switch */
+.md-tabs-switch {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.md-tab-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.md-tab-btn:hover {
+  color: #ffffff;
+}
+
+.md-tab-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Editor Outer Box */
+.md-editor-box {
+  position: relative;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.md-editor-box:focus-within {
+  border-color: rgba(230, 25, 25, 0.6);
+  box-shadow: 0 0 0 3px rgba(230, 25, 25, 0.15), 0 0 16px rgba(230, 25, 25, 0.08);
+}
+
+.md-editor-box.is-dragging-over {
+  border-color: #e61919;
+  background: rgba(230, 25, 25, 0.06);
+  box-shadow: 0 0 20px rgba(230, 25, 25, 0.25);
+}
+
+/* Drop Overlay */
+.md-drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: rgba(10, 11, 16, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #f1f5f9;
+  font-weight: 700;
+  font-size: 0.88rem;
+  pointer-events: none;
+  animation: mdFadeIn 0.15s ease-out;
+}
+
+@keyframes mdFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Toolbar */
+.md-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.6rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.md-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.md-tool-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  transition: all 0.15s ease;
+  padding: 0;
+}
+
+.md-tool-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.md-tool-clear-btn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+  font-family: inherit;
+}
+
+.md-tool-clear-btn:hover {
+  color: #f87171;
+}
+
+/* Textarea in Write Mode */
+.md-textarea {
+  width: 100%;
+  min-height: 120px;
+  max-height: 420px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #ffffff;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.md-textarea::placeholder {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+/* Preview Pane */
+.md-preview-pane {
+  min-height: 140px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 0.85rem 1rem;
+  background: rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Status Bar */
+.md-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  flex-wrap: wrap;
+  padding: 0 0.15rem;
+}
+
+.md-status-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.md-field-hint {
+  color: #64748b;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.md-imported-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  max-width: 100%;
+}
+
+.md-imported-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.md-imported-size {
+  color: #86efac;
+  font-size: 0.68rem;
+}
+
+.md-imported-remove {
+  background: transparent;
+  border: none;
+  color: #86efac;
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: 0.75rem;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.md-imported-remove:hover {
+  color: #ffffff;
+}
+
+.md-status-right {
+  display: flex;
+  align-items: center;
+}
+
+.md-char-count {
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+}
+
+.md-char-count.limit-warning {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+/* Toast Message */
+.md-feedback-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.76rem;
+  animation: mdFadeIn 0.2s ease-out;
+}
+
+.md-feedback-toast.success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #86efac;
+}
+
+.md-feedback-toast.error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.md-feedback-toast button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+  .md-field-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .md-header-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .md-action-btn.md-upload-btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 38px;
+    font-size: 0.8rem;
+  }
+
+  .md-tabs-switch {
+    min-height: 38px;
+  }
+
+  .md-tab-btn {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  .md-toolbar {
+    padding: 0.45rem;
+  }
+
+  .md-tool-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
+
+  .md-textarea {
+    font-size: 16px !important; /* Prevents iOS auto-zoom on mobile focus */
+    min-height: 140px;
+    padding: 0.7rem 0.8rem;
+  }
+
+  .md-status-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+
+  .md-status-right {
+    align-self: flex-end;
+  }
+
+  .md-imported-name {
+    max-width: 150px;
+  }
+}

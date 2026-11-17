@@ -12,6 +12,7 @@ import VipClubModal from './VipClubModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, LockIcon, CheckIcon, ArrowRightIcon, CloseIcon } from './Icons';
 import { VipAvatar } from './VipAvatar';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
+import MarkdownViewer from './MarkdownViewer';
 import './ProductDetailModal.css';
 
 const parseYouTubeVideoId = (url) => {
@@ -734,7 +735,7 @@ const ProductDetailModal = ({ product, onClose }) => {
                   </svg>
                   <span>Release Notes & Specs</span>
                 </div>
-                <p>{product.releaseNotes}</p>
+                <MarkdownViewer content={product.releaseNotes} />
               </div>
             )}
           </div>

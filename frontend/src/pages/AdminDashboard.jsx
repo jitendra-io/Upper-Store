@@ -18,6 +18,7 @@ import {
 } from '../components/Icons';
 import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
 import { MAJOR_50_COUNTRIES } from '../utils/countries';
+import MarkdownReleaseNotesField from '../components/MarkdownReleaseNotesField';
 import './AdminDashboard.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -1758,12 +1759,13 @@ const AdminDashboard = () => {
               </div>
 
               <div className="form-group">
-                <label>Release Notes</label>
-                <textarea
-                  rows="2"
+                <MarkdownReleaseNotesField
                   value={releaseNotes}
-                  onChange={(e) => setReleaseNotes(e.target.value)}
-                  placeholder="v1.0.0 - Initial release notes..."
+                  onChange={(newNotes) => setReleaseNotes(newNotes)}
+                  label="Release Notes / What's New"
+                  placeholder="Write changelog in Markdown or upload a .md file (e.g. # Release Notes v1.0.0...)"
+                  maxLength={25000}
+                  id="admin-release-notes"
                 />
               </div>
 
