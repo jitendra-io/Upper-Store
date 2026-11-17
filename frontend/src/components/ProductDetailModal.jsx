@@ -13,6 +13,7 @@ import { CrownIcon, DiamondIcon, SparkleIcon, LockIcon, CheckIcon, ArrowRightIco
 import { VipAvatar } from './VipAvatar';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import MarkdownViewer from './MarkdownViewer';
+import ReleaseNotesModal from './ReleaseNotesModal';
 import './ProductDetailModal.css';
 
 const parseYouTubeVideoId = (url) => {
@@ -53,6 +54,7 @@ const ProductDetailModal = ({ product, onClose }) => {
   const [feePaid, setFeePaid] = useState(() => localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
   const [copiedSha, setCopiedSha] = useState(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [releaseNotesModalOpen, setReleaseNotesModalOpen] = useState(false);
 
   // Phone and PC browser Back button support and history synchronization
   const modalHistoryKeyRef = useRef(`upper-product-${product?.id || 'modal'}-${Date.now()}`);
@@ -259,7 +261,7 @@ const ProductDetailModal = ({ product, onClose }) => {
     };
   }, []);
 
-  const isAnySubmodalOpen = Boolean(permissionsModalOpen || reviewModalOpen || termsModalOpen || checkoutOpen || vipModalOpen);
+  const isAnySubmodalOpen = Boolean(permissionsModalOpen || reviewModalOpen || termsModalOpen || checkoutOpen || vipModalOpen || releaseNotesModalOpen);
 
   // Keep active submodal ref in sync for event listeners
   useEffect(() => {
@@ -269,8 +271,9 @@ const ProductDetailModal = ({ product, onClose }) => {
       terms: termsModalOpen,
       checkout: checkoutOpen,
       vip: vipModalOpen,
+      releaseNotes: releaseNotesModalOpen,
     };
-  }, [permissionsModalOpen, reviewModalOpen, termsModalOpen, checkoutOpen, vipModalOpen]);
+  }, [permissionsModalOpen, reviewModalOpen, termsModalOpen, checkoutOpen, vipModalOpen, releaseNotesModalOpen]);
 
   // Manage nested sub-modal history entries so back button closes top-most sub-modal first
   useEffect(() => {
@@ -308,9 +311,10 @@ const ProductDetailModal = ({ product, onClose }) => {
       }
 
       const activeSubs = activeSubmodalRef.current;
-      if (activeSubs && (activeSubs.permissions || activeSubs.reviews || activeSubs.terms || activeSubs.checkout || activeSubs.vip)) {
+      if (activeSubs && (activeSubs.permissions || activeSubs.reviews || activeSubs.terms || activeSubs.checkout || activeSubs.vip || activeSubs.releaseNotes)) {
         submodalPushedRef.current = false;
-        if (activeSubs.terms) setTermsModalOpen(false);
+        if (activeSubs.releaseNotes) setReleaseNotesModalOpen(false);
+        else if (activeSubs.terms) setTermsModalOpen(false);
         else if (activeSubs.permissions) setPermissionsModalOpen(false);
         else if (activeSubs.reviews) setReviewModalOpen(false);
         else if (activeSubs.checkout) setCheckoutOpen(false);
@@ -347,7 +351,9 @@ const ProductDetailModal = ({ product, onClose }) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        if (termsModalOpen) {
+        if (releaseNotesModalOpen) {
+          setReleaseNotesModalOpen(false);
+        } else if (termsModalOpen) {
           setTermsModalOpen(false);
         } else if (permissionsModalOpen) {
           setPermissionsModalOpen(false);
@@ -366,7 +372,7 @@ const ProductDetailModal = ({ product, onClose }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [termsModalOpen, permissionsModalOpen, reviewModalOpen, checkoutOpen, vipModalOpen]);
+  }, [termsModalOpen, permissionsModalOpen, reviewModalOpen, checkoutOpen, vipModalOpen, releaseNotesModalOpen]);
 
   // Smooth scroll lock without resetting scroll position or triggering immediate layout thrash
   useEffect(() => {
@@ -726,16 +732,56 @@ const ProductDetailModal = ({ product, onClose }) => {
             {/* Release Notes & Specs */}
             {product.releaseNotes && (
               <div className="modal-section-card modal-release-notes">
-                <div className="section-card-header">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                    <polyline points="14 2 14 8 20 8"></polyline>
-                    <line x1="16" y1="13" x2="8" y2="13"></line>
-                    <line x1="16" y1="17" x2="8" y2="17"></line>
-                  </svg>
-                  <span>Release Notes & Specs</span>
+                <div className="section-card-header section-card-header-with-action">
+                  <div className="section-card-title-group">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    <span>Release Notes &amp; Specs</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="release-notes-expand-pill-btn"
+                    onClick={() => setReleaseNotesModalOpen(true)}
+                    title="Expand full release notes view"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="15 3 21 3 21 9"></polyline>
+                      <polyline points="9 21 3 21 3 15"></polyline>
+                      <line x1="21" y1="3" x2="14" y2="10"></line>
+                      <line x1="3" y1="21" x2="10" y2="14"></line>
+                    </svg>
+                    <span>Expand</span>
+                  </button>
                 </div>
-                <MarkdownViewer content={product.releaseNotes} />
+
+                <div className="modal-release-notes-content-wrap">
+                  <div className="modal-release-notes-scroll">
+                    <MarkdownViewer content={product.releaseNotes} />
+                  </div>
+
+                  {product.releaseNotes.length > 180 && (
+                    <div className="modal-release-notes-fade-bar">
+                      <button
+                        type="button"
+                        className="modal-release-notes-expand-bar-btn"
+                        onClick={() => setReleaseNotesModalOpen(true)}
+                      >
+                        <span>View Full Release Notes</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <polyline points="9 21 3 21 3 15"></polyline>
+                          <line x1="21" y1="3" x2="14" y2="10"></line>
+                          <line x1="3" y1="21" x2="10" y2="14"></line>
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -887,6 +933,15 @@ const ProductDetailModal = ({ product, onClose }) => {
         <VipClubModal
           isOpen={vipModalOpen}
           onClose={() => setVipModalOpen(false)}
+        />
+      )}
+
+      {/* FULL RELEASE NOTES & CHANGELOG READER MODAL */}
+      {releaseNotesModalOpen && (
+        <ReleaseNotesModal
+          product={product}
+          isOpen={releaseNotesModalOpen}
+          onClose={() => setReleaseNotesModalOpen(false)}
         />
       )}
     </div>

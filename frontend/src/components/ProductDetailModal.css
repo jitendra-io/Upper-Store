@@ -873,6 +873,117 @@
   overflow-wrap: anywhere;
 }
 
+/* Release Notes Card Enhancements & Bounded View */
+.section-card-header.section-card-header-with-action {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.section-card-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.release-notes-expand-pill-btn {
+  background: rgba(230, 25, 25, 0.1);
+  border: 1px solid rgba(230, 25, 25, 0.35);
+  color: #ff6b6b;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+}
+
+.release-notes-expand-pill-btn:hover {
+  background: rgba(230, 25, 25, 0.25);
+  border-color: #ff2a2a;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.modal-release-notes-content-wrap {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-release-notes-scroll {
+  max-height: 210px;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(230, 25, 25, 0.4) transparent;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-release-notes-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal-release-notes-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-release-notes-scroll::-webkit-scrollbar-thumb {
+  background: rgba(230, 25, 25, 0.35);
+  border-radius: 4px;
+}
+
+.modal-release-notes-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(230, 25, 25, 0.65);
+}
+
+.modal-release-notes-fade-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: linear-gradient(to top, rgba(15, 15, 22, 0.98) 60%, rgba(15, 15, 22, 0));
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 0.2rem;
+  pointer-events: none;
+}
+
+.modal-release-notes-expand-bar-btn {
+  pointer-events: auto;
+  background: rgba(18, 18, 26, 0.92);
+  border: 1px solid rgba(230, 25, 25, 0.45);
+  color: #ff8080;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.3rem 0.85rem;
+  border-radius: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.modal-release-notes-expand-bar-btn:hover {
+  background: rgba(230, 25, 25, 0.25);
+  border-color: #ff2a2a;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 18px rgba(230, 25, 25, 0.3);
+}
+
 /* =========================================================================
    RESPONSIVE DESIGN: TABLETS (< 880px)
    ========================================================================= */
@@ -1178,5 +1289,21 @@
 
   .perm-trigger-action-text {
     display: none;
+  }
+
+  .modal-release-notes-scroll {
+    max-height: 175px;
+  }
+
+  .release-notes-expand-pill-btn {
+    min-height: 28px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  .modal-release-notes-expand-bar-btn {
+    min-height: 32px;
+    padding: 0.28rem 0.75rem;
+    font-size: 0.7rem;
   }
 }
