@@ -91,11 +91,15 @@ const ProductReviewsModal = ({ product, isOpen, onClose }) => {
   useEffect(() => {
     let isMounted = true;
     if (isOpen && user?.email) {
-      fetchUserDownloadHistoryFromDB(user.email).then(() => {
-        if (isMounted) {
-          setDownloadHistorySync((prev) => prev + 1);
-        }
-      });
+      fetchUserDownloadHistoryFromDB(user.email)
+        .then(() => {
+          if (isMounted) {
+            setDownloadHistorySync((prev) => prev + 1);
+          }
+        })
+        .catch((err) => {
+          console.warn('Download history sync error:', err);
+        });
     }
     return () => { isMounted = false; };
   }, [isOpen, user?.email]);

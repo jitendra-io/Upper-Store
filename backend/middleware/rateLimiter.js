@@ -21,6 +21,7 @@ const apiLimiter = rateLimit({
   max: 1500, // Limit each external IP to 1,500 requests per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   skip: (req) => isLocalhost(req),
   message: {
     message: 'Too many requests from this IP address. Please try again after 15 minutes.',
@@ -36,6 +37,7 @@ const authLimiter = rateLimit({
   max: 15, // Limit each IP to 15 authentication attempts per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   message: {
     message: 'Too many authentication attempts from this IP. Please wait 15 minutes before retrying.',
   },
@@ -50,6 +52,7 @@ const contactLimiter = rateLimit({
   max: 10, // Limit each IP to 10 contact form submissions per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   message: {
     message: 'Too many contact messages sent from this IP. Please wait 15 minutes before submitting again.',
   },
@@ -64,6 +67,7 @@ const downloadLimiter = rateLimit({
   max: 30, // Limit each IP to 30 downloads recorded per 15 minutes
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   message: {
     message: 'Download recording rate limit reached. Please wait a few minutes before downloading again.',
   },
@@ -78,6 +82,7 @@ const paymentLimiter = rateLimit({
   max: 30, // 30 checkout sessions per 15 minutes per IP
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   skip: (req) => isLocalhost(req),
   message: {
     message: 'Too many checkout attempts from this IP. Please wait a few minutes before trying again.',
@@ -93,6 +98,7 @@ const followLimiter = rateLimit({
   max: 60, // 60 follow/unfollow requests per minute per IP
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false },
   skip: (req) => isLocalhost(req),
   message: {
     message: 'Too many follow requests. Please wait a moment before trying again.',

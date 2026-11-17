@@ -77,15 +77,23 @@ class MemoryCache {
       return await this.inFlight.get(key);
     }
 
-    // 3. Initiate single-flight promise
+    // 3. Initiate single-flight promise with a 12-second deadlock safeguard
     const promise = (async () => {
+      let timeoutId = null;
       try {
-        const freshData = await fetcherFn();
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error(`Cache fetcher timed out after 12s for key: ${key}`));
+          }, 12000);
+        });
+
+        const freshData = await Promise.race([fetcherFn(), timeoutPromise]);
         if (freshData !== undefined && freshData !== null) {
           this.set(key, freshData, ttlSeconds);
         }
         return freshData;
       } finally {
+        if (timeoutId) clearTimeout(timeoutId);
         this.inFlight.delete(key);
       }
     })();

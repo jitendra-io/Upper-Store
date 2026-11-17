@@ -1102,6 +1102,28 @@ const updateUsername = async (req, res) => {
       });
     }
 
+    // Sync username changes to developer_follows records (both as follower and as target developer)
+    try {
+      const oldUname = (userData.username || '').toLowerCase().trim();
+      const newUname = cleanUsername.toLowerCase().trim();
+      if (oldUname && oldUname !== newUname) {
+        const asFollowerSnap = await db.collection('developer_follows').where('followerId', '==', userDoc.id).get();
+        for (const fDoc of asFollowerSnap.docs) {
+          await fDoc.ref.update({ followerUsername: newUname }).catch(() => {});
+        }
+        const asDevSnap = await db.collection('developer_follows').where('developerUserId', '==', userDoc.id).get();
+        for (const fDoc of asDevSnap.docs) {
+          await fDoc.ref.update({ developerUsername: newUname }).catch(() => {});
+        }
+        const asDevOldSnap = await db.collection('developer_follows').where('developerUsername', '==', oldUname).get();
+        for (const fDoc of asDevOldSnap.docs) {
+          await fDoc.ref.update({ developerUsername: newUname, developerUserId: userDoc.id }).catch(() => {});
+        }
+      }
+    } catch (fSyncErr) {
+      console.warn('Error syncing username changes to developer_follows:', fSyncErr.message);
+    }
+
     const remainingChanges = Math.max(0, MAX_CHANGES_PER_YEAR - (recentChanges.length + 1));
 
     res.json({
@@ -1421,6 +1443,28 @@ const updateFullProfile = async (req, res) => {
         }
       } catch (nSyncErr) {
         console.warn('Sync notifications author error:', nSyncErr.message);
+      }
+    }
+
+    // If username changed, sync to developer_follows records
+    if (userUpdates.username && oldUsername && oldUsername.toLowerCase() !== newUsername.toLowerCase()) {
+      try {
+        const oldUname = oldUsername.toLowerCase().trim();
+        const newUname = newUsername.toLowerCase().trim();
+        const asFollowerSnap = await db.collection('developer_follows').where('followerId', '==', userDoc.id).get();
+        for (const fDoc of asFollowerSnap.docs) {
+          await fDoc.ref.update({ followerUsername: newUname }).catch(() => {});
+        }
+        const asDevSnap = await db.collection('developer_follows').where('developerUserId', '==', userDoc.id).get();
+        for (const fDoc of asDevSnap.docs) {
+          await fDoc.ref.update({ developerUsername: newUname }).catch(() => {});
+        }
+        const asDevOldSnap = await db.collection('developer_follows').where('developerUsername', '==', oldUname).get();
+        for (const fDoc of asDevOldSnap.docs) {
+          await fDoc.ref.update({ developerUsername: newUname, developerUserId: userDoc.id }).catch(() => {});
+        }
+      } catch (fSyncErr) {
+        console.warn('Sync developer_follows author error:', fSyncErr.message);
       }
     }
 

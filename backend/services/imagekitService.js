@@ -47,7 +47,7 @@ const uploadFileToCloudOrLocal = async (file, folder, req) => {
     try {
       let buffer = file.buffer;
       if (!buffer && file.path && fs.existsSync(file.path)) {
-        buffer = fs.readFileSync(file.path);
+        buffer = await fs.promises.readFile(file.path);
       }
 
       if (buffer) {
@@ -65,10 +65,10 @@ const uploadFileToCloudOrLocal = async (file, folder, req) => {
           url = uploaded.url;
           console.log(`[ImageKit] Uploaded (${folder}): ${url}`);
 
-          // Remove local temporary staging file if saved to disk
+          // Remove local temporary staging file asynchronously if saved to disk
           if (file.path && fs.existsSync(file.path)) {
             try {
-              fs.unlinkSync(file.path);
+              await fs.promises.unlink(file.path);
             } catch (unlinkErr) {
               console.warn(`[ImageKit] Note: Could not delete temp file ${file.path}:`, unlinkErr.message);
             }
@@ -83,14 +83,14 @@ const uploadFileToCloudOrLocal = async (file, folder, req) => {
 
   // Fallback if ImageKit is not active or failed
   if (!url && file.buffer) {
-    // If memory storage was used and ImageKit failed, persist to local disk as fallback
+    // If memory storage was used and ImageKit failed, persist to local disk asynchronously as fallback
     const targetDir = path.join(__dirname, '..', 'uploads', folder === 'banners' ? 'images' : folder);
     if (!fs.existsSync(targetDir)) {
-      fs.mkdirSync(targetDir, { recursive: true });
+      await fs.promises.mkdir(targetDir, { recursive: true });
     }
     const safeName = `fallback-${Date.now()}-${file.originalname || 'cover.jpg'}`.replace(/[^a-zA-Z0-9_.-]/g, '_');
     const destPath = path.join(targetDir, safeName);
-    fs.writeFileSync(destPath, file.buffer);
+    await fs.promises.writeFile(destPath, file.buffer);
     const rel = path.relative(path.join(__dirname, '..'), destPath);
     url = getFileUrl(req, rel);
   }

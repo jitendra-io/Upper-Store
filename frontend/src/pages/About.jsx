@@ -8,14 +8,18 @@ const About = () => {
   const location = useLocation();
 
   useEffect(() => {
+    let timer = null;
     if (location.hash === '#publish' || window.location.hash === '#publish') {
       const el = document.getElementById('publish');
       if (el) {
-        setTimeout(() => {
+        timer = setTimeout(() => {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 150);
       }
     }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
   }, [location]);
 
   return (

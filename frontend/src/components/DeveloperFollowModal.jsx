@@ -13,6 +13,17 @@ const followListsCache = {
   following: {},
 };
 
+export const clearFollowListsCache = (username = null) => {
+  if (username) {
+    const clean = String(username).replace(/^@/, '').trim().toLowerCase();
+    delete followListsCache.followers[clean];
+    delete followListsCache.following[clean];
+  } else {
+    followListsCache.followers = {};
+    followListsCache.following = {};
+  }
+};
+
 const DeveloperFollowModal = ({
   isOpen,
   onClose,

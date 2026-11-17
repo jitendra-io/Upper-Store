@@ -24,6 +24,10 @@ require('./config/firebase');
 
 const app = express();
 
+// Trust reverse proxy (1 hop for Cloudflare, Render, AWS ELB, or Nginx)
+// Allows rate limiters and logging to identify distinct client IPs via X-Forwarded-For
+app.set('trust proxy', 1);
+
 // Disable Express fingerprint header to prevent server profiling
 app.disable('x-powered-by');
 
@@ -107,12 +111,15 @@ app.use(
   })
 );
 
-// Body parser with safe payload limits and raw body buffer preservation for webhooks
+// Body parser with safe payload limits and selective raw body preservation for webhooks
 app.use(
   express.json({
     limit: '2mb',
     verify: (req, res, buf) => {
-      req.rawBody = buf;
+      // Only retain raw buffer on webhook routes to eliminate memory bloat across general API traffic
+      if (req.originalUrl && req.originalUrl.includes('webhook')) {
+        req.rawBody = buf;
+      }
     },
   })
 );
@@ -136,6 +143,47 @@ const { startNotificationCleanupJob, stopNotificationCleanupJob } = require('./s
 const { apiLimiter } = require('./middleware/rateLimiter');
 app.use('/api', apiLimiter);
 
+// Firestore Quota Exhaustion & Platform Maintenance Guard Middleware
+const { getQuotaStatus, isFirestoreQuotaError } = require('./config/firebase');
+
+app.use((req, res, next) => {
+  const quota = getQuotaStatus();
+  if (quota.isQuotaExceeded && req.path.startsWith('/api') && req.path !== '/api/health') {
+    res.setHeader('Retry-After', '60');
+    return res.status(503).json({
+      status: 'maintenance',
+      maintenance: true,
+      code: 'QUOTA_EXCEEDED',
+      message: 'Under Temporary Maintenance',
+      lastQuotaExceededAt: quota.lastQuotaExceededAt,
+    });
+  }
+
+  // Intercept 500 errors to convert to 503 if quota was tripped during request execution
+  const origStatus = res.status;
+  res.status = function (statusCode) {
+    if (statusCode >= 500 && getQuotaStatus().isQuotaExceeded) {
+      res.setHeader('Retry-After', '60');
+      return origStatus.call(this, 503);
+    }
+    return origStatus.call(this, statusCode);
+  };
+
+  const origJson = res.json;
+  res.json = function (body) {
+    if (res.statusCode === 503 && getQuotaStatus().isQuotaExceeded) {
+      if (body && typeof body === 'object') {
+        body.maintenance = true;
+        body.code = 'QUOTA_EXCEEDED';
+        body.message = 'Under Temporary Maintenance';
+      }
+    }
+    return origJson.call(this, body);
+  };
+
+  next();
+});
+
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
@@ -152,6 +200,18 @@ app.use('/api/search', require('./routes/searchRoutes'));
 // High-Performance Telemetry & Health Endpoint
 const cacheService = require('./services/cacheService');
 app.get('/api/health', (req, res) => {
+  const quota = getQuotaStatus();
+  if (quota.isQuotaExceeded) {
+    res.setHeader('Retry-After', '60');
+    return res.status(503).json({
+      status: 'maintenance',
+      maintenance: true,
+      code: 'QUOTA_EXCEEDED',
+      message: 'Under Temporary Maintenance',
+      lastQuotaExceededAt: quota.lastQuotaExceededAt,
+    });
+  }
+
   const mem = process.memoryUsage();
   res.json({
     status: 'healthy',
@@ -191,6 +251,16 @@ if (fs.existsSync(frontendDist)) {
 
 // Global error handler
 app.use((err, req, res, next) => {
+  if (isFirestoreQuotaError(err)) {
+    res.setHeader('Retry-After', '60');
+    return res.status(503).json({
+      status: 'maintenance',
+      maintenance: true,
+      code: 'QUOTA_EXCEEDED',
+      message: 'Under Temporary Maintenance',
+    });
+  }
+
   console.error('Server Error:', err.message);
   res.status(err.status || 500).json({
     message: err.message || 'Internal Server Error',

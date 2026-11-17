@@ -14,7 +14,7 @@ import { VipAvatar } from './VipAvatar';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
 import './Navbar.css';
 
-const Navbar = ({ onOpenSearch }) => {
+const Navbar = ({ onOpenSearch, disabled = false }) => {
   const [menuOpen, setMenuOpen] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).get('menu') === 'drawer';
@@ -120,10 +120,6 @@ const Navbar = ({ onOpenSearch }) => {
     window.addEventListener('licenseIssued', handleLicenseIssued);
     return () => window.removeEventListener('licenseIssued', handleLicenseIssued);
   }, [user]);
-
-  if (location.pathname.startsWith('/admin')) {
-    return null;
-  }
 
   const closeMenu = () => {
     setMenuOpen(false);
@@ -308,10 +304,54 @@ const Navbar = ({ onOpenSearch }) => {
   };
 
   useEffect(() => {
+    // Only poll notifications if user is authenticated and navbar is not disabled
+    if (disabled) {
+      setNotifications([]);
+      return;
+    }
+    const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('upper_user_token') : null);
+    if (!user && !activeToken) {
+      setNotifications([]);
+      return;
+    }
+
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 8000);
-    return () => clearInterval(interval);
-  }, []);
+
+    let interval = null;
+    const startPolling = () => {
+      if (!interval) {
+        interval = setInterval(() => {
+          if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+            fetchNotifications();
+          }
+        }, 15000);
+      }
+    };
+
+    const stopPolling = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchNotifications();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+
+    startPolling();
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      stopPolling();
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [user, token, disabled]);
 
   const unreadCount = notifications.filter((n) => !readNotifIds.includes(n.id)).length;
 
@@ -352,11 +392,16 @@ const Navbar = ({ onOpenSearch }) => {
     checkBanStatus();
   }, [user]);
 
+  // Navbar is hidden on admin pages (placed after all hooks to strictly adhere to React Rules of Hooks)
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
+
   const userAvatar = user?.photoURL || `https://unavatar.io/${encodeURIComponent(user?.email ? user.email.trim().toLowerCase() : 'user')}?fallback=https%3A%2F%2Fapi.dicebear.com%2F7.x%2Finitials%2Fsvg%3Fseed%3D${encodeURIComponent(user?.email || 'user')}`;
 
   return (
     <>
-      <nav className="navbar">
+      <nav className={`navbar ${disabled ? 'navbar-disabled' : ''}`}>
         <div className="nav-logo">
           <Link to="/" onClick={closeMenu}>
             <img src={logoImg} alt="Upper Store Logo" className="brand-logo-img" />

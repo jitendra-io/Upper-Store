@@ -39,6 +39,7 @@
   flex-direction: column;
   overflow: hidden;
   max-height: 82vh;
+  max-height: 82dvh;
   animation: searchModalSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -560,7 +561,9 @@
   .global-search-modal-card {
     max-width: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     height: 100vh;
+    height: 100dvh;
     border-radius: 0;
     border: none;
   }

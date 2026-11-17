@@ -23,9 +23,10 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
 
     console.log(` Creating GitHub Release "${releaseTitle}" (Tag: ${tagName})...`);
 
-    // 1. Create Release Tag via GitHub REST API
+    // 1. Create Release Tag via GitHub REST API (Guarded with 25s timeout)
     const createReleaseRes = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/releases`, {
       method: 'POST',
+      signal: AbortSignal.timeout(25000),
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',
@@ -73,8 +74,10 @@ const uploadToGitHubRelease = async ({ filePath, fileName, version, title, descr
     else if (ext === '.gz' || ext === '.tgz') contentType = 'application/gzip';
     else if (ext === '.dmg') contentType = 'application/x-apple-diskimage';
 
+    // 2. Stream Binary Asset to GitHub Releases with a 5-minute timeout window
     const uploadAssetRes = await fetch(uploadUrl, {
       method: 'POST',
+      signal: AbortSignal.timeout(300000),
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',

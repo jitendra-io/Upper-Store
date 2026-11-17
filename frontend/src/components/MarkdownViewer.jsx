@@ -25,7 +25,7 @@ const parseInline = (text) => {
   res = res.replace(/__([^_]+)__/g, '<strong>$1</strong>');
 
   // Italic: *text* or _text_
-  res = res.replace(/(^|[^\*])\*([^\*]+)\*([^\*]|$)/g, '$1<em>$2</em>$3');
+  res = res.replace(/(^|[^*])\*([^*]+)\*([^*]|$)/g, '$1<em>$2</em>$3');
   res = res.replace(/(^|[^_])_([^_]+)_([^_]|$)/g, '$1<em>$2</em>$3');
 
   // Strikethrough: ~~text~~
@@ -136,7 +136,9 @@ const parseBlocks = (markdown) => {
     }
 
     // 7. Markdown Tables (| Col 1 | Col 2 |)
-    if (trimmed.startsWith('|') && trimmed.endsWith('|') && lines[i + 1]?.includes('|---')) {
+    const nextLineTrimmed = (lines[i + 1] || '').trim();
+    const isTableDivider = /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/.test(nextLineTrimmed) && nextLineTrimmed.includes('-');
+    if (trimmed.startsWith('|') && trimmed.endsWith('|') && isTableDivider) {
       const headers = trimmed.split('|').slice(1, -1).map(c => c.trim());
       i += 2; // Skip header row and divider row
       const rows = [];
@@ -170,7 +172,7 @@ const parseBlocks = (markdown) => {
       !/^[\*\-]\s+/.test(lines[i].trim()) &&
       !/^\d+\.\s+/.test(lines[i].trim()) &&
       !/^(\-{3,}|\*{3,}|_{3,})$/.test(lines[i].trim()) &&
-      !(lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|') && lines[i + 1]?.includes('|---'))
+      !(lines[i].trim().startsWith('|') && lines[i].trim().endsWith('|') && /^\|?(\s*:?-+:?\s*\|)+(\s*:?-+:?\s*)?$/.test((lines[i + 1] || '').trim()) && (lines[i + 1] || '').includes('-'))
     ) {
       pLines.push(lines[i]);
       i++;

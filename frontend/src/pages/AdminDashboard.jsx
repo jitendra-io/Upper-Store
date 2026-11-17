@@ -25,7 +25,13 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState(localStorage.getItem('adminToken'));
+  const [token, setToken] = useState(() => {
+    try {
+      return typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+    } catch (_) {
+      return null;
+    }
+  });
   const [activeTab, setActiveTab] = useState('products'); // 'products', 'platformFee', 'users', 'appeals', 'inbox', 'storeProfile'
 
   // Official Store Profile State (Upper Store Official Page)
@@ -156,7 +162,10 @@ const AdminDashboard = () => {
   const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('adminToken');
+    let savedToken = null;
+    try {
+      savedToken = typeof window !== 'undefined' ? localStorage.getItem('adminToken') : null;
+    } catch (_) {}
     if (!savedToken) {
       navigate('/admin');
     } else {

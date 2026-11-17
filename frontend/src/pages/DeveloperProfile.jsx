@@ -6,7 +6,7 @@ import StarRatingBadge from '../components/StarRatingBadge';
 import ProductDetailModal from '../components/ProductDetailModal';
 import EditProfileModal from '../components/EditProfileModal';
 import DeveloperDownloadsModal from '../components/DeveloperDownloadsModal';
-import DeveloperFollowModal from '../components/DeveloperFollowModal';
+import DeveloperFollowModal, { clearFollowListsCache } from '../components/DeveloperFollowModal';
 import { formatDownloadCount, getProductDownloadCount } from '../utils/downloadTracker';
 import './DeveloperProfile.css';
 
@@ -145,12 +145,16 @@ const DeveloperProfile = () => {
           'Content-Type': 'application/json',
           ...(activeToken ? { Authorization: `Bearer ${activeToken}` } : {}),
         },
+        body: JSON.stringify({ action: optimisticNext ? 'follow' : 'unfollow' }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
         setIsFollowing(Boolean(data.isFollowing));
         if (data.followersCount !== undefined) {
           setFollowersCount(Number(data.followersCount));
+        }
+        if (typeof clearFollowListsCache === 'function') {
+          clearFollowListsCache(cleanUsername);
         }
       } else {
         // Revert on error
@@ -296,7 +300,46 @@ const DeveloperProfile = () => {
     return () => {
       isMounted = false;
     };
-  }, [cleanUsername]);
+  }, [cleanUsername, token, user?.uid]);
+
+  // Revalidate follow status on window focus and visibility change (cross-device/tab synchronization)
+  useEffect(() => {
+    if (!cleanUsername) return;
+
+    const revalidateFollowStatus = async () => {
+      const activeToken = token || (typeof window !== 'undefined' ? localStorage.getItem('upper_user_token') : null);
+      if (!activeToken) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/developers/follow-status/${cleanUsername}`, {
+          headers: { Authorization: `Bearer ${activeToken}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.isFollowing === 'boolean') {
+            setIsFollowing(data.isFollowing);
+          }
+          if (typeof data.followersCount === 'number') {
+            setFollowersCount(data.followersCount);
+          }
+        }
+      } catch (_) {}
+    };
+
+    const handleFocus = () => revalidateFollowStatus();
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        revalidateFollowStatus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [cleanUsername, token]);
 
 
 

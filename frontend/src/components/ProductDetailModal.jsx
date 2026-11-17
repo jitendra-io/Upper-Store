@@ -51,7 +51,13 @@ const ProductDetailModal = ({ product, onClose }) => {
     }
     return false;
   });
-  const [feePaid, setFeePaid] = useState(() => localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
+  const [feePaid, setFeePaid] = useState(() => {
+    try {
+      return typeof window !== 'undefined' && localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [copiedSha, setCopiedSha] = useState(false);
   const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
   const [releaseNotesModalOpen, setReleaseNotesModalOpen] = useState(false);
@@ -89,7 +95,11 @@ const ProductDetailModal = ({ product, onClose }) => {
   };
 
   useEffect(() => {
-    setFeePaid(localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
+    try {
+      setFeePaid(localStorage.getItem(`upper_paid_fee_${product?.id}`) === 'true');
+    } catch {
+      setFeePaid(false);
+    }
   }, [product?.id]);
 
   useEffect(() => {

@@ -17,6 +17,7 @@ import VipClub from './pages/VipClub';
 import DeveloperProfile from './pages/DeveloperProfile';
 import NotFound from './pages/NotFound';
 import Forbidden from './pages/Forbidden';
+import MaintenanceBreak from './components/MaintenanceBreak';
 import Footer from './components/Footer';
 import MiniFooter from './components/MiniFooter';
 import { AuthProvider } from './context/AuthContext';
@@ -35,6 +36,18 @@ function AppContent() {
     return false;
   });
   const [selectedSearchProduct, setSelectedSearchProduct] = useState(null);
+  const [isMaintenance, setIsMaintenance] = useState(false);
+
+  // Listen for global maintenance events (Firestore Quota Exhaustion / 503)
+  useEffect(() => {
+    const handleMaintenance = (e) => {
+      setIsMaintenance(Boolean(e.detail));
+    };
+    window.addEventListener('upperMaintenanceMode', handleMaintenance);
+    return () => {
+      window.removeEventListener('upperMaintenanceMode', handleMaintenance);
+    };
+  }, []);
 
   // History tracking refs for phone & browser Back button support
   const searchHistoryPushedRef = useRef(false);
@@ -149,48 +162,58 @@ function AppContent() {
     location.pathname === '/403' ||
     location.pathname === '/forbidden';
 
-  const showFullFooter = !isAdmin && !modalOpen && !isErrorRoute;
+  const showFullFooter = !isMaintenance && !isAdmin && !modalOpen && !isErrorRoute;
 
   return (
     <div className="app-container">
       <BackgroundAnimation />
-      <Navbar onOpenSearch={openSearch} />
-      <div key={location.pathname} className="route-page-container">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/faq" element={<Faq />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/press" element={<Press />} />
-          <Route path="/policies" element={<Policies />} />
-          <Route path="/admin" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/vip" element={<VipClub />} />
-          <Route path="/vip-club" element={<VipClub />} />
-          <Route path="/developer/:username" element={<DeveloperProfile />} />
-          <Route path="/developers/:username" element={<DeveloperProfile />} />
-          <Route path="/dev/:username" element={<DeveloperProfile />} />
-          <Route path="/404" element={<NotFound />} />
-          <Route path="/403" element={<Forbidden />} />
-          <Route path="/forbidden" element={<Forbidden />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+      <Navbar onOpenSearch={openSearch} disabled={isMaintenance} />
+
+      {isMaintenance ? (
+        <MaintenanceBreak onRecover={() => setIsMaintenance(false)} />
+      ) : (
+        <div key={location.pathname} className="route-page-container">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/faq" element={<Faq />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/policies" element={<Policies />} />
+            <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/vip" element={<VipClub />} />
+            <Route path="/vip-club" element={<VipClub />} />
+            <Route path="/developer/:username" element={<DeveloperProfile />} />
+            <Route path="/developers/:username" element={<DeveloperProfile />} />
+            <Route path="/dev/:username" element={<DeveloperProfile />} />
+            <Route path="/404" element={<NotFound />} />
+            <Route path="/403" element={<Forbidden />} />
+            <Route path="/forbidden" element={<Forbidden />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      )}
+
       {showFullFooter && <Footer />}
-      <AuthModal />
-      <GlobalSearchModal
-        isOpen={isSearchOpen}
-        onClose={closeSearch}
-        onSelectProduct={(product) => setSelectedSearchProduct(product)}
-      />
-      {selectedSearchProduct && (
-        <ProductDetailModal
-          product={selectedSearchProduct}
-          onClose={() => setSelectedSearchProduct(null)}
-        />
+      {!isMaintenance && (
+        <>
+          <AuthModal />
+          <GlobalSearchModal
+            isOpen={isSearchOpen}
+            onClose={closeSearch}
+            onSelectProduct={(product) => setSelectedSearchProduct(product)}
+          />
+          {selectedSearchProduct && (
+            <ProductDetailModal
+              product={selectedSearchProduct}
+              onClose={() => setSelectedSearchProduct(null)}
+            />
+          )}
+        </>
       )}
     </div>
   );

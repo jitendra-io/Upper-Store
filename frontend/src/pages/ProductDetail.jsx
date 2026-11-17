@@ -17,6 +17,8 @@ const ProductDetail = () => {
         if (res.ok) {
           const data = await res.json();
           setProduct(data);
+        } else if (res.status === 404) {
+          navigate('/404', { replace: true });
         } else {
           setProduct(null);
         }
@@ -27,7 +29,7 @@ const ProductDetail = () => {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, navigate]);
 
   return (
     <>

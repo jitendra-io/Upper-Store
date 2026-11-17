@@ -29,6 +29,7 @@
   width: 100%;
   max-width: 860px;
   height: 90vh;
+  height: 90dvh;
   max-height: 860px;
   background: rgba(14, 15, 21, 0.96);
   border: 1px solid rgba(255, 255, 255, 0.09);

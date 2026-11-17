@@ -154,10 +154,11 @@ export const DeveloperStudioModal = ({ isOpen, onClose, onProductPublished }) =>
       const prodRes = await fetch(`${API_BASE}/api/products`);
       if (prodRes.ok) {
         const allProds = await prodRes.json();
+        const safeProds = Array.isArray(allProds) ? allProds : [];
         const userEmail = (user?.email || '').toLowerCase();
         const userId = user?.uid;
         const userHandle = (user?.username || '').toLowerCase();
-        const owned = allProds.filter(
+        const owned = safeProds.filter(
           (p) =>
             (p.developerId && p.developerId === userId) ||
             (p.developerUsername && p.developerUsername.toLowerCase() === userHandle) ||

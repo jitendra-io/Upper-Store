@@ -49,6 +49,13 @@ export const AuthProvider = ({ children }) => {
           return updated;
         });
         return statusData;
+      } else if (res.status === 401) {
+        // Token expired or invalid: reset session cleanly to eliminate ghost logged-in state
+        setUser(null);
+        setToken(null);
+        localStorage.removeItem('upper_user_token');
+        localStorage.removeItem('upper_user_data');
+        localStorage.removeItem('adminToken');
       }
     } catch (err) {
       console.warn('Failed to refresh user status:', err);

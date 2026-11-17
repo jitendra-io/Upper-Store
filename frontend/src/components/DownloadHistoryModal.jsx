@@ -32,9 +32,13 @@ const DownloadHistoryModal = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (user && user.email && isOpen) {
       setHistory(getUserDownloadHistory(user.email));
-      fetchUserDownloadHistoryFromDB(user.email).then((dbHistory) => {
-        if (dbHistory) setHistory(dbHistory);
-      });
+      fetchUserDownloadHistoryFromDB(user.email)
+        .then((dbHistory) => {
+          if (dbHistory) setHistory(dbHistory);
+        })
+        .catch((err) => {
+          console.warn('Download history sync error:', err);
+        });
     }
   }, [user, isOpen]);
 

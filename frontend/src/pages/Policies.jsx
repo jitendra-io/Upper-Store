@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckIcon } from '../components/Icons';
 import './Policies.css';
@@ -269,6 +269,13 @@ const Policies = () => {
   const [activeTab, setActiveTab] = useState('store');
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedSection, setCopiedSection] = useState(null);
+  const copyTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    };
+  }, []);
 
   // Sync tab with URL hash or default & scroll page to top
   useEffect(() => {
@@ -286,9 +293,12 @@ const Policies = () => {
   };
 
   const handleCopyText = (text, idx) => {
-    navigator.clipboard.writeText(text);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).catch(() => {});
+    }
     setCopiedSection(idx);
-    setTimeout(() => setCopiedSection(null), 2000);
+    if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
+    copyTimeoutRef.current = setTimeout(() => setCopiedSection(null), 2000);
   };
 
   const currentPolicy = POLICIES_DATA[activeTab];

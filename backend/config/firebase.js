@@ -47,14 +47,95 @@ if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL) {
   console.warn('[WARN] Firebase Admin credentials not provided in environment variables.');
 }
 
+// Quota exhaustion tracking state
+let isQuotaExceeded = false;
+let lastQuotaExceededAt = 0;
+const QUOTA_COOLDOWN_MS = 60 * 1000; // 60s cooldown before re-testing
+
+const isFirestoreQuotaError = (err) => {
+  if (!err) return false;
+  const isQuota =
+    err.code === 8 ||
+    (typeof err.message === 'string' && (err.message.includes('RESOURCE_EXHAUSTED') || err.message.includes('Quota exceeded'))) ||
+    (typeof err.details === 'string' && err.details.includes('Quota exceeded'));
+  if (isQuota) {
+    isQuotaExceeded = true;
+    lastQuotaExceededAt = Date.now();
+    console.warn('[FIRESTORE QUOTA] Quota limit exceeded detected. Maintenance mode activated.');
+  }
+  return isQuota;
+};
+
+const getQuotaStatus = () => {
+  if (isQuotaExceeded && Date.now() - lastQuotaExceededAt > QUOTA_COOLDOWN_MS) {
+    isQuotaExceeded = false;
+  }
+  return {
+    isQuotaExceeded,
+    lastQuotaExceededAt,
+  };
+};
+
+const setQuotaExceeded = () => {
+  isQuotaExceeded = true;
+  lastQuotaExceededAt = Date.now();
+};
+
+const resetQuotaStatus = () => {
+  isQuotaExceeded = false;
+  lastQuotaExceededAt = 0;
+};
+
+// Recursive Proxy to automatically catch Firestore Quota Exhaustion on ANY collection, query, or doc operation
+const wrapWithQuotaDetection = (obj) => {
+  if (!obj || (typeof obj !== 'object' && typeof obj !== 'function')) return obj;
+  return new Proxy(obj, {
+    get(target, prop) {
+      const orig = target[prop];
+      if (typeof orig === 'function') {
+        return function (...args) {
+          try {
+            const result = orig.apply(target, args);
+            if (result && typeof result.then === 'function') {
+              return result.catch((err) => {
+                isFirestoreQuotaError(err);
+                throw err;
+              });
+            }
+            if (result && typeof result === 'object') {
+              return wrapWithQuotaDetection(result);
+            }
+            return result;
+          } catch (err) {
+            isFirestoreQuotaError(err);
+            throw err;
+          }
+        };
+      }
+      if (orig && typeof orig === 'object') {
+        return wrapWithQuotaDetection(orig);
+      }
+      return orig;
+    },
+  });
+};
+
 // Proxy db fallback to provide clear error message if queried while unconfigured
 const dbProxy = new Proxy({}, {
   get(target, prop) {
-    if (db) return db[prop];
+    if (db) return wrapWithQuotaDetection(db)[prop];
     return () => {
       throw new Error('Firestore is not initialized. Please verify Firebase Admin credentials in environment variables.');
     };
   }
 });
 
-module.exports = { db: dbProxy, authAdmin: () => authAdmin, FieldValue };
+module.exports = {
+  db: dbProxy,
+  authAdmin: () => authAdmin,
+  FieldValue,
+  isFirestoreQuotaError,
+  getQuotaStatus,
+  setQuotaExceeded,
+  resetQuotaStatus,
+};

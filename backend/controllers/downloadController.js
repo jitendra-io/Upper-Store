@@ -448,13 +448,39 @@ const proxyDownload = async (req, res) => {
     }
 
     // 3. Fallback: Fetch from upstream GitHub release with redirect: follow
-    const upstreamRes = await fetch(targetUrl, {
-      headers: {
-        'User-Agent': 'UpperStore-Proxy/1.0',
-        'Accept': '*/*'
-      },
-      redirect: 'follow'
-    });
+    // Guard the initial connection handshake with a 20s timeout that disarms as soon as headers arrive
+    const abortController = new AbortController();
+    let isHandshakeComplete = false;
+
+    const handshakeTimer = setTimeout(() => {
+      if (!isHandshakeComplete) {
+        abortController.abort(new Error('Upstream release host connection timed out (20s)'));
+      }
+    }, 20000);
+    if (typeof handshakeTimer.unref === 'function') handshakeTimer.unref();
+
+    // Propagate client browser disconnect to immediately terminate upstream streaming
+    const onClientClose = () => {
+      try {
+        abortController.abort();
+      } catch (_) {}
+    };
+    req.on('close', onClientClose);
+
+    let upstreamRes;
+    try {
+      upstreamRes = await fetch(targetUrl, {
+        headers: {
+          'User-Agent': 'UpperStore-Proxy/1.0',
+          'Accept': '*/*'
+        },
+        redirect: 'follow',
+        signal: abortController.signal
+      });
+      isHandshakeComplete = true;
+    } finally {
+      clearTimeout(handshakeTimer); // Disarm connection timeout immediately so active download data stream transfers completely
+    }
 
     if (!upstreamRes.ok) {
       return res.status(upstreamRes.status).send(`Upstream download failed with status ${upstreamRes.status}`);

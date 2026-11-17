@@ -3,6 +3,28 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
+// Global fetch interceptor to detect 503 Maintenance / Firebase Quota Exhaustion
+if (typeof window !== 'undefined' && window.fetch) {
+  const originalFetch = window.fetch;
+  window.fetch = async (...args) => {
+    try {
+      const res = await originalFetch(...args);
+      if (res && res.status === 503) {
+        try {
+          const clone = res.clone();
+          const data = await clone.json();
+          if (data && (data.maintenance || data.code === 'QUOTA_EXCEEDED')) {
+            window.dispatchEvent(new CustomEvent('upperMaintenanceMode', { detail: true }));
+          }
+        } catch (_) {}
+      }
+      return res;
+    } catch (err) {
+      throw err;
+    }
+  };
+}
+
 // Security notice: Warn against DevTools tampering and Self-XSS attacks
 if (import.meta.env.PROD) {
   console.warn(

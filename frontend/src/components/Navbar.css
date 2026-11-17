@@ -2021,3 +2021,25 @@
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+/* -------------------------------------------------------------------------
+   DISABLED NAVBAR (MAINTENANCE BREAK)
+------------------------------------------------------------------------- */
+.navbar.navbar-disabled {
+  pointer-events: none !important;
+  user-select: none !important;
+  opacity: 0.45;
+  filter: grayscale(0.5);
+  cursor: not-allowed !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.navbar.navbar-disabled * {
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}
+
+.navbar.navbar-disabled .nav-logo {
+  pointer-events: none !important;
+  opacity: 0.8;
+}
