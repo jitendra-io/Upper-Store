@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ProductDetailModal from '../components/ProductDetailModal';
 import ProductReviewsModal from '../components/ProductReviewsModal';
-import VipPromoBanner from '../components/VipPromoBanner';
 import StarRatingBadge from '../components/StarRatingBadge';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import { useAuth } from '../context/AuthContext';
@@ -313,10 +312,6 @@ const Products = () => {
     <div className="products-container">
       <header className="products-header">
         <div className="products-header-action-row">
-          <span className="products-crimson-badge">
-            <span className="crimson-dot-pulse" />
-            Official Software Catalog & Demos
-          </span>
           <Link to="/about#publish" className="publish-product-btn">
             Publish Your Product
           </Link>
@@ -410,13 +405,6 @@ const Products = () => {
           </div>
         </form>
       </header>
-
-      {/* COMPACT VIP PROMO BANNER */}
-      {!isUserVipActive(user) && (
-        <div className="catalog-vip-banner-wrap">
-          <VipPromoBanner compact={true} />
-        </div>
-      )}
 
       {/* ========================================================
           SECTION 1: PRODUCTS CATALOG (BENTO CARDS GRID)
