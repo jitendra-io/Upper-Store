@@ -18,8 +18,8 @@ import DeveloperProfile from './pages/DeveloperProfile';
 import NotFound from './pages/NotFound';
 import Forbidden from './pages/Forbidden';
 import MaintenanceBreak from './components/MaintenanceBreak';
+import FallingLeavesDecoration from './components/FallingLeavesDecoration';
 import Footer from './components/Footer';
-import MiniFooter from './components/MiniFooter';
 import { AuthProvider } from './context/AuthContext';
 import AuthModal from './components/AuthModal';
 import GlobalSearchModal from './components/GlobalSearchModal';
@@ -167,6 +167,7 @@ function AppContent() {
   return (
     <div className="app-container">
       <BackgroundAnimation />
+      <FallingLeavesDecoration />
       <Navbar onOpenSearch={openSearch} disabled={isMaintenance} />
 
       {isMaintenance ? (
