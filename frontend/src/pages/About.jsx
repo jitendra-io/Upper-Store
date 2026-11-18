@@ -26,10 +26,6 @@ const About = () => {
     <div className="about-container">
       {/* 1. HERO HEADER */}
       <section className="about-hero">
-        <span className="about-crimson-badge">
-          <span className="crimson-dot-pulse" />
-          Engineering Excellence &amp; Architecture
-        </span>
         <h1 className="about-title">
           About <span className="about-title-crimson">Upper</span> <span className="about-title-white">Store</span>
         </h1>
