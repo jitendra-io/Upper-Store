@@ -8,7 +8,7 @@ import VipClubModal from './VipClubModal';
 import CancelSubscriptionModal from './CancelSubscriptionModal';
 import DeveloperStudioModal from './DeveloperStudioModal';
 import { VipUsernameModal } from './VipUsernameModal';
-import { CrownIcon, DiamondIcon, SparkleIcon, AlertTriangleIcon, ArrowRightIcon, CloseIcon, ShieldOffIcon } from './Icons';
+import { CrownIcon, DiamondIcon, AlertTriangleIcon, ArrowRightIcon, CloseIcon } from './Icons';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
 import { VipAvatar } from './VipAvatar';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
@@ -443,10 +443,6 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
 
           <Link to="/" onClick={closeMenu} className={location.pathname === '/' ? 'active-link' : ''}>Home</Link>
           <Link to="/products" onClick={closeMenu} className={location.pathname.startsWith('/products') ? 'active-link' : ''}>Products</Link>
-          <Link to="/vip-club" onClick={closeMenu} className={`vip-nav-link ${location.pathname === '/vip-club' || location.pathname === '/vip' ? 'active-link' : ''}`}>
-            <SparkleIcon size={13} style={{ marginRight: '5px' }} />
-            VIP Club
-          </Link>
           {isUserVipActive(user) && (
             <button
               type="button"
