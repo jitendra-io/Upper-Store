@@ -6,7 +6,7 @@ import StarRatingBadge from '../components/StarRatingBadge';
 import { getProductDownloadCount, formatDownloadCount } from '../utils/downloadTracker';
 import { useAuth } from '../context/AuthContext';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
-import { VipAvatar, VipFlairBadge } from '../components/VipAvatar';
+import { VipAvatar } from '../components/VipAvatar';
 import { LayersIcon, ArrowRightIcon } from '../components/Icons';
 import './Products.css';
 
@@ -648,24 +648,32 @@ const Products = () => {
                       </div>
 
                       {/* Developer Attribution Link */}
-                      <Link
-                        to={'/developer/' + (product.developerUsername || 'upperstore')}
-                        className="bento-developer-link"
-                        onClick={(e) => e.stopPropagation()}
-                        title={'View @' + (product.developerUsername || 'upperstore') + ' Profile'}
-                      >
-                        <VipAvatar
-                          src={product.developerAvatar || '/logo.png'}
-                          alt={product.developerName || 'Upper Store'}
-                          plan={getProductDevTier(product)}
-                          size="sm"
-                          fallbackSeed={product.developerUsername || product.developerEmail || product.developerName || 'upperstore'}
-                        />
-                        <span className="bento-dev-name">
-                          {product.developerName || 'Upper Store'}
-                        </span>
-                        <VipFlairBadge plan={getProductDevTier(product)} compact={true} />
-                      </Link>
+                      {(() => {
+                        const rawUsername = (product.developerUsername || (product.developerEmail ? product.developerEmail.split('@')[0] : '')).trim();
+                        const isOfficial = !product.developerId && (!rawUsername || rawUsername.toLowerCase() === 'upperstore' || product.isStoreOfficial);
+                        const devHandle = isOfficial ? 'upperstore' : rawUsername.replace(/^@/, '');
+                        const displayLabel = '@' + devHandle;
+
+                        return (
+                          <Link
+                            to={'/developer/' + devHandle}
+                            className="bento-developer-link"
+                            onClick={(e) => e.stopPropagation()}
+                            title={'View @' + devHandle + ' Profile'}
+                          >
+                            <VipAvatar
+                              src={product.developerAvatar || '/logo.png'}
+                              alt={displayLabel}
+                              plan={getProductDevTier(product)}
+                              size="sm"
+                              fallbackSeed={devHandle}
+                            />
+                            <span className="bento-dev-name">
+                              {displayLabel}
+                            </span>
+                          </Link>
+                        );
+                      })()}
 
                       <p className="bento-product-desc">{product.description}</p>
 

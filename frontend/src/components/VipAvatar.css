@@ -351,9 +351,16 @@
 
 /* Compact Flair Variant */
 .vip-flair-badge.compact {
-  padding: 2px 7px;
-  font-size: 0.66rem;
+  padding: 2px 5px;
+  font-size: 0.62rem;
+  letter-spacing: 0.02em;
   gap: 3px;
+  white-space: nowrap;
+}
+
+.vip-flair-badge.compact .vip-flair-icon svg {
+  width: 11px;
+  height: 11px;
 }
 
 /* ==========================================================================

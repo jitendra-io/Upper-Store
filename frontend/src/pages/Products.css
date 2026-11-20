@@ -422,13 +422,13 @@
 
 /* ========================================================
    BENTO PRODUCT CARDS GRID (OBSIDIAN CHARCOAL GLASS)
-   Card size reduced by 20% on PC for high information density
+   Card size balanced (+5% increase for optimal readability & density)
    ======================================================== */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.15rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(auto-fill, minmax(226px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.6rem;
 }
 
 .bento-product-card {
@@ -436,7 +436,7 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
+  border-radius: 13px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -452,11 +452,11 @@
   transform: translateY(-4px);
 }
 
-/* Media Frame (Reduced by 20% on PC: 160px -> 128px) */
+/* Media Frame (Scaled by +5% to 116px) */
 .bento-card-media {
   position: relative;
   width: 100%;
-  height: 128px;
+  height: 116px;
   overflow: hidden;
   background: #09090d;
 }
@@ -474,9 +474,9 @@
 
 .bento-card-badge-row {
   position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
+  top: 8px;
+  left: 8px;
+  right: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -488,10 +488,10 @@
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #e2e8f0;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 6px;
+  padding: 2.5px 8px;
+  border-radius: 5px;
 }
 
 .bento-version-tag {
@@ -499,40 +499,42 @@
   border: 1px solid rgba(255, 42, 42, 0.4);
   color: #ff9999;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 600;
   padding: 2px 7px;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
-/* Card Body */
+/* Card Body (+5% balanced padding) */
 .bento-card-body {
-  padding: 1rem;
+  padding: 0.89rem;
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .bento-card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 0.6rem;
+  gap: 9px;
+  margin-bottom: 0.5rem;
 }
 
 .bento-app-logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.1);
   flex-shrink: 0;
 }
 
 .bento-logo-fallback {
-  width: 30px;
-  height: 30px;
-  border-radius: 7px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
   background: rgba(230, 25, 25, 0.15);
   border: 1px solid rgba(255, 42, 42, 0.3);
   display: flex;
@@ -549,7 +551,7 @@
 
 .bento-product-title {
   font-family: var(--font-heading);
-  font-size: 1.02rem;
+  font-size: 0.96rem;
   font-weight: 700;
   color: #ffffff;
   margin: 0;
@@ -559,22 +561,25 @@
 }
 
 .bento-ratings-row {
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* Developer Attribution Link */
 .bento-developer-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   padding: 2px 7px;
-  border-radius: 6px;
+  border-radius: 5px;
   width: fit-content;
-  margin-bottom: 0.6rem;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0.5rem;
   text-decoration: none;
   transition: all 0.2s ease;
+  overflow: hidden;
 }
 
 .bento-developer-link:hover {
@@ -582,17 +587,29 @@
   border-color: rgba(230, 25, 25, 0.35);
 }
 
+.bento-developer-link .vip-avatar-wrap.sm {
+  width: 25px;
+  height: 25px;
+  padding: 1.5px;
+  flex-shrink: 0;
+}
+
 .bento-dev-name {
   font-size: 0.72rem;
   color: #cbd5e1;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .bento-product-desc {
-  font-size: 0.8rem;
+  font-size: 0.77rem;
   color: var(--color-text-secondary);
-  line-height: 1.48;
-  margin-bottom: 0.9rem;
+  line-height: 1.44;
+  margin-bottom: 0.7rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -605,7 +622,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 0.65rem;
+  padding-top: 0.6rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   margin-top: auto;
 }
@@ -618,14 +635,14 @@
 
 .bento-price-tag {
   font-family: var(--font-heading);
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #ffffff;
 }
 
 .bento-downloads-chip {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: #34d399;
 }
 
@@ -633,9 +650,9 @@
   background: linear-gradient(135deg, #e61919 0%, #b30f0f 100%);
   color: #ffffff;
   border: 1px solid rgba(255, 60, 60, 0.4);
-  padding: 6px 14px;
-  border-radius: 6px;
-  font-size: 0.82rem;
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 0.76rem;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(230, 25, 25, 0.16), 0 1px 3px rgba(0, 0, 0, 0.3);
@@ -1364,10 +1381,10 @@
     display: none !important;
   }
 
-  /* Reduce product card size by 30% for phone and optimize mobile GPU */
+  /* Responsive product card size for tablet and phone */
   .products-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0.9rem;
   }
   .bento-product-card {
     background: #0f0f16 !important;
@@ -1377,10 +1394,10 @@
     transform: translateZ(0);
   }
   .bento-card-media {
-    height: 112px !important;
+    height: 110px !important;
   }
   .bento-card-body {
-    padding: 0.85rem !important;
+    padding: 0.8rem !important;
   }
   .bento-card-header {
     margin-bottom: 0.45rem !important;
@@ -1388,28 +1405,28 @@
   }
   .bento-app-logo,
   .bento-logo-fallback {
-    width: 26px !important;
-    height: 26px !important;
+    width: 25px !important;
+    height: 25px !important;
   }
   .bento-product-title {
-    font-size: 0.95rem !important;
+    font-size: 0.94rem !important;
   }
   .bento-developer-link {
     margin-bottom: 0.45rem !important;
     padding: 2px 6px !important;
   }
   .bento-product-desc {
-    font-size: 0.76rem !important;
-    margin-bottom: 0.65rem !important;
+    font-size: 0.74rem !important;
+    margin-bottom: 0.6rem !important;
   }
   .bento-card-footer {
     padding-top: 0.55rem !important;
   }
   .bento-price-tag {
-    font-size: 0.9rem !important;
+    font-size: 0.88rem !important;
   }
   .bento-action-btn {
-    padding: 5px 10px !important;
+    padding: 4px 10px !important;
     font-size: 0.72rem !important;
   }
 
@@ -1467,5 +1484,12 @@
   }
   .deck-card-info h4 {
     font-size: 0.7rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
   }
 }

@@ -542,11 +542,6 @@ const ProductDetailModal = ({ product, onClose }) => {
                         fallbackSeed={devHandle}
                       />
                       <span className="modal-dev-handle-text">@{devHandle}</span>
-                      {getProductDevTier(product) === 'official' && (
-                        <span className="dev-ref-official-pill" style={{ fontSize: '0.68rem', padding: '0.1rem 0.45rem', borderRadius: '9999px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.35)', color: '#34d399', fontWeight: 700 }}>
-                          OFFICIAL
-                        </span>
-                      )}
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="dev-redirect-icon" style={{ marginLeft: '4px' }}>
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                         <polyline points="15 3 21 3 21 9"></polyline>
