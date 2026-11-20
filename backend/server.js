@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
 const dotenv = require('dotenv');
@@ -40,14 +41,21 @@ const isClusterEnabled = process.env.CLUSTER_MODE === 'true' ||
 const maxConfiguredWorkers = parseInt(process.env.MAX_WORKERS || process.env.WEB_CONCURRENCY, 10);
 const workerCount = Math.max(1, Math.min(maxConfiguredWorkers || totalCpus, 8));
 
-// Enforce standard baseline HTTP security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-  res.setHeader('X-XSS-Protection', '0');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  next();
-});
+// Enforce comprehensive HTTP security headers via Helmet
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    contentSecurityPolicy: false,
+    frameguard: { action: 'sameorigin' },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  })
+);
 
 // Baseline Cache-Control Policy for Edge & Browser Load Balancing:
 // Mutating operations and private routes default to no-store to prevent CDN/browser cache contamination.
