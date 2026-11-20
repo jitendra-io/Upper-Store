@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import CrystalCore3D from '../components/CrystalCore3D';
 import { ArrowRightIcon } from '../components/Icons';
@@ -11,11 +10,6 @@ const Home = () => {
       <section className="home-hero-grid">
         {/* Left Column: Platform Mission & High-Conversion CTAs */}
         <div className="hero-left-column">
-          <div className="hero-crimson-badge">
-            <span className="crimson-badge-dot" />
-            <span className="crimson-badge-text">Next-Gen Software Technology Platform</span>
-          </div>
-
           <h1 className="hero-main-title">
             Powering the Future Through{' '}
             <span className="hero-title-crimson">Intelligent Software</span>
