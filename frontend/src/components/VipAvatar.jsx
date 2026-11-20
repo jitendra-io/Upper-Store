@@ -26,9 +26,11 @@ export const VipAvatar = ({
   const isPro = plan === 'pro';
   const tierClass = isOfficial ? 'official' : isElite ? 'elite' : isPro ? 'pro' : 'standard';
 
-  const defaultAvatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-    fallbackSeed || 'user'
-  )}&backgroundColor=d4af37&textColor=000000`;
+  const defaultAvatar = isOfficial
+    ? '/logo.png'
+    : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
+        fallbackSeed || 'user'
+      )}&backgroundColor=d4af37&textColor=000000`;
 
   const titleText = isOfficial
     ? 'Upper Store Official'

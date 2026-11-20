@@ -1781,29 +1781,45 @@ const getDeveloperFollowers = async (req, res) => {
     // 5. Assemble enriched follower list with read-time orphan pruning
     // Strictly contains: avatar (with premium ring plan), clickable username, displayName.
     // Explicitly NO "pro VIP" or "Elite VIP" tags or badges.
+    const officialHandles = ['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'];
+    let officialAvatar = '/logo.png';
+    try {
+      const offDoc = await db.collection('system_settings').doc('official_profile').get();
+      if (offDoc.exists && offDoc.data().avatar) {
+        officialAvatar = offDoc.data().avatar;
+      }
+    } catch (_) {}
+
     const enrichedFollowers = [];
     let orphansPruned = 0;
 
     for (const item of followItems) {
       const f = item.data;
       const cleanFollowerUname = (f.followerUsername || '').toLowerCase().trim();
+      const isOfficialFollower = officialHandles.includes(cleanFollowerUname);
       const u = userMap[f.followerId] || usernameUserMap[cleanFollowerUname];
       const dev = devMap[f.followerId];
 
-      // If user document does not exist in users or developers collection, account has been deleted
-      if (!u && !dev) {
+      // If user document does not exist in users or developers collection and not official, account has been deleted
+      if (!isOfficialFollower && !u && !dev) {
         orphansPruned++;
         item.ref.delete().catch(() => {});
         continue;
       }
 
-      const username = u?.username || dev?.username || f.followerUsername || (f.followerName || 'user').toLowerCase().replace(/\s+/g, '');
-      const displayName = dev?.displayName || u?.displayName || f.followerName || username;
-      const avatar = dev?.avatar || u?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`;
-      const vipPlan = computeVipRingPlan(u || {}, dev || {});
+      const username = isOfficialFollower
+        ? 'upperstore'
+        : (u?.username || dev?.username || f.followerUsername || (f.followerName || 'user').toLowerCase().replace(/\s+/g, ''));
+      const displayName = isOfficialFollower
+        ? 'UpperStore Official'
+        : (dev?.displayName || u?.displayName || f.followerName || username);
+      const avatar = isOfficialFollower
+        ? officialAvatar
+        : (dev?.avatar || u?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`);
+      const vipPlan = isOfficialFollower ? 'official' : computeVipRingPlan(u || {}, dev || {});
 
       enrichedFollowers.push({
-        id: f.followerId || u?.id,
+        id: isOfficialFollower ? 'GOhjkTTW9ZPqPS9I7Oa1' : (f.followerId || u?.id),
         username,
         displayName,
         avatar,
@@ -1985,6 +2001,14 @@ const getDeveloperFollowing = async (req, res) => {
     }
 
     // 5. Assemble enriched following list with read-time orphan pruning
+    let officialAvatar = '/logo.png';
+    try {
+      const offDoc = await db.collection('system_settings').doc('official_profile').get();
+      if (offDoc.exists && offDoc.data().avatar) {
+        officialAvatar = offDoc.data().avatar;
+      }
+    } catch (_) {}
+
     const enrichedFollowing = [];
     let orphansPruned = 0;
 
@@ -2005,7 +2029,7 @@ const getDeveloperFollowing = async (req, res) => {
       const username = isOfficial ? 'upperstore' : (dev?.username || u?.username || f.developerUsername);
       const displayName = isOfficial ? 'UpperStore Official' : (dev?.displayName || u?.displayName || username);
       const avatar = isOfficial
-        ? '/favicon.svg'
+        ? officialAvatar
         : (dev?.avatar || u?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`);
       const vipPlan = isOfficial ? 'official' : computeVipRingPlan(u || {}, dev || {});
 
