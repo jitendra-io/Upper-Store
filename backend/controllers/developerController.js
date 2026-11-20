@@ -1722,8 +1722,8 @@ const getDeveloperFollowers = async (req, res) => {
       });
     }
 
-    const followDocs = followsSnap.docs.map((d) => d.data());
-    const followerIds = [...new Set(followDocs.map((d) => d.followerId).filter(Boolean))];
+    const followItems = followsSnap.docs.map((d) => ({ ref: d.ref, data: d.data() }));
+    const followerIds = [...new Set(followItems.map((item) => item.data.followerId).filter(Boolean))];
 
     // 3. Batch fetch user documents for live profile picture & VIP ring calculation
     const userMap = {};
@@ -1755,31 +1755,90 @@ const getDeveloperFollowers = async (req, res) => {
       }
     }
 
-    // 5. Assemble enriched follower list
+    // 4b. Check by followerUsername in users for any accounts not resolved by UID
+    const unresolvedUsernames = [
+      ...new Set(
+        followItems
+          .filter((item) => !userMap[item.data.followerId] && !devMap[item.data.followerId])
+          .map((item) => (item.data.followerUsername || '').toLowerCase().trim())
+          .filter(Boolean)
+      ),
+    ];
+    const usernameUserMap = {};
+    if (unresolvedUsernames.length > 0) {
+      for (let i = 0; i < unresolvedUsernames.length; i += 30) {
+        const chunk = unresolvedUsernames.slice(i, i + 30);
+        const uSnaps = await db.collection('users').where('username', 'in', chunk).get();
+        uSnaps.docs.forEach((docSnap) => {
+          const d = docSnap.data();
+          if (d.username) {
+            usernameUserMap[d.username.toLowerCase().trim()] = { id: docSnap.id, ...d };
+          }
+        });
+      }
+    }
+
+    // 5. Assemble enriched follower list with read-time orphan pruning
     // Strictly contains: avatar (with premium ring plan), clickable username, displayName.
     // Explicitly NO "pro VIP" or "Elite VIP" tags or badges.
-    const enrichedFollowers = followDocs.map((f) => {
-      const u = userMap[f.followerId] || {};
-      const dev = devMap[f.followerId] || {};
+    const enrichedFollowers = [];
+    let orphansPruned = 0;
 
-      const username = u.username || dev.username || f.followerUsername || (f.followerName || 'user').toLowerCase().replace(/\s+/g, '');
-      const displayName = dev.displayName || u.displayName || f.followerName || username;
-      const avatar = dev.avatar || u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`;
-      const vipPlan = computeVipRingPlan(u, dev);
+    for (const item of followItems) {
+      const f = item.data;
+      const cleanFollowerUname = (f.followerUsername || '').toLowerCase().trim();
+      const u = userMap[f.followerId] || usernameUserMap[cleanFollowerUname];
+      const dev = devMap[f.followerId];
 
-      return {
-        id: f.followerId,
+      // If user document does not exist in users or developers collection, account has been deleted
+      if (!u && !dev) {
+        orphansPruned++;
+        item.ref.delete().catch(() => {});
+        continue;
+      }
+
+      const username = u?.username || dev?.username || f.followerUsername || (f.followerName || 'user').toLowerCase().replace(/\s+/g, '');
+      const displayName = dev?.displayName || u?.displayName || f.followerName || username;
+      const avatar = dev?.avatar || u?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`;
+      const vipPlan = computeVipRingPlan(u || {}, dev || {});
+
+      enrichedFollowers.push({
+        id: f.followerId || u?.id,
         username,
         displayName,
         avatar,
         vipPlan, // 'elite' | 'pro' | 'official' | 'free' (renders the glowing ring around avatar)
         followedAt: f.createdAt || null,
-      };
-    });
+      });
+    }
+
+    // Background sync developer and user records if orphaned followers were pruned
+    if (orphansPruned > 0) {
+      (async () => {
+        try {
+          const countSnap = isOfficialTarget
+            ? await db.collection('developer_follows').where('developerUsername', 'in', ['upperstore', 'upper-store', 'upper_store', 'upperofficial']).count().get()
+            : await db.collection('developer_follows').where('developerUsername', '==', cleanUsername).count().get();
+          const realCount = countSnap.data().count || 0;
+          const devDocs = await db.collection('developers').where('username', '==', cleanUsername).get();
+          for (const d of devDocs.docs) {
+            await d.ref.update({ followersCount: realCount }).catch(() => {});
+          }
+          const uDocs = await db.collection('users').where('username', '==', cleanUsername).get();
+          for (const u of uDocs.docs) {
+            await u.ref.update({ followersCount: realCount }).catch(() => {});
+          }
+        } catch (_) {}
+      })();
+    }
+
+    const finalCount = followsSnap.size < 100
+      ? enrichedFollowers.length
+      : Math.max(0, totalCount - orphansPruned);
 
     return res.json({
       success: true,
-      count: totalCount,
+      count: finalCount,
       followers: enrichedFollowers,
     });
   } catch (error) {
@@ -1818,7 +1877,7 @@ const getDeveloperFollowing = async (req, res) => {
     }
 
     // 2. Query developer_follows (capped at 100)
-    let followDocs = [];
+    let followItems = [];
     let totalCount = 0;
 
     if (targetUserId) {
@@ -1826,7 +1885,7 @@ const getDeveloperFollowing = async (req, res) => {
         .where('followerId', '==', targetUserId)
         .limit(100)
         .get();
-      followDocs = followsSnap.docs.map((d) => d.data());
+      followItems = followsSnap.docs.map((d) => ({ ref: d.ref, data: d.data() }));
       totalCount = followsSnap.size;
       if (followsSnap.size === 100) {
         try {
@@ -1842,7 +1901,7 @@ const getDeveloperFollowing = async (req, res) => {
         .where('followerUsername', '==', cleanUsername)
         .limit(100)
         .get();
-      followDocs = followsSnap.docs.map((d) => d.data());
+      followItems = followsSnap.docs.map((d) => ({ ref: d.ref, data: d.data() }));
       totalCount = followsSnap.size;
       if (followsSnap.size === 100) {
         try {
@@ -1855,7 +1914,7 @@ const getDeveloperFollowing = async (req, res) => {
       }
     }
 
-    if (followDocs.length === 0) {
+    if (followItems.length === 0) {
       return res.json({
         success: true,
         count: totalCount,
@@ -1863,7 +1922,7 @@ const getDeveloperFollowing = async (req, res) => {
       });
     }
 
-    const followedUsernames = [...new Set(followDocs.map((d) => d.developerUsername).filter(Boolean))];
+    const followedUsernames = [...new Set(followItems.map((item) => item.data.developerUsername).filter(Boolean))];
 
     // 3. Batch fetch developer information for the followed accounts
     const devMap = {};
@@ -1896,30 +1955,77 @@ const getDeveloperFollowing = async (req, res) => {
       }
     }
 
-    // 5. Assemble enriched following list
-    const enrichedFollowing = followDocs.map((f) => {
-      const devHandle = (f.developerUsername || '').toLowerCase();
-      const dev = devMap[devHandle] || {};
-      const u = userMap[devHandle] || {};
+    // 4b. Also check by developerUserId for any remaining accounts not resolved by username
+    const officialHandles = ['upperstore', 'upper-store', 'upper_store', 'upper-admin', 'admin'];
+    const missingUserIds = [
+      ...new Set(
+        followItems
+          .filter((item) => {
+            const u = (item.data.developerUsername || '').toLowerCase().trim();
+            return !devMap[u] && !userMap[u] && !officialHandles.includes(u);
+          })
+          .map((item) => item.data.developerUserId)
+          .filter(Boolean)
+      ),
+    ];
+    if (missingUserIds.length > 0) {
+      for (let i = 0; i < missingUserIds.length; i += 30) {
+        const chunk = missingUserIds.slice(i, i + 30);
+        const refs = chunk.map((id) => db.collection('users').doc(id));
+        const snapshots = await db.getAll(...refs);
+        snapshots.forEach((docSnap) => {
+          if (docSnap.exists) {
+            const d = docSnap.data();
+            const uHandle = (d.username || '').toLowerCase().trim();
+            if (uHandle) userMap[uHandle] = { id: docSnap.id, ...d };
+            userMap[docSnap.id] = { id: docSnap.id, ...d };
+          }
+        });
+      }
+    }
 
-      const username = dev.username || u.username || f.developerUsername;
-      const displayName = dev.displayName || u.displayName || username;
-      const avatar = dev.avatar || u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`;
-      const vipPlan = computeVipRingPlan(u, dev);
+    // 5. Assemble enriched following list with read-time orphan pruning
+    const enrichedFollowing = [];
+    let orphansPruned = 0;
 
-      return {
-        id: dev.userId || dev.id || u.id || username,
+    for (const item of followItems) {
+      const f = item.data;
+      const devHandle = (f.developerUsername || '').toLowerCase().trim();
+      const isOfficial = officialHandles.includes(devHandle);
+      const dev = devMap[devHandle];
+      const u = userMap[devHandle] || (f.developerUserId ? userMap[f.developerUserId] : null);
+
+      // If not official and neither developer doc nor user doc exists in Firestore, account was deleted
+      if (!isOfficial && !dev && !u) {
+        orphansPruned++;
+        item.ref.delete().catch(() => {});
+        continue;
+      }
+
+      const username = isOfficial ? 'upperstore' : (dev?.username || u?.username || f.developerUsername);
+      const displayName = isOfficial ? 'UpperStore Official' : (dev?.displayName || u?.displayName || username);
+      const avatar = isOfficial
+        ? '/favicon.svg'
+        : (dev?.avatar || u?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`);
+      const vipPlan = isOfficial ? 'official' : computeVipRingPlan(u || {}, dev || {});
+
+      enrichedFollowing.push({
+        id: isOfficial ? 'GOhjkTTW9ZPqPS9I7Oa1' : (dev?.userId || dev?.id || u?.id || username),
         username,
         displayName,
         avatar,
         vipPlan, // 'elite' | 'pro' | 'official' | 'free' (renders the glowing ring around avatar)
         followedAt: f.createdAt || null,
-      };
-    });
+      });
+    }
+
+    const finalCount = followItems.length < 100
+      ? enrichedFollowing.length
+      : Math.max(0, totalCount - orphansPruned);
 
     return res.json({
       success: true,
-      count: totalCount,
+      count: finalCount,
       following: enrichedFollowing,
     });
   } catch (error) {

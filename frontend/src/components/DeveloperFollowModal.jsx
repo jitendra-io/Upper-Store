@@ -131,8 +131,14 @@ const DeveloperFollowModal = ({
 
         if (tabToFetch === 'followers') {
           setFollowers(list);
+          if (typeof data.count === 'number') {
+            setLocalFollowersCount(data.count);
+          }
         } else {
           setFollowing(list);
+          if (typeof data.count === 'number') {
+            setLocalFollowingCount(data.count);
+          }
         }
       } else if (!cachedData) {
         setError(data.message || `Unable to load ${tabToFetch}.`);
@@ -178,6 +184,7 @@ const DeveloperFollowModal = ({
           (f) => (f.username || '').toLowerCase() !== fUsername && f.id !== followerItem.id
         );
         setFollowers(updatedList);
+        setLocalFollowersCount((prev) => (typeof data.followersCount === 'number' ? data.followersCount : Math.max(0, (prev ?? (updatedList.length + 1)) - 1)));
 
         // Update in-memory cache
         if (followListsCache.followers && followListsCache.followers[cleanUsername]) {
