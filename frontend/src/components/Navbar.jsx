@@ -8,7 +8,8 @@ import VipClubModal from './VipClubModal';
 import CancelSubscriptionModal from './CancelSubscriptionModal';
 import DeveloperStudioModal from './DeveloperStudioModal';
 import { VipUsernameModal } from './VipUsernameModal';
-import { CrownIcon, DiamondIcon, AlertTriangleIcon, ArrowRightIcon, CloseIcon } from './Icons';
+import AccountSettingsModal from './AccountSettingsModal';
+import { ArrowRightIcon, CloseIcon, GearIcon } from './Icons';
 import { getUserDownloadHistory, fetchUserDownloadHistoryFromDB } from '../utils/downloadTracker';
 import { VipAvatar } from './VipAvatar';
 import { isUserVipActive, getUserVipTier } from '../utils/vipValidator';
@@ -29,6 +30,7 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
   });
   const [historyModalOpen, setHistoryModalOpen] = useState(false);
   const [licensesModalOpen, setLicensesModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [vipModalOpen, setVipModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [devStudioOpen, setDevStudioOpen] = useState(false);
@@ -36,7 +38,7 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
   const [downloadCount, setDownloadCount] = useState(0);
   const [licenseCount, setLicenseCount] = useState(0);
   const location = useLocation();
-  const { user: authUser, token, isLoggedIn: authLoggedIn, openAuthModal, logout, withdrawConsent } = useAuth();
+  const { user: authUser, token, isLoggedIn: authLoggedIn, openAuthModal } = useAuth();
   const mockUser = location.search.includes('mock=user-pro') ? {
     displayName: 'Alex Rivers',
     username: 'alexrivers',
@@ -61,6 +63,9 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
     }
     if (params.get('menu') === 'drawer') {
       setMenuOpen(true);
+    }
+    if (params.get('menu') === 'settings') {
+      setSettingsModalOpen(true);
     }
   }, [location.search]);
 
@@ -726,13 +731,21 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
 
               {/* DROPDOWN MENU */}
               {userDropdownOpen && (() => {
-                const isVipActive = (user?.membership?.plan === 'pro' || user?.membership?.plan === 'elite') &&
-                  user?.membership?.validUntil &&
-                  new Date(user.membership.validUntil) > new Date();
-
                 return (
                   <div className="nav-user-dropdown">
-                    <div className="dropdown-user-header">
+                    <div className="dropdown-user-header compact">
+                      <button
+                        type="button"
+                        className="dropdown-settings-gear-btn"
+                        onClick={() => {
+                          setSettingsModalOpen(true);
+                          setUserDropdownOpen(false);
+                        }}
+                        title="Account Settings"
+                        aria-label="Account Settings"
+                      >
+                        <GearIcon size={17} />
+                      </button>
                       <div className="dropdown-avatar-wrapper">
                         <VipAvatar
                           src={userAvatar}
@@ -756,58 +769,6 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
                           @{user?.username || user?.email?.split('@')[0]}
                         </Link>
                       </div>
-                      <p className="dropdown-user-email" title={user?.email}>{user?.email}</p>
-                      
-                      {isVipActive && (
-                        <div className="dropdown-badges-row">
-                          {user?.membership?.plan === 'elite' ? (
-                            <span className="dropdown-vip-status-badge elite">
-                              <DiamondIcon size={12} /> Elite VIP
-                            </span>
-                          ) : user?.membership?.plan === 'pro' ? (
-                            <span className="dropdown-vip-status-badge pro">
-                              <CrownIcon size={12} /> Pro VIP
-                            </span>
-                          ) : null}
-                        </div>
-                      )}
-
-                      {isVipActive && user?.membership?.validUntil && (
-                        <div className="dropdown-vip-expiry-well">
-                          <div className="dropdown-vip-expiry-info">
-                            <span className="dropdown-vip-expiry-label">VIP Active Until</span>
-                            <span className="dropdown-vip-expiry-date">
-                              {new Date(user.membership.validUntil).toLocaleDateString(undefined, {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            className="nav-cancel-sub-link"
-                            onClick={() => {
-                              setCancelModalOpen(true);
-                              setUserDropdownOpen(false);
-                            }}
-                            title="Cancel subscription"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      )}
-
-                      {isBanned && (
-                        <div className="nav-banned-notice">
-                          <p style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                            <AlertTriangleIcon size={14} style={{ color: '#ef4444' }} /> Account Banned: Downloads restricted.
-                          </p>
-                          <Link to="/contact" onClick={closeMenu} className="nav-banned-appeal-btn">
-                            Submit Ban Appeal
-                          </Link>
-                        </div>
-                      )}
                     </div>
 
                     <div className="dropdown-menu-list">
@@ -831,137 +792,7 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
                           </div>
                         </button>
                       )}
-
-                      {/* UPPER VIP CLUB BUTTON */}
-                      <button
-                        className="dropdown-item-btn vip-action-btn"
-                        onClick={() => {
-                          setVipModalOpen(true);
-                          closeMenu();
-                        }}
-                      >
-                        <div className="dropdown-item-left">
-                          <span className="dropdown-item-icon vip-icon-box">
-                            {user?.membership?.plan === 'elite' ? <DiamondIcon size={16} /> : <CrownIcon size={16} />}
-                          </span>
-                          <span className="dropdown-item-label">Upper VIP Club</span>
-                        </div>
-                        {isVipActive && user?.membership?.plan && (
-                          <span className="dropdown-history-count-tag vip-perk-badge active">
-                            {user.membership.plan.toUpperCase()}
-                          </span>
-                        )}
-                      </button>
-
-                      {/* DOWNLOAD HISTORY BUTTON */}
-                      <button
-                        className="dropdown-item-btn"
-                        onClick={() => {
-                          setHistoryModalOpen(true);
-                          closeMenu();
-                        }}
-                      >
-                        <div className="dropdown-item-left">
-                          <span className="dropdown-item-icon">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                              <polyline points="7 10 12 15 17 10"></polyline>
-                              <line x1="12" y1="15" x2="12" y2="3"></line>
-                            </svg>
-                          </span>
-                          <span className="dropdown-item-label">Download History</span>
-                        </div>
-                        <span className="dropdown-history-count-tag">{downloadCount}</span>
-                      </button>
-
-                      {/* MY LICENSES BUTTON */}
-                      <button
-                        className="dropdown-item-btn"
-                        onClick={() => {
-                          setLicensesModalOpen(true);
-                          closeMenu();
-                        }}
-                      >
-                        <div className="dropdown-item-left">
-                          <span className="dropdown-item-icon">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 2l-2 2m-1-1l-3 3m1 1l-2 2m-1-1l-2 2m-1-1l-2 2m-1-1l-3 3"></path>
-                              <circle cx="7.5" cy="15.5" r="5.5"></circle>
-                            </svg>
-                          </span>
-                          <span className="dropdown-item-label">My Licenses</span>
-                        </div>
-                        <span className="dropdown-history-count-tag license-count-badge">{licenseCount}</span>
-                      </button>
                     </div>
-
-                    {/* Subtle Privacy & Account Options */}
-                    <div className="dropdown-privacy-row">
-                      <button
-                        type="button"
-                        className="dropdown-privacy-btn"
-                        onClick={async () => {
-                          if (user?.consentStatus === 'withdrawn') {
-                            alert('Your consent is currently withdrawn. You may re-grant consent at any time from your profile settings.');
-                            return;
-                          }
-                          if (window.confirm('Withdraw Consent:\n\nAre you sure you want to withdraw your consent? Withdrawing consent will pause non-essential personal data processing and deactivate developer publishing privileges (if registered).\n\nYou may re-grant consent at any time in your profile settings.\n\nDo you wish to proceed?')) {
-                            try {
-                              const res = await withdrawConsent();
-                              alert(res.message || 'Consent successfully withdrawn.');
-                              closeMenu();
-                            } catch (err) {
-                              alert(err.message || 'Failed to withdraw consent. Please contact support.');
-                            }
-                          }
-                        }}
-                      >
-                        {user?.consentStatus === 'withdrawn' ? 'Consent Withdrawn' : 'Withdraw Consent'}
-                      </button>
-                      <span className="dropdown-privacy-dot">&bull;</span>
-                      <button
-                        type="button"
-                        className="dropdown-privacy-btn danger"
-                        onClick={async () => {
-                          if (window.confirm('Delete Account & Erase Data: Are you sure you want to permanently delete your account and erase all associated personal data from Upper Store? This action is irreversible.')) {
-                            try {
-                              const activeToken = token || localStorage.getItem('upper_user_token') || localStorage.getItem('adminToken');
-                              const res = await fetch(`${API_BASE}/api/auth/user/delete-account`, {
-                                method: 'DELETE',
-                                headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : {},
-                              });
-                              const data = await res.json();
-                              alert(data.message || 'Your account and data have been erased successfully.');
-                              logout();
-                              closeMenu();
-                            } catch (err) {
-                              alert('Failed to erase account data. Please contact support.');
-                            }
-                          }
-                        }}
-                      >
-                        Delete Account
-                      </button>
-                    </div>
-
-                    <hr className="dropdown-divider" />
-                    
-                    <button
-                      className="dropdown-logout-btn"
-                      onClick={() => {
-                        if (window.confirm('Are you sure you want to sign out of your account?')) {
-                          logout();
-                          closeMenu();
-                        }
-                      }}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                        <polyline points="16 17 21 12 16 7"></polyline>
-                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                      </svg>
-                      <span>Sign Out</span>
-                    </button>
                   </div>
                 );
               })()}
@@ -1053,6 +884,19 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
           setVipUsernameModalOpen(false);
           setVipModalOpen(true);
         }}
+      />
+
+      {/* ACCOUNT SETTINGS MODAL */}
+      <AccountSettingsModal
+        isOpen={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        currentUser={user}
+        onOpenVipClub={() => setVipModalOpen(true)}
+        onOpenCancelSub={() => setCancelModalOpen(true)}
+        onOpenHistory={() => setHistoryModalOpen(true)}
+        onOpenLicenses={() => setLicensesModalOpen(true)}
+        downloadCount={downloadCount}
+        licenseCount={licenseCount}
       />
     </>
   );
