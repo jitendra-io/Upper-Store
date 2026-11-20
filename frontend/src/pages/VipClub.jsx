@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import VipClubModal from '../components/VipClubModal';
 import CancelSubscriptionModal from '../components/CancelSubscriptionModal';
-import DeveloperStudioModal from '../components/DeveloperStudioModal';
 import { CrownIcon, DiamondIcon, SparkleIcon, CheckIcon, StarIcon, ArrowRightIcon, CloseIcon, ShieldOffIcon, LockIcon } from '../components/Icons';
 import eliteBadgeScreenshot from '../assets/elite-badge-preview.png';
 import proBadgeScreenshot from '../assets/pro-badge-preview.png';
@@ -14,7 +14,6 @@ const VipClub = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalPlan, setModalPlan] = useState('elite');
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [devStudioOpen, setDevStudioOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
   const [lightboxImg, setLightboxImg] = useState(null);
   const [eligibility, setEligibility] = useState(null);
@@ -474,14 +473,13 @@ const VipClub = () => {
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
+              <Link
+                to="/developer-studio"
                 className="launch-dev-studio-btn"
-                onClick={() => setDevStudioOpen(true)}
-                style={{ background: 'linear-gradient(135deg, #e61919 0%, #ff2a2a 100%)', color: '#ffffff', border: 'none', padding: '0.65rem 1.3rem', borderRadius: '8px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(230, 25, 25, 0.4)' }}
+                style={{ background: 'linear-gradient(135deg, #e61919 0%, #ff2a2a 100%)', color: '#ffffff', border: 'none', padding: '0.65rem 1.3rem', borderRadius: '8px', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer', boxShadow: '0 4px 15px rgba(230, 25, 25, 0.4)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
               >
                 Launch Developer Studio ↗
-              </button>
+              </Link>
             </div>
           )}
 

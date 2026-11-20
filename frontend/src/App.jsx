@@ -15,6 +15,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import VipClub from './pages/VipClub';
 import DeveloperProfile from './pages/DeveloperProfile';
+import DeveloperStudio from './pages/DeveloperStudio';
 import NotFound from './pages/NotFound';
 import Forbidden from './pages/Forbidden';
 import MaintenanceBreak from './components/MaintenanceBreak';
@@ -146,7 +147,19 @@ function AppContent() {
   }, [isSearchOpen, openSearch, closeSearch]);
 
   const isAdmin = location.pathname.startsWith('/admin');
-  const exactKnownPaths = ['/', '/about', '/contact', '/faq', '/blog', '/press', '/policies', '/vip', '/vip-club'];
+  const exactKnownPaths = [
+    '/',
+    '/about',
+    '/contact',
+    '/faq',
+    '/blog',
+    '/press',
+    '/policies',
+    '/vip',
+    '/vip-club',
+    '/developer-studio',
+    '/studio',
+  ];
   const isKnownRoute =
     exactKnownPaths.includes(location.pathname) ||
     location.pathname === '/products' ||
@@ -188,6 +201,10 @@ function AppContent() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/vip" element={<VipClub />} />
             <Route path="/vip-club" element={<VipClub />} />
+            <Route path="/developer-studio" element={<DeveloperStudio />} />
+            <Route path="/studio" element={<DeveloperStudio />} />
+            <Route path="/developer/studio" element={<DeveloperStudio />} />
+            <Route path="/dev/studio" element={<DeveloperStudio />} />
             <Route path="/developer/:username" element={<DeveloperProfile />} />
             <Route path="/developers/:username" element={<DeveloperProfile />} />
             <Route path="/dev/:username" element={<DeveloperProfile />} />

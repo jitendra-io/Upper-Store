@@ -366,6 +366,15 @@ export default function AccountSettingsModal({
                 <span>Delete Account &amp; Erase Personal Data</span>
                 <ArrowRightIcon size={14} style={{ color: '#ef4444' }} />
               </button>
+
+              <button
+                type="button"
+                className="settings-privacy-btn danger signout-row-btn"
+                onClick={handleSignOut}
+              >
+                <span>Sign Out of Account</span>
+                <ArrowRightIcon size={14} style={{ color: '#ef4444' }} />
+              </button>
             </div>
           </div>
         </div>

@@ -4,7 +4,14 @@
 
 .settings-modal-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(4, 4, 7, 0.72);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -29,8 +36,12 @@
 .settings-modal-container {
   width: 100%;
   max-width: 440px;
+  height: 100%;
   height: 100vh;
+  height: 100dvh;
+  max-height: 100%;
   max-height: 100vh;
+  max-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: #0b0b10;
@@ -64,6 +75,7 @@
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
 }
 
 .settings-modal-title-row {
@@ -112,8 +124,11 @@
 
 /* Modal Scrollable Body */
 .settings-modal-body {
-  flex: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -410,14 +425,33 @@
   color: #ef4444;
 }
 
-/* Modal Footer */
+/* Secondary Sign Out Row in Body */
+.settings-privacy-btn.signout-row-btn {
+  margin-top: 4px;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  font-weight: 600;
+}
+
+.settings-privacy-btn.signout-row-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+
+/* Modal Footer (Pinned Sticky Above Safe Area) */
 .settings-modal-footer {
-  padding: 1.1rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.25);
+  padding: 1rem 1.5rem;
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 16px));
+  border-top: 1px solid rgba(255, 42, 42, 0.22);
+  background: #0d0d14;
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.7);
 }
 
 .settings-signout-btn {
@@ -447,5 +481,31 @@
     max-width: 100%;
     border-radius: 0;
     border-left: none;
+    height: 100%;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  .settings-modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .settings-modal-body {
+    padding: 1.25rem 1rem 1.75rem;
+  }
+
+  .settings-modal-footer {
+    padding: 0.85rem 1.25rem;
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom, 16px));
+    background: #0b0b12;
+    border-top: 1px solid rgba(255, 42, 42, 0.35);
+  }
+
+  .settings-signout-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px 18px;
+    font-size: 0.94rem;
   }
 }

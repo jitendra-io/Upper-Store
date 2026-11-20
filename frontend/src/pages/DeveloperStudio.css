@@ -1,0 +1,238 @@
+/* ==========================================================================
+   UPPER STORE — DEVELOPER STUDIO PAGE STYLES
+   Enterprise luxury glass aesthetic, hardware accelerated, responsive.
+   ========================================================================== */
+
+.developer-studio-page {
+  width: 100%;
+  min-height: calc(100vh - 140px);
+  padding: 2.5rem 1.5rem 5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* Page Card Container */
+.dev-modal-card.page-mode {
+  width: 100%;
+  max-width: 1040px;
+  height: auto;
+  max-height: none;
+  background: rgba(14, 15, 21, 0.96);
+  border: 1px solid rgba(255, 42, 42, 0.22);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(230, 25, 25, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  animation: devPageFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  position: relative;
+}
+
+@keyframes devPageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dev-modal-card.page-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(230, 25, 25, 0.6), transparent);
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Page Mode Body: Natural Flow & Overflow */
+.dev-modal-card.page-mode .dev-modal-body {
+  max-height: none;
+  overflow-y: visible;
+  padding: 2rem 2.25rem 2.5rem;
+}
+
+/* Page Mode Sticky Footer */
+.dev-modal-card.page-mode .dev-modal-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  background: rgba(14, 15, 21, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0 0 20px 20px;
+  padding: 1.15rem 2.25rem;
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.6);
+}
+
+/* Back to Store Action Link */
+.dev-back-to-store-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.55rem 1.05rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.dev-back-to-store-btn:hover {
+  background: rgba(255, 42, 42, 0.15);
+  border-color: rgba(255, 42, 42, 0.4);
+  color: #ffffff;
+  transform: translateX(-2px);
+  box-shadow: 0 0 15px rgba(230, 25, 25, 0.2);
+}
+
+/* ============================================================
+   GATING CARDS (UNAUTHENTICATED / NON-VIP ACCESS)
+   ============================================================ */
+
+.dev-studio-gate-card {
+  width: 100%;
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 3rem 2.5rem;
+  box-sizing: border-box;
+  background: rgba(14, 15, 21, 0.95);
+  border: 1px solid rgba(255, 42, 42, 0.25);
+  border-radius: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(230, 25, 25, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  animation: devPageFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.dev-gate-icon-box {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 42, 42, 0.12);
+  border: 1px solid rgba(255, 42, 42, 0.3);
+  color: #ff4d4d;
+  box-shadow: 0 0 20px rgba(230, 25, 25, 0.2);
+}
+
+.dev-gate-icon-box.gold {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+}
+
+.dev-gate-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  background: rgba(255, 42, 42, 0.15);
+  color: #ff6666;
+  border: 1px solid rgba(255, 42, 42, 0.3);
+}
+
+.dev-gate-badge.gold {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fde047;
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.dev-gate-title {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.2px;
+}
+
+.dev-gate-desc {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #94a3b8;
+  max-width: 480px;
+}
+
+.dev-gate-perks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  text-align: left;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1.25rem 1.4rem;
+  box-sizing: border-box;
+}
+
+.dev-gate-perk-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  color: #e2e8f0;
+}
+
+.dev-gate-perk-item svg {
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+.dev-gate-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .developer-studio-page {
+    padding: 1.25rem 0.85rem 4rem;
+  }
+
+  .dev-modal-card.page-mode {
+    border-radius: 14px;
+  }
+
+  .dev-modal-card.page-mode .dev-modal-body {
+    padding: 1.25rem 1rem;
+  }
+
+  .dev-modal-card.page-mode .dev-modal-footer {
+    padding: 1rem;
+    border-radius: 0 0 14px 14px;
+  }
+
+  .dev-studio-gate-card {
+    padding: 2rem 1.25rem;
+    margin: 1.5rem auto;
+  }
+}

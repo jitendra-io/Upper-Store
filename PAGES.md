@@ -6,13 +6,14 @@ This document provides a comprehensive inventory and functional specification of
 
 ## 1. Frontend Route Pages Inventory
 
-Upper Store features 15 dedicated route pages managed by React Router v6 in `frontend/src/App.jsx`.
+Upper Store features 16 dedicated route pages managed by React Router v6 in `frontend/src/App.jsx`.
 
 | Route | Page Component | File Path | Access Level | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `/` | `Home` | `frontend/src/pages/Home.jsx` | Public | Primary storefront landing page featuring the 3D Crimson Core, featured products, category highlights, and VIP preview. |
 | `/products` | `Products` | `frontend/src/pages/Products.jsx` | Public | Complete software catalog with live search, category filtering, sorting, and responsive pagination. |
 | `/products/:id` | `ProductDetail` | `frontend/src/pages/ProductDetail.jsx` | Public | Deep-linked dedicated product page displaying detailed software specs, screenshots, checksums, and reviews. |
+| `/developer-studio`<br>`/studio`<br>`/developer/studio`<br>`/dev/studio` | `DeveloperStudio` | `frontend/src/pages/DeveloperStudio.jsx` | VIP Member | Full-page VIP Developer Studio suite for catalog publishing, pre-flight security audits, product management, community broadcasts, and statutory DPDP consent. |
 | `/vip`, `/vip-club` | `VipClub` | `frontend/src/pages/VipClub.jsx` | Public / Auth | VIP Club membership landing page detailing exclusive developer perks, custom handles, pricing, and subscription actions. |
 | `/developer/:username`<br>`/developers/:username`<br>`/dev/:username` | `DeveloperProfile` | `frontend/src/pages/DeveloperProfile.jsx` | Public / Owner | Dynamic developer showcase page displaying cover banner, avatar, follower counts, bio, social links, and published software catalog. |
 | `/about` | `About` | `frontend/src/pages/About.jsx` | Public | About Upper Store, engineering principles, zero-trust security guarantees, SHA-256 validation policy, and core team info. |

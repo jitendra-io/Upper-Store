@@ -6,7 +6,6 @@ import DownloadHistoryModal from './DownloadHistoryModal';
 import UserLicensesModal from './UserLicensesModal';
 import VipClubModal from './VipClubModal';
 import CancelSubscriptionModal from './CancelSubscriptionModal';
-import DeveloperStudioModal from './DeveloperStudioModal';
 import { VipUsernameModal } from './VipUsernameModal';
 import AccountSettingsModal from './AccountSettingsModal';
 import { ArrowRightIcon, CloseIcon, GearIcon } from './Icons';
@@ -33,12 +32,11 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [vipModalOpen, setVipModalOpen] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [devStudioOpen, setDevStudioOpen] = useState(false);
   const [vipUsernameModalOpen, setVipUsernameModalOpen] = useState(false);
   const [downloadCount, setDownloadCount] = useState(0);
   const [licenseCount, setLicenseCount] = useState(0);
   const location = useLocation();
-  const { user: authUser, token, isLoggedIn: authLoggedIn, openAuthModal } = useAuth();
+  const { user: authUser, token, isLoggedIn: authLoggedIn, openAuthModal, logout } = useAuth();
   const mockUser = location.search.includes('mock=user-pro') ? {
     displayName: 'Alex Rivers',
     username: 'alexrivers',
@@ -449,13 +447,10 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
           <Link to="/" onClick={closeMenu} className={location.pathname === '/' ? 'active-link' : ''}>Home</Link>
           <Link to="/products" onClick={closeMenu} className={location.pathname.startsWith('/products') ? 'active-link' : ''}>Products</Link>
           {isUserVipActive(user) && (
-            <button
-              type="button"
-              className="mobile-drawer-dev-btn"
-              onClick={() => {
-                setDevStudioOpen(true);
-                closeMenu();
-              }}
+            <Link
+              to="/developer-studio"
+              className={`mobile-drawer-dev-btn ${location.pathname.startsWith('/developer-studio') ? 'active-link' : ''}`}
+              onClick={closeMenu}
             >
               <span className="mobile-drawer-dev-btn-left">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ff2a2a" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -469,11 +464,30 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
               <span className="mobile-drawer-vip-pill">
                 {getUserVipTier(user) === 'elite' ? 'ELITE VIP' : 'PRO VIP'}
               </span>
-            </button>
+            </Link>
           )}
           <Link to="/about" onClick={closeMenu} className={location.pathname === '/about' ? 'active-link' : ''}>About</Link>
           <Link to="/faq" onClick={closeMenu} className={location.pathname === '/faq' ? 'active-link' : ''}>FAQ</Link>
           <Link to="/contact" onClick={closeMenu} className={location.pathname === '/contact' ? 'active-link' : ''}>Contact</Link>
+          {isLoggedIn && (
+            <button
+              type="button"
+              className="mobile-drawer-signout-btn"
+              onClick={() => {
+                closeMenu();
+                if (window.confirm('Are you sure you want to sign out of your account?')) {
+                  logout();
+                }
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>Sign Out</span>
+            </button>
+          )}
           <div className="mobile-drawer-footer">
             <span className="drawer-footer-text">Upper Store • Elite Experience</span>
           </div>
@@ -774,12 +788,10 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
                     <div className="dropdown-menu-list">
                       {/* DEVELOPER STUDIO BUTTON FOR ACTIVE VIPs */}
                       {isUserVipActive(user) && (
-                        <button
+                        <Link
+                          to="/developer-studio"
                           className="dropdown-item-btn dev-studio-action-btn"
-                          onClick={() => {
-                            setDevStudioOpen(true);
-                            closeMenu();
-                          }}
+                          onClick={closeMenu}
                         >
                           <div className="dropdown-item-left">
                             <span className="dropdown-item-icon dev-icon-box">
@@ -790,7 +802,7 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
                             </span>
                             <span className="dropdown-item-label">Developer Studio</span>
                           </div>
-                        </button>
+                        </Link>
                       )}
                     </div>
                   </div>
@@ -867,14 +879,6 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
         onClose={() => setCancelModalOpen(false)}
       />
 
-      {/* VIP DEVELOPER STUDIO MODAL */}
-      <DeveloperStudioModal
-        isOpen={devStudioOpen}
-        onClose={() => setDevStudioOpen(false)}
-        onProductPublished={() => {
-          window.dispatchEvent(new Event('productsUpdated'));
-        }}
-      />
 
       {/* VIP CUSTOM USERNAME MODAL */}
       <VipUsernameModal

@@ -733,6 +733,10 @@
   display: none;
 }
 
+.mobile-drawer-signout-btn {
+  display: none;
+}
+
 .nav-drawer-backdrop {
   display: none;
 }
@@ -1285,6 +1289,44 @@
     border-color: rgba(230, 25, 25, 0.4);
     border-left: 4px solid #e61919;
     font-weight: 700;
+  }
+
+  .mobile-drawer-signout-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    width: 100%;
+    margin: 1.25rem 0 0.5rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #ff6666;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+
+  .mobile-drawer-signout-btn svg {
+    color: #ff6666;
+    flex-shrink: 0;
+  }
+
+  .mobile-drawer-signout-btn:hover,
+  .mobile-drawer-signout-btn:active {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.4);
+  }
+
+  .mobile-drawer-signout-btn:hover svg,
+  .mobile-drawer-signout-btn:active svg {
+    color: #ffffff;
   }
 
   .mobile-drawer-footer {
