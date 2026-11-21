@@ -606,99 +606,131 @@ const Products = () => {
                 const downloadsCount = getProductDownloadCount(product.id, product.downloadCount);
                 return (
                   <div key={product.id} className="bento-product-card" onClick={() => setSelectedProduct(product)}>
-                    {/* Top Media Frame */}
-                    <div className="bento-card-media">
-                      <img
-                        src={product.image || FALLBACK_POSTER}
-                        alt={product.title}
-                        referrerPolicy="no-referrer"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <div className="bento-card-badge-row">
-                        <span className="bento-category-tag">{product.category}</span>
-                        {product.version && <span className="bento-version-tag">v{product.version}</span>}
+                    {/* Header Row: Logo on left, Title + Version on right, Category · Developer below */}
+                    <div className="bento-card-header">
+                      <div className="bento-app-logo-wrap">
+                        {product.logo ? (
+                          <img
+                            src={product.logo}
+                            alt=""
+                            className="bento-app-logo"
+                            referrerPolicy="no-referrer"
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const sibling = e.currentTarget.parentElement?.querySelector('.bento-logo-fallback');
+                              if (sibling) sibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className="bento-logo-fallback"
+                          style={{ display: product.logo ? 'none' : 'flex' }}
+                        >
+                          <LayersIcon size={22} />
+                        </div>
+                      </div>
+
+                      <div className="bento-header-meta">
+                        <div className="bento-title-row">
+                          <h3 className="bento-product-title" title={product.title}>
+                            {product.title}
+                          </h3>
+                          {product.version && (
+                            <span className="bento-version-text">v{product.version}</span>
+                          )}
+                        </div>
+
+                        {(() => {
+                          const rawUsername = (product.developerUsername || (product.developerEmail ? product.developerEmail.split('@')[0] : '')).trim();
+                          const isOfficial = !product.developerId && (!rawUsername || rawUsername.toLowerCase() === 'upperstore' || product.isStoreOfficial);
+                          const devHandle = isOfficial ? 'upperstore' : rawUsername.replace(/^@/, '');
+                          const displayLabel = '@' + devHandle;
+
+                          return (
+                            <div className="bento-subtitle-row">
+                              <span className="bento-category-name">{product.category || 'Software Tool'}</span>
+                              <span className="bento-meta-dot">·</span>
+                              <Link
+                                to={'/developer/' + devHandle}
+                                className="bento-dev-chip"
+                                onClick={(e) => e.stopPropagation()}
+                                title={'View @' + devHandle + ' Profile'}
+                              >
+                                <VipAvatar
+                                  src={product.developerAvatar || '/logo.png'}
+                                  alt={displayLabel}
+                                  plan={getProductDevTier(product)}
+                                  size="xs"
+                                  fallbackSeed={devHandle}
+                                />
+                                <span className="bento-dev-handle">{displayLabel}</span>
+                              </Link>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
 
-                    {/* Card Content Body */}
-                    <div className="bento-card-body">
-                      <div className="bento-card-header">
-                        {product.logo ? (
-                          <img src={product.logo} alt="" className="bento-app-logo" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
-                        ) : (
-                          <div className="bento-logo-fallback">
-                            <LayersIcon size={16} />
-                          </div>
-                        )}
-                        <div className="bento-title-col">
-                          <h3 className="bento-product-title">{product.title}</h3>
-                          <div className="bento-ratings-row">
-                            <StarRatingBadge
-                              productId={product.id}
-                              initialRating={product.averageRating || 5.0}
-                              initialCount={product.reviewsCount || 0}
-                              onClick={(e) => {
-                                e?.stopPropagation?.();
-                                setReviewModalProduct(product);
-                              }}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                    {/* Description Paragraph */}
+                    <p className="bento-product-desc" title={product.description}>
+                      {product.description}
+                    </p>
 
-                      {/* Developer Attribution Link */}
-                      {(() => {
-                        const rawUsername = (product.developerUsername || (product.developerEmail ? product.developerEmail.split('@')[0] : '')).trim();
-                        const isOfficial = !product.developerId && (!rawUsername || rawUsername.toLowerCase() === 'upperstore' || product.isStoreOfficial);
-                        const devHandle = isOfficial ? 'upperstore' : rawUsername.replace(/^@/, '');
-                        const displayLabel = '@' + devHandle;
-
-                        return (
-                          <Link
-                            to={'/developer/' + devHandle}
-                            className="bento-developer-link"
-                            onClick={(e) => e.stopPropagation()}
-                            title={'View @' + devHandle + ' Profile'}
-                          >
-                            <VipAvatar
-                              src={product.developerAvatar || '/logo.png'}
-                              alt={displayLabel}
-                              plan={getProductDevTier(product)}
-                              size="sm"
-                              fallbackSeed={devHandle}
-                            />
-                            <span className="bento-dev-name">
-                              {displayLabel}
-                            </span>
-                          </Link>
-                        );
-                      })()}
-
-                      <p className="bento-product-desc">{product.description}</p>
-
-                      {/* Card Footer: Downloads and CTA */}
-                      <div className="bento-card-footer">
-                        <div className="bento-meta-left">
-                          <span className="bento-price-tag">{product.price || 'Free'}</span>
-                          <span className="bento-downloads-chip">
-                            {formatDownloadCount(downloadsCount)} Downloads
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          className="bento-action-btn"
+                    {/* Stats Row: Gold Stars on left, Downloads Count on right */}
+                    <div className="bento-stats-row">
+                      <div className="bento-rating-box">
+                        <StarRatingBadge
+                          productId={product.id}
+                          initialRating={product.averageRating || 5.0}
+                          initialCount={product.reviewsCount || 0}
+                          className="crimson-stars"
                           onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedProduct(product);
+                            e?.stopPropagation?.();
+                            setReviewModalProduct(product);
                           }}
-                        >
-                          Details
-                        </button>
+                        />
                       </div>
+
+                      <div className="bento-downloads-stat">
+                        <svg
+                          width="13"
+                          height="13"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="bento-download-icon"
+                        >
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        <span>{downloadsCount.toLocaleString()} downloads</span>
+                      </div>
+                    </div>
+
+                    {/* Footer Row: Price on left, Details -> button on right */}
+                    <div className="bento-card-footer">
+                      <span className="bento-price-tag">
+                        {product.price ? String(product.price).replace(/\$\s*₹/g, '₹').replace(/₹\s*\$/g, '₹') : 'Free'}
+                      </span>
+                      <button
+                        type="button"
+                        className="bento-action-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProduct(product);
+                        }}
+                      >
+                        Details →
+                      </button>
                     </div>
                   </div>
-                );
+);
               })}
             </div>
           )}

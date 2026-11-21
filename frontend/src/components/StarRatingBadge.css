@@ -55,3 +55,67 @@
   line-height: 1;
 }
 
+
+
+/* Crimson Red Stars Variant */
+
+.star-rating-badge.gold-stars,
+.star-rating-badge.crimson-stars {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  gap: 0.35rem;
+}
+
+.star-rating-badge.gold-stars:hover,
+.star-rating-badge.crimson-stars:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.star-rating-badge.gold-stars .stars-flex-row,
+.star-rating-badge.crimson-stars .stars-flex-row {
+  gap: 2px;
+}
+
+.star-rating-badge.gold-stars .star-svg,
+.star-rating-badge.crimson-stars .star-svg {
+  width: 12px;
+  height: 12px;
+  stroke: #e61919;
+}
+
+.star-rating-badge.gold-stars .star-svg.full,
+.star-rating-badge.crimson-stars .star-svg.full {
+  fill: #e61919;
+  stroke: #e61919;
+}
+
+.star-rating-badge.gold-stars .star-svg.half,
+.star-rating-badge.crimson-stars .star-svg.half {
+  fill: #e61919;
+  stroke: #e61919;
+}
+
+.star-rating-badge.gold-stars .star-svg.empty,
+.star-rating-badge.crimson-stars .star-svg.empty {
+  fill: rgba(255, 255, 255, 0.1);
+  stroke: rgba(230, 25, 25, 0.35);
+}
+
+.star-rating-badge.gold-stars .rating-num,
+.star-rating-badge.crimson-stars .rating-num {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-left: 3px;
+}
+
+.star-rating-badge.gold-stars .rating-count,
+.star-rating-badge.crimson-stars .rating-count {
+  font-size: 0.82rem;
+  color: #71717a;
+}

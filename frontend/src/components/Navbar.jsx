@@ -731,7 +731,9 @@ const Navbar = ({ onOpenSearch, disabled = false }) => {
                 />
                 <span className="nav-user-name">{user?.displayName || user?.email?.split('@')[0]}</span>
                 {isBanned && <span className="nav-banned-tag">BANNED</span>}
-                <span className="dropdown-caret">▾</span>
+                <svg className="dropdown-caret" width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 10l5 5 5-5z"></path>
+                </svg>
               </button>
 
               {/* BACKDROP TO DISMISS AND PREVENT BACKGROUND INTERACTION */}

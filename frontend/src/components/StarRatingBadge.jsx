@@ -12,7 +12,7 @@ const formatCount = (num) => {
   return num;
 };
 
-const StarRatingBadge = ({ productId, initialRating = 5.0, initialCount = 0, onClick }) => {
+const StarRatingBadge = ({ productId, initialRating = 5.0, initialCount = 0, onClick, className = '' }) => {
   const [rating, setRating] = useState(initialRating);
   const [count, setCount] = useState(initialCount);
 
@@ -48,7 +48,7 @@ const StarRatingBadge = ({ productId, initialRating = 5.0, initialCount = 0, onC
 
   return (
     <div
-      className="star-rating-badge"
+      className={`star-rating-badge ${className}`.trim()}
       onClick={(e) => {
         e.stopPropagation();
         if (onClick) onClick(e);
